@@ -15,7 +15,9 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 project "Ares"
 	location "Ares"
 	kind "SharedLib"
-	language "C++"
+    language "C++"
+    
+    staticruntime "off"
     
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -33,30 +35,29 @@ project "Ares"
     
 	filter "system:windows"
         cppdialect "C++17"
-        staticruntime "On"
 		systemversion "latest"
         defines 
         {
-            "A_PLATFORM_WINDOWS",
-            "A_BUILD_DLL"
+            "ARES_PLATFORM_WINDOWS",
+            "ARES_BUILD_DLL"
         }
         postbuildcommands
         {
-            ("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox")
+            ("{COPY} %{cfg.buildtarget.relpath} \"../bin/" .. outputdir .. "/Sandbox\"")
         }
 
 	filter "configurations:Debug"
-		defines "A_DEBUG"
+		defines "ARES_DEBUG"
 		runtime "Debug"
 		symbols "On"
 
 	filter "configurations:Release"
-		defines "A_RELEASE"
+		defines "ARES_RELEASE"
 		runtime "Release"
 		optimize "On"
 
 	filter "configurations:Dist"
-		defines "A_DIST"
+		defines "ARES_DIST"
 		runtime "Release"
         optimize "On"
         
@@ -66,6 +67,7 @@ project "Sandbox"
     kind "ConsoleApp"
     language "C++"
     
+    staticruntime "off"
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
@@ -88,24 +90,23 @@ project "Sandbox"
 
     filter "system:windows"
         cppdialect "C++17"
-        staticruntime "On"
         systemversion "latest"
         defines 
         {
-            "A_PLATFORM_WINDOWS"
+            "ARES_PLATFORM_WINDOWS"
         }
         
     filter "configurations:Debug"
-        defines "A_DEBUG"
+        defines "ARES_DEBUG"
         runtime "Debug"
         symbols "On"
 
     filter "configurations:Release"
-        defines "A_RELEASE"
+        defines "ARES_RELEASE"
         runtime "Release"
         optimize "On"
 
     filter "configurations:Dist"
-        defines "A_DIST"
+        defines "ARES_DIST"
         runtime "Release"
         optimize "On"

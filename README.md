@@ -1,6 +1,6 @@
 # Ares
 
-**Rendering engine software written in `C++`.**
+**Rendering software written in `C++`.**
 
 <hr>
 
