@@ -19,8 +19,8 @@ project "Ares"
     
     staticruntime "off"
     
-	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+	targetdir ("_bin/" .. outputdir .. "/%{prj.name}")
+	objdir ("_bin-int/" .. outputdir .. "/%{prj.name}")
     
 	files
 	{
@@ -43,7 +43,7 @@ project "Ares"
         }
         postbuildcommands
         {
-            ("{COPY} %{cfg.buildtarget.relpath} \"../bin/" .. outputdir .. "/Sandbox\"")
+            ("{COPY} %{cfg.buildtarget.relpath} \"../_bin/" .. outputdir .. "/Sandbox\"")
         }
 
 	filter "configurations:Debug"
@@ -68,8 +68,8 @@ project "Sandbox"
     language "C++"
     
     staticruntime "off"
-    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+    targetdir ("_bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("_bin-int/" .. outputdir .. "/%{prj.name}")
 
     files
     {
