@@ -1,7 +1,8 @@
 # Binaries
-**/bin/*
-!vendor/bin/premake/
-bin-int/
+# **/bin/*
+# !vendor/bin/premake/
+_bin-int/
+_bin/
 
 # Visual Studio files and folder
 .vs/
