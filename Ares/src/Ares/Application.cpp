@@ -1,5 +1,6 @@
 #include "Application.h"
-
+#include "Ares/Log.h"
+#include "Ares/Events/ApplicationEvent.h"
 
 namespace Ares {
     Application::Application() {
@@ -10,6 +11,9 @@ namespace Ares {
     }
 
     void Application::Run() {
-        while (true) {};
+
+        WindowResizeEvent e(1200, 720);
+        ARES_CORE_LOG(e);
+        while (true) {}
     }
 }

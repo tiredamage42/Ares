@@ -1,9 +1,13 @@
 #pragma once
 
 #include <memory>
-
-#include "spdlog/spdlog.h"
 #include "Core.h"
+
+// suppress warnings
+#pragma warning(push, 0)
+#include "spdlog/spdlog.h"
+#include "spdlog/fmt/ostr.h"
+#pragma warning(pop)
 
 namespace Ares {
 
