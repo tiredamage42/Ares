@@ -2,8 +2,6 @@
 
 #include "Event.h"
 
-#include <sstream>
-
 namespace Ares {
 
 	class ARES_API WindowResizeEvent : public Event 

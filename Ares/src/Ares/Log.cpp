@@ -1,3 +1,5 @@
+#include "AresPCH.h"
+
 #include "Log.h"
 
 // suppress warnings

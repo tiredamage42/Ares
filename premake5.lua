@@ -22,6 +22,9 @@ project "Ares"
 	targetdir ("_bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("_bin-int/" .. outputdir .. "/%{prj.name}")
     
+    pchheader "AresPCH.h"
+    pchsource "Ares/src/AresPCH.cpp"
+
 	files
 	{
         "%{prj.name}/src/**.h",

@@ -1,3 +1,5 @@
+#include "AresPCH.h"
+
 #include "Application.h"
 #include "Ares/Log.h"
 #include "Ares/Events/ApplicationEvent.h"
