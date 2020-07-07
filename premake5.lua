@@ -12,6 +12,12 @@ workspace "Ares"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+-- include directories relative to root folder (solution directory)
+IncludeDir = {}
+IncludeDir["GLFW"] = "Ares/vendor/GLFW/include"
+
+include "Ares/vendor/GLFW"
+
 project "Ares"
 	location "Ares"
 	kind "SharedLib"
@@ -19,8 +25,8 @@ project "Ares"
     
     staticruntime "off"
     
-	targetdir ("_bin/" .. outputdir .. "/%{prj.name}")
-	objdir ("_bin-int/" .. outputdir .. "/%{prj.name}")
+	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
     
     pchheader "AresPCH.h"
     pchsource "Ares/src/AresPCH.cpp"
@@ -35,7 +41,13 @@ project "Ares"
 	{
         "%{prj.name}/src",
         "%{prj.name}/vendor/spdlog/include",
-	}
+        "%{IncludeDir.GLFW}"
+    }
+    links
+    {
+        "GLFW",
+        "opengl32.lib"
+    }
     
 	filter "system:windows"
         cppdialect "C++17"
@@ -47,7 +59,7 @@ project "Ares"
         }
         postbuildcommands
         {
-            ("{COPY} %{cfg.buildtarget.relpath} \"../_bin/" .. outputdir .. "/Sandbox\"")
+            ("{COPY} %{cfg.buildtarget.relpath} \"../bin/" .. outputdir .. "/Sandbox\"")
         }
 
 	filter "configurations:Debug"
@@ -72,8 +84,8 @@ project "Sandbox"
     language "C++"
     
     staticruntime "off"
-    targetdir ("_bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("_bin-int/" .. outputdir .. "/%{prj.name}")
+    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
     files
     {

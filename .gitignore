@@ -1,6 +1,6 @@
 # Binaries
-_bin-int/
-_bin/
+bin-int/
+bin/
 
 # Visual Studio files and folder
 .vs/
