@@ -1,6 +1,3 @@
 [submodule "Ares/vendor/spdlog"]
 	path = Ares/vendor/spdlog
 	url = https://github.com/gabime/spdlog
-[submodule "Ares/vendor/GLFW"]
-	path = Ares/vendor/GLFW
-	url = https://github.com/TheCherno/GLFW
