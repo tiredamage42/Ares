@@ -30,7 +30,7 @@ namespace Ares {
         // OnWindowClose
         dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(Application::OnWindowClose));
 
-        ARES_CORE_INFO("{0}", e);
+        ARES_CORE_LOG("{0}", e);
     }
 
     bool Application::OnWindowClose(WindowCloseEvent& e)
