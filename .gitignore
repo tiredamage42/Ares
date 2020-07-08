@@ -8,3 +8,6 @@ bin/
 .vs/
 **.sln
 **.vcxproj*
+
+# imgui configs
+**imgui.ini
