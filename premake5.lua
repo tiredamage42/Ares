@@ -16,9 +16,11 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 IncludeDir = {}
 IncludeDir["GLFW"] = "Ares/vendor/GLFW/include"
 IncludeDir["Glad"] = "Ares/vendor/Glad/include"
+IncludeDir["ImGui"] = "Ares/vendor/imgui"
 
 include "Ares/vendor/GLFW"
 include "Ares/vendor/Glad"
+include "Ares/vendor/imgui"
 
 project "Ares"
 	location "Ares"
@@ -44,12 +46,14 @@ project "Ares"
         "%{prj.name}/src",
         "%{prj.name}/vendor/spdlog/include",
         "%{IncludeDir.GLFW}",
-        "%{IncludeDir.Glad}"
+        "%{IncludeDir.Glad}",
+        "%{IncludeDir.ImGui}"
     }
     links
     {
         "GLFW",
         "Glad",
+        "ImGui",
         "opengl32.lib"
     }
     
@@ -62,7 +66,7 @@ project "Ares"
             "ARES_BUILD_DLL",
             "GLFW_INCLUDE_NONE"
         }
-        
+
         postbuildcommands
         {
             ("{COPY} %{cfg.buildtarget.relpath} \"../bin/" .. outputdir .. "/Sandbox\"")

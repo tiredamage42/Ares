@@ -6,6 +6,8 @@
 #include "Ares/Layer.h"
 #include "Ares/Log.h"
 
+#include "Ares/ImGui/ImGuiLayer.h"
+
 // entry point =============
 #include "Ares/EntryPoint.h"
 // =========================
