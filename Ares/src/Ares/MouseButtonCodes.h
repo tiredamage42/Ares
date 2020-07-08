@@ -1,0 +1,15 @@
+#pragma once
+
+// from glfw3.h
+#define ARES_MOUSE_BUTTON_1         0
+#define ARES_MOUSE_BUTTON_2         1
+#define ARES_MOUSE_BUTTON_3         2
+#define ARES_MOUSE_BUTTON_4         3
+#define ARES_MOUSE_BUTTON_5         4
+#define ARES_MOUSE_BUTTON_6         5
+#define ARES_MOUSE_BUTTON_7         6
+#define ARES_MOUSE_BUTTON_8         7
+#define ARES_MOUSE_BUTTON_LAST      ARES_MOUSE_BUTTON_8
+#define ARES_MOUSE_BUTTON_LEFT      ARES_MOUSE_BUTTON_1
+#define ARES_MOUSE_BUTTON_RIGHT     ARES_MOUSE_BUTTON_2
+#define ARES_MOUSE_BUTTON_MIDDLE    ARES_MOUSE_BUTTON_3

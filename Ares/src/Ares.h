@@ -6,6 +6,10 @@
 #include "Ares/Layer.h"
 #include "Ares/Log.h"
 
+#include "Ares/Input.h"
+#include "Ares/Keycodes.h"
+#include "Ares/MouseButtonCodes.h"
+
 #include "Ares/ImGui/ImGuiLayer.h"
 
 // entry point =============
