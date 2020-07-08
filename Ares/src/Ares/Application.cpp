@@ -4,6 +4,8 @@
 
 #include <glad/glad.h>
 
+#include "Input.h"
+
 namespace Ares {
 
 #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
@@ -66,6 +68,9 @@ namespace Ares {
 
             for (Layer* layer : m_LayerStack)
                 layer->OnUpdate();
+
+            auto [x, y] = Input::GetMousePosition();
+            ARES_CORE_LOG("{0}, {1}", x, y);
 
             m_Window->OnUpdate();
         }
