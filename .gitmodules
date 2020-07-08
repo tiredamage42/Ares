@@ -7,3 +7,6 @@
 [submodule "Ares/vendor/imgui"]
 	path = Ares/vendor/imgui
 	url = https://github.com/TheCherno/imgui
+[submodule "Ares\\vendor\\glm"]
+	path = Ares\\vendor\\glm
+	url = https://github.com/g-truc/glm

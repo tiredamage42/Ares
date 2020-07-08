@@ -12,3 +12,4 @@ Third-party libraries used:
 - GLFW
 - Glad
 - ImGui
+- glm
