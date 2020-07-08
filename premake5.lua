@@ -74,19 +74,16 @@ project "Ares"
 
 	filter "configurations:Debug"
         defines "ARES_DEBUG"
-        buildoptions "/MDd"
 		runtime "Debug"
 		symbols "On"
 
 	filter "configurations:Release"
         defines "ARES_RELEASE"
-        buildoptions "/MD"
 		runtime "Release"
 		optimize "On"
 
 	filter "configurations:Dist"
         defines "ARES_DIST"
-        buildoptions "/MD"
 		runtime "Release"
         optimize "On"
         
@@ -124,21 +121,23 @@ project "Sandbox"
         {
             "ARES_PLATFORM_WINDOWS"
         }
+        -- postbuildcommands
+        -- {
+        --     ("IF NOT EXIST ../bin/" .. outputdir .. "/%{prj.name} mkdir ../bin/" .. outputdir .. "/%{prj.name}"),
+        --     ("{COPY} ../bin/" .. outputdir .. "/Ares/Ares.dll" .. " ../bin/" .. outputdir .. "/%{prj.name}")
+        -- }
         
     filter "configurations:Debug"
         defines "ARES_DEBUG"
-        buildoptions "/MDd"
         runtime "Debug"
         symbols "On"
 
     filter "configurations:Release"
         defines "ARES_RELEASE"
-        buildoptions "/MD"
         runtime "Release"
         optimize "On"
 
     filter "configurations:Dist"
         defines "ARES_DIST"
-        buildoptions "/MD"
         runtime "Release"
         optimize "On"

@@ -10,6 +10,10 @@
     #error Ares only supports Windows for now...
 #endif
 
+#ifdef ARES_DEBUG
+    #define ARES_ENABLE_ASSERTS
+#endif
+
 #ifdef ARES_ENABLE_ASSERTS
     #define ARES_ASSERT(x, ...) { if (!(x)) { ARES_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
     #define ARES_CORE_ASSERT(x, ...) { if (!(x)) { ARES_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
