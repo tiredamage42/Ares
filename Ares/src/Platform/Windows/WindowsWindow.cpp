@@ -1,12 +1,11 @@
 #include "AresPCH.h"
-
 #include "WindowsWindow.h"
-
 #include "Ares/Events/ApplicationEvent.h"
 #include "Ares/Events/MouseEvent.h"
 #include "Ares/Events/KeyEvent.h"
 
 namespace Ares {
+
 	static bool s_GLFWInitialized = false;
 
 	static void GLFWErrorCallback(int error, const char* description) {
@@ -40,11 +39,10 @@ namespace Ares {
 			// TODO: glfwTerminate on system shutdown
 			int success = glfwInit();
 			ARES_CORE_ASSERT(success, "Could not initialize GLFW!");
-
 			glfwSetErrorCallback(GLFWErrorCallback);
-
 			s_GLFWInitialized = true;
 		}
+
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 		glfwMakeContextCurrent(m_Window);
 		glfwSetWindowUserPointer(m_Window, &m_Data);
@@ -147,7 +145,4 @@ namespace Ares {
 	{
 		return m_Data.VSync;
 	}
-
-
-
 }

@@ -9,10 +9,8 @@ int main(int argc, char** argv) {
 
 	Ares::Log::Init();
 
-	auto app = Ares::CreateApplication();
-	
+	auto app = Ares::CreateApplication();	
 	app->Run();
-	
 	delete app;
 }
 

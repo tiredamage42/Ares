@@ -6,7 +6,6 @@
     #else 
         #define ARES_API __declspec(dllimport)
     #endif
-
 #else 
     #error Ares only supports Windows for now...
 #endif

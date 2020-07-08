@@ -63,17 +63,20 @@ project "Ares"
         }
 
 	filter "configurations:Debug"
-		defines "ARES_DEBUG"
+        defines "ARES_DEBUG"
+        buildoptions "/MDd"
 		runtime "Debug"
 		symbols "On"
 
 	filter "configurations:Release"
-		defines "ARES_RELEASE"
+        defines "ARES_RELEASE"
+        buildoptions "/MD"
 		runtime "Release"
 		optimize "On"
 
 	filter "configurations:Dist"
-		defines "ARES_DIST"
+        defines "ARES_DIST"
+        buildoptions "/MD"
 		runtime "Release"
         optimize "On"
         
@@ -114,15 +117,18 @@ project "Sandbox"
         
     filter "configurations:Debug"
         defines "ARES_DEBUG"
+        buildoptions "/MDd"
         runtime "Debug"
         symbols "On"
 
     filter "configurations:Release"
         defines "ARES_RELEASE"
+        buildoptions "/MD"
         runtime "Release"
         optimize "On"
 
     filter "configurations:Dist"
         defines "ARES_DIST"
+        buildoptions "/MD"
         runtime "Release"
         optimize "On"

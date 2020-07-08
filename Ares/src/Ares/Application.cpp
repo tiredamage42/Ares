@@ -1,13 +1,9 @@
 #include "AresPCH.h"
-
 #include "Application.h"
-//#include "Ares/Events/ApplicationEvent.h"
 #include "Ares/Log.h"
-
 #include <GLFW/glfw3.h>
 
 namespace Ares {
-
 
 #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
@@ -19,7 +15,6 @@ namespace Ares {
 
     Application::~Application() 
     {
-
     }
 
     void Application::OnEvent(Event& e)
@@ -30,7 +25,23 @@ namespace Ares {
         // OnWindowClose
         dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(Application::OnWindowClose));
 
-        ARES_CORE_LOG("{0}", e);
+        //ARES_CORE_LOG("{0}", e);
+        for (auto it = m_LayerStack.end(); it != m_LayerStack.begin();)
+        {
+            (*--it)->OnEvent(e);
+            if (e.Handled)
+                break;
+        }
+    }
+
+    void Application::PushLayer(Layer* layer)
+    {
+        m_LayerStack.PushLayer(layer);
+    }
+
+    void Application::PushOverlay(Layer* layer)
+    {
+        m_LayerStack.PushOverlay(layer);
     }
 
     bool Application::OnWindowClose(WindowCloseEvent& e)
@@ -45,6 +56,10 @@ namespace Ares {
         {
             glClearColor(1, .5, 0, 1);
             glClear(GL_COLOR_BUFFER_BIT);
+
+            for (Layer* layer : m_LayerStack)
+                layer->OnUpdate();
+
             m_Window->OnUpdate();
         }
     }
