@@ -4,6 +4,3 @@
 [submodule "Ares/vendor/GLFW"]
 	path = Ares/vendor/GLFW
 	url = https://github.com/TheCherno/GLFW
-[submodule "Ares/vendor/imgui"]
-	path = Ares/vendor/imgui
-	url = https://github.com/TheCherno/imgui
