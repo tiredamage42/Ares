@@ -1,9 +1,11 @@
 #include "AresPCH.h"
 #include "WindowsWindow.h"
+
 #include "Ares/Events/ApplicationEvent.h"
 #include "Ares/Events/MouseEvent.h"
 #include "Ares/Events/KeyEvent.h"
-#include <glad/glad.h>
+
+#include "Platform/OpenGL/OpenGLContext.h"
 
 namespace Ares {
 
@@ -45,11 +47,10 @@ namespace Ares {
 		}
 
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-		glfwMakeContextCurrent(m_Window);
-
-		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-		ARES_CORE_ASSERT(status, "Could not initialize Glad!");
-
+		
+		m_Context = new OpenGLContext(m_Window);
+		m_Context->Init();
+		
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
 
@@ -95,7 +96,6 @@ namespace Ares {
 				}
 			}
 		});
-
 
 		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int keycode)
 		{
@@ -144,7 +144,7 @@ namespace Ares {
 	void WindowsWindow::OnUpdate()
 	{
 		glfwPollEvents();
-		glfwSwapBuffers(m_Window);
+		m_Context->SwapBuffers();
 	}
 	void WindowsWindow::SetVSync(bool enabled)
 	{

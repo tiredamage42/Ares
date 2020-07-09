@@ -1,6 +1,7 @@
 #pragma once
 #include "Ares/Window.h"
 #include <GLFW/glfw3.h>
+#include "Ares/Renderer/GraphicsContext.h"
 
 namespace Ares {
 	class WindowsWindow : public Window {
@@ -24,6 +25,8 @@ namespace Ares {
 		virtual void Shutdown();
 
 		GLFWwindow* m_Window;
+
+		GraphicsContext* m_Context;
 
 		struct WindowData {
 			std::string Title;
