@@ -22,6 +22,43 @@ namespace Ares {
         m_ImGuiLayer = new ImGuiLayer();
 
         PushOverlay(m_ImGuiLayer);
+
+
+        // 1 vertex array
+        glGenVertexArrays(1, &m_VertexArray);
+        glBindVertexArray(m_VertexArray);
+
+
+        glGenBuffers(1, &m_VertexBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, m_VertexBuffer);
+
+        float vertices[3 * 3] = {
+            -0.5f, -0.5f, 0.0f,
+            0.5f, -0.5f, 0.0f,
+            0.0f, 0.5f, 0.0f,
+        };
+
+        // upload to gpu
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+        // tell open gl layout
+        glEnableVertexAttribArray(0);
+        // index, 
+        // num attributes, 
+        // type, 
+        // normalized, 
+        // amount of bytes between vertices, 
+        // offset
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+
+
+        // index buffer specifies order to draw vertices
+        glGenBuffers(1, &m_IndexBuffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexBuffer);
+
+        unsigned int indicies[3] = { 0,1,2 };
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
+
     }
 
     Application::~Application() 
@@ -69,6 +106,11 @@ namespace Ares {
         {
             glClearColor(1, .5, 0, 1);
             glClear(GL_COLOR_BUFFER_BIT);
+
+
+            glBindVertexArray(m_VertexArray);
+            glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
+
 
             for (Layer* layer : m_LayerStack)
                 layer->OnUpdate();
