@@ -7,6 +7,8 @@
 #include "Ares/LayerStack.h"
 #include "Ares/ImGui/ImGuiLayer.h"
 
+#include "Ares/Renderer/Shader.h";
+
 namespace Ares {
 
     class ARES_API Application
@@ -38,6 +40,7 @@ namespace Ares {
 
 
         unsigned int m_VertexArray, m_VertexBuffer, m_IndexBuffer;
+        std::unique_ptr<Shader> m_Shader;
 
         static Application* s_Instance;
     };
