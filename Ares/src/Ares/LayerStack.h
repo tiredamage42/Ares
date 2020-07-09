@@ -21,6 +21,6 @@ namespace Ares {
 
 	private:
 		std::vector<Layer*> m_Layers;
-		unsigned int m_OverlayStartIndex;
+		unsigned int m_OverlayStartIndex = 0;
 	};
 }

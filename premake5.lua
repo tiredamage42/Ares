@@ -111,6 +111,7 @@ project "Sandbox"
     {
         "Ares/vendor/spdlog/include",
         "Ares/src",
+        "Ares/vendor",
         "%{IncludeDir.glm}"
     }
 

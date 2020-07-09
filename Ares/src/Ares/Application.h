@@ -5,6 +5,7 @@
 #include "Ares/Events/ApplicationEvent.h"
 #include "Window.h "
 #include "Ares/LayerStack.h"
+#include "Ares/ImGui/ImGuiLayer.h"
 
 namespace Ares {
 
@@ -28,6 +29,9 @@ namespace Ares {
         bool OnWindowClose(WindowCloseEvent& e);
 
         std::unique_ptr<Window> m_Window;
+
+        ImGuiLayer* m_ImGuiLayer;
+
         bool m_Running = true;
 
         LayerStack m_LayerStack;

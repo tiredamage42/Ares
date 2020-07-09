@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Ares/Layer.h"
-#include "Ares/Events/ApplicationEvent.h"
-#include "Ares/Events/KeyEvent.h"
-#include "Ares/Events/MouseEvent.h"
+//#include "Ares/Events/ApplicationEvent.h"
+//#include "Ares/Events/KeyEvent.h"
+//#include "Ares/Events/MouseEvent.h"
 
 namespace Ares {
 	class ARES_API ImGuiLayer : public Layer
@@ -11,23 +11,14 @@ namespace Ares {
 	public:
 		ImGuiLayer();
 		~ImGuiLayer();
-		void OnAttach();
-		void OnDetach();
-		void OnUpdate();
-		void OnEvent(Event& event);
+		virtual void OnAttach() override;
+		virtual void OnDetach() override;
+		virtual void OnImGuiDraw() override;
+
+		
+		void BeginImGui();
+		void EndImGui();
 	private:
-
-		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
-		bool OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& e);
-		bool OnMouseMovedEvent(MouseMovedEvent& e);
-		bool OnMouseScrolledEvent(MouseScrolledEvent& e);
-		
-		bool OnKeyPressedEvent(KeyPressedEvent& e);
-		bool OnKeyReleasedEvent(KeyReleasedEvent& e);
-		bool OnKeyTypedEvent(KeyTypedEvent& e);
-		
-		bool OnWindowResizeEvent(WindowResizeEvent& e);
-
 		float m_Time = 0.0f;
 	};
 }
