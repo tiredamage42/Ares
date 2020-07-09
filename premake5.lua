@@ -25,10 +25,11 @@ include "Ares/vendor/imgui"
 
 project "Ares"
 	location "Ares"
-	kind "SharedLib"
+	kind "StaticLib"
     language "C++"
+    cppdialect "C++17"
+    staticruntime "on"
     
-    staticruntime "off"
     
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -42,7 +43,11 @@ project "Ares"
         "%{prj.name}/src/**.cpp",
         "%{prj.name}/vendor/glm/glm/**.hpp",
         "%{prj.name}/vendor/glm/glm/**.inl"
-	}
+    }
+    defines
+    {
+        "_CRT_SECURE_NO_WARNINGS"
+    }
     
 	includedirs
 	{
@@ -62,8 +67,7 @@ project "Ares"
     }
     
 	filter "system:windows"
-        cppdialect "C++17"
-		systemversion "latest"
+        systemversion "latest"
         defines 
         {
             "ARES_PLATFORM_WINDOWS",
@@ -71,33 +75,29 @@ project "Ares"
             "GLFW_INCLUDE_NONE"
         }
 
-        postbuildcommands
-        {
-            ("{COPY} %{cfg.buildtarget.relpath} \"../bin/" .. outputdir .. "/Sandbox\"")
-        }
-
 	filter "configurations:Debug"
         defines "ARES_DEBUG"
 		runtime "Debug"
-		symbols "On"
+		symbols "on"
 
 	filter "configurations:Release"
         defines "ARES_RELEASE"
 		runtime "Release"
-		optimize "On"
+		optimize "on"
 
 	filter "configurations:Dist"
         defines "ARES_DIST"
 		runtime "Release"
-        optimize "On"
+        optimize "on"
         
 
 project "Sandbox"
     location "Sandbox"
     kind "ConsoleApp"
     language "C++"
+    cppdialect "C++17"
+    staticruntime "on"
     
-    staticruntime "off"
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
@@ -121,29 +121,23 @@ project "Sandbox"
     }
 
     filter "system:windows"
-        cppdialect "C++17"
         systemversion "latest"
         defines 
         {
             "ARES_PLATFORM_WINDOWS"
         }
-        -- postbuildcommands
-        -- {
-        --     ("IF NOT EXIST ../bin/" .. outputdir .. "/%{prj.name} mkdir ../bin/" .. outputdir .. "/%{prj.name}"),
-        --     ("{COPY} ../bin/" .. outputdir .. "/Ares/Ares.dll" .. " ../bin/" .. outputdir .. "/%{prj.name}")
-        -- }
         
     filter "configurations:Debug"
         defines "ARES_DEBUG"
         runtime "Debug"
-        symbols "On"
+        symbols "on"
 
     filter "configurations:Release"
         defines "ARES_RELEASE"
         runtime "Release"
-        optimize "On"
+        optimize "on"
 
     filter "configurations:Dist"
         defines "ARES_DIST"
         runtime "Release"
-        optimize "On"
+        optimize "on"
