@@ -25,11 +25,11 @@ namespace Ares {
 #define ARES_CORE_INFO(...)		::Ares::Log::GetCoreLogger()->info(__VA_ARGS__)
 #define ARES_CORE_WARN(...)		::Ares::Log::GetCoreLogger()->warn(__VA_ARGS__)
 #define ARES_CORE_ERROR(...)	::Ares::Log::GetCoreLogger()->error(__VA_ARGS__)
-#define ARES_CORE_FATAL(...)	::Ares::Log::GetCoreLogger()->critical(__VA_ARGS__)
+#define ARES_CORE_CRITICAL(...)	::Ares::Log::GetCoreLogger()->critical(__VA_ARGS__)
 
 // client loggers
-#define ARES_LOG(...)	::Ares::Log::GetClientLogger()->trace(__VA_ARGS__)
-#define ARES_INFO(...)	::Ares::Log::GetClientLogger()->info(__VA_ARGS__)
-#define ARES_WARN(...)	::Ares::Log::GetClientLogger()->warn(__VA_ARGS__)
-#define ARES_ERROR(...)	::Ares::Log::GetClientLogger()->error(__VA_ARGS__)
-#define ARES_FATAL(...)	::Ares::Log::GetClientLogger()->critical(__VA_ARGS__)
+#define ARES_LOG(...)		::Ares::Log::GetClientLogger()->trace(__VA_ARGS__)
+#define ARES_INFO(...)		::Ares::Log::GetClientLogger()->info(__VA_ARGS__)
+#define ARES_WARN(...)		::Ares::Log::GetClientLogger()->warn(__VA_ARGS__)
+#define ARES_ERROR(...)		::Ares::Log::GetClientLogger()->error(__VA_ARGS__)
+#define ARES_CRITICAL(...)	::Ares::Log::GetClientLogger()->critical(__VA_ARGS__)
