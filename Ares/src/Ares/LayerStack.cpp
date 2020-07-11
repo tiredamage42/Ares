@@ -6,6 +6,7 @@ namespace Ares {
 	LayerStack::LayerStack()
 	{
 	}
+
 	LayerStack::~LayerStack()
 	{
 		for (Layer* layer : m_Layers)
@@ -16,7 +17,6 @@ namespace Ares {
 	{
 		m_Layers.emplace(m_Layers.begin() + m_OverlayStartIndex, layer);
 		m_OverlayStartIndex++;
-
 		layer->OnAttach();
 	}
 
@@ -28,7 +28,7 @@ namespace Ares {
 
 	void LayerStack::PopLayer(Layer* layer)
 	{
-		auto it = std::find(m_Layers.begin(), m_Layers.end(), layer);
+		auto it = std::find(m_Layers.begin(), m_Layers.begin() + m_OverlayStartIndex, layer);
 		if (it != m_Layers.end())
 		{
 			layer->OnDetach();
@@ -39,7 +39,7 @@ namespace Ares {
 
 	void LayerStack::PopOverlay(Layer* layer)
 	{
-		auto it = std::find(m_Layers.begin(), m_Layers.end(), layer);
+		auto it = std::find(m_Layers.begin() + m_OverlayStartIndex, m_Layers.end(), layer);
 		if (it != m_Layers.end()) 
 		{
 			layer->OnDetach();
