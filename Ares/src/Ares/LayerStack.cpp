@@ -16,11 +16,14 @@ namespace Ares {
 	{
 		m_Layers.emplace(m_Layers.begin() + m_OverlayStartIndex, layer);
 		m_OverlayStartIndex++;
+
+		layer->OnAttach();
 	}
 
 	void LayerStack::PushOverlay(Layer* layer)
 	{
 		m_Layers.emplace_back(layer);
+		layer->OnAttach();
 	}
 
 	void LayerStack::PopLayer(Layer* layer)
@@ -30,13 +33,17 @@ namespace Ares {
 		{
 			m_Layers.erase(it);
 			m_OverlayStartIndex--;
+			layer->OnDetach();
 		}
 	}
 
 	void LayerStack::PopOverlay(Layer* layer)
 	{
 		auto it = std::find(m_Layers.begin(), m_Layers.end(), layer);
-		if (it != m_Layers.end())
+		if (it != m_Layers.end()) 
+		{
 			m_Layers.erase(it);
+			layer->OnDetach();
+		}
 	}
 }
