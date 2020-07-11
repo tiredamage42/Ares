@@ -132,10 +132,7 @@ void main()
         m_BlueShader.reset(new Shader(blueShaderVertexSrc, blueShaderFragmentSrc));
     }
 
-    Application::~Application() 
-    {
-    }
-
+    
     void Application::OnEvent(Event& e)
     {
         EventDispatcher dispatcher(e);

@@ -17,9 +17,6 @@ namespace Ares {
 	ImGuiLayer::ImGuiLayer() : Layer("ImGuiLayer")
 	{
 	}
-	ImGuiLayer::~ImGuiLayer()
-	{
-	}
 	void ImGuiLayer::OnAttach()
 	{
 		// setup imgui context
