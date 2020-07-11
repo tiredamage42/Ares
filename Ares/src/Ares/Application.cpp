@@ -2,7 +2,7 @@
 #include "Application.h"
 #include "Ares/Log.h"
 
-#include <glad/glad.h>
+#include "Ares/Renderer/Renderer.h"
 
 #include "Input.h"
 
@@ -46,8 +46,6 @@ namespace Ares {
         uint32_t indicies[3] = { 0,1,2 };
         std::shared_ptr<IndexBuffer> m_IndexBuffer;
         m_IndexBuffer.reset(IndexBuffer::Create(indicies, sizeof(indicies) / sizeof(uint32_t)));
-
-
         m_VertexArray->SetIndexBuffer(m_IndexBuffer);
 
         
@@ -177,17 +175,22 @@ void main()
     {
         while (m_Running)
         {
-            glClearColor(1, .5, 0, 1);
-            glClear(GL_COLOR_BUFFER_BIT);
+            RenderCommand::SetClearColor({ 1, .5, 0, 1 });
+            RenderCommand::Clear();
 
+            // submission
+            Renderer::BeginScene();
+
+            // submit an actual mesh, geometry, etc.
             m_BlueShader->Bind();
-            m_SquareVA->Bind();
-            glDrawElements(GL_TRIANGLES, m_SquareVA->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+            Renderer::Submit(m_SquareVA);
 
             m_Shader->Bind();
-            m_VertexArray->Bind();
-            glDrawElements(GL_TRIANGLES, m_VertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+            Renderer::Submit(m_VertexArray);
 
+
+            Renderer::EndScene();
+            
             m_Shader->Unbind();
 
             for (Layer* layer : m_LayerStack)
