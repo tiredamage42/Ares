@@ -12,6 +12,27 @@ namespace Ares {
 
     Application* Application::s_Instance = nullptr;
 
+
+    static GLenum ShaderDataType2OpenGLBaseType(ShaderDataType type) {
+        switch (type)
+        {
+        case Ares::ShaderDataType::Float:	return GL_FLOAT;
+        case Ares::ShaderDataType::Float2:	return GL_FLOAT;
+        case Ares::ShaderDataType::Float3:	return GL_FLOAT;
+        case Ares::ShaderDataType::Float4:	return GL_FLOAT;
+        case Ares::ShaderDataType::Mat3:	return GL_FLOAT;
+        case Ares::ShaderDataType::Mat4:	return GL_FLOAT;
+        case Ares::ShaderDataType::Int:		return GL_INT;
+        case Ares::ShaderDataType::Int2:	return GL_INT;
+        case Ares::ShaderDataType::Int3:	return GL_INT;
+        case Ares::ShaderDataType::Int4:	return GL_INT;
+        case Ares::ShaderDataType::Bool:	return GL_BOOL;
+        }
+        ARES_CORE_ASSERT(false, "Unknown ShaderDataType");
+        return 0;
+    }
+
+
     Application::Application() 
     {
         ARES_CORE_ASSERT(!s_Instance, "Application Instance Already Exists!");
@@ -29,47 +50,81 @@ namespace Ares {
         glBindVertexArray(m_VertexArray);
 
 
-        glGenBuffers(1, &m_VertexBuffer);
-        glBindBuffer(GL_ARRAY_BUFFER, m_VertexBuffer);
-
-        float vertices[3 * 3] = {
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f,
-            0.0f, 0.5f, 0.0f,
+        
+        float vertices[3 * 7] = {
+            -0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f, 1.0f,
+             0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f, 1.0f,
+             0.0f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f, 1.0f
         };
 
-        // upload to gpu
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        m_VertexBuffer.reset( VertexBuffer::Create(vertices, sizeof(vertices)) );
+        //m_VertexBuffer->Bind();
 
+        {
+
+            BufferLayout layout = {
+                { ShaderDataType::Float3, "a_Position" },
+                { ShaderDataType::Float4, "a_Color" }
+            };
+
+            m_VertexBuffer->SetLayout(layout);
+        }
+
+
+        
+        const auto& layout = m_VertexBuffer->GetLayout();
+
+        uint32_t index = 0;
+        for (const auto& element : layout)
+        {
+            glEnableVertexAttribArray(index);
+            glVertexAttribPointer(
+                index, 
+                element.GetComponentCount(), 
+                ShaderDataType2OpenGLBaseType(element.Type), 
+                element.Normalized ? GL_TRUE : GL_FALSE, 
+                layout.GetStride(), 
+                (const void*)element.Offset
+            );
+
+            index++;
+        }
+        
         // tell open gl layout
-        glEnableVertexAttribArray(0);
+        //glEnableVertexAttribArray(0);
         // index, 
         // num attributes, 
         // type, 
         // normalized, 
         // amount of bytes between vertices, 
         // offset
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+        //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 
+        uint32_t indicies[3] = { 0,1,2 };
 
         // index buffer specifies order to draw vertices
-        glGenBuffers(1, &m_IndexBuffer);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexBuffer);
+        m_IndexBuffer.reset(IndexBuffer::Create(indicies, sizeof(indicies) / sizeof(uint32_t)));
 
-        unsigned int indicies[3] = { 0,1,2 };
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
+        //glGenBuffers(1, &m_IndexBuffer);
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexBuffer);
+
+        ////unsigned int indicies[3] = { 0,1,2 };
+        //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
 
         std::string vertexSrc = R"(
 #version 330 core
 
 layout(location = 0) in vec3 a_Position;
+layout(location = 1) in vec4 a_Color;
 
 out vec3 v_Position;
+out vec4 v_Color;
             
 void main()
 {
     gl_Position = vec4(a_Position, 1);
     v_Position = a_Position;
+    v_Color = a_Color;
 }
 
 )";
@@ -77,11 +132,14 @@ void main()
 #version 330 core
 
 layout(location = 0) out vec4 color;
+
 in vec3 v_Position;
+in vec4 v_Color;
             
 void main()
 {
     color = vec4(v_Position * 0.5 + 0.5, 1.0);
+    color = v_Color;
 }
 
 )";
@@ -139,7 +197,7 @@ void main()
             m_Shader->Bind();
 
             glBindVertexArray(m_VertexArray);
-            glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
+            glDrawElements(GL_TRIANGLES, m_IndexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
 
             m_Shader->Unbind();
 
