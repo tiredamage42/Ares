@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-
+#include <glm/glm.hpp>
 namespace Ares {
 	class Shader
 	{
@@ -10,6 +10,8 @@ namespace Ares {
 		~Shader();
 		void Bind() const;
 		void Unbind() const;
+
+		void UploadUniformMat4(const std::string& name, glm::mat4 matrix);
 	private:
 
 		// unique id in opengl

@@ -11,6 +11,7 @@
 #include "Ares/Renderer/Shader.h"
 #include "Ares/Renderer/Buffer.h"
 #include "Ares/Renderer/VertexArray.h"
+#include "Ares/Renderer/Camera.h"
 
 namespace Ares {
 
@@ -42,12 +43,7 @@ namespace Ares {
         LayerStack m_LayerStack;
 
 
-        std::shared_ptr<Shader> m_Shader;
-        std::shared_ptr<VertexArray> m_VertexArray;
-
-        std::shared_ptr<Shader> m_BlueShader;
-        std::shared_ptr<VertexArray> m_SquareVA;
-
+        
         static Application* s_Instance;
     };
 
