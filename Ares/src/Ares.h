@@ -6,6 +6,8 @@
 #include "Ares/Layer.h"
 #include "Ares/Log.h"
 
+#include "Ares/Core/Time.h"
+
 #include "Ares/Input.h"
 #include "Ares/Keycodes.h"
 #include "Ares/MouseButtonCodes.h"

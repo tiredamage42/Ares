@@ -18,7 +18,5 @@ namespace Ares {
 		
 		void BeginImGui();
 		void EndImGui();
-	private:
-		float m_Time = 0.0f;
 	};
 }

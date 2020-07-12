@@ -6,7 +6,11 @@
 #include "Ares/Events/ApplicationEvent.h"
 #include "Window.h "
 #include "Ares/LayerStack.h"
+
+#include "Ares/Core/Time.h"
+
 #include "Ares/ImGui/ImGuiLayer.h"
+
 
 namespace Ares {
 
@@ -36,6 +40,8 @@ namespace Ares {
         bool m_Running = true;
 
         LayerStack m_LayerStack;
+
+        float m_LastFrameTime = 0.0f;
 
         static Application* s_Instance;
     };
