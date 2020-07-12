@@ -8,14 +8,9 @@
 #include "Ares/LayerStack.h"
 #include "Ares/ImGui/ImGuiLayer.h"
 
-#include "Ares/Renderer/Shader.h"
-#include "Ares/Renderer/Buffer.h"
-#include "Ares/Renderer/VertexArray.h"
-#include "Ares/Renderer/Camera.h"
-
 namespace Ares {
 
-    class ARES_API Application
+    class Application
     {
     public:
         Application();
@@ -42,8 +37,6 @@ namespace Ares {
 
         LayerStack m_LayerStack;
 
-
-        
         static Application* s_Instance;
     };
 
