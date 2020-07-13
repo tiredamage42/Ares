@@ -3,11 +3,10 @@
 #include "OpenGLRendererAPI.h"
 #include <glad/glad.h>
 namespace Ares {
-	OpenGLRendererAPI::OpenGLRendererAPI()
+	void OpenGLRendererAPI::Init()
 	{
-	}
-	OpenGLRendererAPI::~OpenGLRendererAPI()
-	{
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 	void OpenGLRendererAPI::SetClearColor(const glm::vec4& color)
 	{
