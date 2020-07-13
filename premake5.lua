@@ -19,6 +19,8 @@ IncludeDir["Glad"] = "Ares/vendor/Glad/include"
 IncludeDir["ImGui"] = "Ares/vendor/imgui"
 IncludeDir["glm"] = "Ares/vendor/glm"
 
+IncludeDir["stb_image"] = "Ares/vendor/stb_image"
+
 include "Ares/vendor/GLFW"
 include "Ares/vendor/Glad"
 include "Ares/vendor/imgui"
@@ -41,6 +43,10 @@ project "Ares"
 	{
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
+        
+        "%{prj.name}/vendor/stb_image/**.h",
+        "%{prj.name}/vendor/stb_image/**.cpp",
+        
         "%{prj.name}/vendor/glm/glm/**.hpp",
         "%{prj.name}/vendor/glm/glm/**.inl"
     }
@@ -56,7 +62,8 @@ project "Ares"
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.Glad}",
         "%{IncludeDir.ImGui}",
-        "%{IncludeDir.glm}"
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.stb_image}"
     }
     links
     {

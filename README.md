@@ -13,3 +13,4 @@ Third-party libraries used:
 - Glad
 - ImGui
 - glm
+- stb_image
