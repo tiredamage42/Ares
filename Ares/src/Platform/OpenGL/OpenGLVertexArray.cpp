@@ -58,19 +58,18 @@ namespace Ares {
 
 		const auto& layout = buffer->GetLayout();
 
-		uint32_t index = 0;
 		for (const auto& element : layout)
 		{
-			glEnableVertexAttribArray(index);
+			glEnableVertexAttribArray(m_VertexBufferIndex);
 			glVertexAttribPointer(
-				index,
+				m_VertexBufferIndex,
 				element.GetComponentCount(),
 				ShaderDataType2OpenGLBaseType(element.Type),
 				element.Normalized ? GL_TRUE : GL_FALSE,
 				layout.GetStride(),
 				(const void*)(intptr_t)element.Offset
 			);
-			index++;
+			m_VertexBufferIndex++;
 		}
 		m_VertexBuffers.push_back(buffer);
 	}
