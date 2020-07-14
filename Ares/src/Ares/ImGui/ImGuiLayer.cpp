@@ -88,12 +88,4 @@ namespace Ares {
 			glfwMakeContextCurrent(backup_current_context);
 		}
 	}
-
-	// draw demo window, or any imgui drawing
-	void ImGuiLayer::OnImGuiDraw()
-	{
-		//static bool show = true;
-		//ImGui::ShowDemoWindow(&show);
-	}
-
 }
