@@ -9,7 +9,7 @@
 
 namespace Ares {
 
-	static bool s_GLFWInitialized = false;
+	static uint8_t s_GLFWWindowCount = 0;
 
 	static void GLFWErrorCallback(int error, const char* description) {
 		ARES_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
@@ -37,17 +37,17 @@ namespace Ares {
 		ARES_CORE_LOG("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
 
 		// only initialize glfw once (might have several window instances)
-		if (!s_GLFWInitialized)
+		if (s_GLFWWindowCount == 0)
 		{
 			// TODO: glfwTerminate on system shutdown
 			int success = glfwInit();
 			ARES_CORE_ASSERT(success, "Could not initialize GLFW!");
 			glfwSetErrorCallback(GLFWErrorCallback);
-			s_GLFWInitialized = true;
 		}
 
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-		
+		s_GLFWWindowCount++;
+
 		m_Context = CreateScope<OpenGLContext>(m_Window);
 		m_Context->Init();
 		
@@ -139,6 +139,13 @@ namespace Ares {
 	void WindowsWindow::Shutdown()
 	{
 		glfwDestroyWindow(m_Window);
+
+		s_GLFWWindowCount -= 1;
+		if (s_GLFWWindowCount == 0)
+		{
+			ARES_CORE_INFO("Terminating GLFW");
+			glfwTerminate();
+		}
 	}
 
 	void WindowsWindow::OnUpdate()
