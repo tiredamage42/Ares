@@ -4,7 +4,7 @@
 #include "Platform/OpenGL/OpenGLShader.h"
 namespace Ares {
 
-	Renderer::SceneData* Renderer::m_SceneData = new Renderer::SceneData;
+	Renderer::SceneData* Renderer::s_SceneData = new Renderer::SceneData;
 	
 	void Renderer::Init()
 	{
@@ -33,7 +33,7 @@ namespace Ares {
 	{
 		shader->Bind();
 		
-		std::dynamic_pointer_cast<OpenGLShader>(shader)->UploadUniformMat4("u_ViewProjectionMatrix", m_SceneData->ViewProjectionMatrix);
+		std::dynamic_pointer_cast<OpenGLShader>(shader)->UploadUniformMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
 		std::dynamic_pointer_cast<OpenGLShader>(shader)->UploadUniformMat4("u_TransformMatrix", transform);
 
 		vertexArray->Bind();
