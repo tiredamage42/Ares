@@ -7,6 +7,10 @@ workspace "Ares"
 		"Debug",
 		"Release",
 		"Dist"
+    }
+    flags
+	{
+		"MultiProcessorCompile"
 	}
 	
 
