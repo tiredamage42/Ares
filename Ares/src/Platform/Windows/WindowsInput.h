@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Ares/Input.h"
+#include "Ares/Core/Input.h"
 
 
 namespace Ares {

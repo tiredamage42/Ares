@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Ares/Core.h"
+#include "Ares/Core/Core.h"
 
 namespace Ares {
 	/*

@@ -1,5 +1,5 @@
 #pragma once
-#include "Ares/Core.h"
+#include "Ares/Core/Core.h"
 #include "Ares/Events/Event.h"
 
 namespace Ares {

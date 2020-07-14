@@ -1,6 +1,6 @@
 #include "AresPCH.h"
 #include "WindowsInput.h"
-#include "Ares/Application.h"
+#include "Ares/Core/Application.h"
 #include <GLFW/glfw3.h>
 
 namespace Ares {

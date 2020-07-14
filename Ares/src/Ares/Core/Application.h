@@ -2,10 +2,10 @@
 
 #include "AresPCH.h"
 #include "Core.h"
-#include "Events/Event.h"
+#include "Ares/Events/Event.h"
 #include "Ares/Events/ApplicationEvent.h"
 #include "Window.h "
-#include "Ares/LayerStack.h"
+#include "Ares/Core/LayerStack.h"
 
 #include "Ares/Core/Time.h"
 

@@ -1,7 +1,7 @@
 #include "AresPCH.h"
 #include "CameraController.h"
-#include "Ares/Input.h"
-#include "Ares/Keycodes.h"
+#include "Ares/Core/Input.h"
+#include "Ares/Core/Keycodes.h"
 
 namespace Ares {
 	

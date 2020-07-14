@@ -2,16 +2,15 @@
 
 // for use by Ares applications
 
-#include "Ares/Application.h"
-#include "Ares/Layer.h"
-#include "Ares/Log.h"
+#include "Ares/Core/Application.h"
+#include "Ares/Core/Layer.h"
+#include "Ares/Core/Log.h"
 
-#include "Ares/Core/Time.h"
+#include "Ares/Core/Input.h"
+#include "Ares/Core/Keycodes.h"
+#include "Ares/Core/MouseButtonCodes.h"
 
-#include "Ares/Input.h"
-#include "Ares/Keycodes.h"
-#include "Ares/MouseButtonCodes.h"
-#include "Ares/CameraController.h"
+#include "Ares/Renderer/CameraController.h"
 
 #include "Ares/ImGui/ImGuiLayer.h"
 
@@ -29,5 +28,5 @@
 // =========================
 
 // entry point =============
-#include "Ares/EntryPoint.h"
+#include "Ares/Core/EntryPoint.h"
 // =========================

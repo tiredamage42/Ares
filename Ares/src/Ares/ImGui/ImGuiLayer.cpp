@@ -6,7 +6,7 @@
 #include "examples/imgui_impl_glfw.h"
 #include "examples/imgui_impl_opengl3.h"
 
-#include "Ares/Application.h"
+#include "Ares/Core/Application.h"
 
 // Temporary
 #include <GLFW/glfw3.h>

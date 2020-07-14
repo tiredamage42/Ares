@@ -1,6 +1,6 @@
 #include "AresPCH.h"
 #include "Application.h"
-#include "Ares/Log.h"
+#include "Ares/Core/Log.h"
 #include "Ares/Renderer/Renderer.h"
 #include "Input.h"
 #include <GLFW/glfw3.h>
