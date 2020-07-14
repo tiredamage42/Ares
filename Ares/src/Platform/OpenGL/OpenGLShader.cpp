@@ -20,7 +20,30 @@ namespace Ares {
 		return 0;
 	}
 
-	OpenGLShader::OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc)
+	OpenGLShader::OpenGLShader(const std::string& filePath)
+	{
+		std::string source = ReadFile(filePath);
+		auto shaderSources = PreProcess(source);
+		Compile(shaderSources);
+
+		// extract name from filepath
+
+		// assets/shaders/shader.glsl
+
+		// find last of forward slash or back slash
+		auto lastSlashIndex = filePath.find_last_of("/\\");
+		lastSlashIndex = lastSlashIndex == std::string::npos ? 0 : lastSlashIndex + 1;
+
+		auto lastDotIndex = filePath.rfind('.');
+		auto count = lastDotIndex == std::string::npos ? 
+			filePath.size() - lastSlashIndex : 
+			lastDotIndex - lastSlashIndex;
+
+		m_Name = filePath.substr(lastSlashIndex, count);
+
+	}
+	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
+		: m_Name(name)
 	{
 		std::unordered_map<GLenum, std::string> sources;
 		sources[GL_VERTEX_SHADER] = vertexSrc;
@@ -28,13 +51,6 @@ namespace Ares {
 		Compile(sources);
 	}
 		
-	OpenGLShader::OpenGLShader(const std::string& filePath)
-	{
-		std::string source = ReadFile(filePath);
-		auto shaderSources = PreProcess(source);
-		Compile(shaderSources);
-	}
-
 
 	OpenGLShader::~OpenGLShader()
 	{
@@ -86,10 +102,11 @@ namespace Ares {
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
 	}
+
 	std::string OpenGLShader::ReadFile(const std::string& filePath)
 	{
 		std::string result;
-		std::ifstream in(filePath, std::ios::in, std::ios::binary);
+		std::ifstream in(filePath, std::ios::in | std::ios::binary);
 		if (in)
 		{
 			// go to end of the file
