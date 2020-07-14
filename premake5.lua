@@ -77,7 +77,6 @@ project "Ares"
         systemversion "latest"
         defines 
         {
-            "ARES_PLATFORM_WINDOWS",
             "ARES_BUILD_DLL",
             "GLFW_INCLUDE_NONE"
         }
@@ -131,7 +130,6 @@ project "Sandbox"
         systemversion "latest"
         defines 
         {
-            "ARES_PLATFORM_WINDOWS"
         }
         
     filter "configurations:Debug"
