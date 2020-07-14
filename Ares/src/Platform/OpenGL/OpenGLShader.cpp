@@ -244,8 +244,8 @@ namespace Ares {
 
 			// We don't need the program anymore.
 			glDeleteProgram(program);
-			// Don't leak shaders either.
 
+			// Don't leak shaders either.
 			for (auto id : glShaderIDs)
 				glDeleteShader(id);
 
@@ -259,7 +259,11 @@ namespace Ares {
 
 		// Always detach shaders after a successful link.
 		for (auto id : glShaderIDs)
+		{
+
 			glDetachShader(program, id);
+			glDeleteShader(id);
+		}
 
 		m_RendererID = program;
 
