@@ -1,12 +1,16 @@
 [submodule "Ares/vendor/spdlog"]
 	path = Ares/vendor/spdlog
 	url = https://github.com/gabime/spdlog
+	branch = v1.x
 [submodule "Ares/vendor/GLFW"]
 	path = Ares/vendor/GLFW
 	url = https://github.com/TheCherno/GLFW
+	branch = master
 [submodule "Ares/vendor/imgui"]
 	path = Ares/vendor/imgui
 	url = https://github.com/TheCherno/imgui
+	branch = docking
 [submodule "Ares\\vendor\\glm"]
 	path = Ares\\vendor\\glm
 	url = https://github.com/g-truc/glm
+	branch = master
