@@ -155,6 +155,7 @@ namespace Ares {
 			
 			// get next line
 			size_t nextLinePos = source.find_first_not_of("\r\n", eol);
+			ARES_CORE_ASSERT(nextLinePos != std::string::npos, "Syntax error");
 
 			// find the next #type line
 			pos = source.find(typeToken, nextLinePos);
