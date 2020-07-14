@@ -28,5 +28,5 @@
 // =========================
 
 // entry point =============
-#include "Ares/Core/EntryPoint.h"
+//#include "Ares/Core/EntryPoint.h"
 // =========================
