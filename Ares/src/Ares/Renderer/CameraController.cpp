@@ -15,13 +15,26 @@ namespace Ares {
 	void OrthographicCameraController::OnUpdate(float deltaTime)
 	{
 		if (Input::IsKeyPressed(ARES_KEY_A))
-			m_CameraPosition.x -= m_PositionSpeed * deltaTime;
+		{
+			m_CameraPosition.x -= cos(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
+			m_CameraPosition.y -= sin(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
+		}
 		if (Input::IsKeyPressed(ARES_KEY_D))
-			m_CameraPosition.x += m_PositionSpeed * deltaTime;
+		{
+			m_CameraPosition.x += cos(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
+			m_CameraPosition.y += sin(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
+		}
+
 		if (Input::IsKeyPressed(ARES_KEY_W))
-			m_CameraPosition.y += m_PositionSpeed * deltaTime;
+		{
+			m_CameraPosition.x += -sin(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
+			m_CameraPosition.y += cos(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
+		}
 		if (Input::IsKeyPressed(ARES_KEY_S))
-			m_CameraPosition.y -= m_PositionSpeed * deltaTime;
+		{
+			m_CameraPosition.x -= -sin(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
+			m_CameraPosition.y -= cos(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
+		}
 		
 		if (m_Rotation)
 		{
@@ -29,6 +42,11 @@ namespace Ares {
 				m_CameraRotation += m_RotationSpeed * deltaTime;
 			if (Input::IsKeyPressed(ARES_KEY_E))
 				m_CameraRotation -= m_RotationSpeed * deltaTime;
+			
+			if (m_CameraRotation > 180.0f)
+				m_CameraRotation -= 360.0f;
+			else if (m_CameraRotation <= -180.0f)
+				m_CameraRotation += 360.0f;
 			
 			m_Camera.SetRotation(m_CameraRotation);
 		}
