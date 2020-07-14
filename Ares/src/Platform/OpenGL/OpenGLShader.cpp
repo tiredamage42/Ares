@@ -158,9 +158,10 @@ namespace Ares {
 		// Get a program object.
 		GLuint program = glCreateProgram();
 
-		std::vector<GLenum> glShaderIDs(shaderSources.size());
-
-
+		ARES_CORE_ASSERT(shaderSources.size() <= 2, "Max 2 Shaders In Source");
+		std::array<GLenum, 2> glShaderIDs;
+		
+		int i = 0;
 		// Read our shaders into the appropriate buffers
 		for (auto& kv : shaderSources)
 		{
@@ -201,7 +202,7 @@ namespace Ares {
 			// Attach our shaders to our program
 			glAttachShader(program, shader);
 
-			glShaderIDs.push_back(shader);
+			glShaderIDs[i++] = shader;
 		}
 
 
