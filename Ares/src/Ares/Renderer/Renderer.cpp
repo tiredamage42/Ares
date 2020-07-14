@@ -2,7 +2,7 @@
 #include "Renderer.h"
 
 #include "Renderer2D.h"
-#include "Platform/OpenGL/OpenGLShader.h"
+//#include "Platform/OpenGL/OpenGLShader.h"
 namespace Ares {
 
 	Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
@@ -35,8 +35,8 @@ namespace Ares {
 	{
 		shader->Bind();
 		
-		std::dynamic_pointer_cast<OpenGLShader>(shader)->UploadUniformMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
-		std::dynamic_pointer_cast<OpenGLShader>(shader)->UploadUniformMat4("u_TransformMatrix", transform);
+		shader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
+		shader->SetMat4("u_TransformMatrix", transform);
 
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);
