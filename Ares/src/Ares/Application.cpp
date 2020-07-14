@@ -31,6 +31,7 @@ namespace Ares {
         // if dispatcher sees window close event, dispatch it to
         // OnWindowClose
         dispatcher.Dispatch<WindowCloseEvent>(ARES_BIND_EVENT_FN(Application::OnWindowClose));
+        dispatcher.Dispatch<WindowResizeEvent>(ARES_BIND_EVENT_FN(Application::OnWindowResize));
 
         for (auto it = m_LayerStack.end(); it != m_LayerStack.begin();)
         {
@@ -56,6 +57,20 @@ namespace Ares {
         return true;
     }
 
+    bool Application::OnWindowResize(WindowResizeEvent& e)
+    {
+        if (e.GetWidth() == 0 || e.GetHeight() == 0)
+        {
+            m_Minimized = true;
+            return false;
+        }
+        m_Minimized = false;
+
+        Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+
+        return false;
+    }
+
     void Application::Run() 
     {
         while (m_Running)
@@ -66,10 +81,11 @@ namespace Ares {
 
             m_LastFrameTime = time;
 
-
-
-            for (Layer* layer : m_LayerStack)
-                layer->OnUpdate(deltaTime);
+            if (!m_Minimized)
+            {
+                for (Layer* layer : m_LayerStack)
+                    layer->OnUpdate(deltaTime);
+            }
 
             // draw custom imgui for debugging, etc...
             m_ImGuiLayer->BeginImGui();        
