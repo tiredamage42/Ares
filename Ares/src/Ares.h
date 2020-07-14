@@ -17,6 +17,8 @@
 // renderer ===============
 
 #include "Ares/Renderer/Renderer.h"
+#include "Ares/Renderer/Renderer2D.h"
+
 #include "Ares/Renderer/RenderCommand.h"
 
 #include "Ares/Renderer/Buffer.h"
