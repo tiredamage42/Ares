@@ -1,13 +1,13 @@
 
 #include "AresPCH.h"
-#include "Buffer.h"
-#include "Renderer.h"
+#include "Ares/Renderer/Buffer.h"
+#include "Ares/Renderer/Renderer.h"
 
 #include "Platform/OpenGL/OpenGLBuffer.h"
 
 namespace Ares 
 {
-	VertexBuffer* VertexBuffer::Create(float* vertices, uint32_t size)
+	Ref<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -17,14 +17,14 @@ namespace Ares
 			return nullptr;
 
 		case RendererAPI::API::OpenGL:
-			return new OpenGLVertexBuffer(vertices, size);
+			return CreateRef<OpenGLVertexBuffer>(vertices, size);
 
 		}
 
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");
 		return nullptr;
 	}
-	IndexBuffer* IndexBuffer::Create(uint32_t* indicies, uint32_t size)
+	Ref<IndexBuffer> IndexBuffer::Create(uint32_t* indicies, uint32_t size)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -34,7 +34,7 @@ namespace Ares
 			return nullptr;
 
 		case RendererAPI::API::OpenGL:
-			return new OpenGLIndexBuffer(indicies, size);
+			return CreateRef<OpenGLIndexBuffer>(indicies, size);
 		}
 
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");

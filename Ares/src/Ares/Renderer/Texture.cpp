@@ -1,9 +1,9 @@
 
 #include "AresPCH.h"
 
-#include "Texture.h"
+#include "Ares/Renderer/Texture.h"
 
-#include "Renderer.h"
+#include "Ares/Renderer/Renderer.h"
 
 #include "Platform/OpenGL/OpenGLTexture.h"
 

@@ -1,6 +1,7 @@
 #pragma once
 
 // for use by Ares applications
+#include "Ares/Core/Core.h"
 
 #include "Ares/Core/Application.h"
 #include "Ares/Core/Layer.h"

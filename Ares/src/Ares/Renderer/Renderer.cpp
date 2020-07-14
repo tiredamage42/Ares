@@ -1,8 +1,6 @@
 #include "AresPCH.h"
-#include "Renderer.h"
-
-#include "Renderer2D.h"
-//#include "Platform/OpenGL/OpenGLShader.h"
+#include "Ares/Renderer/Renderer.h"
+#include "Ares/Renderer/Renderer2D.h"
 namespace Ares {
 
 	Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
@@ -11,6 +9,11 @@ namespace Ares {
 	{
 		RenderCommand::Init();
 		Renderer2D::Init();
+	}
+	
+	void Renderer::Shutdown()
+	{
+		Renderer2D::Shutdown();
 	}
 
 	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
@@ -27,11 +30,7 @@ namespace Ares {
 	{
 	}
 
-	void Renderer::Submit(
-		const Ref<Shader>& shader, 
-		const Ref<VertexArray>& vertexArray,
-		const glm::mat4& transform
-	)
+	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
 		shader->Bind();
 		

@@ -1,11 +1,11 @@
 #include "AresPCH.h"
-#include "WindowsWindow.h"
+#include "Platform/Windows/WindowsWindow.h"
 
 #include "Ares/Events/ApplicationEvent.h"
 #include "Ares/Events/MouseEvent.h"
 #include "Ares/Events/KeyEvent.h"
 
-#include "Platform/OpenGL/OpenGLContext.h"
+//#include "Platform/OpenGL/OpenGLContext.h"
 
 namespace Ares {
 
@@ -15,9 +15,9 @@ namespace Ares {
 		ARES_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
 	}
 
-	Window* Window::Create(const WindowProps& props)
+	Scope<Window> Window::Create(const WindowProps& props)
 	{
-		return new WindowsWindow(props);
+		return CreateScope<WindowsWindow>(props);
 	}
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
@@ -39,7 +39,6 @@ namespace Ares {
 		// only initialize glfw once (might have several window instances)
 		if (s_GLFWWindowCount == 0)
 		{
-			// TODO: glfwTerminate on system shutdown
 			int success = glfwInit();
 			ARES_CORE_ASSERT(success, "Could not initialize GLFW!");
 			glfwSetErrorCallback(GLFWErrorCallback);
@@ -48,7 +47,7 @@ namespace Ares {
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 		s_GLFWWindowCount++;
 
-		m_Context = CreateScope<OpenGLContext>(m_Window);
+		m_Context = GraphicsContext::Create(m_Window);
 		m_Context->Init();
 		
 		glfwSetWindowUserPointer(m_Window, &m_Data);
@@ -140,7 +139,7 @@ namespace Ares {
 	{
 		glfwDestroyWindow(m_Window);
 
-		s_GLFWWindowCount -= 1;
+		s_GLFWWindowCount--;
 		if (s_GLFWWindowCount == 0)
 		{
 			ARES_CORE_INFO("Terminating GLFW");

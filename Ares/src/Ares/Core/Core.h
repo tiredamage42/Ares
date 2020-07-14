@@ -49,20 +49,6 @@
 #endif // End of platform detection
 
 
-#ifdef ARES_PLATFORM_WINDOWS
-    #if ARES_DYNAMIC_LINK
-        #ifdef ARES_BUILD_DLL
-            #define ARES_API __declspec(dllexport)
-        #else 
-            #define ARES_API __declspec(dllimport)
-        #endif
-    #else
-        #define ARES_API
-    #endif
-#else 
-    #error Ares only supports Windows for now...
-#endif
-
 #ifdef ARES_DEBUG
     #define ARES_ENABLE_ASSERTS
 #endif

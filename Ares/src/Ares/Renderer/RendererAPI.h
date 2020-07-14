@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "VertexArray.h"
+#include "Ares/Renderer/VertexArray.h"
 
 namespace Ares {
 	class RendererAPI
@@ -25,6 +25,8 @@ namespace Ares {
 		
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) = 0;
 		inline static API GetAPI() { return s_API; }
+
+		static Scope<RendererAPI> Create();
 
 	private:
 

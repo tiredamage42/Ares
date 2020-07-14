@@ -1,11 +1,8 @@
 #include "AresPCH.h"
-#include "LayerStack.h"
+#include "Ares/Core/LayerStack.h"
 
 namespace Ares {
 
-	LayerStack::LayerStack()
-	{
-	}
 
 	LayerStack::~LayerStack()
 	{

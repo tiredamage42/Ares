@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Camera.h"
-#include "Texture.h"
+#include "Ares/Renderer/Camera.h"
+#include "Ares/Renderer/Texture.h"
 
 namespace Ares {
 	class Renderer2D

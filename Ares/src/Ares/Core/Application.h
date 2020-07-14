@@ -1,12 +1,11 @@
 #pragma once
 
 #include "AresPCH.h"
-#include "Core.h"
+#include "Ares/Core/Core.h"
 #include "Ares/Events/Event.h"
 #include "Ares/Events/ApplicationEvent.h"
-#include "Window.h "
+#include "Ares/Core/Window.h "
 #include "Ares/Core/LayerStack.h"
-
 #include "Ares/Core/Time.h"
 
 #include "Ares/ImGui/ImGuiLayer.h"
@@ -18,7 +17,7 @@ namespace Ares {
     {
     public:
         Application();
-        virtual ~Application() = default;
+        virtual ~Application();
         void Run();
 
         void OnEvent(Event& e);

@@ -1,7 +1,7 @@
 
 #include "AresPCH.h"
-#include "VertexArray.h"
-#include "Renderer.h"
+#include "Ares/Renderer/VertexArray.h"
+#include "Ares/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLVertexArray.h"
 namespace Ares {
 
@@ -15,7 +15,7 @@ namespace Ares {
 			return nullptr;
 
 		case RendererAPI::API::OpenGL:
-			return std::make_shared<OpenGLVertexArray>();
+			return CreateRef<OpenGLVertexArray>();
 		}
 
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");

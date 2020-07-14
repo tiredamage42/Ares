@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Ares/Core/Core.h"
+
 #ifdef ARES_PLATFORM_WINDOWS
 
 // external function that will be defined in the client

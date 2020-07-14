@@ -1,7 +1,7 @@
 
 #include "AresPCH.h"
-#include "Shader.h"
-#include "Renderer.h"
+#include "Ares/Renderer/Shader.h"
+#include "Ares/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLShader.h"
 namespace Ares {
 
@@ -15,7 +15,7 @@ namespace Ares {
 			return nullptr;
 
 		case RendererAPI::API::OpenGL:
-			return std::make_shared<OpenGLShader>(name, vertexSrc, fragmentSrc);
+			return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
 		}
 
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");
@@ -31,7 +31,7 @@ namespace Ares {
 			return nullptr;
 
 		case RendererAPI::API::OpenGL:
-			return std::make_shared<OpenGLShader>(filePath);
+			return CreateRef<OpenGLShader>(filePath);
 		}
 
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");

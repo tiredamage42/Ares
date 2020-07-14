@@ -1,14 +1,14 @@
 #include "AresPCH.h"
-#include "Log.h"
+#include "Ares/Core/Log.h"
 
 // suppress warnings
 #pragma warning(push, 0)
-#include "spdlog/sinks/stdout_color_sinks.h"
+#include <spdlog/sinks/stdout_color_sinks.h>
 #pragma warning(pop)
 
 namespace Ares {
-	std::shared_ptr<spdlog::logger> Log::s_CoreLogger;
-	std::shared_ptr<spdlog::logger> Log::s_ClientLogger;
+	Ref<spdlog::logger> Log::s_CoreLogger;
+	Ref<spdlog::logger> Log::s_ClientLogger;
 
 	void Log::Init() {
 		spdlog::set_pattern("%^[%l][%T] %n: %v %g%#%!%$");

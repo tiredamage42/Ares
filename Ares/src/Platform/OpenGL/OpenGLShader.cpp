@@ -1,7 +1,7 @@
 
 
 #include "AresPCH.h"
-#include "OpenGLShader.h"
+#include "Platform/OpenGL/OpenGLShader.h"
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 #include <glad/glad.h>

@@ -3,7 +3,7 @@
 #include "Ares/Core/Core.h"
 
 namespace Ares {
-	class ARES_API Input
+	class Input
 	{
 	public:
 		Input(const Input&) = delete;

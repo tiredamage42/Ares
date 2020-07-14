@@ -6,7 +6,7 @@
 //#include "Ares/Events/MouseEvent.h"
 
 namespace Ares {
-	class ARES_API ImGuiLayer : public Layer
+	class ImGuiLayer : public Layer
 	{
 	public:
 		ImGuiLayer();

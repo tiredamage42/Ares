@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Event.h"
+#include "Ares/Events/Event.h"
 
 namespace Ares {
 
-	class ARES_API KeyEvent : public Event 
+	class KeyEvent : public Event 
 	{
 	public:
 		inline int GetKeyCode() const { return m_KeyCode; }
@@ -17,7 +17,7 @@ namespace Ares {
 	};
 
 
-	class ARES_API KeyPressedEvent : public KeyEvent 
+	class KeyPressedEvent : public KeyEvent 
 	{
 	public:
 		KeyPressedEvent(int keycode, int repeatCount) : KeyEvent(keycode), m_RepeatCount(repeatCount) { }
@@ -38,7 +38,7 @@ namespace Ares {
 
 	};
 
-	class ARES_API KeyReleasedEvent : public KeyEvent 
+	class KeyReleasedEvent : public KeyEvent 
 	{
 	public:
 		KeyReleasedEvent(int keycode) : KeyEvent(keycode) { }
@@ -55,7 +55,7 @@ namespace Ares {
 
 
 
-	class ARES_API KeyTypedEvent : public KeyEvent
+	class KeyTypedEvent : public KeyEvent
 	{
 	public:
 		KeyTypedEvent(int keycode) 

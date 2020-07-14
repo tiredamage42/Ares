@@ -1,6 +1,6 @@
 
 #include "AresPCH.h"
-#include "Camera.h"
+#include "Ares/Renderer/Camera.h"
 #include <glm/gtc/matrix_transform.hpp>
 namespace Ares {
 	OrthographicCamera::OrthographicCamera(float left, float right, float bottom, float top)

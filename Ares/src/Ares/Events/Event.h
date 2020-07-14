@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AresPCH.h"
 #include "Ares/Core/Core.h"
 
 namespace Ares {
@@ -38,7 +39,7 @@ namespace Ares {
 #define EVENT_CLASS_CATEGORY(category) virtual int GetCategoryFlags() const override { return category; }
 
 
-	class ARES_API Event {
+	class Event {
 		
 	public:
 		bool Handled = false;
