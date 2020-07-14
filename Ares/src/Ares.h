@@ -11,6 +11,7 @@
 #include "Ares/Input.h"
 #include "Ares/Keycodes.h"
 #include "Ares/MouseButtonCodes.h"
+#include "Ares/CameraController.h"
 
 #include "Ares/ImGui/ImGuiLayer.h"
 
