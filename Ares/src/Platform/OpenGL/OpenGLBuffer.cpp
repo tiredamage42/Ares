@@ -8,6 +8,18 @@ namespace Ares {
 	// VERTEX BUFFERS =======================================
 	// =====================================================
 
+	// dynamic buffer
+	OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size)
+	{
+		ARES_PROFILE_FUNCTION();
+
+		glCreateBuffers(1, &m_RendererID);
+		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+
+		// upload to gpu
+		glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+	}
+
 	OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)
 	{
 		ARES_PROFILE_FUNCTION();
@@ -35,6 +47,12 @@ namespace Ares {
 		ARES_PROFILE_FUNCTION();
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	void OpenGLVertexBuffer::SetData(const void* data, uint32_t size) const
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
 	}
 	
 	// =====================================================
