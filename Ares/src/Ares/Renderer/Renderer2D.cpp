@@ -253,6 +253,9 @@ namespace Ares
 
 			if (textureIndex == 0.0f)
 			{
+				if (s_Data.TextureSlotIndex >= s_Data.MaxTextureSlots)
+					FlushAndReset();
+
 				textureIndex = (float)s_Data.TextureSlotIndex;
 				s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
 
