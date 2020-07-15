@@ -144,17 +144,22 @@ namespace Ares {
 		std::ifstream in(filePath, std::ios::in | std::ios::binary);
 		if (in)
 		{
-			// go to end of the file
-			in.seekg(0, std::ios::end);
+			size_t size = in.tellg();
+			if (size != -1)
+			{
+				// resize reult to size of file
+				result.resize(size);
 
-			// resize to fit to the end
-			result.resize(in.tellg());
+				// go to the beginning of the files
+				in.seekg(0, std::ios::beg);
 
-			// go to beginning of the file
-			in.seekg(0, std::ios::beg);
-
-			in.read(&result[0], result.size());
-			in.close();
+				in.read(&result[0], size);
+				in.close();
+			}
+			else
+			{
+				ARES_CORE_ERROR("Could not read from file '{0}'", filePath);
+			}
 		}
 		else
 		{
