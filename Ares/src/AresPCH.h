@@ -15,6 +15,8 @@
 
 #include "Ares/Core/Log.h"
 
+#include "Ares/Debug/Profiling.h"
+
 
 #ifdef ARES_PLATFORM_WINDOWS
 	#include <Windows.h>

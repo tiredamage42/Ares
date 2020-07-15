@@ -144,6 +144,8 @@ namespace Ares {
 		std::ifstream in(filePath, std::ios::in | std::ios::binary);
 		if (in)
 		{
+			// go to the end
+			in.seekg(0, std::ios::end);
 			size_t size = in.tellg();
 			if (size != -1)
 			{

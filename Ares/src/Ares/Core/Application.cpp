@@ -8,9 +8,9 @@ namespace Ares {
 
     Application* Application::s_Instance = nullptr;
 
-    Application::Application() 
-        
+    Application::Application()    
     {
+
         ARES_CORE_ASSERT(!s_Instance, "Application Instance Already Exists!");
         s_Instance = this;
 
@@ -102,6 +102,9 @@ namespace Ares {
             m_ImGuiLayer->EndImGui();
 
             m_Window->OnUpdate();
+
+
+            // TODO:  profiler frame++
         }
     }
 }
