@@ -42,6 +42,8 @@ namespace Ares
 		std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
 		uint32_t TextureSlotIndex = 1; // 0 = white texture
 
+		glm::vec4 QuadVertices[4];
+
 	};
 
 	static Renderer2DData s_Data;
@@ -124,6 +126,13 @@ namespace Ares
 
 
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
+
+		s_Data.QuadVertices[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
+		s_Data.QuadVertices[1] = {  0.5f, -0.5f, 0.0f, 1.0f };
+		s_Data.QuadVertices[2] = {  0.5f,  0.5f, 0.0f, 1.0f };
+		s_Data.QuadVertices[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
+
+
 	}
 
 	void Renderer2D::Shutdown()
@@ -207,33 +216,54 @@ namespace Ares
 			}
 		}
 
-		s_Data.QuadVertexBufferPtr->Position = position;
+
+
+		glm::mat4 transform = glm::mat4(1.0f);
+
+		transform = glm::translate(transform, position);
+
+		if (rotation != 0.0f)
+			transform = glm::rotate(transform, glm::radians(rotation), { 0.0f, 0.0f, 1.0f });
+
+		transform = glm::scale(transform, { size.x, size.y, 1.0f });
+
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertices[i];
+			s_Data.QuadVertexBufferPtr->Color = color;
+			s_Data.QuadVertexBufferPtr->TexCoord = { (float)(i == 1 || i == 2), (float)(i > 1) };
+			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
+			s_Data.QuadVertexBufferPtr->Tiling = tiling;
+			s_Data.QuadVertexBufferPtr++;
+		}
+
+		/*s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertices[0];
 		s_Data.QuadVertexBufferPtr->Color = color;
 		s_Data.QuadVertexBufferPtr->TexCoord = { 0.0f, 0.0f };
 		s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 		s_Data.QuadVertexBufferPtr->Tiling = tiling;
 		s_Data.QuadVertexBufferPtr++;
 
-		s_Data.QuadVertexBufferPtr->Position = { position.x + size.x, position.y, position.z };
+		s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertices[1];
 		s_Data.QuadVertexBufferPtr->Color = color;
 		s_Data.QuadVertexBufferPtr->TexCoord = { 1.0f, 0.0f };
 		s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 		s_Data.QuadVertexBufferPtr->Tiling = tiling;
 		s_Data.QuadVertexBufferPtr++;
 
-		s_Data.QuadVertexBufferPtr->Position = { position.x + size.x, position.y + size.y, position.z };
+		s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertices[2];
 		s_Data.QuadVertexBufferPtr->Color = color;
 		s_Data.QuadVertexBufferPtr->TexCoord = { 1.0f, 1.0f };
 		s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 		s_Data.QuadVertexBufferPtr->Tiling = tiling;
 		s_Data.QuadVertexBufferPtr++;
 
-		s_Data.QuadVertexBufferPtr->Position = { position.x, position.y + size.y, position.z };
+		s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertices[3];
 		s_Data.QuadVertexBufferPtr->Color = color;
 		s_Data.QuadVertexBufferPtr->TexCoord = { 0.0f, 1.0f };
 		s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 		s_Data.QuadVertexBufferPtr->Tiling = tiling;
-		s_Data.QuadVertexBufferPtr++;
+		s_Data.QuadVertexBufferPtr++;*/
 
 
 		s_Data.QuadIndexCount += 6;
