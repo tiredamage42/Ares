@@ -10,6 +10,7 @@
 
 #include "Ares/ImGui/ImGuiLayer.h"
 
+int main(int argc, char** argv);
 
 namespace Ares {
 
@@ -18,8 +19,7 @@ namespace Ares {
     public:
         Application();
         virtual ~Application();
-        void Run();
-
+        
         void OnEvent(Event& e);
 
         void PushLayer(Layer* layer);
@@ -30,6 +30,8 @@ namespace Ares {
         inline static Application& Get() { return *s_Instance; }
     
     private:
+        void Run();
+
         bool OnWindowClose(WindowCloseEvent& e);
         bool OnWindowResize(WindowResizeEvent& e);
 
@@ -45,6 +47,8 @@ namespace Ares {
         float m_LastFrameTime = 0.0f;
 
         static Application* s_Instance;
+
+        friend int ::main(int argc, char** argv);
     };
 
     // defined in client
