@@ -5,6 +5,8 @@
 #include "Ares/Events/MouseEvent.h"
 #include "Ares/Events/KeyEvent.h"
 
+#include "Ares/Renderer/Renderer.h"
+
 //#include "Platform/OpenGL/OpenGLContext.h"
 
 namespace Ares {
@@ -50,8 +52,18 @@ namespace Ares {
 			glfwSetErrorCallback(GLFWErrorCallback);
 		}
 
-		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-		s_GLFWWindowCount++;
+		{
+			ARES_PROFILE_SCOPE("glfwCreateWindow");
+
+#if defined(ARES_DEBUG)
+			if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
+				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+#endif
+
+			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+			s_GLFWWindowCount++;
+		}
+
 
 		m_Context = GraphicsContext::Create(m_Window);
 		m_Context->Init();
