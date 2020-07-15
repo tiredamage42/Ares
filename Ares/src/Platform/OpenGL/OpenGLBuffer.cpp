@@ -64,6 +64,9 @@ namespace Ares {
 	{
 		ARES_PROFILE_FUNCTION();
 
+		// GL_ELEMENT_ARRAY_BUFFER is not valid without an actively bound VAO
+		// Binding with GL_ARRAY_BUFFER allows the data to be loaded regardless of VAO state
+
 		glCreateBuffers(1, &m_RendererID);
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 

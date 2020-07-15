@@ -153,7 +153,7 @@ namespace Ares {
 }
 
 
-#define ARES_PROFILING 1
+#define ARES_PROFILING 0
 
 #if ARES_PROFILING
     // Resolve which function signature macro will be used. Note that this only

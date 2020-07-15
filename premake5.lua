@@ -22,7 +22,6 @@ IncludeDir["GLFW"] = "Ares/vendor/GLFW/include"
 IncludeDir["Glad"] = "Ares/vendor/Glad/include"
 IncludeDir["ImGui"] = "Ares/vendor/imgui"
 IncludeDir["glm"] = "Ares/vendor/glm"
-
 IncludeDir["stb_image"] = "Ares/vendor/stb_image"
 
 include "Ares/vendor/GLFW"
@@ -56,7 +55,8 @@ project "Ares"
     }
     defines
     {
-        "_CRT_SECURE_NO_WARNINGS"
+        "_CRT_SECURE_NO_WARNINGS",
+        "GLFW_INCLUDE_NONE"
     }
     
 	includedirs
@@ -81,8 +81,6 @@ project "Ares"
         systemversion "latest"
         defines 
         {
-            "ARES_BUILD_DLL",
-            "GLFW_INCLUDE_NONE"
         }
 
 	filter "configurations:Debug"
@@ -128,13 +126,11 @@ project "Sandbox"
     links
     {
         "Ares"
-    }
+    } 
 
     filter "system:windows"
         systemversion "latest"
-        defines 
-        {
-        }
+        
         
     filter "configurations:Debug"
         defines "ARES_DEBUG"

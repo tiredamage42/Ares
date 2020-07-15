@@ -5,6 +5,8 @@
 
 #include "Ares/Renderer/RenderCommand.h"
 
+
+#include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Ares 
@@ -44,10 +46,26 @@ namespace Ares
 
 		glm::vec4 QuadVertices[4];
 
+		
+		Renderer2D::Statistics Stats;
+
 	};
+
 
 	static Renderer2DData s_Data;
 
+	void Renderer2D::ResetStats()
+	{
+
+		s_Data.Stats.DrawCalls = 0;
+		s_Data.Stats.QuadCount = 0;
+		s_Data.Stats.TextureCount = 0;
+		//memset(&s_Data.Stats, 0, sizeof(Renderer2D::Statistics));
+	}
+	Renderer2D::Statistics Renderer2D::GetStats()
+	{
+		return s_Data.Stats;
+	}
 	
 	void Renderer2D::Init()
 	{
@@ -140,6 +158,9 @@ namespace Ares
 		ARES_PROFILE_FUNCTION();
 
 		//delete s_Data;
+
+		delete[] s_Data.QuadVertexBufferBase;
+
 	}
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
@@ -154,7 +175,16 @@ namespace Ares
 
 		s_Data.TextureSlotIndex = 1;
 	}
-		
+	void Renderer2D::FlushAndReset()
+	{
+		EndScene();
+		s_Data.QuadIndexCount = 0;
+
+		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+
+		s_Data.TextureSlotIndex = 1;
+	}
+
 
 	void Renderer2D::EndScene()
 	{
@@ -170,11 +200,19 @@ namespace Ares
 
 	void Renderer2D::Flush()
 	{
+
+		// Nothing to draw
+		if (s_Data.QuadIndexCount == 0)
+			return; 
+
 		// bind textures
 		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
 			s_Data.TextureSlots[i]->Bind(i);
 		
 		RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
+
+		s_Data.Stats.DrawCalls++;
+
 	}
 	
 	void Renderer2D::DrawQuad(
@@ -184,12 +222,18 @@ namespace Ares
 	{
 		DrawQuad({ position.x, position.y, 0.0f }, rotation, size, texture, tiling, color);
 	}
+	
 	void Renderer2D::DrawQuad(
 		const glm::vec3& position, float rotation, const glm::vec2& size, 
 		const Ref<Texture2D>& texture, float tiling, const glm::vec4& color
 	)
 	{
 		ARES_PROFILE_FUNCTION();
+
+		if (s_Data.QuadIndexCount >= s_Data.MaxIndicies)
+		{
+			FlushAndReset();
+		}
 
 		float textureIndex = 0.0f;
 
@@ -268,6 +312,8 @@ namespace Ares
 
 		s_Data.QuadIndexCount += 6;
 
+		s_Data.Stats.QuadCount++;
+
 
 
 
@@ -296,4 +342,17 @@ namespace Ares
 		RenderCommand::DrawIndexed(s_Data.VertexArray);
 		*/
 	}
+
+	void Renderer2D::StatsBeginFrame() {
+		s_Data.Stats.CurrentFrameBeginTime = (float)glfwGetTime();
+	}
+
+	void Renderer2D::StatsEndFrame() {
+		s_Data.Stats.FrameRenderTime[s_Data.Stats.FrameCount] = (float)glfwGetTime() - s_Data.Stats.CurrentFrameBeginTime;
+		s_Data.Stats.TotalFrameRenderTime += (s_Data.Stats.FrameRenderTime[s_Data.Stats.FrameCount] - s_Data.Stats.FrameRenderTime[(s_Data.Stats.FrameCount + 1) % s_Data.Stats.FrameRenderTime.size()]);
+		if (++s_Data.Stats.FrameCount == s_Data.Stats.FrameRenderTime.size()) {
+			s_Data.Stats.FrameCount = 0;
+		}
+	}
+
 }
