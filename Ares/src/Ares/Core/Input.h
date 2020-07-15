@@ -15,8 +15,9 @@ namespace Ares {
 		inline static bool IsMouseButtonPressed(MouseButtonCode button) { return s_Instance->IsMouseButtonPressedImpl(button); }
 		inline static float GetMouseX() { return s_Instance->GetMouseXImpl(); }
 		inline static float GetMouseY() { return s_Instance->GetMouseYImpl(); }
-
 		inline static std::pair<float, float> GetMousePosition() { return s_Instance->GetMousePositionImpl(); }
+
+		static Scope<Input> Create();
 
 	protected:
 		Input() = default;
