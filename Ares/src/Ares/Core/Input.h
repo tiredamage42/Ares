@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Ares/Core/Core.h"
+#include "Ares/Core/Keycodes.h"
+#include "Ares/Core/MouseButtonCodes.h"
 
 namespace Ares {
 	class Input
@@ -9,8 +11,8 @@ namespace Ares {
 		Input(const Input&) = delete;
 		Input& operator=(const Input&) = delete;
 
-		inline static bool IsKeyPressed(int keycode) { return s_Instance->IsKeyPressedImpl(keycode); }
-		inline static bool IsMouseButtonPressed(int button) { return s_Instance->IsMouseButtonPressedImpl(button); }		
+		inline static bool IsKeyPressed(KeyCode keycode) { return s_Instance->IsKeyPressedImpl(keycode); }
+		inline static bool IsMouseButtonPressed(MouseButtonCode button) { return s_Instance->IsMouseButtonPressedImpl(button); }
 		inline static float GetMouseX() { return s_Instance->GetMouseXImpl(); }
 		inline static float GetMouseY() { return s_Instance->GetMouseYImpl(); }
 
@@ -20,8 +22,8 @@ namespace Ares {
 		Input() = default;
 
 
-		virtual bool IsKeyPressedImpl(int keycode) = 0;
-		virtual bool IsMouseButtonPressedImpl(int button) = 0;
+		virtual bool IsKeyPressedImpl(KeyCode keycode) = 0;
+		virtual bool IsMouseButtonPressedImpl(MouseButtonCode button) = 0;
 		virtual float GetMouseXImpl() = 0;
 		virtual float GetMouseYImpl() = 0;
 
@@ -29,6 +31,5 @@ namespace Ares {
 
 	private:
 		static Scope<Input> s_Instance;
-		//static Input* s_Instance;
 	};
 }

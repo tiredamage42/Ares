@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Ares/Events/Event.h"
+#include "Ares/Core/Input.h"
 
 namespace Ares {
 
@@ -53,20 +54,20 @@ namespace Ares {
 	class MouseButtonEvent : public Event
 	{
 	public:
-		inline int GetMouseButton() const { return m_Button; }
+		inline MouseButtonCode GetMouseButton() const { return m_Button; }
 
 		EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
 
 	protected:
-		MouseButtonEvent(int button) : m_Button(button) { }
-		int m_Button;
+		MouseButtonEvent(MouseButtonCode button) : m_Button(button) { }
+		MouseButtonCode m_Button;
 	};
 
 
 	class MouseButtonPressedEvent : public MouseButtonEvent
 	{
 	public:
-		MouseButtonPressedEvent(int button) 
+		MouseButtonPressedEvent(MouseButtonCode button)
 			: MouseButtonEvent(button) { }
 
 		std::string ToString() const override {
@@ -81,7 +82,7 @@ namespace Ares {
 	class MouseButtonReleasedEvent : public MouseButtonEvent
 	{
 	public:
-		MouseButtonReleasedEvent(int button) 
+		MouseButtonReleasedEvent(MouseButtonCode button)
 			: MouseButtonEvent(button) { }
 
 		std::string ToString() const override {
