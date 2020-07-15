@@ -7,7 +7,6 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-
 namespace Ares 
 {
 	struct Renderer2DStorage
@@ -78,27 +77,7 @@ namespace Ares
 		ARES_PROFILE_FUNCTION();
 
 	}
-	//void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
-	//{
-	//	DrawQuad({ position.x, position.y, 0.0f }, size, color);
-	//}
-	//void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
-	//{
-	//	ARES_PROFILE_FUNCTION();
-
-	//	s_Data->TextureShader->SetFloat4("u_Color", color);
-	//	s_Data->WhiteTexture->Bind();
-	//	// bind white texture
-
-	//	glm::mat4 transform = 
-	//		glm::translate(glm::mat4(1.0f), position) * 
-	//		// rotation *
-	//		glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
-
-	//	s_Data->TextureShader->SetMat4("u_TransformMatrix", transform);
-	//	s_Data->VertexArray->Bind();
-	//	RenderCommand::DrawIndexed(s_Data->VertexArray);
-	//}
+	
 	void Renderer2D::DrawQuad(
 		const glm::vec2& position, float rotation, const glm::vec2& size,
 		const Ref<Texture2D>& texture, float tiling, const glm::vec4& color
@@ -121,7 +100,6 @@ namespace Ares
 		else
 			s_Data->WhiteTexture->Bind();
 
-		
 		glm::mat4 transform = glm::mat4(1.0f);
 
 		transform = glm::translate(transform, position);
@@ -131,13 +109,7 @@ namespace Ares
 		
 		transform = glm::scale(transform, { size.x, size.y, 1.0f });
 
-		//glm::mat4 transform =
-		//	glm::translate(glm::mat4(1.0f), position) *
-		//	// rotation *
-		//	glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 		s_Data->TextureShader->SetMat4("u_TransformMatrix", transform);
-
-		
 
 		s_Data->VertexArray->Bind();
 		RenderCommand::DrawIndexed(s_Data->VertexArray);
