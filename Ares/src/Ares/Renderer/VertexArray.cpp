@@ -7,6 +7,7 @@ namespace Ares {
 
 	Ref<VertexArray> VertexArray::Create()
 	{
+		
 		switch (Renderer::GetAPI())
 		{
 

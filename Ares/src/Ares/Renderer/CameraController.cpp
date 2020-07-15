@@ -14,6 +14,8 @@ namespace Ares {
 	}
 	void OrthographicCameraController::OnUpdate(float deltaTime)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		if (Input::IsKeyPressed(ARES_KEY_A))
 		{
 			m_CameraPosition.x -= cos(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
@@ -58,12 +60,16 @@ namespace Ares {
 
 	void OrthographicCameraController::OnEvent(Event& e)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<MouseScrolledEvent>(ARES_BIND_EVENT_FN(OrthographicCameraController::OnMouseScrolled));
 		dispatcher.Dispatch<WindowResizeEvent>(ARES_BIND_EVENT_FN(OrthographicCameraController::OnWindowResized));
 	}
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		m_ZoomLevel -= e.GetYOffset() * .25f;
 		m_ZoomLevel = std::max(m_ZoomLevel, .25f);
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
@@ -71,6 +77,8 @@ namespace Ares {
 	}
 	bool OrthographicCameraController::OnWindowResized(WindowResizeEvent& e)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
 		return false;

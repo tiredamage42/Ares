@@ -22,6 +22,8 @@ namespace Ares {
 
 	OpenGLShader::OpenGLShader(const std::string& filePath)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		std::string source = ReadFile(filePath);
 		auto shaderSources = PreProcess(source);
 		Compile(shaderSources);
@@ -45,6 +47,8 @@ namespace Ares {
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 		: m_Name(name)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		std::unordered_map<GLenum, std::string> sources;
 		sources[GL_VERTEX_SHADER] = vertexSrc;
 		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
@@ -54,49 +58,69 @@ namespace Ares {
 
 	OpenGLShader::~OpenGLShader()
 	{
+		ARES_PROFILE_FUNCTION();
+
 		glDeleteProgram(m_RendererID);
 	}
 	void OpenGLShader::Bind() const
 	{
+		ARES_PROFILE_FUNCTION();
+
 		glUseProgram(m_RendererID);
 	}
 	void OpenGLShader::Unbind() const
 	{
+		ARES_PROFILE_FUNCTION();
+
 		glUseProgram(0);
 	}
 
 	void OpenGLShader::SetInt(const std::string& name, int value)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		UploadUniformInt(name, value);
 	}
 
 	void OpenGLShader::SetFloat(const std::string& name, float value)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		UploadUniformFloat(name, value);
 	}
 
 	void OpenGLShader::SetFloat2(const std::string& name, glm::vec2 value)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		UploadUniformFloat2(name, value);
 	}
 
 	void OpenGLShader::SetFloat3(const std::string& name, glm::vec3 value)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		UploadUniformFloat3(name, value);
 	}
 
 	void OpenGLShader::SetFloat4(const std::string& name, glm::vec4 value)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		UploadUniformFloat4(name, value);
 	}
 
 	void OpenGLShader::SetMat3(const std::string& name, glm::mat3 value)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		UploadUniformMat3(name, value);
 	}
 
 	void OpenGLShader::SetMat4(const std::string& name, glm::mat4 value)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		UploadUniformMat4(name, value);
 	}
 
@@ -140,6 +164,8 @@ namespace Ares {
 
 	std::string OpenGLShader::ReadFile(const std::string& filePath)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		std::string result;
 		std::ifstream in(filePath, std::ios::in | std::ios::binary);
 		if (in)
@@ -172,6 +198,8 @@ namespace Ares {
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		std::unordered_map<GLenum, std::string> shaderSources;
 
 		// token to split on
@@ -215,6 +243,8 @@ namespace Ares {
 
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		// Get a program object.
 		GLuint program = glCreateProgram();
 

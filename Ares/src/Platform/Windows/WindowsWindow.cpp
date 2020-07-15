@@ -21,15 +21,21 @@ namespace Ares {
 	}
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		Init(props);
 	}
 	WindowsWindow::~WindowsWindow()
 	{
+		ARES_PROFILE_FUNCTION();
+
 		Shutdown();
 	}
 
 	void WindowsWindow::Init(const WindowProps& props)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
@@ -137,6 +143,8 @@ namespace Ares {
 
 	void WindowsWindow::Shutdown()
 	{
+		ARES_PROFILE_FUNCTION();
+
 		glfwDestroyWindow(m_Window);
 
 		s_GLFWWindowCount--;
@@ -149,11 +157,15 @@ namespace Ares {
 
 	void WindowsWindow::OnUpdate()
 	{
+		ARES_PROFILE_FUNCTION();
+
 		glfwPollEvents();
 		m_Context->SwapBuffers();
 	}
 	void WindowsWindow::SetVSync(bool enabled)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		if (enabled)
 			glfwSwapInterval(1);
 		else

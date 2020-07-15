@@ -10,6 +10,7 @@ namespace Ares {
 
     Application::Application()    
     {
+        ARES_PROFILE_FUNCTION();
 
         ARES_CORE_ASSERT(!s_Instance, "Application Instance Already Exists!");
         s_Instance = this;
@@ -27,11 +28,15 @@ namespace Ares {
     }
     Application::~Application()
     {
+        ARES_PROFILE_FUNCTION();
+
         Renderer::Shutdown();
     }
     
     void Application::OnEvent(Event& e)
     {
+        ARES_PROFILE_FUNCTION();
+
         EventDispatcher dispatcher(e);
 
         // if dispatcher sees window close event, dispatch it to
@@ -39,9 +44,11 @@ namespace Ares {
         dispatcher.Dispatch<WindowCloseEvent>(ARES_BIND_EVENT_FN(Application::OnWindowClose));
         dispatcher.Dispatch<WindowResizeEvent>(ARES_BIND_EVENT_FN(Application::OnWindowResize));
 
-        for (auto it = m_LayerStack.end(); it != m_LayerStack.begin();)
+        //for (auto it = m_LayerStack.end(); it != m_LayerStack.begin();)
+        for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
         {
-            (*--it)->OnEvent(e);
+            //(*--it)->OnEvent(e);
+            (*it)->OnEvent(e);
             if (e.Handled)
                 break;
         }
@@ -49,11 +56,15 @@ namespace Ares {
 
     void Application::PushLayer(Layer* layer)
     {
+        ARES_PROFILE_FUNCTION();
+
         m_LayerStack.PushLayer(layer);
     }
 
     void Application::PushOverlay(Layer* layer)
     {
+        ARES_PROFILE_FUNCTION();
+
         m_LayerStack.PushOverlay(layer);
     }
 
@@ -65,6 +76,8 @@ namespace Ares {
 
     bool Application::OnWindowResize(WindowResizeEvent& e)
     {
+        ARES_PROFILE_FUNCTION();
+
         if (e.GetWidth() == 0 || e.GetHeight() == 0)
         {
             m_Minimized = true;
@@ -79,8 +92,12 @@ namespace Ares {
 
     void Application::Run() 
     {
+        ARES_PROFILE_FUNCTION();
+
         while (m_Running)
         {        
+            ARES_PROFILE_SCOPE("RunLoop");
+
             float time = (float)glfwGetTime(); // Platform::GetTime
             
             float deltaTime = time - m_LastFrameTime;
@@ -89,15 +106,23 @@ namespace Ares {
 
             if (!m_Minimized)
             {
-                for (Layer* layer : m_LayerStack)
-                    layer->OnUpdate(deltaTime);
+                {
+                    ARES_PROFILE_SCOPE("Layerstack OnUpdate");
+
+                    for (Layer* layer : m_LayerStack)
+                        layer->OnUpdate(deltaTime);
+                }
             }
 
             // draw custom imgui for debugging, etc...
             m_ImGuiLayer->BeginImGui();        
             
-            for (Layer* layer : m_LayerStack)
-                layer->OnImGuiDraw();
+            {
+                ARES_PROFILE_SCOPE("Layerstack OnImGuiDraw");
+
+                for (Layer* layer : m_LayerStack)
+                    layer->OnImGuiDraw();
+            }
             
             m_ImGuiLayer->EndImGui();
 

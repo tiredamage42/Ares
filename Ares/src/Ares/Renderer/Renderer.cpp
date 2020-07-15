@@ -7,6 +7,8 @@ namespace Ares {
 	
 	void Renderer::Init()
 	{
+		ARES_PROFILE_FUNCTION();
+
 		RenderCommand::Init();
 		Renderer2D::Init();
 	}

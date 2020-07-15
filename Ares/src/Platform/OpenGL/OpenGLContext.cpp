@@ -13,6 +13,8 @@ namespace Ares {
 	}
 	void OpenGLContext::Init()
 	{
+		ARES_PROFILE_FUNCTION();
+
 		glfwMakeContextCurrent(m_WindowHandle);
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		ARES_CORE_ASSERT(status, "Could not initialize Glad!");
@@ -35,6 +37,8 @@ namespace Ares {
 
 	void OpenGLContext::SwapBuffers()
 	{
+		ARES_PROFILE_FUNCTION();
+
 		glfwSwapBuffers(m_WindowHandle);
 	}
 }

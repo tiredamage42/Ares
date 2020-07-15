@@ -18,6 +18,8 @@ namespace Ares {
 	}
 	void ImGuiLayer::OnAttach()
 	{
+		ARES_PROFILE_FUNCTION();
+
 		// setup imgui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -55,6 +57,8 @@ namespace Ares {
 
 	void ImGuiLayer::OnDetach()
 	{
+		ARES_PROFILE_FUNCTION();
+
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
@@ -64,12 +68,16 @@ namespace Ares {
 	// begin a new frame
 	void ImGuiLayer::BeginImGui()
 	{
+		ARES_PROFILE_FUNCTION();
+
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 	}
 	void ImGuiLayer::EndImGui()
 	{
+		ARES_PROFILE_FUNCTION();
+
 		// set up imgui display size
 		ImGuiIO& io = ImGui::GetIO();
 		Application& app = Application::Get();

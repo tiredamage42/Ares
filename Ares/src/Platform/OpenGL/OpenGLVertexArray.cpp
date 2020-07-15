@@ -10,19 +10,27 @@ namespace Ares {
 
 	OpenGLVertexArray::OpenGLVertexArray()
 	{
+		ARES_PROFILE_FUNCTION();
+
 		glCreateVertexArrays(1, &m_RendererID);
 	}
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
+		ARES_PROFILE_FUNCTION();
+
 		glDeleteVertexArrays(1, &m_RendererID);
 	}
 
 	void OpenGLVertexArray::Bind() const
 	{
+		ARES_PROFILE_FUNCTION();
+
 		glBindVertexArray(m_RendererID);
 	}
 	void OpenGLVertexArray::Unbind() const
 	{
+		ARES_PROFILE_FUNCTION();
+
 		glBindVertexArray(0);
 	}
 
@@ -50,6 +58,8 @@ namespace Ares {
 
 	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& buffer)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		ARES_CORE_ASSERT(buffer->GetLayout().GetElements().size(), "Vertex Buffer Has No Layout!");
 		
 		glBindVertexArray(m_RendererID);
@@ -75,6 +85,8 @@ namespace Ares {
 	}
 	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& buffer)
 	{
+		ARES_PROFILE_FUNCTION();
+
 		glBindVertexArray(m_RendererID);
 		buffer->Bind();
 		m_IndexBuffer = buffer;
