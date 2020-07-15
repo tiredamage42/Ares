@@ -12,5 +12,6 @@ bin/
 # imgui configs
 **imgui.ini
 
-# Ares Log Files
+# Ares Files
 *.log
+AresProfile-*.json
