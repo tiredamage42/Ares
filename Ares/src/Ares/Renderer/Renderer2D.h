@@ -17,12 +17,7 @@ namespace Ares {
 		static void Flush();
 
 		// Primitives
-		/*static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
-		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
-
-		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture);
-		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture);*/
-
+		
 
 		static void DrawQuad(
 			const glm::vec3& position, 
@@ -62,26 +57,15 @@ namespace Ares {
 
 		struct Statistics
 		{
-
-			std::array<float, 100> FrameRenderTime; // collect render time for multiple frames
 			uint32_t DrawCalls = 0;
 			uint32_t QuadCount = 0;
-			//uint32_t TextureCount = 0;
 			uint32_t FrameCount = 0;
-			/*float CurrentFrameBeginTime = 0.0f;
-			float TotalFrameRenderTime = 0.0f;*/
-
-			/*uint32_t DrawCalls = 0;
-			uint32_t QuadCount = 0;*/
-
 			uint32_t GetTotalVertexCount() { return QuadCount * 4; }
 			uint32_t GetTotalIndexCount() { return QuadCount * 6; }
 		};
 
 		static Statistics GetStats();
 		static void ResetStats();
-		/*static void StatsBeginFrame();
-		static void StatsEndFrame();*/
 
 
 	private:

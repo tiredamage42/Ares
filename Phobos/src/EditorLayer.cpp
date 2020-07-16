@@ -8,22 +8,6 @@
 namespace Ares
 {
 
-    //static const uint32_t s_MapWidth = 24;
-    //static const char* s_MapTiles = 
-    //"WWWWWWWWWWWWWWWWWWWWWWWW"
-    //"WWWWWWDDDDDDWWWWWWWWWWWW"
-    //"WWWWDDDDDDDDDDDWWWWWWWWW"
-    //"WWWWDDDDDDDDDDDDWWWWWWWW"
-    //"WWWWDDDDWWDDDDDDDDWWWWWW"
-    //"WWWWDDDDWWWDDDDDDDDWWWWW"
-    //"WWWWDDDDDWWDDDDDDDWWWWWW"
-    //"WWWWWDDDDDDDDDDWWWWWWWWW"
-    //"WWWWWWDDDDDDDWWWWWWWWWWW"
-    //"WWWWWWWWDDDDDWWWWWWWWWWW"
-    //"WWWWWWWWWWWWWWWWWWWWWWWW"
-    //;
-
-
     EditorLayer::EditorLayer()
         : Layer("Sandbox2D"),
         m_CameraController(1280.0f / 720.0f)
@@ -35,28 +19,6 @@ namespace Ares
 
 
         m_Texture = Ares::Texture2D::Create("Assets/Textures/Checkerboard.png");
-
-        //m_SpriteSheet = Ares::Texture2D::Create("Assets/Game/Textures/RPGpack_sheet_2X.png");
-    
-        /*m_TextureStairs = Ares::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 7.0f, 6.0f }, { 128, 128 });
-    
-        m_TextureBarrel = Ares::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 8.0f, 2.0f }, { 128, 128 });
-        m_TextureTree = Ares::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 2.0f, 1.0f }, { 128, 128 }, { 1,2 });*/
-
-        /*s_TextureMap['D'] = Ares::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 6.0f, 11.0f }, { 128, 128 });
-        s_TextureMap['W'] = Ares::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 11.0f, 11.0f }, { 128, 128 });
-        */
-        /*m_MapWidth = s_MapWidth;
-        m_MapHeight = strlen(s_MapTiles) / m_MapWidth;*/
-
-
-        /*m_Particle.ColorBegin = { 254 / 255.0f, 212 / 255.0f, 123 / 255.0f, 1.0f };
-        m_Particle.ColorEnd = { 254 / 255.0f, 109 / 255.0f, 41 / 255.0f, 1.0f };
-        m_Particle.SizeBegin = 0.5f, m_Particle.SizeVariation = 0.3f, m_Particle.SizeEnd = 0.0f;
-        m_Particle.LifeTime = 1.0f;
-        m_Particle.Velocity = { 0.0f, 0.0f };
-        m_Particle.VelocityVariation = { 3.0f, 1.0f };
-        m_Particle.Position = { 0.0f, 0.0f };*/
 
         FrameBufferSpecification fbSpec;
         fbSpec.Width = 1280;
@@ -95,9 +57,7 @@ namespace Ares
     
         // render
         Renderer2D::ResetStats();
-        //Ares::Renderer2D::StatsBeginFrame();
-
-
+        
         {
             ARES_PROFILE_SCOPE("Renderer Prep");
 
@@ -140,85 +100,10 @@ namespace Ares
 
             }
 
-
-            /*Ares::Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 0.75f, 0.75f }, { 0.8f, 0.2f, 0.3f, 1.0f });
-            Ares::Renderer2D::DrawQuad({ 0.5f, -0.5f }, { 0.5f, 0.75f }, { 0.2f, 0.3f, 0.8f, 1.0f });
-            Ares::Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 10.0f, 10.0f }, m_Texture);*/
-        
-        
-        
-        
-        
             Ares::Renderer2D::EndScene();
 
             m_FrameBuffer->Unbind();
 
-            //Ares::Renderer2D::StatsEndFrame();
-
-
-
-
-
-            /*if (Ares::Input::IsMouseButtonPressed(ARES_MOUSE_BUTTON_LEFT))
-            {
-                auto [x, y] = Ares::Input::GetMousePosition();
-                auto width = Ares::Application::Get().GetWindow().GetWidth();
-                auto height = Ares::Application::Get().GetWindow().GetHeight();
-
-                auto bounds = m_CameraController.GetBounds();
-                auto pos = m_CameraController.GetCamera().GetPosition();
-                x = (x / width) * bounds.GetWidth() - bounds.GetWidth() * 0.5f;
-                y = bounds.GetHeight() * 0.5f - (y / height) * bounds.GetHeight();
-                m_Particle.Position = { x + pos.x, y + pos.y };
-                for (int i = 0; i < 5; i++)
-                    m_ParticleSystem.Emit(m_Particle);
-            }
-
-            m_ParticleSystem.OnUpdate(deltaTime);
-            m_ParticleSystem.OnRender(m_CameraController.GetCamera());*/
-
-
-        
-            /*Ares::Renderer2D::BeginScene(m_CameraController.GetCamera());
-
-
-            for (uint32_t y = 0; y < m_MapHeight; y++)
-            {
-                for (uint32_t x = 0; x < m_MapHeight; x++)
-                {
-                    char tileType = s_MapTiles[x + y * m_MapWidth];
-
-                    Ares::Ref<Ares::SubTexture2D> texture;
-
-                    if (s_TextureMap.find(tileType) != s_TextureMap.end())
-                    {
-                        texture = s_TextureMap[tileType];
-                    }
-                    else
-                    {
-                        texture = m_TextureBarrel;
-                    }
-
-                    Ares::Renderer2D::DrawQuad(
-                        { x - m_MapWidth * .5f, y - m_MapHeight * .5f }, 0.0f, { 1.0f, 1.0f }, 
-                        texture, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f }
-                    );
-                }
-
-            }*/
-            /*Ares::Renderer2D::DrawQuad({ 0.0f, 0.0f }, 0.0f, { 1.0f, 1.0f }, m_TextureStairs, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f });
-            Ares::Renderer2D::DrawQuad({ 1.0f, 0.0f }, 0.0f, { 1.0f, 1.0f }, m_TextureBarrel, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f });
-            Ares::Renderer2D::DrawQuad({ -1.0f, 0.0f }, 0.0f, { 1.0f, 2.0f }, m_TextureTree, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f });*/
-
-        
-            //Ares::Renderer2D::EndScene();
-
-            //auto stats = Ares::Renderer2D::GetStats();
-            // wont be accurate until we have gathered at least stats.FrameRenderTime().size() results
-            /*float averageRenderTime = stats.TotalFrameRenderTime / stats.FrameRenderTime.size(); 
-            float averageFPS = 1.0f / averageRenderTime;
-            char buffer[64];
-            glfwSetWindowTitle((GLFWwindow*)Ares::Application::Get().GetWindow().GetNativeWindow(), buffer);*/
         }
     
 
@@ -228,19 +113,6 @@ namespace Ares
     {
 
         ARES_PROFILE_FUNCTION();
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         static bool dockspaceOpen = true;
@@ -334,7 +206,7 @@ namespace Ares
 
 
         ImGui::Begin("Settings");
-        ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
+        //ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
 
         auto stats = Ares::Renderer2D::GetStats();
         ImGui::Text("Renderer2D Stats:");
@@ -343,32 +215,7 @@ namespace Ares
         ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
         ImGui::Text("Indicies: %d", stats.GetTotalIndexCount());
 
-
-
-        /*ImGui::Text("Textures: %d", stats.TextureCount);
-        ImGui::Text("Frame count: %d", stats.FrameCount);*/
-
-        // wont be accurate until we have gathered at least stats.FrameRenderTime().size() results
-        //float averageRenderTime = stats.TotalFrameRenderTime / stats.FrameRenderTime.size(); 
-        //float averageFPS = 1.0f / averageRenderTime;
-        //ImGui::Text("Average frame render time: %8.5f (%5.0f fps)", averageRenderTime, averageFPS);
-        //ImGui::End();
-
-        /*for (auto& result : m_ProfileResults)
-        {
-            char label[50];
-            strcpy(label, "%.3fms  ");
-            strcat(label, result.Name);
-            ImGui::Text(label, result.Time);
-        }
-
-        m_ProfileResults.clear();*/
-
-        //uint32_t textureID = m_Texture->GetRendererID();
-
-
         ImGui::End();
-
 
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0,0 });
@@ -382,24 +229,7 @@ namespace Ares
 
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 
-        /*if (viewportSize.x < 1)
-            viewportSize.x = 1;
-        if (viewportSize.y < 1)
-            viewportSize.y = 1;*/
-
-
-        /*if (m_ViewportSize != *((glm::vec2*)&viewportSize))
-        {
-
-            m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);*/
-            m_ViewportSize = { viewportSize.x, viewportSize.y };
-
-            //m_CameraController.OnResize(viewportSize.x, viewportSize.y);
-
-            /*m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
-            m_ViewportSize = { viewportSize.x, viewportSize.y };*/
-        //}
-
+        m_ViewportSize = { viewportSize.x, viewportSize.y };
 
         uint32_t textureID = m_FrameBuffer->GetColorAttachmentRendererID();
         ImGui::Image((void*)textureID, ImVec2{ viewportSize.x, viewportSize.y }, ImVec2(0, 1), ImVec2(1, 0));

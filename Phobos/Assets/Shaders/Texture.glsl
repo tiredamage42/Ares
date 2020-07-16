@@ -34,16 +34,9 @@ in float v_TexIndex;
 in float v_Tiling;
 
 uniform sampler2D u_Textures[32];
-//uniform vec4 u_Color;
-//uniform float u_Tile;
 
 void main()
 {
-
-	/*color = texture(u_Textures[int(v_TexIndex)], v_UV 
-		* v_Tiling
-		) * v_Color;*/
-
 
 	vec4 texColor = v_Color;
 	switch (int(v_TexIndex))
@@ -82,5 +75,4 @@ void main()
 		case 31: texColor *= texture(u_Textures[31], v_UV * v_Tiling); break;
 	}
 	color = texColor;
-	//color = v_Color;
 }

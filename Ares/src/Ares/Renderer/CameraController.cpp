@@ -7,11 +7,6 @@ namespace Ares {
 	
 	OrthographicCameraController::OrthographicCameraController(float aspectRatio, bool rotation)
 		
-		/*: m_AspectRatio(aspectRatio), 
-			m_Bounds({ -m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel }), 
-			m_Camera(m_Bounds.Left, m_Bounds.Right, m_Bounds.Bottom, m_Bounds.Top), 
-			m_Rotation(rotation)*/
-
 		: m_AspectRatio(aspectRatio), 
 			m_Camera(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel),
 			m_Rotation(rotation)
@@ -84,47 +79,17 @@ namespace Ares {
 		dispatcher.Dispatch<MouseScrolledEvent>(ARES_BIND_EVENT_FN(OrthographicCameraController::OnMouseScrolled));
 		dispatcher.Dispatch<WindowResizeEvent>(ARES_BIND_EVENT_FN(OrthographicCameraController::OnWindowResized));
 	}
-	/*bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
-	{
-		ARES_PROFILE_FUNCTION();
-
-		m_ZoomLevel -= e.GetYOffset() * .25f;
-		m_ZoomLevel = std::max(m_ZoomLevel, .25f);
-		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
-		return false;
-	}
-	bool OrthographicCameraController::OnWindowResized(WindowResizeEvent& e)
-	{
-		ARES_PROFILE_FUNCTION();
-
-		m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
-		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
-		return false;
-	}*/
 
 	void OrthographicCameraController::OnResize(float width, float height)
 	{
 		m_AspectRatio = width / height;
 		//CalculateView();
 		UpdateProjectionMatrix();
-		
 	}
-
-	/*void OrthographicCameraController::CalculateView()
-	{
-		ARES_PROFILE_FUNCTION();
-
-		m_Bounds = { -m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel };
-		m_Camera.SetProjection(m_Bounds.Left, m_Bounds.Right, m_Bounds.Bottom, m_Bounds.Top);
-	}*/
-
+		
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
 		ARES_PROFILE_FUNCTION();
-
-		/*m_ZoomLevel -= e.GetYOffset() * 0.25f;
-		m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);
-		CalculateView();*/
 
 		float zoomLevel = m_ZoomLevel - e.GetYOffset() * m_ZoomSpeed;
 		/* Hazel's current "Zoom Level" definition makes std::clamp confuses:
@@ -148,9 +113,6 @@ namespace Ares {
 		ARES_PROFILE_FUNCTION();
 
 		OnResize((float)e.GetWidth(), (float)e.GetHeight());
-
-		/*m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
-		CalculateView();*/
 		return false;
 	}
 }
