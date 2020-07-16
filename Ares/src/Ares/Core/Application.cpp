@@ -54,6 +54,7 @@ namespace Ares {
         }
     }
 
+    
     void Application::PushLayer(Layer* layer)
     {
         ARES_PROFILE_FUNCTION();
@@ -73,6 +74,11 @@ namespace Ares {
         m_Running = false;
         return true;
     }
+    void Application::Close()
+    {
+        m_Running = false;
+    }
+
 
     bool Application::OnWindowResize(WindowResizeEvent& e)
     {

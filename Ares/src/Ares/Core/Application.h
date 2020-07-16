@@ -22,6 +22,8 @@ namespace Ares {
         
         void OnEvent(Event& e);
 
+        void Close();
+
         void PushLayer(Layer* layer);
         void PushOverlay(Layer* layer);
 

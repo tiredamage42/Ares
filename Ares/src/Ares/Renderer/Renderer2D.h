@@ -41,7 +41,7 @@ namespace Ares {
 			const glm::vec4& color = glm::vec4(1.0f)
 		);
 
-		static void DrawQuad(
+		/*static void DrawQuad(
 			const glm::vec3& position,
 			float rotation = 0.0f,
 			const glm::vec2& size = glm::vec2(1.0f),
@@ -56,7 +56,7 @@ namespace Ares {
 			const Ref<SubTexture2D>& subTexture = nullptr,
 			float tiling = 1.0f,
 			const glm::vec4& color = glm::vec4(1.0f)
-		);
+		);*/
 
 
 
