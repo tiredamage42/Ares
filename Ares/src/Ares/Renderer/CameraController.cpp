@@ -7,14 +7,14 @@ namespace Ares {
 	
 	OrthographicCameraController::OrthographicCameraController(float aspectRatio, bool rotation)
 		
-		: m_AspectRatio(aspectRatio), 
+		/*: m_AspectRatio(aspectRatio), 
 			m_Bounds({ -m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel }), 
 			m_Camera(m_Bounds.Left, m_Bounds.Right, m_Bounds.Bottom, m_Bounds.Top), 
-			m_Rotation(rotation)
-
-		/*: m_AspectRatio(aspectRatio), 
-			m_Camera(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel),
 			m_Rotation(rotation)*/
+
+		: m_AspectRatio(aspectRatio), 
+			m_Camera(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel),
+			m_Rotation(rotation)
 	{
 
 	}
@@ -61,8 +61,20 @@ namespace Ares {
 
 		m_Camera.SetPosition(m_CameraPosition);
 
-		m_PositionSpeed = m_ZoomLevel;
+		//m_PositionSpeed = m_ZoomLevel;
 	}
+
+	void OrthographicCameraController::SetZoomLevel(float level)
+	{
+		ARES_CORE_ASSERT(level > 0.0f, "Zoom Level has to be higher than 0.0f!");
+
+		// translation speed should scale relative to the zoom level changes;
+		float diff = level / m_ZoomLevel; // zoom in -> fast translation, zoom out -> slow translation;
+		m_PositionSpeed *= diff;
+		m_ZoomLevel = level;
+		UpdateProjectionMatrix();
+	}
+
 
 	void OrthographicCameraController::OnEvent(Event& e)
 	{
@@ -93,25 +105,41 @@ namespace Ares {
 	void OrthographicCameraController::OnResize(float width, float height)
 	{
 		m_AspectRatio = width / height;
-		CalculateView();
+		//CalculateView();
+		UpdateProjectionMatrix();
 		
 	}
 
-	void OrthographicCameraController::CalculateView()
+	/*void OrthographicCameraController::CalculateView()
 	{
 		ARES_PROFILE_FUNCTION();
 
 		m_Bounds = { -m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel };
 		m_Camera.SetProjection(m_Bounds.Left, m_Bounds.Right, m_Bounds.Bottom, m_Bounds.Top);
-	}
+	}*/
 
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
 		ARES_PROFILE_FUNCTION();
 
-		m_ZoomLevel -= e.GetYOffset() * 0.25f;
+		/*m_ZoomLevel -= e.GetYOffset() * 0.25f;
 		m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);
-		CalculateView();
+		CalculateView();*/
+
+		float zoomLevel = m_ZoomLevel - e.GetYOffset() * m_ZoomSpeed;
+		/* Hazel's current "Zoom Level" definition makes std::clamp confuses:
+		 *   - 0.25f Zoom Level -> 4x magnification
+		 *   - 2.0f Zoom Level -> 0.5x magnification
+		 * so the min and max value of "Zoom Level" and "Magnification Level" is the invertion of each other.
+		 * If we set MaxZoomLevel to 0.25f (4x) and MinZoomLevel to 2.0f (0.5x) then the user will confuses
+		 * "why Max is smaller than Min??".
+		 *
+		 * Suggestion: Changing the definition to "Magnification Level".
+		 */
+		zoomLevel = std::clamp(zoomLevel, m_MinZoomLevel, m_MaxZoomLevel);
+		SetZoomLevel(zoomLevel);
+		UpdateProjectionMatrix();
+
 		return false;
 	}
 
