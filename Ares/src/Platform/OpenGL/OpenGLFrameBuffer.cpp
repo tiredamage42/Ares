@@ -4,6 +4,8 @@
 #include <glad/glad.h>
 namespace Ares
 {
+
+	static const uint32_t s_MaxFrameBufferSize = 8192;
 	OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferSpecification& spec)
 		: m_Specification(spec)
 	{
@@ -91,6 +93,11 @@ namespace Ares
 	}
 	void OpenGLFrameBuffer::Resize(uint32_t width, uint32_t height)
 	{
+		if (width == 0 || height == 0 || width > s_MaxFrameBufferSize || height > s_MaxFrameBufferSize)
+		{
+			ARES_CORE_WARN("Attempted to resize frame buffer to w: {0}, h: {1}", width, height);
+			return;
+		}
 
 		m_Specification.Width = width;
 		m_Specification.Height = height;

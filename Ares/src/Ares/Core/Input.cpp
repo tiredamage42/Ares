@@ -1,5 +1,5 @@
 
-//#include "AresPCH.h"
+#include "AresPCH.h"
 //#include "Ares/Core/Input.h"
 //
 //#ifdef ARES_PLATFORM_WINDOWS
