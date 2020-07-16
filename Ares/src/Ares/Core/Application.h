@@ -24,6 +24,9 @@ namespace Ares {
 
         void Close();
 
+        ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
+
+
         void PushLayer(Layer* layer);
         void PushOverlay(Layer* layer);
 

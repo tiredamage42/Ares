@@ -72,7 +72,9 @@ namespace Ares
     void EditorLayer::OnUpdate(float deltaTime)
     {
         ARES_PROFILE_FUNCTION();
-        m_CameraController.OnUpdate(deltaTime);
+
+        if (m_ViewportFocused)
+            m_CameraController.OnUpdate(deltaTime);
     
         // render
         Renderer2D::ResetStats();
@@ -355,6 +357,12 @@ namespace Ares
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0,0 });
 
         ImGui::Begin("Viewport");
+
+        m_ViewportFocused = ImGui::IsWindowFocused();
+        m_ViewportHovered = ImGui::IsWindowHovered();
+        Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
+
+
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 
         /*if (viewportSize.x < 1)
