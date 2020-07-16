@@ -18,7 +18,7 @@ namespace Ares
 	class FrameBuffer
 	{
 	public:
-
+		virtual ~FrameBuffer() = default;
 		virtual const FrameBufferSpecification& GetSpecification() const = 0;
 		
 		virtual void Bind() const = 0;

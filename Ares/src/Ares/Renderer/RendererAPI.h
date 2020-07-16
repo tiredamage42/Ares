@@ -13,6 +13,8 @@ namespace Ares {
 			OpenGL = 1
 		};
 
+		virtual ~RendererAPI() = default;
+
 		virtual void Init() = 0;
 
 		virtual void SetClearColor(const glm::vec4& color) = 0;
