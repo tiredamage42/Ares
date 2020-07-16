@@ -20,7 +20,7 @@ namespace Ares
 
         m_Texture = Ares::Texture2D::Create("Assets/Textures/Checkerboard.png");
 
-        FrameBufferSpecification fbSpec;
+        FrameBufferSpecs fbSpec;
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
         m_FrameBuffer = Ares::FrameBuffer::Create(fbSpec);
@@ -37,14 +37,16 @@ namespace Ares
 
         // Resize
         /*
-        This solution will render the 'old' sized framebuffer onto the 'new' sized ImGuiPanel 
-        and store the 'new' size in m_ViewportSize. 
-        The next frame will first resize the framebuffer as m_ViewportSize differs 
-        from m_Framebuffer.Width/Height before updating and rendering. 
-        This results in never rendering an empty (black) framebuffer.
+            This solution will render the 'old' sized framebuffer onto the 'new' sized ImGuiPanel 
+            and store the 'new' size in m_ViewportSize. 
+            The next frame will first resize the framebuffer as m_ViewportSize differs 
+            from m_Framebuffer.Width/Height before updating and rendering. 
+            This results in never rendering an empty (black) framebuffer.
         */
-        FrameBufferSpecification spec = m_FrameBuffer->GetSpecification();
-        if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
+        FrameBufferSpecs spec = m_FrameBuffer->GetSpecs();
+        if (
+            // zero sized framebuffer is invalid
+            m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && 
             (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
         {
             m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);

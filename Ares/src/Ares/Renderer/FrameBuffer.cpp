@@ -6,7 +6,7 @@
 #include "Platform/OpenGL/OpenGLFrameBuffer.h"
 namespace Ares
 {
-	Ref<FrameBuffer> FrameBuffer::Create(const FrameBufferSpecification& spec)
+	Ref<FrameBuffer> FrameBuffer::Create(const FrameBufferSpecs& specs)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -16,7 +16,7 @@ namespace Ares
 			return nullptr;
 
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLFrameBuffer>(spec);
+			return CreateRef<OpenGLFrameBuffer>(specs);
 
 		}
 

@@ -6,7 +6,6 @@
 #include "Ares/Events/ApplicationEvent.h"
 #include "Ares/Core/Window.h "
 #include "Ares/Core/LayerStack.h"
-#include "Ares/Core/Time.h"
 
 #include "Ares/ImGui/ImGuiLayer.h"
 

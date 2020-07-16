@@ -1,13 +1,12 @@
 #include "AresPCH.h"
 #include "Platform/OpenGL/OpenGLFrameBuffer.h"
-
 #include <glad/glad.h>
+
 namespace Ares
 {
-
 	static const uint32_t s_MaxFrameBufferSize = 8192;
-	OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferSpecification& spec)
-		: m_Specification(spec)
+	OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferSpecs& specs)
+		: m_Specs(specs)
 	{
 		Invalidate();
 	}
@@ -26,66 +25,37 @@ namespace Ares
 			glDeleteTextures(1, &m_DepthAttachment);
 		}
 
-		//glCreateFramebuffers(1, &m_RendererID);
-		//glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
-
-
-		//// create color attachment
-		//glCreateTextures(GL_TEXTURE_2D, 1, &m_ColorAttachment);
-		//glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
-
-		//// create a tex2d on the gpu
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Specification.Width, m_Specification.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-
-		//// attach color attachment
-		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorAttachment, 0);
-
-
-		//// creaet depth attachment
-		//glCreateTextures(GL_TEXTURE_2D, 1, &m_DepthAttachment);
-		//glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
-		//// create a tex2d on the gpu
-		//glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height);
-
-		//// attach depth attachment
-		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
-
-		//ARES_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
-
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-
 		glCreateFramebuffers(1, &m_RendererID);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 
+		// create the color attachment
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_ColorAttachment);
 		glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Specification.Width, m_Specification.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Specs.Width, m_Specs.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+		// attach it
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorAttachment, 0);
 
+		// create the depth attachment
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_DepthAttachment);
 		glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, m_Specs.Width, m_Specs.Height);
+
+		// attach it
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
 
 		ARES_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
 
+		// unbind frame buffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	}
 	void OpenGLFrameBuffer::Bind() const
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
-		glViewport(0, 0, m_Specification.Width, m_Specification.Height);
-
+		glViewport(0, 0, m_Specs.Width, m_Specs.Height);
 	}
 	void OpenGLFrameBuffer::Unbind() const
 	{
@@ -99,8 +69,8 @@ namespace Ares
 			return;
 		}
 
-		m_Specification.Width = width;
-		m_Specification.Height = height;
+		m_Specs.Width = width;
+		m_Specs.Height = height;
 		Invalidate();
 	}
 }
