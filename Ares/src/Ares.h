@@ -24,6 +24,7 @@
 
 #include "Ares/Renderer/Buffer.h"
 #include "Ares/Renderer/Shader.h"
+#include "Ares/Renderer/FrameBuffer.h"
 #include "Ares/Renderer/Texture.h"
 #include "Ares/Renderer/SubTexture2D.h"
 #include "Ares/Renderer/VertexArray.h"
