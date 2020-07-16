@@ -73,6 +73,23 @@ namespace Ares
     {
         ARES_PROFILE_FUNCTION();
 
+        // Resize
+        /*
+        This solution will render the 'old' sized framebuffer onto the 'new' sized ImGuiPanel 
+        and store the 'new' size in m_ViewportSize. 
+        The next frame will first resize the framebuffer as m_ViewportSize differs 
+        from m_Framebuffer.Width/Height before updating and rendering. 
+        This results in never rendering an empty (black) framebuffer.
+        */
+        FrameBufferSpecification spec = m_FrameBuffer->GetSpecification();
+        if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
+            (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
+        {
+            m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+        }
+
+
         if (m_ViewportFocused)
             m_CameraController.OnUpdate(deltaTime);
     
@@ -371,17 +388,17 @@ namespace Ares
             viewportSize.y = 1;*/
 
 
-        if (m_ViewportSize != *((glm::vec2*)&viewportSize))
+        /*if (m_ViewportSize != *((glm::vec2*)&viewportSize))
         {
 
-            m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+            m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);*/
             m_ViewportSize = { viewportSize.x, viewportSize.y };
 
-            m_CameraController.OnResize(viewportSize.x, viewportSize.y);
+            //m_CameraController.OnResize(viewportSize.x, viewportSize.y);
 
             /*m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
             m_ViewportSize = { viewportSize.x, viewportSize.y };*/
-        }
+        //}
 
 
         uint32_t textureID = m_FrameBuffer->GetColorAttachmentRendererID();
