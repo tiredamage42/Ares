@@ -21,11 +21,10 @@ namespace Ares
 
 	struct Renderer2DData
 	{
-		const uint32_t MaxQuads = 10000;
-		const uint32_t MaxVertices = MaxQuads * 4;
-		const uint32_t MaxIndicies = MaxQuads * 6;
-
-		static const uint32_t MaxTextureSlots = 32; // TODO: per platform
+		static const uint32_t MAX_QUADS = 10000;
+		static const uint32_t MAX_VERTS = MAX_QUADS * 4;
+		static const uint32_t MAX_INDICIES = MAX_QUADS * 6;
+		static const uint32_t MAX_TEXTURE_SLOTS = 32; // TODO: per platform
 		
 		Ref<VertexArray> QuadVertexArray;
 		Ref<VertexBuffer> QuadVertexBuffer;
@@ -39,7 +38,7 @@ namespace Ares
 		QuadVertex* QuadVertexBufferPtr = nullptr;
 
 		//stack allocated array
-		std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
+		std::array<Ref<Texture2D>, MAX_TEXTURE_SLOTS> TextureSlots;
 		uint32_t TextureSlotIndex = 1; // 0 = white texture
 
 		glm::mat4 QuadVertices;
@@ -71,7 +70,7 @@ namespace Ares
 			-0.5f,  0.5f, 0.0f,     0.0f, 1.0f
 		};*/
 
-		s_Data.QuadVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
+		s_Data.QuadVertexBuffer = VertexBuffer::Create(Renderer2DData::MAX_VERTS * sizeof(QuadVertex));
 
 		s_Data.QuadVertexBuffer->SetLayout({
 			{ ShaderDataType::Float3, "a_Position" },
@@ -83,13 +82,13 @@ namespace Ares
 
 		s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
 
-		s_Data.QuadVertexBufferBase = new QuadVertex[s_Data.MaxVertices];
+		s_Data.QuadVertexBufferBase = new QuadVertex[Renderer2DData::MAX_VERTS];
 		
-		uint32_t* quadIndicies = new uint32_t[s_Data.MaxIndicies];
+		uint32_t* quadIndicies = new uint32_t[Renderer2DData::MAX_INDICIES];
 		
 		uint32_t offset = 0;
 		//uint32_t quadIndicies[6] = { 0, 1, 2, 2, 3, 0 };
-		for (uint32_t i = 0; i < s_Data.MaxIndicies; i+=6)
+		for (uint32_t i = 0; i < Renderer2DData::MAX_INDICIES; i+=6)
 		{
 			quadIndicies[i + 0] = offset + 0;
 			quadIndicies[i + 1] = offset + 1;
@@ -102,7 +101,7 @@ namespace Ares
 			offset += 4;
 		}
 		
-		Ref<IndexBuffer> quadIB = IndexBuffer::Create(quadIndicies, s_Data.MaxIndicies);
+		Ref<IndexBuffer> quadIB = IndexBuffer::Create(quadIndicies, Renderer2DData::MAX_INDICIES);
 		s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
 		delete[] quadIndicies;
 
@@ -112,15 +111,15 @@ namespace Ares
 		uint32_t whiteTextureData = 0xffffffff;
 		s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 
-		int32_t samplers[s_Data.MaxTextureSlots];
-		for (uint32_t i = 0; i < s_Data.MaxTextureSlots; i++)
+		int32_t samplers[Renderer2DData::MAX_TEXTURE_SLOTS];
+		for (uint32_t i = 0; i < Renderer2DData::MAX_TEXTURE_SLOTS; i++)
 			samplers[i] = i;
 
 		s_Data.TextureShader = Shader::Create("Assets/Shaders/Texture.glsl");
 
 		s_Data.TextureShader->Bind();
 
-		s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
+		s_Data.TextureShader->SetIntArray("u_Textures", samplers, Renderer2DData::MAX_TEXTURE_SLOTS);
 		
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
 
@@ -212,7 +211,7 @@ namespace Ares
 	{
 		ARES_PROFILE_FUNCTION();
 
-		if (s_Data.QuadIndexCount >= s_Data.MaxIndicies)
+		if (s_Data.QuadIndexCount >= Renderer2DData::MAX_INDICIES)
 			FlushAndReset();
 		
 		float textureIndex = 0.0f;
@@ -232,7 +231,7 @@ namespace Ares
 
 			if (textureIndex == 0.0f)
 			{
-				if (s_Data.TextureSlotIndex >= s_Data.MaxTextureSlots)
+				if (s_Data.TextureSlotIndex >= Renderer2DData::MAX_TEXTURE_SLOTS)
 					FlushAndReset();
 
 				textureIndex = (float)s_Data.TextureSlotIndex;
