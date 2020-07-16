@@ -129,9 +129,6 @@ namespace Ares
 			{  0.5f,  0.5f, 0.0f, 1.0f },
 			{ -0.5f,  0.5f, 0.0f, 1.0f } 
 		};
-
-
-
 	}
 
 	void Renderer2D::Shutdown()
@@ -211,7 +208,9 @@ namespace Ares
 	{
 		ARES_PROFILE_FUNCTION();
 
-		if (s_Data.QuadIndexCount >= Renderer2DData::MAX_INDICIES)
+		if (
+			s_Data.QuadIndexCount / 6 > s_MaxQuadsPerDraw ||
+			s_Data.QuadIndexCount >= Renderer2DData::MAX_INDICIES)
 			FlushAndReset();
 		
 		float textureIndex = 0.0f;

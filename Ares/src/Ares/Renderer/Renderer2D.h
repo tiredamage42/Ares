@@ -68,7 +68,11 @@ namespace Ares {
 		static void ResetStats();
 
 
+		inline static void SetMaxQuadsPerDraw(uint32_t maxQuads) { s_MaxQuadsPerDraw = maxQuads; }
+
 	private:
+
+		inline static uint32_t s_MaxQuadsPerDraw = 10000;
 
 		static void FlushAndReset();
 

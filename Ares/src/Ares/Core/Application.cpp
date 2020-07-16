@@ -3,6 +3,8 @@
 #include "Ares/Core/Log.h"
 #include "Ares/Renderer/Renderer.h"
 #include "Ares/Core/Input.h"
+
+#include "Ares/Core/Time.h"
 #include <GLFW/glfw3.h>
 namespace Ares {
 
@@ -104,11 +106,15 @@ namespace Ares {
         {        
             ARES_PROFILE_SCOPE("RunLoop");
 
-            float time = (float)glfwGetTime(); // Platform::GetTime
+            Time::Tick(glfwGetTime()); // Platform::GetTime
+
+            /*float time = (float)glfwGetTime(); 
             
             float deltaTime = time - m_LastFrameTime;
 
-            m_LastFrameTime = time;
+            float ms = deltaTime * 1000.0f;
+
+            m_LastFrameTime = time;*/
 
             if (!m_Minimized)
             {
@@ -116,7 +122,7 @@ namespace Ares {
                     ARES_PROFILE_SCOPE("Layerstack OnUpdate");
 
                     for (Layer* layer : m_LayerStack)
-                        layer->OnUpdate(deltaTime);
+                        layer->OnUpdate();// deltaTime);
                 }
             }
 

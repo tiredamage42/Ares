@@ -11,6 +11,9 @@ namespace Ares {
 	{
 		ARES_CORE_ASSERT(windowHandle, "OpenGL window handle is null!");
 	}
+
+
+
 	void OpenGLContext::Init()
 	{
 		ARES_PROFILE_FUNCTION();
@@ -19,11 +22,11 @@ namespace Ares {
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		ARES_CORE_ASSERT(status, "Could not initialize Glad!");
 
+
 		ARES_CORE_INFO("OpenGL Info:");
 		ARES_CORE_INFO("  Vendor: {0}", glGetString(GL_VENDOR));
 		ARES_CORE_INFO("  Renderer: {0}", glGetString(GL_RENDERER));
 		ARES_CORE_INFO("  Version: {0}", glGetString(GL_VERSION));
-
 
 #ifdef ARES_ENABLE_ASSERTS
 		int versionMajor;

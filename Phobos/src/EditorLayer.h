@@ -17,7 +17,7 @@ namespace Ares
 
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
-		virtual void OnUpdate(float deltaTime) override;
+		virtual void OnUpdate() override;// float deltaTime) override;
 		virtual void OnImGuiDraw() override;
 		virtual void OnEvent(Event& e) override;
 
@@ -29,5 +29,12 @@ namespace Ares
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 
 		glm::vec2 m_ViewportSize = { 0,0 };
+
+
+		int32_t m_MaxQuadsPerDraw = 10000;
+		int32_t m_NumberOfSprites = 10;
+
+		float m_FrameTimeGraph[100];
+		int values_offset = 0;
 	};
 }

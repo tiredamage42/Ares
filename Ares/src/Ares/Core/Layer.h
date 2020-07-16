@@ -12,7 +12,7 @@ namespace Ares {
 
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
-		virtual void OnUpdate(float deltaTime) {}
+		virtual void OnUpdate() {}//float deltaTime) {}
 		virtual void OnImGuiDraw() {}
 		virtual void OnEvent(Event& event) {}
 

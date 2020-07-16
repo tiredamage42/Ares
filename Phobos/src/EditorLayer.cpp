@@ -4,9 +4,24 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+//#include <GLFW/glfw3.h>
+//#include <glad/glad.h>
 
 namespace Ares
 {
+
+    static void ImGuiShowHelpMarker(const char* desc)
+    {
+        ImGui::TextDisabled("(?)");
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+            ImGui::TextUnformatted(desc);
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    }
 
     EditorLayer::EditorLayer()
         : Layer("Sandbox2D"),
@@ -25,13 +40,15 @@ namespace Ares
         fbSpec.Height = 720;
         m_FrameBuffer = Ares::FrameBuffer::Create(fbSpec);
 
+        memset(m_FrameTimeGraph, 0, sizeof(float) * 100);
+
     }
     void EditorLayer::OnDetach()
     {
         ARES_PROFILE_FUNCTION();
 
     }
-    void EditorLayer::OnUpdate(float deltaTime)
+    void EditorLayer::OnUpdate()//float deltaTime)
     {
         ARES_PROFILE_FUNCTION();
 
@@ -55,7 +72,7 @@ namespace Ares
 
 
         if (m_ViewportFocused)
-            m_CameraController.OnUpdate(deltaTime);
+            m_CameraController.OnUpdate();// deltaTime);
     
         // render
         Renderer2D::ResetStats();
@@ -73,10 +90,30 @@ namespace Ares
             ARES_PROFILE_SCOPE("Renderer Draw");
             Ares::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
+
+            constexpr float spriteSize = .05f;
+            constexpr float halfSpriteSize = spriteSize * .5f;
+
+            float o = -m_NumberOfSprites * halfSpriteSize + halfSpriteSize;
+            
+            for (int y = 0; y < m_NumberOfSprites; y++)
+            {
+                for (int x = 0; x < m_NumberOfSprites; x++)
+                {
+                    Ares::Renderer2D::DrawQuad(
+                        { x * spriteSize + o, y * spriteSize + o }, 0.0f, { .045f,.045f },
+                        nullptr, 1.0f, { (float)x / m_NumberOfSprites, 0.3f, (float)y / m_NumberOfSprites, 1.0f }
+                    );
+
+
+                }
+            }
+
             Ares::Renderer2D::DrawQuad(
-                { -1.0f, 0.0f }, glm::radians(-45.0f), { 0.8f, 0.8f }, 
-                nullptr, 1.0f, { 0.8f, 0.2f, 0.3f, 1.0f }
+                { 0.0f, 0.0f, 0.1f }, glm::radians(-45.0f), { 0.1f, 0.1f }, 
+                nullptr, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f }
             );
+            /*
             Ares::Renderer2D::DrawQuad(
                 { 0.5f, -0.5f }, 0.0f, { 0.5f, 0.75f }, 
                 nullptr, 1.0f, { 0.2f, 0.3f, 0.8f, 1.0f }
@@ -89,10 +126,10 @@ namespace Ares
             Ares::Renderer2D::DrawQuad(
                 { -2.0f, 0.0f, 0.0f }, glm::radians(45.0f), { 1.0f, 1.0f },
                 m_Texture, 10.0f
-            );
+            );*/
 
 
-            for (float y = -5.0; y < 5.0f; y += 0.5f)
+            /*for (float y = -5.0; y < 5.0f; y += 0.5f)
             {
                 for (float x = -5.0; x < 5.0f; x += 0.5f)
                 {
@@ -100,7 +137,7 @@ namespace Ares
                     Ares::Renderer2D::DrawQuad({ x, y }, 0.0f, { 0.45f, 0.45f }, nullptr, 1.0f, color);
                 }
 
-            }
+            }*/
 
             Ares::Renderer2D::EndScene();
 
@@ -207,7 +244,7 @@ namespace Ares
 
 
 
-        ImGui::Begin("Settings");
+        ImGui::Begin("Stats");
         //ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
 
         auto stats = Ares::Renderer2D::GetStats();
@@ -217,7 +254,31 @@ namespace Ares
         ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
         ImGui::Text("Indicies: %d", stats.GetTotalIndexCount());
 
+        if (ImGui::DragInt("Max Quads Per Draw", &m_MaxQuadsPerDraw, 10, 0, 100000))
+        {
+            Renderer2D::SetMaxQuadsPerDraw(m_MaxQuadsPerDraw);
+        }
+        //ImGui::DragInt("Num Sprites", &m_NumberOfSprites, 1, 0, 1000);
+        ImGui::SliderInt("Num Sprites", &m_NumberOfSprites, 0, 1000);
         ImGui::End();
+
+        ImGui::Begin("Renderer Performance:");
+        m_FrameTimeGraph[values_offset] = Time::GetDeltaTime() * 1000.0; // get in milliseconds
+        values_offset = (values_offset + 1) % 100;
+
+        ImGui::PlotLines("##Frametime", m_FrameTimeGraph, 100, values_offset, "Frametime (ms)", 0.0f, 66.6f, ImVec2(0, 100));
+
+        ImGui::Text("Frametime: %.2fms", Time::GetDeltaTime() * 1000.0); // get in milliseconds
+        
+        ImGui::Text("FPS: %d", Time::GetFPS());
+        
+        /*ImGui::Text("  Vendor: ", glGetString(GL_VENDOR));
+        ImGui::Text("  Renderer: ", glGetString(GL_RENDERER));
+        ImGui::Text("  Version: ", glGetString(GL_VERSION));*/
+
+        
+        ImGui::End();
+
 
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0,0 });

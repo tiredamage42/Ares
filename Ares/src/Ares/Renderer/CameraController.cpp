@@ -13,9 +13,11 @@ namespace Ares {
 	{
 
 	}
-	void OrthographicCameraController::OnUpdate(float deltaTime)
+	void OrthographicCameraController::OnUpdate()//float deltaTime)
 	{
 		ARES_PROFILE_FUNCTION();
+
+		float deltaTime = Time::GetDeltaTime();
 
 		if (Input::IsKeyPressed(ARES_KEY_A))
 		{

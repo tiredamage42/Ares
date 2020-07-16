@@ -11,6 +11,8 @@
 #include "Ares/Core/Keycodes.h"
 #include "Ares/Core/MouseButtonCodes.h"
 
+#include "Ares/Core/Time.h"
+
 #include "Ares/Renderer/CameraController.h"
 
 #include "Ares/ImGui/ImGuiLayer.h"

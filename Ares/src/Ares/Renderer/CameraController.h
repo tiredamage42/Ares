@@ -4,14 +4,14 @@
 
 #include "Ares/Events/ApplicationEvent.h"
 #include "Ares/Events/MouseEvent.h"
-
+#include "Ares/Core/Time.h"
 namespace Ares 
 {
 	class OrthographicCameraController
 	{
 	public:
 		OrthographicCameraController(float aspectRatio, bool rotation=false);
-		void OnUpdate(float deltaTime);
+		void OnUpdate();// float deltaTime);
 		void OnEvent(Event& e);
 
 		inline OrthographicCamera& GetCamera() { return m_Camera; }
