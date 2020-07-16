@@ -5,6 +5,14 @@
 
 namespace Ares {
 
+	struct OrthographicCameraBounds
+	{
+		float Left, Right;
+		float Bottom, Top;
+
+		float GetWidth() { return Right - Left; }
+		float GetHeight() { return Top - Bottom; }
+	};
 
 	class OrthographicCamera
 	{
@@ -18,8 +26,7 @@ namespace Ares {
 		inline const glm::vec3& GetPosition() const { return m_Position; }
 		inline const float GetRotation() const { return m_Rotation; }
 
-
-
+		
 		inline const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 		inline const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
 		inline const glm::mat4& GetViewProjectionMatrix() const { return m_ViewProjectionMatrix; }
@@ -32,6 +39,7 @@ namespace Ares {
 		glm::mat4 m_ViewProjectionMatrix;
 
 		glm::vec3 m_Position = { 0.0f, 0.0f, 0.0f };
+		
 		
 		// rotation only around z axis for 2d orthographic cameras
 		float m_Rotation = 0.0f; 

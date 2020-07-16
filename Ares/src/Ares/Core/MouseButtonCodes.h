@@ -29,18 +29,18 @@ namespace Ares
 }
 // from glfw3.h
 
-#define ARES_MOUSE_BUTTON_0      ::Ares::Mouse::Button0
-#define ARES_MOUSE_BUTTON_1      ::Ares::Mouse::Button1
-#define ARES_MOUSE_BUTTON_2      ::Ares::Mouse::Button2
-#define ARES_MOUSE_BUTTON_3      ::Ares::Mouse::Button3
-#define ARES_MOUSE_BUTTON_4      ::Ares::Mouse::Button4
-#define ARES_MOUSE_BUTTON_5      ::Ares::Mouse::Button5
-#define ARES_MOUSE_BUTTON_6      ::Ares::Mouse::Button6
-#define ARES_MOUSE_BUTTON_7      ::Ares::Mouse::Button7
-#define ARES_MOUSE_BUTTON_LAST   ::Ares::Mouse::ButtonLast
-#define ARES_MOUSE_BUTTON_LEFT   ::Ares::Mouse::ButtonLeft
-#define ARES_MOUSE_BUTTON_RIGHT  ::Ares::Mouse::ButtonRight
-#define ARES_MOUSE_BUTTON_MIDDLE ::Ares::Mouse::ButtonMiddle
+#define ARES_MOUSE_BUTTON_0      ::Ares::MouseButton::Button0
+#define ARES_MOUSE_BUTTON_1      ::Ares::MouseButton::Button1
+#define ARES_MOUSE_BUTTON_2      ::Ares::MouseButton::Button2
+#define ARES_MOUSE_BUTTON_3      ::Ares::MouseButton::Button3
+#define ARES_MOUSE_BUTTON_4      ::Ares::MouseButton::Button4
+#define ARES_MOUSE_BUTTON_5      ::Ares::MouseButton::Button5
+#define ARES_MOUSE_BUTTON_6      ::Ares::MouseButton::Button6
+#define ARES_MOUSE_BUTTON_7      ::Ares::MouseButton::Button7
+#define ARES_MOUSE_BUTTON_LAST   ::Ares::MouseButton::ButtonLast
+#define ARES_MOUSE_BUTTON_LEFT   ::Ares::MouseButton::ButtonLeft
+#define ARES_MOUSE_BUTTON_RIGHT  ::Ares::MouseButton::ButtonRight
+#define ARES_MOUSE_BUTTON_MIDDLE ::Ares::MouseButton::ButtonMiddle
 
 //#define ARES_MOUSE_BUTTON_1         0
 //#define ARES_MOUSE_BUTTON_2         1

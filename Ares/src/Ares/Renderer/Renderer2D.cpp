@@ -270,7 +270,7 @@ namespace Ares
 		transform = glm::translate(transform, position);
 
 		if (rotation != 0.0f)
-			transform = glm::rotate(transform, glm::radians(rotation), { 0.0f, 0.0f, 1.0f });
+			transform = glm::rotate(transform, rotation, { 0.0f, 0.0f, 1.0f });
 
 		transform = glm::scale(transform, { size.x, size.y, 1.0f });
 
