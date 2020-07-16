@@ -22,6 +22,7 @@ namespace Ares
 
 		const OrthographicCameraBounds& GetBounds() const { return m_Bounds; }
 
+		void OnResize(float width, float height);
 	private:
 
 		void CalculateView();

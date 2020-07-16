@@ -90,6 +90,13 @@ namespace Ares {
 		return false;
 	}*/
 
+	void OrthographicCameraController::OnResize(float width, float height)
+	{
+		m_AspectRatio = width / height;
+		CalculateView();
+		
+	}
+
 	void OrthographicCameraController::CalculateView()
 	{
 		ARES_PROFILE_FUNCTION();
@@ -112,8 +119,10 @@ namespace Ares {
 	{
 		ARES_PROFILE_FUNCTION();
 
-		m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
-		CalculateView();
+		OnResize((float)e.GetWidth(), (float)e.GetHeight());
+
+		/*m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
+		CalculateView();*/
 		return false;
 	}
 }

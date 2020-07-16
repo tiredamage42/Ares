@@ -210,7 +210,7 @@ namespace Ares
 
         ARES_PROFILE_FUNCTION();
 
-    
+
 
 
 
@@ -346,12 +346,42 @@ namespace Ares
         m_ProfileResults.clear();*/
 
         //uint32_t textureID = m_Texture->GetRendererID();
-        uint32_t textureID = m_FrameBuffer->GetColorAttachmentRendererID();
-        ImGui::Image((void*)textureID, ImVec2(320, 180));
 
 
         ImGui::End();
 
+
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0,0 });
+
+        ImGui::Begin("Viewport");
+        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+
+        /*if (viewportSize.x < 1)
+            viewportSize.x = 1;
+        if (viewportSize.y < 1)
+            viewportSize.y = 1;*/
+
+
+        if (m_ViewportSize != *((glm::vec2*)&viewportSize))
+        {
+
+            m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+            m_ViewportSize = { viewportSize.x, viewportSize.y };
+
+            m_CameraController.OnResize(viewportSize.x, viewportSize.y);
+
+            /*m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+            m_ViewportSize = { viewportSize.x, viewportSize.y };*/
+        }
+
+
+        uint32_t textureID = m_FrameBuffer->GetColorAttachmentRendererID();
+        ImGui::Image((void*)textureID, ImVec2{ viewportSize.x, viewportSize.y }, ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::End();
+        ImGui::PopStyleVar();
+
+        
         ImGui::End();
     }
 
