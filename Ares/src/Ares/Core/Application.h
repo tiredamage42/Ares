@@ -17,7 +17,7 @@ namespace Ares {
     class Application
     {
     public:
-        Application(const std::string& name = "Ares App");
+        Application(const WindowProps& props);
         virtual ~Application();
         
         void OnEvent(Event& e);

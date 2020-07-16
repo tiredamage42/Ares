@@ -10,8 +10,8 @@ namespace Ares
 	class Phobos : public Application 
 	{
 	public:
-		Phobos() 
-			: Application("Phobos (Ares Editor)")
+		Phobos(const WindowProps& props)
+			: Application(props)
 		{
 			PushLayer(new EditorLayer());
 		}
@@ -23,6 +23,6 @@ namespace Ares
 
 	Application* CreateApplication() 
 	{
-		return new Phobos();
+		return new Phobos({ "Phobos (Ares Editor)", 1280, 720 });
 	}
 }
