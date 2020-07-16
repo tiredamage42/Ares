@@ -2,6 +2,7 @@
 
 #include "Ares/Renderer/Camera.h"
 #include "Ares/Renderer/Texture.h"
+#include "Ares/Renderer/SubTexture2D.h"
 
 namespace Ares {
 	class Renderer2D
@@ -40,6 +41,23 @@ namespace Ares {
 			const glm::vec4& color = glm::vec4(1.0f)
 		);
 
+		static void DrawQuad(
+			const glm::vec3& position,
+			float rotation = 0.0f,
+			const glm::vec2& size = glm::vec2(1.0f),
+			const Ref<SubTexture2D>& subTexture = nullptr,
+			float tiling = 1.0f,
+			const glm::vec4& color = glm::vec4(1.0f)
+		);
+		static void DrawQuad(
+			const glm::vec2& position,
+			float rotation = 0.0f,
+			const glm::vec2& size = glm::vec2(1.0f),
+			const Ref<SubTexture2D>& subTexture = nullptr,
+			float tiling = 1.0f,
+			const glm::vec4& color = glm::vec4(1.0f)
+		);
+
 
 
 		struct Statistics
@@ -48,10 +66,10 @@ namespace Ares {
 			std::array<float, 100> FrameRenderTime; // collect render time for multiple frames
 			uint32_t DrawCalls = 0;
 			uint32_t QuadCount = 0;
-			uint32_t TextureCount = 0;
+			//uint32_t TextureCount = 0;
 			uint32_t FrameCount = 0;
-			float CurrentFrameBeginTime = 0.0f;
-			float TotalFrameRenderTime = 0.0f;
+			/*float CurrentFrameBeginTime = 0.0f;
+			float TotalFrameRenderTime = 0.0f;*/
 
 			/*uint32_t DrawCalls = 0;
 			uint32_t QuadCount = 0;*/
@@ -62,8 +80,8 @@ namespace Ares {
 
 		static Statistics GetStats();
 		static void ResetStats();
-		static void StatsBeginFrame();
-		static void StatsEndFrame();
+		/*static void StatsBeginFrame();
+		static void StatsEndFrame();*/
 
 
 	private:
