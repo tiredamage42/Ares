@@ -52,6 +52,7 @@ void main()
 		case 1:  texColor *= texture(u_Textures[1],  v_UV * v_Tiling); break;
 		case 2:  texColor *= texture(u_Textures[2],  v_UV * v_Tiling); break;
 		case 3:  texColor *= texture(u_Textures[3],  v_UV * v_Tiling); break;
+		case 4:  texColor *= texture(u_Textures[4],  v_UV * v_Tiling); break;
 		case 5:  texColor *= texture(u_Textures[5],  v_UV * v_Tiling); break;
 		case 6:  texColor *= texture(u_Textures[6],  v_UV * v_Tiling); break;
 		case 7:  texColor *= texture(u_Textures[7],  v_UV * v_Tiling); break;
