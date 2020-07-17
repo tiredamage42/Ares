@@ -23,6 +23,37 @@ namespace Ares
         }
     }
 
+
+
+    /*void Property(const std::string& name, glm::vec3& value, PropertyFlag flags)
+    {
+        Property(name, value, -1.0f, 1.0f, flags);
+    }
+    void Property(const std::string& name, glm::vec3& value, float min = -1.0f, float max = 1.0f, PropertyFlag flags = PropertyFlag::)
+    {
+        ImGui::Text(name.c_str());
+        ImGui::NextColumn();
+        ImGui::PushItemWidth(-1);
+
+        std::string id = "##" + name;
+        if ((int)flags & (int)PropertyFlag::ColorProperty)
+        {
+            ImGui::ColorEdit3(id.c_str(), glm::value_ptr(value), ImGuiColorEditFlags_NoInputs);
+        }
+        else
+        {
+            ImGui::SliderFloat3(id.c_str(), glm::value_ptr(value), min, max);
+        }
+
+        ImGui::PopItemWidth();
+        ImGui::NextColumn();
+    }
+    void Property(const std::string& name, glm::vec4& value, PropertyFlag flags)
+    {
+        Property(name, value, -1.0f, 1.0f, flags);
+    }*/
+
+
     EditorLayer::EditorLayer()
         : Layer("Sandbox2D"),
         m_CameraController(1280.0f / 720.0f)
