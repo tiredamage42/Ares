@@ -196,9 +196,14 @@ namespace Ares
 	{
 		const uint32_t cubemapSize = 1024;
 
+		// create blank texture cube
 		Ref<TextureCube> envUnfiltered = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize);
+		
 		Ref<Shader> equirectangularConversionShader = Shader::Create("Assets/Shaders/EquirectangularToCubeMap.glsl");
+		
+		// load teh 2d texture we're converting to cubemap
 		Ref<Texture2D> envEquirect = Texture2D::Create(filepath);
+		
 		ARES_CORE_ASSERT(envEquirect->GetFormat() == TextureFormat::Float16, "Texture is not HDR!");
 
 		equirectangularConversionShader->Bind();

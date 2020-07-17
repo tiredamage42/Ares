@@ -2,7 +2,7 @@
 #include "AresPCH.h"
 #include "Ares/Scene/Scene.h"
 
-//#include "Ares/Renderer/SceneRenderer.h"
+#include "Ares/Renderer/SceneRenderer.h"
 namespace Ares
 {
 	Scene::Scene(const std::string& debugName)
@@ -28,9 +28,9 @@ namespace Ares
 		// update all entities
 		for (auto entity : m_Entities)
 		{
-			/*auto mesh = entity->GetMesh();
+			auto mesh = entity->GetMesh();
 			if (mesh)
-				mesh->OnUpdate();*/
+				mesh->OnUpdate();
 		}
 		SceneRenderer::BeginScene(this);
 

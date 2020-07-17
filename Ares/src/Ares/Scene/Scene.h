@@ -27,6 +27,6 @@ namespace Ares
 
 		Camera m_Camera;
 		std::string m_DebugName;
-		std::vector<Entity> m_Entities;
+		std::vector<Entity*> m_Entities;
 	};
 }
