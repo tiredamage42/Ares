@@ -2,7 +2,7 @@
 
 //#include <string>
 #include "Ares/Renderer/Shader.h"
-//#include <glad/glad.h>
+#include <glad/glad.h>
 #include <glm/glm.hpp>
 
 // TODO: remove
@@ -32,7 +32,7 @@ namespace Ares {
 		virtual void SetMat3(const std::string& name, glm::mat3 value) override;
 		virtual void SetMat4(const std::string& name, glm::mat4 value) override;
 
-
+	protected:
 		void UploadUniformInt(const std::string& name, int value);
 		void UploadUniformIntArray(const std::string& name, int* values, uint32_t count);
 
@@ -46,10 +46,16 @@ namespace Ares {
 
 	private:
 
+		GLint GetUniformLocation(const std::string& name) const;
+
 		std::string ReadFile(const std::string& filePath);
 
 		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
 		void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
+
+
+		mutable std::unordered_map<std::string, GLint> m_UniformLocationMap;
+
 
 		// unique id in opengl
 		uint32_t m_RendererID;
