@@ -9,6 +9,18 @@ namespace Ares {
 	{
 	public:
 
+
+		static void SetClearColor(float r, float g, float b, float a);
+		static void DrawIndexed(uint32_t count, bool depthTest);
+		static void WaitAndRender();
+		static void BeginRenderPass(const Ref<RenderPass>& renderPass);
+		static void EndRenderPass();
+
+
+		static void SubmitQuad(const Ref<MaterialInstance>& material, const glm::mat4& transform);
+
+
+
 		static void Init();
 		static void Shutdown();
 
