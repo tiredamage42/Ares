@@ -73,6 +73,118 @@ namespace Ares
 
         memset(m_FrameTimeGraph, 0, sizeof(float) * 100);
 
+
+
+        // NEW ====================================
+
+
+        colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.0f);
+        colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.0f);
+        colors[ImGuiCol_CheckMark] = ImVec4(0.94f, 0.94f, 0.94f, 1.0f);
+        colors[ImGuiCol_SliderGrab] = ImVec4(0.51f, 0.51f, 0.51f, 0.7f);
+        colors[ImGuiCol_SliderGrabActive] = ImVec4(0.66f, 0.66f, 0.66f, 1.0f);
+        colors[ImGuiCol_Button] = ImVec4(0.44f, 0.44f, 0.44f, 0.4f);
+        colors[ImGuiCol_ButtonHovered] = ImVec4(0.46f, 0.47f, 0.48f, 1.0f);
+        colors[ImGuiCol_ButtonActive] = ImVec4(0.42f, 0.42f, 0.42f, 1.0f);
+        colors[ImGuiCol_Header] = ImVec4(0.7f, 0.7f, 0.7f, 0.31f);
+        colors[ImGuiCol_HeaderHovered] = ImVec4(0.7f, 0.7f, 0.7f, 0.8f);
+        colors[ImGuiCol_HeaderActive] = ImVec4(0.48f, 0.5f, 0.52f, 1.0f);
+        colors[ImGuiCol_Separator] = ImVec4(0.43f, 0.43f, 0.5f, 0.5f);
+        colors[ImGuiCol_SeparatorHovered] = ImVec4(0.72f, 0.72f, 0.72f, 0.78f);
+        colors[ImGuiCol_SeparatorActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.0f);
+        colors[ImGuiCol_ResizeGrip] = ImVec4(0.91f, 0.91f, 0.91f, 0.25f);
+        colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.81f, 0.81f, 0.81f, 0.67f);
+        colors[ImGuiCol_ResizeGripActive] = ImVec4(0.46f, 0.46f, 0.46f, 0.95f);
+        colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.0f);
+        colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.0f, 0.43f, 0.35f, 1.0f);
+        colors[ImGuiCol_PlotHistogram] = ImVec4(0.73f, 0.6f, 0.15f, 1.0f);
+        colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.0f, 0.6f, 0.0f, 1.0f);
+        colors[ImGuiCol_TextSelectedBg] = ImVec4(0.87f, 0.87f, 0.87f, 0.35f);
+        colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.8f, 0.8f, 0.8f, 0.35f);
+        colors[ImGuiCol_DragDropTarget] = ImVec4(1.0f, 1.0f, 0.0f, 0.9f);
+        colors[ImGuiCol_NavHighlight] = ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
+        colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.0f, 1.0f, 1.0f, 0.7f);
+
+        
+
+        using namespace glm;
+
+        auto environmentRadianceMap = TextureCube::Create("Assets/Textures/Environments/Arches_E_PineTree_Radiance.tga");
+        auto environmentIrradianceMap = TextureCube::Create("Assets/Textures/Environments/Arches_E_PineTree_Irradiance.tga");
+        //m_Scene->LoadEnvironmentMap("Assets/Env/pink_sunrise_4k.hdr");
+
+        // model scene
+        {
+            m_Scene = CreateRef<Scene>("Model Scene");
+            m_Scene->SetCamera(Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
+
+
+            // TODO: replace with hdr
+            m_Scene->SetEnvironmentMaps(environmentRadianceMap, environmentIrradianceMap);
+
+            m_Scene->SetSkybox(environmentIrradianceMap);
+
+            m_MeshEntity = m_Scene->CreateEntity();
+            auto mesh = CreateRef<Mesh>("Assets/Models/m1911/m1911.fbx");
+            m_MeshEntity->SetMesh(mesh);
+            m_MeshMaterial = CreateRef<MaterialInstance>(mesh->GetMaterial());
+
+            m_MeshEntity->SetMaterial(m_MeshMaterial);
+        }
+
+
+        // sphere scene
+        {
+            m_SphereScene = CreateRef<Scene>("PBR Sphere Scene");
+            m_SphereScene->SetCamera(Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
+
+
+            // TODO: replace with hdr
+            m_SphereScene->SetEnvironmentMaps(environmentRadianceMap, environmentIrradianceMap);
+            m_SphereScene->SetSkybox(environmentIrradianceMap);
+
+            auto sphereMesh = CreateRef<Mesh>("Assets/Models/Sphere1m.fbx");
+            m_SphereBaseMaterial = sphereMesh->GetMaterial();
+
+            float x = -4.0f;
+            float roughness = 0.0f;
+            for (int i = 0; i < 8; i++)
+            {
+                auto sphereEntity = m_SphereScene->CreateEntity();
+                Ref<MaterialInstance> mi = CreateRef<MaterialInstance>(m_SphereBaseMaterial);
+                mi->Set("u_Metalness", 1.0f);
+                mi->Set("u_Roughness", roughness);
+                x += 1.1f;
+                roughness += .15f;
+                m_MetalSphereMaterialInstances.push_back(mi);
+                
+                sphereEntity->SetMesh(sphereMesh);
+                sphereEntity->SetMaterial(mi);
+                sphereEntity->Transform() = translate(mat4(1.0f), vec3(x, 0, 0));
+            }
+
+
+            x = -4.0f;
+            roughness = 0.0f;
+            for (int i = 0; i < 8; i++)
+            {
+                auto sphereEntity = m_SphereScene->CreateEntity();
+                Ref<MaterialInstance> mi(new MaterialInstance(m_SphereBaseMaterial));
+                mi->Set("u_Metalness", 0.0f);
+                mi->Set("u_Roughness", roughness);
+                x += 1.1f;
+                roughness += .15f;
+                m_DialectricSphereMaterialInstances.push_back(mi);
+
+                sphereEntity->SetMesh(sphereMesh);
+                sphereEntity->SetMaterial(mi);
+                sphereEntity->Transform() = translate(mat4(1.0f), vec3(x, 0, 0));
+            }
+
+
+        }
+
+
     }
     void EditorLayer::OnDetach()
     {

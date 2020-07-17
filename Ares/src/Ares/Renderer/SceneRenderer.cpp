@@ -1,3 +1,5 @@
+#include "AresPCH.h"
+
 #include "SceneRenderer.h"
 
 #include "Renderer.h"
@@ -104,6 +106,28 @@ namespace Ares
 		FlushDrawList();
 	}
 
+	void SceneRenderer::FlushDrawList()
+	{
+		ARES_CORE_ASSERT(!s_Data.ActiveScene, "");
+
+		GeometryPass();
+		CompositePass();
+		s_Data.DrawList.clear();
+		s_Data.SceneData = {};
+	}
+
+	Ref<Texture2D> SceneRenderer::GetFinalColorBuffer()
+	{
+		// return s_Data.CompositePass->GetSpecs().TargetFrameBuffer
+		ARES_CORE_ASSERT(false, "Not implemented");
+		return nullptr;
+	}
+
+	uint32_t SceneRenderer::GetFinalColorBufferRendererID()
+	{
+		return s_Data.CompositePass->GetSpecs().TargetFrameBuffer->GetColorAttachmentRendererID();
+	}
+
 	void SceneRenderer::GeometryPass()
 	{
 		Renderer::BeginRenderPass(s_Data.GeoPass);
@@ -140,6 +164,16 @@ namespace Ares
 
 	void SceneRenderer::CompositePass()
 	{
+		Renderer::BeginRenderPass(s_Data.CompositePass);
+		s_Data.CompositeShader->Bind();
+		s_Data.CompositeShader->SetFloat("u_Exposure", s_Data.SceneData.SceneCamera.GetExposure());
+		
+		// maybe composite pass???
+		s_Data.GeoPass->GetSpecs().TargetFrameBuffer->BindTexture();
+		
+
+		Renderer::SubmitFullscreenQuad(nullptr);
+		Renderer::EndRenderPass();
 	}
 
 	void SceneRenderer::SubmitEntity(Entity* entity)

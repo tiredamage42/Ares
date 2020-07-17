@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Ares/Scene/Entity.h"
-#include "Ares\Scene\Scene.h"
+#include "Ares/Scene/Scene.h"
 
 namespace Ares
 {
@@ -15,7 +15,11 @@ namespace Ares
 		static void BeginScene(const Scene* scene);
 		static void SubmitEntity(Entity* entity);
 		static void EndScene();
-		
+
+		static void FlushDrawList();
+		static Ref<Texture2D> GetFinalColorBuffer();
+		static uint32_t GetFinalColorBufferRendererID();
+
 		static void GeometryPass();
 		static void CompositePass();
 	private:

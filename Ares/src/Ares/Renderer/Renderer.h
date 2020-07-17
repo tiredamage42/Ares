@@ -9,6 +9,12 @@ namespace Ares {
 	{
 	public:
 
+		const static Scope<ShaderLibrary>& GetShaderLibrary();
+
+		static void Clear();
+		static void Clear(float r, float g, float b);
+		static void Clear(float r, float g, float b, float a);
+		static void ClearMagenta();
 
 		static void SetClearColor(float r, float g, float b, float a);
 		static void DrawIndexed(uint32_t count, bool depthTest);
@@ -17,8 +23,12 @@ namespace Ares {
 		static void EndRenderPass();
 
 
-		static void SubmitQuad(const Ref<MaterialInstance>& material, const glm::mat4& transform);
+		static RenderCommandQueue& GetRenderCommandQueue();
 
+
+		static void SubmitQuad(const Ref<MaterialInstance>& material, const glm::mat4& transform);
+		static void SubmitFullscreenQuad(const Ref<MaterialInstance>& material);
+		static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<MaterialInstance>& overrideMaterial);
 
 
 		static void Init();
