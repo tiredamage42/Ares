@@ -25,7 +25,7 @@ namespace Ares
 
 
 
-    /*void Property(const std::string& name, glm::vec3& value, PropertyFlag flags)
+    void Property(const std::string& name, glm::vec3& value, PropertyFlag flags)
     {
         Property(name, value, -1.0f, 1.0f, flags);
     }
@@ -51,7 +51,7 @@ namespace Ares
     void Property(const std::string& name, glm::vec4& value, PropertyFlag flags)
     {
         Property(name, value, -1.0f, 1.0f, flags);
-    }*/
+    }
 
 
     EditorLayer::EditorLayer()
@@ -76,6 +76,32 @@ namespace Ares
 
 
         // NEW ====================================
+
+        ImVec4* colors = ImGui::GetStyle().Colors;
+        colors[ImGuiCol_Text] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+        colors[ImGuiCol_TextDisabled] = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+        colors[ImGuiCol_WindowBg] = ImVec4(0.18f, 0.18f, 0.18f, 1.0f);
+        colors[ImGuiCol_ChildBg] = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
+        colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
+        colors[ImGuiCol_Border] = ImVec4(0.43f, 0.43f, 0.50f, 0.5f);
+        colors[ImGuiCol_BorderShadow] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+        colors[ImGuiCol_FrameBg] = ImVec4(0.3f, 0.3f, 0.3f, 0.5f); // widget backgorounds
+        colors[ImGuiCol_FrameBgHovered] = ImVec4(0.4f, 0.4f, 0.4f, 0.4f);
+        colors[ImGuiCol_FrameBgActive] = ImVec4(0.4f, 0.4f, 0.4f, 0.6f);
+        
+        colors[ImGuiCol_TitleBg] = ImVec4(0.04f, 0.04f, 0.04f, 1.0f);
+        colors[ImGuiCol_TitleBgActive] = ImVec4(0.29f, 0.29f, 0.29f, 1.0f);
+        colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.0f, 0.0f, 0.0f, 0.51f);
+
+        colors[ImGuiCol_MenuBarBg] = ImVec4(0.14f, 0.14f, 0.14f, 1.0f);
+
+        colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
+        colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.31f, 0.31f, 0.31f, 1.0f);
+
+
+
+
+
 
 
         colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.0f);
@@ -373,6 +399,45 @@ namespace Ares
             ImGui::EndMenuBar();
         }
 
+
+        // Editor Panel
+        ImGui::Begin("Model");
+        if (ImGui::RadioButton("Spheres", (int*)&m_SceneType, (int)SceneType::Spheres))
+            m_ActiveScene = m_SpheresScene;
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Model", (int*)&m_SceneType, (int)SceneType::Model))
+            m_ActiveScene = m_Scene;
+
+        ImGui::Begin("Environment");
+        ImGui::Columns(2);
+        ImGui::AlignTextToFramePadding();
+
+        Property("Light Direction", m_Light.Direction);
+        Property("Light Radiance", m_Light.Radiance, PropertyFlag::ColorProperty);
+        Property("Light Multiplier", m_LightMultiplier, 0.0f, 5.0f);
+        Property("Exposure", m_ActiveScene->GetCamera()->GetExposure(), 0.0f, 5.0f);
+
+        Property("Mesh Scale", m_MeshScale, 0.0f, 2.0f);
+
+        Property("Radiance Prefiltering", m_RadiancePrefilter);
+        Property("Env Map Rotation", m_EnvMapRotation, -360.0f, 360.0f);
+
+        ImGui::Columns(1);
+        ImGui::End();
+
+        ImGui::Separator();
+        {
+            ImGui::Text("Mesh");
+
+            /*std::string fullPath = m_Mesh ? m_Mesh->GetFilePath() : "None";
+            size_t found = fullPath.find_last_of("/\\");
+            std::string path = found != std::string::npos ? fullPath.substr(found + 1) : fullPath;
+            ImGui::Text(path.c_str()); ImGui::SameLine();
+            if (ImGui::Button("...##Mesh"))
+            {
+                std::string filename = Application::Get().OpenFile("");
+            }*/
+        }
 
 
 
