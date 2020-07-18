@@ -49,7 +49,9 @@ namespace Ares
 	}
 	void Scene::LoadEnvironmentMap(const std::string& filepath)
 	{
-		SceneRenderer::CreateEnvironmentMap(filepath);
+		m_EnvironmentRadianceMap = SceneRenderer::CreateEnvironmentMap(filepath);
+
+		SetSkybox(m_EnvironmentRadianceMap);
 	}
 	void Scene::SetEnvironmentMaps(const Ref<TextureCube>& environmentRadianceMap, const Ref<TextureCube>& environmentIrradianceMap)
 	{

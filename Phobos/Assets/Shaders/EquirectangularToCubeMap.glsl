@@ -7,8 +7,8 @@
 const float PI = 3.141592;
 const float TwoPI = 2 * PI;
 
-layout(binding = 0) uniform sampler2D inputTexture;
-layout(binding = 0, rgba16f) restrict writeonly uniform imageCube outputTexture;
+layout(binding = 0) uniform sampler2D u_EquirectangularTex;
+layout(binding = 0, rgba16f) restrict writeonly uniform imageCube o_Cubemap;
 
 // calcualte normalized sampling direction vector
 // based on current fragment coordinates (gl_GlobalInvocationID.xyz).
@@ -20,7 +20,7 @@ layout(binding = 0, rgba16f) restrict writeonly uniform imageCube outputTexture;
 
 vec3 GetSamplingVector()
 {
-	vec2 st = gl_GlobalInvocationID.xy / vec2(imageSize(outputTexture));
+	vec2 st = gl_GlobalInvocationID.xy / vec2(imageSize(o_Cubemap));
 	vec2 uv = 2.0 * vec2(st.x, 1.0 - st.y) - vec2(1.0);
 
 	vec3 ret;
@@ -45,8 +45,8 @@ void main()
 	float theta = acos(v.y);
 
 	// sample equirectangular texture
-	vec4 color = texture(inputTexture, vec2(phi / TwoPi, theta / PI));
+	vec4 color = texture(u_EquirectangularTex, vec2(phi / TwoPi + 0.5, theta / PI));
 
 	// write out color to output cubemap
-	imageStore(outputTexture, ivec3(gl_GlobalInvocationID), color);
+	imageStore(o_Cubemap, ivec3(gl_GlobalInvocationID), color);
 }

@@ -45,7 +45,7 @@ namespace Ares {
 	}
 
 
-	std::string OpenGLShader::ReadFile(const std::string& filePath)
+	std::string OpenGLShader::ReadFile(const std::string& filePath) const
 	{
 		std::string result;
 		std::ifstream in(filePath, std::ios::in | std::ios::binary);
@@ -230,9 +230,51 @@ namespace Ares {
 	{
 		glDeleteProgram(m_RendererID);
 	}
+
+	void OpenGLShader::Reload()
+	{
+		std::string source = ReadFile(m_AssetPath);
+		Load(source);
+	}
+
+	void OpenGLShader::Load(const std::string& source)
+	{
+		m_ShaderSource = PreProcess(source);
+		if (!m_IsCompute)
+			Parse();
+
+		Renderer::Submit([this]() {
+			if (m_RendererID)
+				glDeleteShader(m_RendererID);
+			
+			CompileAndUploadShader();
+			if (!m_IsCompute)
+			{
+				ResolveUniforms();
+				ValidateUniforms();
+			}
+
+			if (m_Loaded)
+			{
+				for (auto& callback : m_ShaderReloadedCallbacks)
+					callback();
+			}
+			m_Loaded = true;
+
+		});
+	}
+
+	void OpenGLShader::AddShaderReloadedCallback(const ShaderReloadedCallback& callback)
+	{
+		m_ShaderReloadedCallbacks.push_back(callback);
+	}
+
+
 	void OpenGLShader::Bind() const
 	{
-		glUseProgram(m_RendererID);
+		Renderer::Submit([=]() {
+			glUseProgram(m_RendererID);
+		});
 	}
 	void OpenGLShader::Unbind() const
 	{
@@ -272,6 +314,7 @@ namespace Ares {
 		UploadUniformMat4(name, value);
 	}
 
+	
 	void OpenGLShader::UploadUniformInt(const std::string& name, int value)
 	{
 		GLint location = GetUniformLocation(name);
@@ -287,7 +330,6 @@ namespace Ares {
 		GLint location = GetUniformLocation(name);
 		glUniform1f(location, value);
 	}
-
 	void OpenGLShader::UploadUniformFloat2(const std::string& name, glm::vec2 value)
 	{
 		GLint location = GetUniformLocation(name);
@@ -303,7 +345,6 @@ namespace Ares {
 		GLint location = GetUniformLocation(name);
 		glUniform4f(location, value.x, value.y, value.z, value.w);
 	}
-
 	void OpenGLShader::UploadUniformMat3(const std::string& name, glm::mat3 value)
 	{
 		GLint location = GetUniformLocation(name);

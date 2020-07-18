@@ -245,7 +245,7 @@ namespace Ares {
 	{
 	}
 
-	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
+	/*void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
 		shader->Bind();
 		
@@ -254,6 +254,6 @@ namespace Ares {
 
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);
-	}
+	}*/
 
 }

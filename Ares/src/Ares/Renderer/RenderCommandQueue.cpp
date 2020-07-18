@@ -34,8 +34,19 @@ namespace Ares
 
 		for (uint32_t i = 0; i < m_CommandCount; i++)
 		{
+			RenderCommandFn function = *(RenderCommandFn)buffer;
+			buffer += sizeof(RenderCommandFn);
 
+			uint32_t size = *(uint32_t*)buffer;
+			buffer += sizeof(uint32_t);
+			function(buffer);
+			buffer += size;
 		}
+
+		m_CommandBufferPtr = m_CommandBuffer;
+		m_CommandCount = 0;
+			
+
 	
 	}
 }

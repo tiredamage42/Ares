@@ -16,6 +16,10 @@ namespace Ares {
 		OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 
 		virtual ~OpenGLShader();
+
+
+		void Reload();
+		void Load(const std::string& source);
 		
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
@@ -31,6 +35,8 @@ namespace Ares {
 		virtual void SetFloat4(const std::string& name, glm::vec4 value) override;
 		virtual void SetMat3(const std::string& name, glm::mat3 value) override;
 		virtual void SetMat4(const std::string& name, glm::mat4 value) override;
+
+		void AddShaderReloadedCallback(const ShaderReloadedCallback& callback);
 
 	protected:
 		void UploadUniformInt(const std::string& name, int value);
@@ -48,7 +54,7 @@ namespace Ares {
 
 		GLint GetUniformLocation(const std::string& name) const;
 
-		std::string ReadFile(const std::string& filePath);
+		std::string ReadFile(const std::string& filePath) const;
 
 		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
 		void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);

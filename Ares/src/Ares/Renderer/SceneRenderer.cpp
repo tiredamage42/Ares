@@ -192,7 +192,7 @@ namespace Ares
 	}
 
 
-	void SceneRenderer::CreateEnvironmentMap(const std::string& filepath)
+	Ref<TextureCube> SceneRenderer::CreateEnvironmentMap(const std::string& filepath)
 	{
 		const uint32_t cubemapSize = 1024;
 
@@ -209,11 +209,21 @@ namespace Ares
 		equirectangularConversionShader->Bind();
 		envEquirect->Bind(0);
 
-		Renderer::Submit([=]()
+		Renderer::Submit([envUnfiltered, cubemapSize, equirectangularConversionShader, envEquirect]()
 		{
+
+			// make sure share ref pointers dont get deleted
+			// since ref count on each will go to 0 on end of the outer
+			// method
+			//Ref<Shader> shader = equirectangularConversionShader;
+			//Ref<Texture2D> tex = envEquirect;
+
+			// dispatch compute shader to populate pixels of cubemap
 			glBindImageTexture(0, envUnfiltered->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16);
 			glDispatchCompute(cubemapSize / 32, cubemapSize / 32, 6);
 			glGenerateTextureMipmap(envUnfiltered->GetRendererID());
 		});
+
+		return envUnfiltered;
 	}
 }
