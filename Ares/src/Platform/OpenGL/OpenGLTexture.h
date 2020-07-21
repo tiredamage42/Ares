@@ -18,12 +18,6 @@ namespace Ares {
 		inline virtual uint32_t GetWidth() const override { return m_Width; }
 		inline virtual uint32_t GetHeight() const override { return m_Height; }
 		
-		
-		virtual void Lock() override;
-		virtual void Unlock() override;
-		virtual void Resize(uint32_t width, uint32_t hieght) override;
-		virtual Buffer GetWriteableBuffer() override;
-
 		virtual const std::string& GetPath() const override { return m_Path; }
 
 		inline virtual uint32_t GetRendererID() const override { return m_RendererID; }
@@ -41,43 +35,10 @@ namespace Ares {
 		TextureWrap m_Wrap = TextureWrap::Clamp;
 		uint32_t m_Width, m_Height;
 
-		Buffer m_ImageData;
 		bool m_IsHDR = false;
-		bool m_Locked = false;
 
 		std::string m_Path;
 		GLenum m_InternalFormat, m_DataFormat;
-	};
-
-
-	class OpenGLTextureCube : public TextureCube
-	{
-	public:
-		OpenGLTextureCube(TextureFormat format, uint32_t width, uint32_t height);
-		OpenGLTextureCube(const std::string& path);
-		virtual ~OpenGLTextureCube();
-
-		virtual void Bind(uint32_t slot = 0) const;
-
-		virtual TextureFormat GetFormat() const { return m_Format; }
-		inline virtual uint32_t GetWidth() const { return m_Width; }
-		inline virtual uint32_t GetHeight() const { return m_Height; }
-
-		virtual const std::string& GetPath() const override { return m_Path; }
-
-	private:
-		uint32_t m_RendererID;
-		TextureFormat m_Format;
-		uint32_t m_Width, m_Height;
-
-		/*Buffer m_ImageData;
-		bool m_IsHDR = false;
-		bool m_Locked = false;*/
-
-		std::string m_Path;
-		//GLenum m_InternalFormat, m_DataFormat;
-
-
 	};
 
 }

@@ -2,7 +2,7 @@
 
 #include "Ares/Renderer/Camera.h"
 #include "Ares/Renderer/Texture.h"
-#include "Ares/Renderer/SubTexture2D.h"
+//#include "Ares/Renderer/SubTexture2D.h"
 
 namespace Ares {
 	class Renderer2D

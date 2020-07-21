@@ -1,14 +1,23 @@
 #pragma once
+
+
+#include "Ares/Core/Core.h"
+//#include "Ares/Core/Buffer.h"
+//#include "Ares/Renderer/Renderer.h"
+//#include "Ares/Renderer/ShaderUniform.h"
+
 #include <string>
 
 #include <glm/glm.hpp>
 
 namespace Ares {
+	
 	class Shader
 	{
 	public:
 		virtual ~Shader() = default;
-		virtual void Bind() const = 0;
+
+		virtual void Bind() = 0;
 		virtual void Unbind() const = 0;
 
 		virtual const std::string& GetName() const = 0;
@@ -20,11 +29,14 @@ namespace Ares {
 		virtual void SetFloat2(const std::string& name, glm::vec2 value) = 0;
 		virtual void SetFloat3(const std::string& name, glm::vec3 value) = 0;
 		virtual void SetFloat4(const std::string& name, glm::vec4 value) = 0;
+		
 		virtual void SetMat3(const std::string& name, glm::mat3 value) = 0;
 		virtual void SetMat4(const std::string& name, glm::mat4 value) = 0;
 
 		static Ref<Shader> Create(const std::string& filePath);
 		static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
+
+		static std::vector<Ref<Shader>> s_AllShaders;
 	};
 
 	class ShaderLibrary

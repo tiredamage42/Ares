@@ -32,6 +32,10 @@
 #include "Ares/Renderer/VertexArray.h"
 
 #include "Ares/Renderer/Camera.h"
+
+#include "Ares/Events/KeyEvent.h"
+#include "Ares/Events/MouseEvent.h"
+
 // =========================
 
 // entry point =============

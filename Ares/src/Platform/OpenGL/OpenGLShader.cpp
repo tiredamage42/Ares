@@ -44,6 +44,35 @@ namespace Ares {
 
 	}
 
+	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
+		: m_Name(name)
+	{
+		ARES_PROFILE_FUNCTION();
+
+		std::unordered_map<GLenum, std::string> sources;
+		sources[GL_VERTEX_SHADER] = vertexSrc;
+		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
+		Compile(sources);
+	}
+
+	OpenGLShader::~OpenGLShader()
+	{
+		glDeleteProgram(m_RendererID);
+	}
+	
+	
+
+	void OpenGLShader::Bind()
+	{
+		glUseProgram(m_RendererID);
+	}
+	void OpenGLShader::Unbind() const
+	{
+		glUseProgram(0);
+	}
+
+
+
 
 	std::string OpenGLShader::ReadFile(const std::string& filePath) const
 	{
@@ -214,71 +243,6 @@ namespace Ares {
 
 		m_RendererID = program;
 
-	}
-	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
-		: m_Name(name)
-	{
-		ARES_PROFILE_FUNCTION();
-
-		std::unordered_map<GLenum, std::string> sources;
-		sources[GL_VERTEX_SHADER] = vertexSrc;
-		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
-		Compile(sources);
-	}
-	
-	OpenGLShader::~OpenGLShader()
-	{
-		glDeleteProgram(m_RendererID);
-	}
-
-	void OpenGLShader::Reload()
-	{
-		std::string source = ReadFile(m_AssetPath);
-		Load(source);
-	}
-
-	void OpenGLShader::Load(const std::string& source)
-	{
-		m_ShaderSource = PreProcess(source);
-		if (!m_IsCompute)
-			Parse();
-
-		Renderer::Submit([this]() {
-			if (m_RendererID)
-				glDeleteShader(m_RendererID);
-			
-			CompileAndUploadShader();
-			if (!m_IsCompute)
-			{
-				ResolveUniforms();
-				ValidateUniforms();
-			}
-
-			if (m_Loaded)
-			{
-				for (auto& callback : m_ShaderReloadedCallbacks)
-					callback();
-			}
-			m_Loaded = true;
-
-		});
-	}
-
-	void OpenGLShader::AddShaderReloadedCallback(const ShaderReloadedCallback& callback)
-	{
-		m_ShaderReloadedCallbacks.push_back(callback);
-	}
-
-
-	void OpenGLShader::Bind() const
-	{
-		Renderer::Submit([=]() {
-			glUseProgram(m_RendererID);
-		});
-	}
-	void OpenGLShader::Unbind() const
-	{
-		glUseProgram(0);
 	}
 
 	void OpenGLShader::SetInt(const std::string& name, int value)

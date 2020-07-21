@@ -12,16 +12,14 @@ namespace Ares {
 	class OpenGLShader : public Shader
 	{
 	public:
+		OpenGLShader() = default;
+		virtual ~OpenGLShader();
+
 		OpenGLShader(const std::string& filePath);
 		OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 
-		virtual ~OpenGLShader();
-
-
-		void Reload();
-		void Load(const std::string& source);
+		virtual void Bind() override;
 		
-		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
 		virtual const std::string& GetName() const override { return m_Name; }
@@ -36,8 +34,7 @@ namespace Ares {
 		virtual void SetMat3(const std::string& name, glm::mat3 value) override;
 		virtual void SetMat4(const std::string& name, glm::mat4 value) override;
 
-		void AddShaderReloadedCallback(const ShaderReloadedCallback& callback);
-
+		
 	protected:
 		void UploadUniformInt(const std::string& name, int value);
 		void UploadUniformIntArray(const std::string& name, int* values, uint32_t count);
@@ -52,22 +49,18 @@ namespace Ares {
 
 	private:
 
-		GLint GetUniformLocation(const std::string& name) const;
-
 		std::string ReadFile(const std::string& filePath) const;
-
 		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
+
+		int32_t GetUniformLocation(const std::string& name) const;
+		
 		void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
 
-
 		mutable std::unordered_map<std::string, GLint> m_UniformLocationMap;
-
 
 		// unique id in opengl
 		uint32_t m_RendererID;
 
-
 		std::string m_Name;
-
 	};
 }

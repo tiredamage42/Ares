@@ -108,21 +108,13 @@ namespace Ares {
 
             Time::Tick(glfwGetTime()); // Platform::GetTime
 
-            /*float time = (float)glfwGetTime(); 
-            
-            float deltaTime = time - m_LastFrameTime;
-
-            float ms = deltaTime * 1000.0f;
-
-            m_LastFrameTime = time;*/
-
             if (!m_Minimized)
             {
                 {
                     ARES_PROFILE_SCOPE("Layerstack OnUpdate");
 
                     for (Layer* layer : m_LayerStack)
-                        layer->OnUpdate();// deltaTime);
+                        layer->OnUpdate();
                 }
             }
 
@@ -140,8 +132,6 @@ namespace Ares {
 
             m_Window->OnUpdate();
 
-
-            // TODO:  profiler frame++
         }
     }
 }

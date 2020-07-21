@@ -4,6 +4,7 @@
 #include "Ares/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLShader.h"
 namespace Ares {
+	std::vector<Ref<Shader>> Shader::s_AllShaders;
 
 	Ref<Shader> Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
@@ -15,7 +16,9 @@ namespace Ares {
 			return nullptr;
 
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
+			Ref<Shader> result = CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
+			s_AllShaders.push_back(result);
+			return result;
 		}
 
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");
@@ -31,7 +34,9 @@ namespace Ares {
 			return nullptr;
 
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLShader>(filePath);
+			Ref<Shader> result = CreateRef<OpenGLShader>(filePath);
+			s_AllShaders.push_back(result);
+			return result;
 		}
 
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");
