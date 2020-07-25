@@ -2,6 +2,13 @@
 
 #include <memory>
 
+
+namespace Ares
+{
+    void InitializeCore();
+    void ShutdownCore();
+}
+
 // platform detection using predefined macros
 #ifdef _WIN32
     /* Windows x64/x86 */

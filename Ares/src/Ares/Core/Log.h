@@ -2,10 +2,10 @@
 #include "Ares/Core/Core.h"
 
 // suppress warnings
-#pragma warning(push, 0)
+//#pragma warning(push, 0)
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
-#pragma warning(pop)
+//#pragma warning(pop)
 
 namespace Ares {
 	class Log
@@ -19,6 +19,8 @@ namespace Ares {
 		static Ref<spdlog::logger> s_ClientLogger;
 	};
 }
+
+#define ARES_LOG_INIT() Ares::Log::Init();
 
 // core engine loggers
 #define ARES_CORE_LOG(...)		::Ares::Log::GetCoreLogger()->trace(__VA_ARGS__)
