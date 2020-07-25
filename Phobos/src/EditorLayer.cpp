@@ -31,6 +31,21 @@ namespace Ares
         memset(m_FrameTimeGraph, 0, sizeof(float) * 100);
 
 
+        m_ActiveScene = CreateRef<Scene>();
+        
+        auto square = m_ActiveScene->CreateEntity("Custom Entity");
+       
+        //Entity squareEntity = { square, m_ActiveScene.get() };
+
+        //square.AddComponent<TransformComponent>();
+        square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0, 1, 0, 1 });
+
+        /*m_ActiveScene->Reg().emplace<TransformComponent>(square);
+        m_ActiveScene->Reg().emplace<SpriteRendererComponent>(square, glm::vec4{ 0,1,0,1 });*/
+
+
+        m_SquareEntity = square;
+
     }
     void EditorLayer::OnDetach()
     {
@@ -63,11 +78,15 @@ namespace Ares
         if (m_ViewportFocused)
             m_CameraController.OnUpdate();// deltaTime);
 
+
+
+
+
         // render
         Renderer2D::ResetStats();
         
         {
-            ARES_PROFILE_SCOPE("Renderer Prep");
+            //ARES_PROFILE_SCOPE("Renderer Prep");
 
             m_FrameBuffer->Bind();
 
@@ -75,17 +94,21 @@ namespace Ares
             Ares::RenderCommand::Clear();
         }
 
+        
+
         {
-            ARES_PROFILE_SCOPE("Renderer Draw");
+            //ARES_PROFILE_SCOPE("Renderer Draw");
             Ares::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
+            // update scnee
+            m_ActiveScene->OnUpdate();
 
-            constexpr float spriteSize = .05f;
-            constexpr float halfSpriteSize = spriteSize * .5f;
+            /*constexpr float spriteSize = .05f;
+            constexpr float halfSpriteSize = spriteSize * .5f;*/
 
-            float o = -m_NumberOfSprites * halfSpriteSize + halfSpriteSize;
+            //float o = -m_NumberOfSprites * halfSpriteSize + halfSpriteSize;
             
-            for (int y = 0; y < m_NumberOfSprites; y++)
+            /*for (int y = 0; y < m_NumberOfSprites; y++)
             {
                 for (int x = 0; x < m_NumberOfSprites; x++)
                 {
@@ -93,10 +116,8 @@ namespace Ares
                         { x * spriteSize + o, y * spriteSize + o }, 0.0f, { .045f,.045f },
                         nullptr, 1.0f, { (float)x / m_NumberOfSprites, 0.3f, (float)y / m_NumberOfSprites, 1.0f }
                     );
-
-
                 }
-            }
+            }*/
 
             Ares::Renderer2D::DrawQuad(
                 { 0.0f, 0.0f, 0.1f }, glm::radians(-45.0f), { 0.1f, 0.1f }, 
@@ -229,7 +250,6 @@ namespace Ares
         ImGui::Begin("Stats");
         {
 
-            //ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
 
             auto stats = Ares::Renderer2D::GetStats();
             ImGui::Text("Renderer2D Stats:");
@@ -238,6 +258,22 @@ namespace Ares
             ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
             ImGui::Text("Indicies: %d", stats.GetTotalIndexCount());
 
+            ImGui::Separator();
+
+            if (m_SquareEntity)
+            {
+                auto& tag = m_SquareEntity.GetComponent<TagComponent>().Tag;
+                ImGui::Text("%s", tag.c_str());
+                //auto& squareColor = m_ActiveScene->Reg().get<SpriteRendererComponent>(m_SquareEntity).Color;
+                auto& squareColor = m_SquareEntity.GetComponent<SpriteRendererComponent>().Color;
+
+                ImGui::ColorEdit4("Square Color", glm::value_ptr(squareColor));
+            }
+            
+            
+            
+            ImGui::Separator();
+            
             if (ImGui::DragInt("Max Quads Per Draw", &m_MaxQuadsPerDraw, 10, 0, 100000))
             {
                 Renderer2D::SetMaxQuadsPerDraw(m_MaxQuadsPerDraw);

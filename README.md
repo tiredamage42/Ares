@@ -20,3 +20,4 @@ Double click on the `GenerateVSProject.bat` file to generate the Visual Studio p
 | [ImGui](github.com/TheCherno/imgui) | Immediate Mode GUI |
 | [glm](github.com/g-truc/glm) | Math Library |
 | [stb_image](github.com/nothings/stb) | Image Loading |
+| [entt](github.com/skypjack/entt) | Entity Component System |

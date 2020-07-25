@@ -200,11 +200,91 @@ namespace Ares
 	{
 		DrawQuad({ position.x, position.y, 0.0f }, rotation, size, texture, tiling, color);
 	}
+
+	
 	
 	void Renderer2D::DrawQuad(
 		const glm::vec3& position, float rotation, const glm::vec2& size, 
 		const Ref<Texture2D>& texture, float tiling, const glm::vec4& color
 	)
+	{
+		glm::mat4 transform = glm::mat4(1.0f);
+
+		transform = glm::translate(transform, position);
+
+		if (rotation != 0.0f)
+			transform = glm::rotate(transform, rotation, { 0.0f, 0.0f, 1.0f });
+
+		transform = glm::scale(transform, { size.x, size.y, 1.0f });
+
+		DrawQuad(transform, texture, tiling, color);
+
+		//ARES_PROFILE_FUNCTION();
+
+		//if (
+		//	s_Data.QuadIndexCount / 6 > s_MaxQuadsPerDraw ||
+		//	s_Data.QuadIndexCount >= Renderer2DData::MAX_INDICIES)
+		//	FlushAndReset();
+		//
+		//float textureIndex = 0.0f;
+
+		//if (texture)
+		//{
+		//	for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
+		//	{
+		//		// check if we've already submitted this texture
+		//		if (*s_Data.TextureSlots[i].get() == *texture.get())
+		//		{
+		//			textureIndex = (float)i;
+		//			break;
+		//		}
+		//	}
+
+
+		//	if (textureIndex == 0.0f)
+		//	{
+		//		if (s_Data.TextureSlotIndex >= Renderer2DData::MAX_TEXTURE_SLOTS)
+		//			FlushAndReset();
+
+		//		textureIndex = (float)s_Data.TextureSlotIndex;
+		//		s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
+
+		//		s_Data.TextureSlotIndex++;
+		//	}
+		//}
+
+
+
+		//glm::mat4 transform = glm::mat4(1.0f);
+
+		//transform = glm::translate(transform, position);
+
+		//if (rotation != 0.0f)
+		//	transform = glm::rotate(transform, rotation, { 0.0f, 0.0f, 1.0f });
+
+		//transform = glm::scale(transform, { size.x, size.y, 1.0f });
+
+		//transform = transform * s_Data.QuadVertices;
+
+		//for (uint32_t i = 0; i < 4; i++)
+		//{
+		//	s_Data.QuadVertexBufferPtr->Position = transform[i];
+
+		//	s_Data.QuadVertexBufferPtr->Color = color;
+		//	s_Data.QuadVertexBufferPtr->TexCoord = { (float)(i == 1 || i == 2), (float)(i > 1) };
+		//	s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
+		//	s_Data.QuadVertexBufferPtr->Tiling = tiling;
+		//	s_Data.QuadVertexBufferPtr++;
+		//}
+
+		//s_Data.QuadIndexCount += 6;
+
+		//s_Data.Stats.QuadCount++;
+	}
+
+
+
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tiling, const glm::vec4& color)
 	{
 		ARES_PROFILE_FUNCTION();
 
@@ -212,7 +292,7 @@ namespace Ares
 			s_Data.QuadIndexCount / 6 > s_MaxQuadsPerDraw ||
 			s_Data.QuadIndexCount >= Renderer2DData::MAX_INDICIES)
 			FlushAndReset();
-		
+
 		float textureIndex = 0.0f;
 
 		if (texture)
@@ -240,22 +320,11 @@ namespace Ares
 			}
 		}
 
-
-
-		glm::mat4 transform = glm::mat4(1.0f);
-
-		transform = glm::translate(transform, position);
-
-		if (rotation != 0.0f)
-			transform = glm::rotate(transform, rotation, { 0.0f, 0.0f, 1.0f });
-
-		transform = glm::scale(transform, { size.x, size.y, 1.0f });
-
-		transform = transform * s_Data.QuadVertices;
+		glm::mat4 transformedVerts = transform * s_Data.QuadVertices;
 
 		for (uint32_t i = 0; i < 4; i++)
 		{
-			s_Data.QuadVertexBufferPtr->Position = transform[i];
+			s_Data.QuadVertexBufferPtr->Position = transformedVerts[i];
 
 			s_Data.QuadVertexBufferPtr->Color = color;
 			s_Data.QuadVertexBufferPtr->TexCoord = { (float)(i == 1 || i == 2), (float)(i > 1) };

@@ -26,6 +26,10 @@ namespace Ares
 		Ref<Texture2D> m_Texture;
 		Ref<FrameBuffer> m_FrameBuffer;
 		
+
+		Ref<Scene> m_ActiveScene;
+		Entity m_SquareEntity;
+
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 
 		glm::vec2 m_ViewportSize = { 0,0 };
@@ -36,6 +40,9 @@ namespace Ares
 
 		float m_FrameTimeGraph[100];
 		int values_offset = 0;
+
+
+		glm::vec4 m_SquareColor = { 1.0f, .5f, 0, 1 };
 
 
 	};

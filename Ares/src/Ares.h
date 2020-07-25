@@ -17,6 +17,11 @@
 
 #include "Ares/ImGui/ImGuiLayer.h"
 
+#include "Ares/Core/Scene.h"
+#include "Ares/Core/Entity.h"
+#include "Ares/Core/Components.h"
+
+
 // renderer ===============
 
 #include "Ares/Renderer/Renderer.h"

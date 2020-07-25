@@ -23,6 +23,7 @@ IncludeDir["Glad"] = "Ares/vendor/Glad/include"
 IncludeDir["ImGui"] = "Ares/vendor/imgui"
 IncludeDir["glm"] = "Ares/vendor/glm"
 IncludeDir["stb_image"] = "Ares/vendor/stb_image"
+IncludeDir["entt"] = "Ares/vendor/entt/include"
 
 group "Dependencies"
     include "Ares/vendor/GLFW"
@@ -69,7 +70,8 @@ project "Ares"
         "%{IncludeDir.Glad}",
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.glm}",
-        "%{IncludeDir.stb_image}"
+        "%{IncludeDir.stb_image}",
+        "%{IncludeDir.entt}"
     }
     links
     {
@@ -150,17 +152,6 @@ project "Sandbox"
         optimize "on"
 
 
-
-
-
-
-
-
-
-
-
-
-
 project "Phobos"
     location "Phobos"
     kind "ConsoleApp"
@@ -182,7 +173,8 @@ project "Phobos"
         "Ares/vendor/spdlog/include",
         "Ares/src",
         "Ares/vendor",
-        "%{IncludeDir.glm}"
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.entt}"
     }
 
     links
