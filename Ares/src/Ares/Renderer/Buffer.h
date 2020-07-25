@@ -54,8 +54,8 @@ namespace Ares {
 				case Ares::ShaderDataType::Float2:	return 2;
 				case Ares::ShaderDataType::Float3:	return 3;
 				case Ares::ShaderDataType::Float4:	return 4;
-				case Ares::ShaderDataType::Mat3:	return 9;
-				case Ares::ShaderDataType::Mat4:	return 16;
+				case Ares::ShaderDataType::Mat3:	return 3;//(3*float3) //9;
+				case Ares::ShaderDataType::Mat4:	return 4;//(4*float4) //16;
 				case Ares::ShaderDataType::Int:		return 1;
 				case Ares::ShaderDataType::Int2:	return 2;
 				case Ares::ShaderDataType::Int3:	return 3;
