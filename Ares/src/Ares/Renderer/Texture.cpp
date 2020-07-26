@@ -50,7 +50,14 @@ namespace Ares
 		return 0;
 	}
 
+	void Texture2D::CalculateTilingAndOffsetForSubTexture(glm::vec2* tiling, glm::vec2* offset, const Ref<Texture2D>& texture, const glm::vec2& coords, const glm::vec2& cellSize, const glm::vec2& spriteSize)
+	{
+		CalculateTilingAndOffsetForSubTexture(tiling, offset, texture->GetWidth(), texture->GetHeight(), coords, cellSize, spriteSize);
+	}
 
-
-
+	void Texture2D::CalculateTilingAndOffsetForSubTexture(glm::vec2* tiling, glm::vec2* offset, uint32_t width, uint32_t height, const glm::vec2& coords, const glm::vec2& cellSize, const glm::vec2& spriteSize)
+	{
+		*tiling = { (spriteSize.x * cellSize.x) / width, (spriteSize.y * cellSize.y) / height };
+		*offset = { (coords.x * cellSize.x) / width, (coords.y * cellSize.y) / height };
+	}
 }

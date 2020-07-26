@@ -8,6 +8,7 @@ namespace Ares {
 
 	static GLenum Ares2OpenGLTextureFormat(TextureFormat format)
 	{
+		//ARES_CORE_WARN(format);
 		switch (format)
 		{
 		case TextureFormat::RGB: return GL_RGB;
@@ -15,6 +16,8 @@ namespace Ares {
 		case TextureFormat::Float16: return GL_RGBA16F;
 
 		}
+
+		//ARES_CORE_ERROR(format);
 		ARES_CORE_ASSERT(false, "Unknown Texture Format!");
 		return 0;
 	}
@@ -63,7 +66,7 @@ namespace Ares {
 	}
 
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path, bool srgb)
-		: m_Path(path)
+		: m_Path(path), m_Format(TextureFormat::RGB), m_Width(1), m_Height(1)
 	{
 
 		int width, height, channels;
@@ -79,8 +82,9 @@ namespace Ares {
 		m_Width = width;
 		m_Height = height;
 
+		m_Format = (channels == 4 ? TextureFormat::RGBA : TextureFormat::RGB);
+		//ARES_CORE_ERROR(m_Format);
 
-		m_Format = channels == 4 ? TextureFormat::RGBA : TextureFormat::RGB;
 		// how opengl stores it
 		/*GLenum internalFormat = 0, dataFormat = 0;
 		if (channels == 4)
@@ -99,26 +103,37 @@ namespace Ares {
 
 		//ARES_CORE_ASSERT(internalFormat & dataFormat, "Format not supported!");
 
-		Renderer::Submit([this]() {
-		//upload to opengl (gpu)
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
-		glTextureStorage2D(m_RendererID, 1, Ares2OpenGLTextureFormat(this->m_Format), m_Width, m_Height);
+		Renderer::Submit([this]() mutable {
+
+
+			glGenTextures(1, &this->m_RendererID);
+			glBindTexture(GL_TEXTURE_2D, this->m_RendererID);
+
+			//upload to opengl (gpu)
+			//glCreateTextures(GL_TEXTURE_2D, 1, &this->m_RendererID);
+			//glTextureStorage2D(this->m_RendererID, 1, Ares2OpenGLTextureFormat(this->m_Format), m_Width, m_Height);
 		
 		// if image is larger or smaller than actual size, what kind of filtering to use?
 		// if shrinking image
-		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTextureParameteri(this->m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		// if enlarging image
-		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTextureParameteri(this->m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTextureParameteri(this->m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTextureParameteri(this->m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
+			
+			GLenum internalFormat = Ares2OpenGLTextureFormat(this->m_Format);
+			GLenum format = Ares2OpenGLTextureFormat(this->m_Format);
+			GLenum type = internalFormat == GL_RGBA16F ? GL_FLOAT : GL_UNSIGNED_BYTE;
+			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, this->m_Width, this->m_Height, 0, format, type, this->m_ImageData.Data);
 
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, this->m_Format == TextureFormat::RGB ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, this->m_ImageData.Data);
-		// uploaded to gpu, now delete from cpu memory
-		stbi_image_free(this->m_ImageData.Data);
+			//glTextureSubImage2D(this->m_RendererID, 0, 0, 0, this->m_Width, this->m_Height, this->m_Format == TextureFormat::RGB ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, this->m_ImageData.Data);
 		
-			});
+			// uploaded to gpu, now delete from cpu memory
+			stbi_image_free(this->m_ImageData.Data);
+		
+		});
 
 	}
 
@@ -126,7 +141,7 @@ namespace Ares {
 	OpenGLTexture2D::~OpenGLTexture2D()
 	{
 		Renderer::Submit([this]() {
-		glDeleteTextures(1, &m_RendererID);
+		glDeleteTextures(1, &this->m_RendererID);
 			});
 		
 	}

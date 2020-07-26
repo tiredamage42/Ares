@@ -12,6 +12,7 @@ namespace Ares {
 
     Application::Application(const WindowProps& props)
     {
+
         ARES_CORE_ASSERT(!s_Instance, "Application Instance Already Exists!");
         s_Instance = this;
 
@@ -19,18 +20,13 @@ namespace Ares {
         m_Window->SetEventCallback(ARES_BIND_EVENT_FN(Application::OnEvent));
         //m_Window->SetVSync(false);
 
-
         m_ImGuiLayer = new ImGuiLayer();
         PushOverlay(m_ImGuiLayer);
 
         Renderer::Init();
-
-        //ARES_CORE_LOG("First Wait and render");
-
         Renderer::WaitAndRender();
-
-        //ARES_CORE_LOG("First Wait and render END");
     }
+
     Application::~Application()
     {
         Renderer::Shutdown();
@@ -41,26 +37,22 @@ namespace Ares {
         EventDispatcher dispatcher(e);
 
         // if dispatcher sees window close event, dispatch it to
-        // OnWindowClose
+        // OnWindowClose / OnWindowResize
         dispatcher.Dispatch<WindowCloseEvent>(ARES_BIND_EVENT_FN(Application::OnWindowClose));
         dispatcher.Dispatch<WindowResizeEvent>(ARES_BIND_EVENT_FN(Application::OnWindowResize));
 
-        //for (auto it = m_LayerStack.end(); it != m_LayerStack.begin();)
         for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
         {
-            //(*--it)->OnEvent(e);
             (*it)->OnEvent(e);
             if (e.Handled)
                 break;
         }
     }
 
-    
     void Application::PushLayer(Layer* layer)
     {
         m_LayerStack.PushLayer(layer);
     }
-
     void Application::PushOverlay(Layer* layer)
     {
         m_LayerStack.PushOverlay(layer);
@@ -76,11 +68,8 @@ namespace Ares {
         m_Running = false;
     }
 
-
     bool Application::OnWindowResize(WindowResizeEvent& e)
     {
-        ARES_PROFILE_FUNCTION();
-
         if (e.GetWidth() == 0 || e.GetHeight() == 0)
         {
             m_Minimized = true;
@@ -102,9 +91,7 @@ namespace Ares {
             layer->OnImGuiDraw();
 
         m_ImGuiLayer->EndImGui();
-
     }
-
 
     void Application::Run() 
     {
@@ -114,36 +101,16 @@ namespace Ares {
 
             if (!m_Minimized)
             {
-            //ARES_CORE_LOG("Update Start");
                 for (Layer* layer : m_LayerStack)
                     layer->OnUpdate();
-            //ARES_CORE_LOG("Update END");
             }
 
-            
-            
-            
-            
             // Render ImGui on render thread
-            //Application* app = this;
-
             Renderer::Submit([this]() { this->RenderImGui(); });
-            //ARES_RENDER_1(app, { app->RenderImGui(); });
-    
-            //ARES_CORE_LOG("Render Run Begin");
+            
             Renderer::WaitAndRender();
-            //ARES_CORE_LOG("Render Run end");
-
-            // draw custom imgui for debugging, etc...
-            /*m_ImGuiLayer->BeginImGui();        
             
-            for (Layer* layer : m_LayerStack)
-                layer->OnImGuiDraw();
-            
-            m_ImGuiLayer->EndImGui();*/
-
             m_Window->OnUpdate();
-
         }
     }
 }

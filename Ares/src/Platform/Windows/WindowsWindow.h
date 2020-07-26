@@ -1,7 +1,7 @@
 #pragma once
 #include "Ares/Core/Window.h"
 #include <GLFW/glfw3.h>
-#include "Ares/Renderer/GraphicsContext.h"
+//#include "Ares/Renderer/GraphicsContext.h"
 
 namespace Ares {
 	class WindowsWindow : public Window {

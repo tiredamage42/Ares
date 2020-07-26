@@ -22,9 +22,6 @@ namespace Ares
 		}
 		Entity(const Entity& other) = default;
 
-		//~Entity();
-
-
 		template <typename T>
 		bool HasComponent()
 		{
@@ -57,8 +54,6 @@ namespace Ares
 		template <typename T>
 		void RemoveComponent()
 		{
-			ARES_CORE_ASSERT(HasComponent<T>(), "Entity Doesn't Have Component!");
-
 			return m_Scene->m_Registry.remove_if_exists<T>(m_EntityHandle);
 		}
 

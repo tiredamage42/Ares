@@ -21,17 +21,36 @@ namespace Ares
         fbSpec.Height = 720;
         m_FrameBuffer = Ares::FrameBuffer::Create(fbSpec);
 
-        ARES_LOG("Created Frame Buffer");
-
-
-
+        
         memset(m_FrameTimeGraph, 0, sizeof(float) * 100);
 
         m_ActiveScene = CreateRef<Scene>();
         
         auto square = m_ActiveScene->CreateEntity("Custom Entity");
        
-        square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0, 1, 0, 1 });
+
+
+        //m_SpriteSheet = Ares::Texture2D::Create("Assets/Game/Textures/RPGpack_sheet_2X.png");
+
+    /*m_TextureStairs = Ares::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 7.0f, 6.0f }, { 128, 128 });
+
+    m_TextureBarrel = Ares::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 8.0f, 2.0f }, { 128, 128 });
+    m_TextureTree = Ares::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 2.0f, 1.0f }, { 128, 128 }, { 1,2 });*/
+
+        Ref<Texture2D> spriteSheet = Texture2D::Create("Assets/Game/Textures/RPGpack_sheet_2X.png");
+
+        glm::vec2 tiling, offset;
+        Texture2D::CalculateTilingAndOffsetForSubTexture(&tiling, &offset, spriteSheet, { 8.0f, 2.0f }, { 128, 128 });
+
+        /*ARES_LOG("tiling: {0}/{1}", tiling.x, tiling.y);
+        ARES_LOG("offset: {0}/{1}", offset.x, offset.y);*/
+
+        SpriteRendererComponent& spriteRenderer = square.AddComponent<SpriteRendererComponent>();
+        
+        spriteRenderer.Color = glm::vec4{ 0, 1, 0, 1 };
+        spriteRenderer.Tiling = tiling;
+        spriteRenderer.Offset = offset;
+        spriteRenderer.Texture = spriteSheet;
 
         m_SquareEntity = square;
     }
@@ -84,10 +103,10 @@ namespace Ares
         // update scnee
         m_ActiveScene->OnUpdate();
 
-        Renderer2D::DrawQuad(
+        /*Renderer2D::DrawQuad(
             { 0.0f, 0.0f, 0.1f }, glm::radians(-45.0f), { 0.5f, 0.5f }, 
-            nullptr, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f }
-        );
+            nullptr, glm::vec2(1.0f), glm::vec2(0.0f), { 1.0f, 0.0f, 1.0f, 1.0f }
+        );*/
         
 
         Renderer2D::EndScene();

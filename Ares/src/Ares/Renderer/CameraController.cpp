@@ -15,8 +15,6 @@ namespace Ares {
 	}
 	void OrthographicCameraController::OnUpdate()//float deltaTime)
 	{
-		ARES_PROFILE_FUNCTION();
-
 		float deltaTime = Time::GetDeltaTime();
 
 		if (Input::IsKeyPressed(ARES_KEY_A))
@@ -75,8 +73,6 @@ namespace Ares {
 
 	void OrthographicCameraController::OnEvent(Event& e)
 	{
-		ARES_PROFILE_FUNCTION();
-
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<MouseScrolledEvent>(ARES_BIND_EVENT_FN(OrthographicCameraController::OnMouseScrolled));
 		dispatcher.Dispatch<WindowResizeEvent>(ARES_BIND_EVENT_FN(OrthographicCameraController::OnWindowResized));
@@ -91,8 +87,6 @@ namespace Ares {
 		
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
-		ARES_PROFILE_FUNCTION();
-
 		float zoomLevel = m_ZoomLevel - e.GetYOffset() * m_ZoomSpeed;
 		/* Hazel's current "Zoom Level" definition makes std::clamp confuses:
 		 *   - 0.25f Zoom Level -> 4x magnification
@@ -112,8 +106,6 @@ namespace Ares {
 
 	bool OrthographicCameraController::OnWindowResized(WindowResizeEvent& e)
 	{
-		ARES_PROFILE_FUNCTION();
-
 		OnResize((float)e.GetWidth(), (float)e.GetHeight());
 		return false;
 	}

@@ -1,9 +1,8 @@
 #include "AresPCH.h"
 #include "Ares/Core/LayerStack.h"
 
-namespace Ares {
-
-
+namespace Ares 
+{
 	LayerStack::~LayerStack()
 	{
 		for (Layer* layer : m_Layers)
@@ -12,20 +11,17 @@ namespace Ares {
 			delete layer;
 		}
 	}
-
 	void LayerStack::PushLayer(Layer* layer)
 	{
 		m_Layers.emplace(m_Layers.begin() + m_OverlayStartIndex, layer);
 		m_OverlayStartIndex++;
 		layer->OnAttach();
 	}
-
 	void LayerStack::PushOverlay(Layer* layer)
 	{
 		m_Layers.emplace_back(layer);
 		layer->OnAttach();
 	}
-
 	void LayerStack::PopLayer(Layer* layer)
 	{
 		auto it = std::find(m_Layers.begin(), m_Layers.begin() + m_OverlayStartIndex, layer);
@@ -36,7 +32,6 @@ namespace Ares {
 			m_OverlayStartIndex--;
 		}
 	}
-
 	void LayerStack::PopOverlay(Layer* layer)
 	{
 		auto it = std::find(m_Layers.begin() + m_OverlayStartIndex, m_Layers.end(), layer);

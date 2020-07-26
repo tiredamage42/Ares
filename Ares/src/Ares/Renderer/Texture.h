@@ -4,6 +4,8 @@
 #include "Ares/Core/Buffer.h"
 //#include <string>
 
+#include <glm/glm.hpp>
+
 namespace Ares {
 	enum class TextureFormat
 	{
@@ -40,6 +42,9 @@ namespace Ares {
 		static Ref<Texture2D> Create(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap);
 		static Ref<Texture2D> Create(const std::string& path, bool srgb = false);
 
+		static void CalculateTilingAndOffsetForSubTexture(glm::vec2* tiling, glm::vec2* offset, const Ref<Texture2D>& texture, const glm::vec2& coords, const glm::vec2& cellSize, const glm::vec2& spriteSize = { 1, 1 });
+		static void CalculateTilingAndOffsetForSubTexture(glm::vec2* tiling, glm::vec2* offset, uint32_t width, uint32_t height, const glm::vec2& coords, const glm::vec2& cellSize, const glm::vec2& spriteSize = { 1, 1 });
+
 		virtual TextureFormat GetFormat() const = 0;
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
@@ -50,6 +55,9 @@ namespace Ares {
 		virtual Buffer GetWriteableBuffer() = 0;
 
 		virtual const std::string& GetPath() const = 0;
+
+
+
 	};
 	
 }

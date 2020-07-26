@@ -1,9 +1,7 @@
 #pragma once
 
-
 #include <memory>
 #include <stdint.h>
-
 
 namespace Ares
 {
@@ -56,13 +54,6 @@ namespace Ares
     /* Unknown compiler/platform */
     #error "Unknown platform!"
 #endif // End of platform detection
-
-
-
-
-
-
-
 
 #ifdef ARES_DEBUG
 

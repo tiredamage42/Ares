@@ -42,10 +42,6 @@ namespace Ares
 			RenderCommandFn fn = *(RenderCommandFn*)buffer;
 			buffer += sizeof(RenderCommandFn);
 
-			/*buffer += (*fn)(buffer);
-			auto padding = (int)buffer % 16;
-			buffer += padding;*/
-
 			uint32_t size = *(uint32_t*)buffer;
 			buffer += sizeof(uint32_t);
 			fn(buffer);

@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "entt.hpp"
 
 namespace Ares
@@ -16,8 +15,6 @@ namespace Ares
 		void OnUpdate();
 
 		Entity CreateEntity(const std::string& name = std::string());
-
-		//entt::registry& Reg() { return m_Registry; }
 
 	private:
 		// cotnainer for the actual component data (IDs)

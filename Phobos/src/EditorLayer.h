@@ -19,7 +19,7 @@ namespace Ares
 
 	private:
 		OrthographicCameraController m_CameraController;
-		Ref<Texture2D> m_Texture;
+		Ref<Texture2D> m_Texture, m_SpriteSheet;
 		Ref<FrameBuffer> m_FrameBuffer;
 		
 		Ref<Scene> m_ActiveScene;

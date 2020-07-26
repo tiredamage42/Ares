@@ -1,7 +1,5 @@
 #pragma once
 
-//#include "Ares/Core/Core.h"
-
 #ifdef ARES_PLATFORM_WINDOWS
 
 // external function that will be defined in the client
@@ -9,12 +7,16 @@ extern Ares::Application* Ares::CreateApplication();
 
 int main(int argc, char** argv) {
 
-	//Ares::Log::Init();
 	Ares::InitializeCore();
+	ARES_CORE_LOG("Initializing");
 
+
+	ARES_CORE_LOG("Creating APP");
 	ARES_PROFILE_BEGIN_SESSION("Startup", "AresProfile-Startup.json");
 	auto app = Ares::CreateApplication();
 	ARES_PROFILE_END_SESSION();
+
+	ARES_CORE_LOG("Creatied APP");
 
 	ARES_PROFILE_BEGIN_SESSION("Runtime", "AresProfile-Runtime.json");
 	app->Run();

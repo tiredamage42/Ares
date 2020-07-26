@@ -1,11 +1,8 @@
 #include "AresPCH.h"
 #include "Ares/Core/Log.h"
 
-// suppress warnings
-//#pragma warning(push, 0)
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
-//#pragma warning(pop)
 
 namespace Ares {
 	Ref<spdlog::logger> Log::s_CoreLogger;

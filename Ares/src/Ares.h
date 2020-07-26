@@ -38,8 +38,8 @@
 
 #include "Ares/Renderer/CameraController.h"
 #include "Ares/Renderer/Renderer2D.h"
-#include "Ares/Renderer/RenderCommand.h"
-#include "Ares/Renderer/SubTexture2D.h"
+//#include "Ares/Renderer/RenderCommand.h"
+//#include "Ares/Renderer/SubTexture2D.h"
 
 
 // =========================
