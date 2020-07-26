@@ -1,15 +1,11 @@
 #include "EditorLayer.h"
-#include <imgui/imgui.h>
+//#include <imgui/imgui.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-//#include <GLFW/glfw3.h>
-//#include <glad/glad.h>
-
 namespace Ares
 {
-
 
     EditorLayer::EditorLayer()
         : Layer("Sandbox2D"),
@@ -18,9 +14,6 @@ namespace Ares
     }
     void EditorLayer::OnAttach()
     {
-        ARES_PROFILE_FUNCTION();
-
-
         m_Texture = Ares::Texture2D::Create("Assets/Textures/Checkerboard.png");
 
         FrameBufferSpecs fbSpec;
@@ -30,32 +23,24 @@ namespace Ares
 
         memset(m_FrameTimeGraph, 0, sizeof(float) * 100);
 
-
         m_ActiveScene = CreateRef<Scene>();
         
         auto square = m_ActiveScene->CreateEntity("Custom Entity");
        
-        //Entity squareEntity = { square, m_ActiveScene.get() };
-
-        //square.AddComponent<TransformComponent>();
         square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0, 1, 0, 1 });
 
-        /*m_ActiveScene->Reg().emplace<TransformComponent>(square);
-        m_ActiveScene->Reg().emplace<SpriteRendererComponent>(square, glm::vec4{ 0,1,0,1 });*/
-
-
         m_SquareEntity = square;
-
     }
+
     void EditorLayer::OnDetach()
     {
-        //ARES_PROFILE_FUNCTION();
-
+        
     }
-    void EditorLayer::OnUpdate()//float deltaTime)
+    void EditorLayer::OnUpdate()
     {
-        //ARES_PROFILE_FUNCTION();
+        Renderer::Clear(.2f, .3f, .8f, 1);
 
+#if 0
         // Resize
         /*
             This solution will render the 'old' sized framebuffer onto the 'new' sized ImGuiPanel
@@ -65,8 +50,8 @@ namespace Ares
             This results in never rendering an empty (black) framebuffer.
         */
         FrameBufferSpecs spec = m_FrameBuffer->GetSpecs();
+        // zero sized framebuffer is invalid
         if (
-            // zero sized framebuffer is invalid
             m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && 
             (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
         {
@@ -74,88 +59,29 @@ namespace Ares
             m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
         }
 
-
         if (m_ViewportFocused)
             m_CameraController.OnUpdate();// deltaTime);
 
-
-
-
-
         // render
-        Renderer2D::ResetStats();
+        Renderer2D::ResetStats();        
+        m_FrameBuffer->Bind();
+        RenderCommand::SetClearColor({ .1f, .1f, .1f, 1 });
+        RenderCommand::Clear();
+        Renderer2D::BeginScene(m_CameraController.GetCamera());
+
+        // update scnee
+        m_ActiveScene->OnUpdate();
+
+        Renderer2D::DrawQuad(
+            { 0.0f, 0.0f, 0.1f }, glm::radians(-45.0f), { 0.1f, 0.1f }, 
+            nullptr, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f }
+        );
         
-        {
-            //ARES_PROFILE_SCOPE("Renderer Prep");
 
-            m_FrameBuffer->Bind();
+        Renderer2D::EndScene();
 
-            Ares::RenderCommand::SetClearColor({ .1f, .1f, .1f, 1 });
-            Ares::RenderCommand::Clear();
-        }
-
-        
-
-        {
-            //ARES_PROFILE_SCOPE("Renderer Draw");
-            Ares::Renderer2D::BeginScene(m_CameraController.GetCamera());
-
-            // update scnee
-            m_ActiveScene->OnUpdate();
-
-            /*constexpr float spriteSize = .05f;
-            constexpr float halfSpriteSize = spriteSize * .5f;*/
-
-            //float o = -m_NumberOfSprites * halfSpriteSize + halfSpriteSize;
-            
-            /*for (int y = 0; y < m_NumberOfSprites; y++)
-            {
-                for (int x = 0; x < m_NumberOfSprites; x++)
-                {
-                    Ares::Renderer2D::DrawQuad(
-                        { x * spriteSize + o, y * spriteSize + o }, 0.0f, { .045f,.045f },
-                        nullptr, 1.0f, { (float)x / m_NumberOfSprites, 0.3f, (float)y / m_NumberOfSprites, 1.0f }
-                    );
-                }
-            }*/
-
-            Ares::Renderer2D::DrawQuad(
-                { 0.0f, 0.0f, 0.1f }, glm::radians(-45.0f), { 0.1f, 0.1f }, 
-                nullptr, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f }
-            );
-            /*
-            Ares::Renderer2D::DrawQuad(
-                { 0.5f, -0.5f }, 0.0f, { 0.5f, 0.75f }, 
-                nullptr, 1.0f, { 0.2f, 0.3f, 0.8f, 1.0f }
-            );
-            Ares::Renderer2D::DrawQuad(
-                { 0.0f, 0.0f, -0.1f }, 0.0f, { 10.0f, 10.0f }, 
-                m_Texture, 10.0f
-            );
-
-            Ares::Renderer2D::DrawQuad(
-                { -2.0f, 0.0f, 0.0f }, glm::radians(45.0f), { 1.0f, 1.0f },
-                m_Texture, 10.0f
-            );*/
-
-
-            /*for (float y = -5.0; y < 5.0f; y += 0.5f)
-            {
-                for (float x = -5.0; x < 5.0f; x += 0.5f)
-                {
-                    glm::vec4 color = { (x + 5.0f) / 10.0f, 0.4f, (y + 5.0f) / 10.0f, 1.0f };
-                    Ares::Renderer2D::DrawQuad({ x, y }, 0.0f, { 0.45f, 0.45f }, nullptr, 1.0f, color);
-                }
-
-            }*/
-
-            Ares::Renderer2D::EndScene();
-
-            m_FrameBuffer->Unbind();
-
-        }
-
-
+        m_FrameBuffer->Unbind();
+#endif
     }
 
 
@@ -165,10 +91,7 @@ namespace Ares
 
     void EditorLayer::OnImGuiDraw()
     {
-
-        //ARES_PROFILE_FUNCTION();
-
-
+#if 0
         static bool dockspaceOpen = true;
 
         static bool opt_fullscreen_persistant = true;
@@ -245,12 +168,8 @@ namespace Ares
             ImGui::EndMenuBar();
         }
 
-
-
         ImGui::Begin("Stats");
         {
-
-
             auto stats = Ares::Renderer2D::GetStats();
             ImGui::Text("Renderer2D Stats:");
             ImGui::Text("Draw Calls: %d", stats.DrawCalls);
@@ -264,13 +183,9 @@ namespace Ares
             {
                 auto& tag = m_SquareEntity.GetComponent<TagComponent>().Tag;
                 ImGui::Text("%s", tag.c_str());
-                //auto& squareColor = m_ActiveScene->Reg().get<SpriteRendererComponent>(m_SquareEntity).Color;
                 auto& squareColor = m_SquareEntity.GetComponent<SpriteRendererComponent>().Color;
-
                 ImGui::ColorEdit4("Square Color", glm::value_ptr(squareColor));
             }
-            
-            
             
             ImGui::Separator();
             
@@ -278,7 +193,6 @@ namespace Ares
             {
                 Renderer2D::SetMaxQuadsPerDraw(m_MaxQuadsPerDraw);
             }
-            //ImGui::DragInt("Num Sprites", &m_NumberOfSprites, 1, 0, 1000);
             ImGui::SliderInt("Num Sprites", &m_NumberOfSprites, 0, 1000);
             ImGui::End();
         }
@@ -295,15 +209,8 @@ namespace Ares
 
             ImGui::Text("FPS: %d", Time::GetFPS());
 
-            /*ImGui::Text("  Vendor: ", glGetString(GL_VENDOR));
-            ImGui::Text("  Renderer: ", glGetString(GL_RENDERER));
-            ImGui::Text("  Version: ", glGetString(GL_VERSION));*/
-
-
             ImGui::End();
         }
-
-
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0,0 });
 
@@ -312,7 +219,6 @@ namespace Ares
         m_ViewportFocused = ImGui::IsWindowFocused();
         m_ViewportHovered = ImGui::IsWindowHovered();
         Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
-
 
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 
@@ -323,8 +229,8 @@ namespace Ares
         ImGui::End();
         ImGui::PopStyleVar();
 
-
         ImGui::End();
+#endif
     }
 
     void EditorLayer::OnEvent(Ares::Event& e)

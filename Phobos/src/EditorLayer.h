@@ -1,10 +1,6 @@
 #pragma once
 #include <Ares.h>
 
-//#include "imgui/imgui.h"
-//#include <glm/gtc/matrix_transform.hpp>
-//#include <glm/gtc/type_ptr.hpp>
-
 namespace Ares
 {
 
@@ -26,7 +22,6 @@ namespace Ares
 		Ref<Texture2D> m_Texture;
 		Ref<FrameBuffer> m_FrameBuffer;
 		
-
 		Ref<Scene> m_ActiveScene;
 		Entity m_SquareEntity;
 
@@ -34,16 +29,12 @@ namespace Ares
 
 		glm::vec2 m_ViewportSize = { 0,0 };
 
-
 		int32_t m_MaxQuadsPerDraw = 10000;
 		int32_t m_NumberOfSprites = 10;
 
 		float m_FrameTimeGraph[100];
 		int values_offset = 0;
 
-
 		glm::vec4 m_SquareColor = { 1.0f, .5f, 0, 1 };
-
-
 	};
 }

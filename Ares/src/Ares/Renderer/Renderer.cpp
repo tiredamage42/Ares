@@ -5,6 +5,8 @@ namespace Ares {
 
 	Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
 	
+	RenderCommandQueue Renderer::s_CommandQueue;
+
 	void Renderer::Init()
 	{
 		RenderCommand::Init();
@@ -30,7 +32,7 @@ namespace Ares {
 	{
 	}
 
-	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
+	/*void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
 		shader->Bind();
 		
@@ -39,5 +41,15 @@ namespace Ares {
 
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);
+	}*/
+	
+	void Renderer::Clear(float r, float g, float b, float a)
+	{
+		float params[4] = { r, g, b, a };
+		s_CommandQueue.SubmitCommand(RenderCommand::Clear, params, sizeof(float) * 4);
+	}
+	void Renderer::WaitAndRender()
+	{
+		s_CommandQueue.Execute();
 	}
 }

@@ -12,11 +12,8 @@ namespace Ares {
 
     Application::Application(const WindowProps& props)
     {
-        ARES_PROFILE_FUNCTION();
-
         ARES_CORE_ASSERT(!s_Instance, "Application Instance Already Exists!");
         s_Instance = this;
-
 
         m_Window = Window::Create(props);
         m_Window->SetEventCallback(ARES_BIND_EVENT_FN(Application::OnEvent));
@@ -30,15 +27,11 @@ namespace Ares {
     }
     Application::~Application()
     {
-        ARES_PROFILE_FUNCTION();
-
         Renderer::Shutdown();
     }
     
     void Application::OnEvent(Event& e)
     {
-        ARES_PROFILE_FUNCTION();
-
         EventDispatcher dispatcher(e);
 
         // if dispatcher sees window close event, dispatch it to
@@ -59,15 +52,11 @@ namespace Ares {
     
     void Application::PushLayer(Layer* layer)
     {
-        ARES_PROFILE_FUNCTION();
-
         m_LayerStack.PushLayer(layer);
     }
 
     void Application::PushOverlay(Layer* layer)
     {
-        ARES_PROFILE_FUNCTION();
-
         m_LayerStack.PushOverlay(layer);
     }
 
@@ -100,33 +89,23 @@ namespace Ares {
 
     void Application::Run() 
     {
-        ARES_PROFILE_FUNCTION();
-
         while (m_Running)
         {        
-            ARES_PROFILE_SCOPE("RunLoop");
-
             Time::Tick(glfwGetTime()); // Platform::GetTime
 
             if (!m_Minimized)
             {
-                {
-                    ARES_PROFILE_SCOPE("Layerstack OnUpdate");
+                for (Layer* layer : m_LayerStack)
+                    layer->OnUpdate();
 
-                    for (Layer* layer : m_LayerStack)
-                        layer->OnUpdate();
-                }
+                Renderer::WaitAndRender();
             }
 
             // draw custom imgui for debugging, etc...
             m_ImGuiLayer->BeginImGui();        
             
-            {
-                ARES_PROFILE_SCOPE("Layerstack OnImGuiDraw");
-
-                for (Layer* layer : m_LayerStack)
-                    layer->OnImGuiDraw();
-            }
+            for (Layer* layer : m_LayerStack)
+                layer->OnImGuiDraw();
             
             m_ImGuiLayer->EndImGui();
 

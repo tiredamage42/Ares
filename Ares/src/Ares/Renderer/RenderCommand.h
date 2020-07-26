@@ -24,6 +24,22 @@ namespace Ares {
 		{
 			s_RendererAPI->Clear();
 		}
+
+		inline static unsigned int Clear(void* datablock)
+		{
+			float* data = (float*)datablock;
+
+			float r = *data++;
+			float g = *data++;
+			float b = *data++;
+			float a = *data;
+
+			s_RendererAPI->Clear(r, g, b, a);
+
+			return sizeof(float) * 4;
+		}
+
+
 		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0)
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, indexCount);

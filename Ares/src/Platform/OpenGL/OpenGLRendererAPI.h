@@ -12,6 +12,8 @@ namespace Ares {
 
 		virtual void SetClearColor(const glm::vec4& color) override;
 		virtual void Clear() override;
+		virtual void Clear(float r, float g, float b, float a) override;
+
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) override;
 
 	private:
