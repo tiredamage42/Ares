@@ -1,5 +1,3 @@
-
-
 #include "AresPCH.h"
 
 #include "Platform/OpenGL/OpenGLVertexArray.h"
@@ -12,30 +10,27 @@ namespace Ares {
 	{
 		Renderer::Submit([this]() mutable {
 			glCreateVertexArrays(1, &this->m_RendererID);
-			});
+		});
 	}
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
 		GLuint rendererID = m_RendererID;
-
 		Renderer::Submit([rendererID]() {
-		glDeleteVertexArrays(1, &rendererID);
-			});
+			glDeleteVertexArrays(1, &rendererID);
+		});
 	}
 
 	void OpenGLVertexArray::Bind() const
 	{
 		Renderer::Submit([this]() {
-
-			//ARES_CORE_LOG("Binding VA {0}", this->m_RendererID);
-		glBindVertexArray(this->m_RendererID);
-			});
+			glBindVertexArray(this->m_RendererID);
+		});
 	}
 	void OpenGLVertexArray::Unbind() const
 	{
-		Renderer::Submit([=]() {
-		glBindVertexArray(0);
-			});
+		Renderer::Submit([]() {
+			glBindVertexArray(0);
+		});
 	}
 
 	static GLenum ShaderDataType2OpenGLBaseType(ShaderDataType type) {
@@ -62,77 +57,63 @@ namespace Ares {
 		ARES_CORE_ASSERT(buffer->GetLayout().GetElements().size(), "Vertex Buffer Has No Layout!");
 		
 		Bind();
-		//glBindVertexArray(m_RendererID);
 		buffer->Bind();
 
-
 		Renderer::Submit([this, buffer]() mutable {
-		const auto& layout = buffer->GetLayout();
+			const auto& layout = buffer->GetLayout();
 
-		for (const auto& element : layout)
-		{
-			/*glEnableVertexAttribArray(m_VertexBufferIndex);
-			glVertexAttribPointer(
-				m_VertexBufferIndex,
-				element.GetComponentCount(),
-				ShaderDataType2OpenGLBaseType(element.Type),
-				element.Normalized ? GL_TRUE : GL_FALSE,
-				layout.GetStride(),
-				(const void*)element.Offset
-			);
-			m_VertexBufferIndex++;*/
-
-			switch (element.Type)
+			for (const auto& element : layout)
 			{
-			case ShaderDataType::Float:
-			case ShaderDataType::Float2:
-			case ShaderDataType::Float3:
-			case ShaderDataType::Float4:
-			case ShaderDataType::Int:
-			case ShaderDataType::Int2:
-			case ShaderDataType::Int3:
-			case ShaderDataType::Int4:
-			case ShaderDataType::Bool:
-			{
-				glEnableVertexAttribArray(this->m_VertexBufferIndex);
-				glVertexAttribPointer(this->m_VertexBufferIndex,
-					element.GetComponentCount(),
-					ShaderDataType2OpenGLBaseType(element.Type),
-					element.Normalized ? GL_TRUE : GL_FALSE,
-					layout.GetStride(),
-					(const void*)element.Offset);
-				this->m_VertexBufferIndex++;
-				break;
-			}
-			case ShaderDataType::Mat3:
-			case ShaderDataType::Mat4:
-			{
-				uint8_t count = element.GetComponentCount();
-				for (uint8_t i = 0; i < count; i++)
+				switch (element.Type)
+				{
+				case ShaderDataType::Float:
+				case ShaderDataType::Float2:
+				case ShaderDataType::Float3:
+				case ShaderDataType::Float4:
+				case ShaderDataType::Int:
+				case ShaderDataType::Int2:
+				case ShaderDataType::Int3:
+				case ShaderDataType::Int4:
+				case ShaderDataType::Bool:
 				{
 					glEnableVertexAttribArray(this->m_VertexBufferIndex);
 					glVertexAttribPointer(this->m_VertexBufferIndex,
-						count,
+						element.GetComponentCount(),
 						ShaderDataType2OpenGLBaseType(element.Type),
 						element.Normalized ? GL_TRUE : GL_FALSE,
 						layout.GetStride(),
-						(const void*)(sizeof(float) * count * i));
-					glVertexAttribDivisor(this->m_VertexBufferIndex, 1);
+						(const void*)element.Offset);
 					this->m_VertexBufferIndex++;
+					break;
 				}
-				break;
+				case ShaderDataType::Mat3:
+				case ShaderDataType::Mat4:
+				{
+					uint8_t count = element.GetComponentCount();
+					for (uint8_t i = 0; i < count; i++)
+					{
+						glEnableVertexAttribArray(this->m_VertexBufferIndex);
+						glVertexAttribPointer(this->m_VertexBufferIndex,
+							count,
+							ShaderDataType2OpenGLBaseType(element.Type),
+							element.Normalized ? GL_TRUE : GL_FALSE,
+							layout.GetStride(),
+							(const void*)(sizeof(float) * count * i));
+						glVertexAttribDivisor(this->m_VertexBufferIndex, 1);
+						this->m_VertexBufferIndex++;
+					}
+					break;
+				}
+				default:
+					ARES_CORE_ASSERT(false, "Unknown ShaderDataType!");
+				}
 			}
-			default:
-				ARES_CORE_ASSERT(false, "Unknown ShaderDataType!");
-			}
-		}
-			});
+		});
 		m_VertexBuffers.push_back(buffer);
 	}
 	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& buffer)
 	{
 		Bind();
-		//glBindVertexArray(m_RendererID);
 		buffer->Bind();
 		m_IndexBuffer = buffer;
 	}

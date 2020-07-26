@@ -46,7 +46,6 @@ namespace Ares {
 		ARES_CORE_ASSERT(versionMajor > 4 || (versionMajor == 4 && versionMinor >= 5), "Ares requires at least OpenGL version 4.5!");
 #endif
 		
-		
 		glEnable(GL_DEPTH_TEST);
 
 		glEnable(GL_BLEND);
@@ -63,17 +62,12 @@ namespace Ares {
 
 		glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &caps.MaxTextureUnits);
 
-		//ARES_CORE_WARN("Max Texture units: {0}", caps.MaxTextureUnits);
-
 		GLenum error = glGetError();
 		while (error != GL_NO_ERROR)
 		{
 			ARES_CORE_ERROR("OpenGL Error {0}", error);
 			error = glGetError();
 		}
-
-
-
 	}
 	void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 	{
@@ -94,9 +88,7 @@ namespace Ares {
 	}
 	
 	void OpenGLRendererAPI::DrawIndexed(uint32_t indexCount)
-	//void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
 	{
-		uint32_t count = indexCount;// ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
-		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
 	}
 }

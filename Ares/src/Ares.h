@@ -19,7 +19,6 @@
 #include "imgui/imgui.h"
 
 // renderer ===============
-
 #include "Ares/Renderer/Renderer.h"
 #include "Ares/Renderer/FrameBuffer.h"
 #include "Ares/Renderer/Buffer.h"
@@ -28,22 +27,9 @@
 #include "Ares/Renderer/Shader.h"
 #include "Ares/Renderer/Camera.h"
 
-
 #include "Ares/Core/Entity.h"
 #include "Ares/Core/Scene.h"
 #include "Ares/Core/Components.h"
 
-//#include "Ares/ImGui/ImGuiLayer.h"
-
-
 #include "Ares/Renderer/CameraController.h"
 #include "Ares/Renderer/Renderer2D.h"
-//#include "Ares/Renderer/RenderCommand.h"
-//#include "Ares/Renderer/SubTexture2D.h"
-
-
-// =========================
-
-// entry point =============
-//#include "Ares/Core/EntryPoint.h"
-// =========================

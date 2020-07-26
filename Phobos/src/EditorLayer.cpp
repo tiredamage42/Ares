@@ -1,5 +1,4 @@
 #include "EditorLayer.h"
-//#include <imgui/imgui.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -8,48 +7,27 @@ namespace Ares
 {
 
     EditorLayer::EditorLayer()
-        : Layer("Sandbox2D"), m_ClearColor{ 0.2f, 0.3f, 0.8f, 1.0f },
+        : Layer("Sandbox2D"), 
         m_CameraController(1280.0f / 720.0f)
     {
     }
     void EditorLayer::OnAttach()
     {
-        //m_Texture = Ares::Texture2D::Create("Assets/Textures/Checkerboard.png");
-
         FrameBufferSpecs fbSpec;
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
         m_FrameBuffer = Ares::FrameBuffer::Create(fbSpec);
 
-        
         memset(m_FrameTimeGraph, 0, sizeof(float) * 100);
 
         m_ActiveScene = CreateRef<Scene>();
         
         auto square = m_ActiveScene->CreateEntity("Custom Entity");
        
-
-
-        //m_SpriteSheet = Ares::Texture2D::Create("Assets/Game/Textures/RPGpack_sheet_2X.png");
-
-    /*m_TextureStairs = Ares::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 7.0f, 6.0f }, { 128, 128 });
-
-    m_TextureBarrel = Ares::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 8.0f, 2.0f }, { 128, 128 });
-    m_TextureTree = Ares::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 2.0f, 1.0f }, { 128, 128 }, { 1,2 });*/
-
         Ref<Texture2D> spriteSheet = Texture2D::Create("Assets/Game/Textures/RPGpack_sheet_2X.png");
 
-        glm::vec2 tiling, offset;
-        Texture2D::CalculateTilingAndOffsetForSubTexture(&tiling, &offset, spriteSheet, { 8.0f, 2.0f }, { 128, 128 });
-
-        /*ARES_LOG("tiling: {0}/{1}", tiling.x, tiling.y);
-        ARES_LOG("offset: {0}/{1}", offset.x, offset.y);*/
-
-        SpriteRendererComponent& spriteRenderer = square.AddComponent<SpriteRendererComponent>();
-        
+        SpriteRendererComponent& spriteRenderer = square.AddComponent<SpriteRendererComponent>();        
         spriteRenderer.Color = glm::vec4{ 0, 1, 0, 1 };
-        spriteRenderer.Tiling = tiling;
-        spriteRenderer.Offset = offset;
         spriteRenderer.Texture = spriteSheet;
 
         m_SquareEntity = square;
@@ -61,14 +39,7 @@ namespace Ares
     }
     void EditorLayer::OnUpdate()
     {
-        /*Renderer::Clear(
-            m_ClearColor[0],
-            m_ClearColor[1],
-            m_ClearColor[2],
-            m_ClearColor[3]
-        );*/
-
-#if 1
+        
         // Resize
         /*
             This solution will render the 'old' sized framebuffer onto the 'new' sized ImGuiPanel
@@ -79,55 +50,37 @@ namespace Ares
         */
         FrameBufferSpecs spec = m_FrameBuffer->GetSpecs();
         // zero sized framebuffer is invalid
-        if (
-            m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && 
-            (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
-        {
-            m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+        if (m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y))
             m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
-        }
-
+        
         if (m_ViewportFocused)
-            m_CameraController.OnUpdate();// deltaTime);
+            m_CameraController.OnUpdate();
 
         // render
-        Renderer2D::ResetStats();        
         m_FrameBuffer->Bind();
 
         Renderer::Clear(.1f, .1f, .1f, 1);
             
-        /*RenderCommand::SetClearColor({ .1f, .1f, .1f, 1 });
-        RenderCommand::Clear();*/
         Renderer2D::BeginScene(m_CameraController.GetCamera());
 
         // update scnee
         m_ActiveScene->OnUpdate();
 
-        /*Renderer2D::DrawQuad(
+        Renderer2D::DrawQuad(
             { 0.0f, 0.0f, 0.1f }, glm::radians(-45.0f), { 0.5f, 0.5f }, 
             nullptr, glm::vec2(1.0f), glm::vec2(0.0f), { 1.0f, 0.0f, 1.0f, 1.0f }
-        );*/
+        );
         
-
         Renderer2D::EndScene();
 
         m_FrameBuffer->Unbind();
-#endif
     }
-
-
-
-
-
 
     void EditorLayer::OnImGuiDraw()
     {
 
-        /*ImGui::Begin("GameLayer");
-        ImGui::ColorEdit4("Clear Color", m_ClearColor);
-        ImGui::End();*/
+    
 
-#if 1
         static bool dockspaceOpen = true;
 
         static bool opt_fullscreen_persistant = true;
@@ -178,10 +131,6 @@ namespace Ares
         {
             if (ImGui::BeginMenu("File"))
             {
-                // Disabling fullscreen would allow the window to be moved to the front of other windows,
-                // which we can't undo at the moment without finer window depth/z control.
-                //ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
-
                 if (ImGui::MenuItem("Exit"))
                     Ares::Application::Get().Close();
 
@@ -212,45 +161,53 @@ namespace Ares
             ImGui::Text("Quads: %d", stats.QuadCount);
             ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
             ImGui::Text("Indicies: %d", stats.GetTotalIndexCount());
-
-            ImGui::Separator();
-
-            if (m_SquareEntity)
-            {
-                auto& tag = m_SquareEntity.GetComponent<TagComponent>().Tag;
-                ImGui::Text("%s", tag.c_str());
-                auto& squareColor = m_SquareEntity.GetComponent<SpriteRendererComponent>().Color;
-                ImGui::ColorEdit4("Square Color", glm::value_ptr(squareColor));
-            }
-            
-            ImGui::Separator();
             
             if (ImGui::DragInt("Max Quads Per Draw", &m_MaxQuadsPerDraw, 10, 0, 100000))
             {
                 Renderer2D::SetMaxQuadsPerDraw(m_MaxQuadsPerDraw);
             }
             ImGui::SliderInt("Num Sprites", &m_NumberOfSprites, 0, 1000);
+
+
+            if (m_SquareEntity)
+            {
+                ImGui::Separator();
+                
+                auto& tag = m_SquareEntity.GetComponent<TagComponent>().Tag;
+                ImGui::Text("%s", tag.c_str());
+
+                SpriteRendererComponent& spriteRenderer = m_SquareEntity.GetComponent<SpriteRendererComponent>();
+                
+                auto& squareColor = spriteRenderer.Color;
+                
+                ImGui::ColorEdit4("Sprite Color", glm::value_ptr(squareColor));
+
+                if (ImGui::SliderInt2("Sprite Sheet Coords", glm::value_ptr(m_SpriteSheetCoord), 0, 20)) 
+                    spriteRenderer.SetSpriteSheetCoords(m_SpriteSheetCoord, { 128, 128 }, m_SpriteSize);
+                
+                if (ImGui::SliderInt2("Sprite Size", glm::value_ptr(m_SpriteSize), 1, 3)) 
+                    spriteRenderer.SetSpriteSheetCoords(m_SpriteSheetCoord, { 128, 128 }, m_SpriteSize);
+                
+                ImGui::Separator();
+            }
+            
             ImGui::End();
         }
 
         ImGui::Begin("Renderer Performance:");
         {
-
             m_FrameTimeGraph[values_offset] = (float)(Time::GetDeltaTime() * 1000.0); // get in milliseconds
             values_offset = (values_offset + 1) % 100;
 
             ImGui::PlotLines("##Frametime", m_FrameTimeGraph, 100, values_offset, "Frametime (ms)", 0.0f, 66.6f, ImVec2(0, 100));
-
             ImGui::Text("Frametime: %.2fms", Time::GetDeltaTime() * 1000.0); // get in milliseconds
-
             ImGui::Text("FPS: %d", Time::GetFPS());
-
 
             auto& caps = RendererAPI::GetCapabilities();
             ImGui::Text("Vendor: %s", caps.Vendor.c_str());
             ImGui::Text("Renderer: %s", caps.Renderer.c_str());
             ImGui::Text("Version: %s", caps.Version.c_str());
-
+            
             ImGui::End();
         }
 
@@ -267,12 +224,12 @@ namespace Ares
         m_ViewportSize = { viewportSize.x, viewportSize.y };
 
         uint32_t textureID = m_FrameBuffer->GetColorAttachmentRendererID();
-        ImGui::Image((void*)textureID, ImVec2{ viewportSize.x, viewportSize.y }, ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::Image((void*)textureID, viewportSize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::End();
         ImGui::PopStyleVar();
 
         ImGui::End();
-#endif
+
     }
 
     void EditorLayer::OnEvent(Ares::Event& e)

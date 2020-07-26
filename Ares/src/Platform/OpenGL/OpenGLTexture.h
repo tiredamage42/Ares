@@ -28,8 +28,6 @@ namespace Ares {
 
 		inline virtual uint32_t GetRendererID() const override { return m_RendererID; }
 
-		//virtual void SetData(void* data, uint32_t size) override;
-
 		virtual bool operator==(const Texture& other) const override
 		{
 			return m_RendererID == ((OpenGLTexture2D&)other).m_RendererID;
@@ -42,11 +40,9 @@ namespace Ares {
 		uint32_t m_Width, m_Height;
 
 		Buffer m_ImageData;
-		//bool m_IsHDR = false;
 		bool m_Locked = false;
 
 		std::string m_Path;
-		//GLenum m_InternalFormat, m_DataFormat;
 	};
 
 }

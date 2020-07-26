@@ -19,12 +19,8 @@ namespace Ares
     {
         // entt::entity = uint32_t
         Entity entity = { m_Registry.create(), this };
-
-        auto& tag = entity.AddComponent<TagComponent>(name.empty() ? "Entity" : name);
-        //tag.Tag = name.empty() ? "Entity" : name;
-
+        entity.AddComponent<TagComponent>(name.empty() ? "Entity" : name);
         entity.AddComponent<TransformComponent>();
-
         return entity;
     }
     void Scene::OnUpdate()
@@ -36,7 +32,6 @@ namespace Ares
             auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
             
             Renderer2D::DrawQuad(transform, sprite.Texture, sprite.Tiling, sprite.Offset, sprite.Color);
-            //Renderer2D::DrawQuad(transform, nullptr, sprite.Tiling, sprite.Offset, sprite.Color);
         }
     }
 }

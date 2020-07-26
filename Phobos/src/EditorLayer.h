@@ -36,8 +36,7 @@ namespace Ares
 		int values_offset = 0;
 
 		glm::vec4 m_SquareColor = { 1.0f, .5f, 0, 1 };
-	private:
-		float m_ClearColor[4];
+		glm::ivec2 m_SpriteSheetCoord{ 0 }, m_SpriteSize{ 1 };
 
 	};
 }

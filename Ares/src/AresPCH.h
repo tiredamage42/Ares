@@ -17,7 +17,6 @@
 
 #include "Ares/Debug/Profiling.h"
 
-
 #ifdef ARES_PLATFORM_WINDOWS
 	#include <Windows.h>
 #endif // ARES_PLATFORM_WINDOWS

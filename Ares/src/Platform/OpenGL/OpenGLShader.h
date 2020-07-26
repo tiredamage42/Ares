@@ -1,6 +1,5 @@
 #pragma once
 
-//#include <string>
 #include "Ares/Renderer/Shader.h"
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -25,10 +24,7 @@ namespace Ares {
 		virtual const std::string& GetName() const override { return m_Name; }
 
 		virtual void SetInt(const std::string& name, int value) override;
-		
-		
-		
-		//virtual void SetIntArray(const std::string& name, int** values, uint32_t count) override;
+				
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count, bool deleteFromMem = true) override;
 		 
 		virtual void SetFloat(const std::string& name, float value) override;

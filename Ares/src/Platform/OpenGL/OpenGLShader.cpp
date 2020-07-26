@@ -4,7 +4,6 @@
 #include "Platform/OpenGL/OpenGLShader.h"
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
-//#include <glad/glad.h>
 
 #include "Ares/Renderer/Renderer.h"
 
@@ -22,68 +21,57 @@ namespace Ares {
 		return 0;
 	}
 
-	OpenGLShader::OpenGLShader(const std::string& filePath)
+	OpenGLShader::OpenGLShader(const std::string& filepath)
 	{
+		// extract name from filepath `assets/shaders/shader.glsl`
+		// find last of forward slash or back slash
+		size_t lastSlashI = filepath.find_last_of("/\\");
+		lastSlashI = lastSlashI == std::string::npos ? 0 : lastSlashI + 1;
+		size_t lastDotI = filepath.rfind('.');
+		auto count = lastDotI == std::string::npos ? filepath.size() - lastSlashI : lastDotI - lastSlashI;
+		m_Name = filepath.substr(lastSlashI, count);
+
 		
-		std::string source = ReadFile(filePath);
-		auto shaderSources = PreProcess(source);
+		std::string source = ReadFile(filepath);
+		std::unordered_map<GLenum, std::string> sources = PreProcess(source);
 
 		Renderer::Submit([=]() {
-			Compile(shaderSources);
-			});
-
-		// extract name from filepath
-
-		// assets/shaders/shader.glsl
-
-		// find last of forward slash or back slash
-		size_t lastSlashIndex = filePath.find_last_of("/\\");
-		lastSlashIndex = lastSlashIndex == std::string::npos ? 0 : lastSlashIndex + 1;
-
-		auto lastDotIndex = filePath.rfind('.');
-		auto count = lastDotIndex == std::string::npos ? 
-			filePath.size() - lastSlashIndex : 
-			lastDotIndex - lastSlashIndex;
-
-		m_Name = filePath.substr(lastSlashIndex, count);
-
+			Compile(sources);
+		});
 	}
 
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 		: m_Name(name)
 	{
-		ARES_PROFILE_FUNCTION();
-
 		std::unordered_map<GLenum, std::string> sources;
 		sources[GL_VERTEX_SHADER] = vertexSrc;
 		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
 
 		Renderer::Submit([=]() {
 			Compile(sources);
-			});
+		});
 	}
 
 	OpenGLShader::~OpenGLShader()
 	{
-		Renderer::Submit([=]() {
-			glDeleteProgram(m_RendererID);
-			});
+		GLuint rendererID = m_RendererID;
+		Renderer::Submit([rendererID]() {
+			glDeleteProgram(rendererID);
+		});
 	}
-	
-	
 
 	void OpenGLShader::Bind()
 	{
 		Renderer::Submit([this]() {
-		glUseProgram(m_RendererID);
-			});
-
+			glUseProgram(this->m_RendererID);
+		});
 	}
+
 	void OpenGLShader::Unbind() const
 	{
-		Renderer::Submit([=]() {
-		glUseProgram(0);
-			});
+		Renderer::Submit([]() {
+			glUseProgram(0);
+		});
 	}
 
 
@@ -161,8 +149,6 @@ namespace Ares {
 
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
-		//ARES_PROFILE_FUNCTION();
-
 		// Get a program object.
 		GLuint program = glCreateProgram();
 
@@ -264,75 +250,54 @@ namespace Ares {
 	{
 		Renderer::Submit([=]() {
 			UploadUniformInt(name, value);
-			});
+		});
 	}
 
-	//void OpenGLShader::SetIntArray(const std::string& name, int** values, const uint32_t count)
 	void OpenGLShader::SetIntArray(const std::string& name, int* values, const uint32_t count, bool deleteFromMem)
-
 	{
-		/*for (int i = 0; i < count; i++)
-		{
-			ARES_CORE_WARN("value before: {0}", *values[i]);
-		}*/
-
-
-		/*int samplers[32];
-		for (int i = 0; i < 32; i++)
-			samplers[i] = i;*/
-
-		Renderer::Submit(
-			[=]() mutable {
-
-				//auto v = values;
-
-			/*for (int i = 0; i < count; i++)
-			{
-				ARES_CORE_WARN("value mediums: {0}", values[i]);
+		Renderer::Submit([=]() mutable {	
+			UploadUniformIntArray(name, values, count);
+			if (deleteFromMem)
+				delete[] values;
+			/*{
 			}*/
-		UploadUniformIntArray(name, values, count);
-		if (deleteFromMem)
-		{
-			delete[] values;
-		}
-			}
-		);
+		});
 	}
 	void OpenGLShader::SetFloat(const std::string& name, float value)
 	{
 		Renderer::Submit([=]() {
-		UploadUniformFloat(name, value);
-			});
+			UploadUniformFloat(name, value);
+		});
 	}
 	void OpenGLShader::SetFloat2(const std::string& name, glm::vec2 value)
 	{
 		Renderer::Submit([=]() {
-		UploadUniformFloat2(name, value);
-			});
+			UploadUniformFloat2(name, value);
+		});
 	}
 	void OpenGLShader::SetFloat3(const std::string& name, glm::vec3 value)
 	{
 		Renderer::Submit([=]() {
-		UploadUniformFloat3(name, value);
-			});
+			UploadUniformFloat3(name, value);
+		});
 	}
 	void OpenGLShader::SetFloat4(const std::string& name, glm::vec4 value)
 	{
 		Renderer::Submit([=]() {
-		UploadUniformFloat4(name, value);
-			});
+			UploadUniformFloat4(name, value);
+		});
 	}
 	void OpenGLShader::SetMat3(const std::string& name, glm::mat3 value)
 	{
 		Renderer::Submit([=]() {
-		UploadUniformMat3(name, value);
-			});
+			UploadUniformMat3(name, value);
+		});
 	}
 	void OpenGLShader::SetMat4(const std::string& name, glm::mat4 value)
 	{
 		Renderer::Submit([=]() {
-		UploadUniformMat4(name, value);
-			});
+			UploadUniformMat4(name, value);
+		});
 	}
 
 	
@@ -380,14 +345,7 @@ namespace Ares {
 	GLint OpenGLShader::GetUniformLocation(const std::string& name) const
 	{
 
-		GLint result = glGetUniformLocation(m_RendererID, name.c_str());
-		if (result == -1)
-			ARES_CORE_WARN("Could not find uniform '{0}' in shader", name);
-
-		return result;
-
-
-		/*if (m_UniformLocationMap.find(name) != m_UniformLocationMap.end())
+		if (m_UniformLocationMap.find(name) != m_UniformLocationMap.end())
 			return m_UniformLocationMap[name];
 		
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
@@ -397,6 +355,6 @@ namespace Ares {
 			return location;
 		}
 		m_UniformLocationMap[name] = location;
-		return location;*/
+		return location;
 	}
 }

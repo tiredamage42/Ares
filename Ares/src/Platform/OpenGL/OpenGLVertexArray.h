@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "Ares/Renderer/VertexArray.h"
 
 namespace Ares {

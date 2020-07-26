@@ -11,8 +11,6 @@
 
 #include <glad/glad.h>
 
-//#include "Platform/OpenGL/OpenGLContext.h"
-
 namespace Ares {
 
 	static uint8_t s_GLFWWindowCount = 0;
@@ -23,21 +21,15 @@ namespace Ares {
 
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
-		ARES_PROFILE_FUNCTION();
-
 		Init(props);
 	}
 	WindowsWindow::~WindowsWindow()
 	{
-		ARES_PROFILE_FUNCTION();
-
 		Shutdown();
 	}
 
 	void WindowsWindow::Init(const WindowProps& props)
 	{
-		ARES_PROFILE_FUNCTION();
-
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
@@ -52,13 +44,11 @@ namespace Ares {
 			glfwSetErrorCallback(GLFWErrorCallback);
 		}
 
-		{
-			
+		{	
 #if defined(ARES_DEBUG)
 			if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
-
 			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 			s_GLFWWindowCount++;
 		}
@@ -67,10 +57,6 @@ namespace Ares {
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		ARES_CORE_ASSERT(status, "Could not initialize Glad!");
 
-
-		/*m_Context = GraphicsContext::Create(m_Window);
-		m_Context->Init();*/
-		
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
 
@@ -158,8 +144,6 @@ namespace Ares {
 
 	void WindowsWindow::Shutdown()
 	{
-		ARES_PROFILE_FUNCTION();
-
 		glfwDestroyWindow(m_Window);
 
 		s_GLFWWindowCount--;
@@ -172,17 +156,11 @@ namespace Ares {
 
 	void WindowsWindow::OnUpdate()
 	{
-		ARES_PROFILE_FUNCTION();
-
 		glfwPollEvents();
-
 		glfwSwapBuffers(m_Window);
-		//m_Context->SwapBuffers();
 	}
 	void WindowsWindow::SetVSync(bool enabled)
 	{
-		ARES_PROFILE_FUNCTION();
-
 		if (enabled)
 			glfwSwapInterval(1);
 		else
