@@ -19,11 +19,17 @@ namespace Ares {
         m_Window->SetEventCallback(ARES_BIND_EVENT_FN(Application::OnEvent));
         //m_Window->SetVSync(false);
 
-        Renderer::Init();
 
         m_ImGuiLayer = new ImGuiLayer();
-
         PushOverlay(m_ImGuiLayer);
+
+        Renderer::Init();
+
+        //ARES_CORE_LOG("First Wait and render");
+
+        Renderer::WaitAndRender();
+
+        //ARES_CORE_LOG("First Wait and render END");
     }
     Application::~Application()
     {
@@ -87,6 +93,19 @@ namespace Ares {
         return false;
     }
 
+    void Application::RenderImGui()
+    {
+        // draw custom imgui for debugging, etc...
+        m_ImGuiLayer->BeginImGui();
+
+        for (Layer* layer : m_LayerStack)
+            layer->OnImGuiDraw();
+
+        m_ImGuiLayer->EndImGui();
+
+    }
+
+
     void Application::Run() 
     {
         while (m_Running)
@@ -95,19 +114,33 @@ namespace Ares {
 
             if (!m_Minimized)
             {
+            //ARES_CORE_LOG("Update Start");
                 for (Layer* layer : m_LayerStack)
                     layer->OnUpdate();
-
-                Renderer::WaitAndRender();
+            //ARES_CORE_LOG("Update END");
             }
 
+            
+            
+            
+            
+            // Render ImGui on render thread
+            //Application* app = this;
+
+            Renderer::Submit([this]() { this->RenderImGui(); });
+            //ARES_RENDER_1(app, { app->RenderImGui(); });
+    
+            //ARES_CORE_LOG("Render Run Begin");
+            Renderer::WaitAndRender();
+            //ARES_CORE_LOG("Render Run end");
+
             // draw custom imgui for debugging, etc...
-            m_ImGuiLayer->BeginImGui();        
+            /*m_ImGuiLayer->BeginImGui();        
             
             for (Layer* layer : m_LayerStack)
                 layer->OnImGuiDraw();
             
-            m_ImGuiLayer->EndImGui();
+            m_ImGuiLayer->EndImGui();*/
 
             m_Window->OnUpdate();
 

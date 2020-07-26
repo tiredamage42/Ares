@@ -12,16 +12,16 @@ namespace Ares {
 		switch (severity)
 		{
 		case GL_DEBUG_SEVERITY_HIGH:         
-			ARES_CORE_CRITICAL(message); 
+			ARES_CORE_CRITICAL("[OpenGL Debug HIGH] {0}", message);
 			return;
 		case GL_DEBUG_SEVERITY_MEDIUM:       
-			ARES_CORE_ERROR(message); 
+			ARES_CORE_ERROR("[OpenGL Debug MEDIUM] {0}", message);
 			return;
 		case GL_DEBUG_SEVERITY_LOW:          
-			ARES_CORE_WARN(message); 
+			ARES_CORE_WARN("[OpenGL Debug LOW] {0}", message);
 			return;
 		case GL_DEBUG_SEVERITY_NOTIFICATION: 
-			ARES_CORE_LOG(message); 
+			ARES_CORE_LOG("[OpenGL Debug NOTIFICATION] {0}", message);
 			return;
 		}
 
@@ -30,8 +30,6 @@ namespace Ares {
 
 	void OpenGLRendererAPI::Init()
 	{
-		ARES_PROFILE_FUNCTION();
-
 		// get open gl notifications and higher
 #ifdef ARES_DEBUG
 		glEnable(GL_DEBUG_OUTPUT);
@@ -40,9 +38,42 @@ namespace Ares {
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL, GL_FALSE);
 #endif
 
+#ifdef ARES_ENABLE_ASSERTS
+		int versionMajor, versionMinor;
+		glGetIntegerv(GL_MAJOR_VERSION, &versionMajor);
+		glGetIntegerv(GL_MINOR_VERSION, &versionMinor);
+
+		ARES_CORE_ASSERT(versionMajor > 4 || (versionMajor == 4 && versionMinor >= 5), "Ares requires at least OpenGL version 4.5!");
+#endif
+		
+		
+		glEnable(GL_DEPTH_TEST);
+
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_DEPTH_TEST);
+
+		auto& caps = RendererAPI::GetCapabilities();
+
+		caps.Vendor = (const char*)glGetString(GL_VENDOR);
+		caps.Renderer = (const char*)glGetString(GL_RENDERER);
+		caps.Version = (const char*)glGetString(GL_VERSION);
+
+		glGetIntegerv(GL_MAX_SAMPLES, &caps.MaxSamples);
+		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &caps.MaxAnisotropy);
+
+		glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &caps.MaxTextureUnits);
+
+		//ARES_CORE_WARN("Max Texture units: {0}", caps.MaxTextureUnits);
+
+		GLenum error = glGetError();
+		while (error != GL_NO_ERROR)
+		{
+			ARES_CORE_ERROR("OpenGL Error {0}", error);
+			error = glGetError();
+		}
+
+
+
 	}
 	void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 	{
@@ -61,9 +92,11 @@ namespace Ares {
 		glClearColor(r, g, b, a);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
-	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
+	
+	void OpenGLRendererAPI::DrawIndexed(uint32_t indexCount)
+	//void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
 	{
-		uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
+		uint32_t count = indexCount;// ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
 	}
 }

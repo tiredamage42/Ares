@@ -4,6 +4,19 @@
 #include "Ares/Renderer/VertexArray.h"
 
 namespace Ares {
+
+
+	struct RenderAPICapabilities
+	{
+		std::string Vendor;
+		std::string Renderer;
+		std::string Version;
+
+		int MaxSamples = 0;
+		float MaxAnisotropy = 0.0f;
+		int MaxTextureUnits = 0;
+	};
+
 	class RendererAPI
 	{
 	public:
@@ -21,7 +34,18 @@ namespace Ares {
 		virtual void SetClearColor(const glm::vec4& color) = 0;
 
 		virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
-		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
+
+		virtual void DrawIndexed(uint32_t indexCount) = 0;
+		//virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
+
+
+		static RenderAPICapabilities& GetCapabilities()
+		{
+			static RenderAPICapabilities capabilities;
+			return capabilities;
+		}
+
+
 		inline static API GetAPI() { return s_API; }
 
 		static Scope<RendererAPI> Create();

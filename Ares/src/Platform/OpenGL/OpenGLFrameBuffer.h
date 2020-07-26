@@ -13,7 +13,7 @@ namespace Ares
 		//void Invalidate();
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
-		virtual void Resize(uint32_t width, uint32_t height) override;
+		virtual void Resize(uint32_t width, uint32_t height, bool force=false) override;
 		virtual uint32_t GetColorAttachmentRendererID() const override { return m_ColorAttachment; }
 		virtual const FrameBufferSpecs& GetSpecs() const override { return m_Specs; }
 	private:

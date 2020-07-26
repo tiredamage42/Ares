@@ -9,6 +9,8 @@
 
 #include "Ares/Renderer/Renderer.h"
 
+#include <glad/glad.h>
+
 //#include "Platform/OpenGL/OpenGLContext.h"
 
 namespace Ares {
@@ -51,8 +53,7 @@ namespace Ares {
 		}
 
 		{
-			ARES_PROFILE_SCOPE("glfwCreateWindow");
-
+			
 #if defined(ARES_DEBUG)
 			if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
@@ -62,9 +63,13 @@ namespace Ares {
 			s_GLFWWindowCount++;
 		}
 
+		glfwMakeContextCurrent(m_Window);
+		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		ARES_CORE_ASSERT(status, "Could not initialize Glad!");
 
-		m_Context = GraphicsContext::Create(m_Window);
-		m_Context->Init();
+
+		/*m_Context = GraphicsContext::Create(m_Window);
+		m_Context->Init();*/
 		
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
@@ -170,7 +175,9 @@ namespace Ares {
 		ARES_PROFILE_FUNCTION();
 
 		glfwPollEvents();
-		m_Context->SwapBuffers();
+
+		glfwSwapBuffers(m_Window);
+		//m_Context->SwapBuffers();
 	}
 	void WindowsWindow::SetVSync(bool enabled)
 	{

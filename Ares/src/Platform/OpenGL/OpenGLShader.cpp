@@ -6,6 +6,8 @@
 #include <glm/gtc/type_ptr.hpp>
 //#include <glad/glad.h>
 
+#include "Ares/Renderer/Renderer.h"
+
 namespace Ares {
 
 
@@ -25,7 +27,10 @@ namespace Ares {
 		
 		std::string source = ReadFile(filePath);
 		auto shaderSources = PreProcess(source);
-		Compile(shaderSources);
+
+		Renderer::Submit([=]() {
+			Compile(shaderSources);
+			});
 
 		// extract name from filepath
 
@@ -52,23 +57,33 @@ namespace Ares {
 		std::unordered_map<GLenum, std::string> sources;
 		sources[GL_VERTEX_SHADER] = vertexSrc;
 		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
-		Compile(sources);
+
+		Renderer::Submit([=]() {
+			Compile(sources);
+			});
 	}
 
 	OpenGLShader::~OpenGLShader()
 	{
-		glDeleteProgram(m_RendererID);
+		Renderer::Submit([=]() {
+			glDeleteProgram(m_RendererID);
+			});
 	}
 	
 	
 
 	void OpenGLShader::Bind()
 	{
+		Renderer::Submit([this]() {
 		glUseProgram(m_RendererID);
+			});
+
 	}
 	void OpenGLShader::Unbind() const
 	{
+		Renderer::Submit([=]() {
 		glUseProgram(0);
+			});
 	}
 
 
@@ -146,7 +161,7 @@ namespace Ares {
 
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
-		ARES_PROFILE_FUNCTION();
+		//ARES_PROFILE_FUNCTION();
 
 		// Get a program object.
 		GLuint program = glCreateProgram();
@@ -247,35 +262,77 @@ namespace Ares {
 
 	void OpenGLShader::SetInt(const std::string& name, int value)
 	{
-		UploadUniformInt(name, value);
+		Renderer::Submit([=]() {
+			UploadUniformInt(name, value);
+			});
 	}
-	void OpenGLShader::SetIntArray(const std::string& name, int* values, uint32_t count)
+
+	//void OpenGLShader::SetIntArray(const std::string& name, int** values, const uint32_t count)
+	void OpenGLShader::SetIntArray(const std::string& name, int* values, const uint32_t count, bool deleteFromMem)
+
 	{
+		/*for (int i = 0; i < count; i++)
+		{
+			ARES_CORE_WARN("value before: {0}", *values[i]);
+		}*/
+
+
+		/*int samplers[32];
+		for (int i = 0; i < 32; i++)
+			samplers[i] = i;*/
+
+		Renderer::Submit(
+			[=]() mutable {
+
+				//auto v = values;
+
+			/*for (int i = 0; i < count; i++)
+			{
+				ARES_CORE_WARN("value mediums: {0}", values[i]);
+			}*/
 		UploadUniformIntArray(name, values, count);
+		if (deleteFromMem)
+		{
+			delete[] values;
+		}
+			}
+		);
 	}
 	void OpenGLShader::SetFloat(const std::string& name, float value)
 	{
+		Renderer::Submit([=]() {
 		UploadUniformFloat(name, value);
+			});
 	}
 	void OpenGLShader::SetFloat2(const std::string& name, glm::vec2 value)
 	{
+		Renderer::Submit([=]() {
 		UploadUniformFloat2(name, value);
+			});
 	}
 	void OpenGLShader::SetFloat3(const std::string& name, glm::vec3 value)
 	{
+		Renderer::Submit([=]() {
 		UploadUniformFloat3(name, value);
+			});
 	}
 	void OpenGLShader::SetFloat4(const std::string& name, glm::vec4 value)
 	{
+		Renderer::Submit([=]() {
 		UploadUniformFloat4(name, value);
+			});
 	}
 	void OpenGLShader::SetMat3(const std::string& name, glm::mat3 value)
 	{
+		Renderer::Submit([=]() {
 		UploadUniformMat3(name, value);
+			});
 	}
 	void OpenGLShader::SetMat4(const std::string& name, glm::mat4 value)
 	{
+		Renderer::Submit([=]() {
 		UploadUniformMat4(name, value);
+			});
 	}
 
 	
@@ -322,7 +379,15 @@ namespace Ares {
 
 	GLint OpenGLShader::GetUniformLocation(const std::string& name) const
 	{
-		if (m_UniformLocationMap.find(name) != m_UniformLocationMap.end())
+
+		GLint result = glGetUniformLocation(m_RendererID, name.c_str());
+		if (result == -1)
+			ARES_CORE_WARN("Could not find uniform '{0}' in shader", name);
+
+		return result;
+
+
+		/*if (m_UniformLocationMap.find(name) != m_UniformLocationMap.end())
 			return m_UniformLocationMap[name];
 		
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
@@ -332,6 +397,6 @@ namespace Ares {
 			return location;
 		}
 		m_UniformLocationMap[name] = location;
-		return location;
+		return location;*/
 	}
 }

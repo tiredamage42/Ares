@@ -14,7 +14,8 @@ namespace Ares {
 		virtual void Clear() override;
 		virtual void Clear(float r, float g, float b, float a) override;
 
-		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) override;
+		//virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) override;
+		virtual void DrawIndexed(uint32_t indexCount) override;
 
 	private:
 

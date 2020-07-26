@@ -40,5 +40,17 @@ namespace Ares
 	}
 
 
+	uint32_t Texture::GetBPP(TextureFormat format)
+	{
+		switch (format)
+		{
+		case TextureFormat::RGB:    return 3;
+		case TextureFormat::RGBA:   return 4;
+		}
+		return 0;
+	}
+
+
+
 
 }

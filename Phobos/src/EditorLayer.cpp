@@ -8,18 +8,22 @@ namespace Ares
 {
 
     EditorLayer::EditorLayer()
-        : Layer("Sandbox2D"),
+        : Layer("Sandbox2D"), m_ClearColor{ 0.2f, 0.3f, 0.8f, 1.0f },
         m_CameraController(1280.0f / 720.0f)
     {
     }
     void EditorLayer::OnAttach()
     {
-        m_Texture = Ares::Texture2D::Create("Assets/Textures/Checkerboard.png");
+        //m_Texture = Ares::Texture2D::Create("Assets/Textures/Checkerboard.png");
 
         FrameBufferSpecs fbSpec;
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
         m_FrameBuffer = Ares::FrameBuffer::Create(fbSpec);
+
+        ARES_LOG("Created Frame Buffer");
+
+
 
         memset(m_FrameTimeGraph, 0, sizeof(float) * 100);
 
@@ -38,9 +42,14 @@ namespace Ares
     }
     void EditorLayer::OnUpdate()
     {
-        Renderer::Clear(.2f, .3f, .8f, 1);
+        /*Renderer::Clear(
+            m_ClearColor[0],
+            m_ClearColor[1],
+            m_ClearColor[2],
+            m_ClearColor[3]
+        );*/
 
-#if 0
+#if 1
         // Resize
         /*
             This solution will render the 'old' sized framebuffer onto the 'new' sized ImGuiPanel
@@ -65,15 +74,18 @@ namespace Ares
         // render
         Renderer2D::ResetStats();        
         m_FrameBuffer->Bind();
-        RenderCommand::SetClearColor({ .1f, .1f, .1f, 1 });
-        RenderCommand::Clear();
+
+        Renderer::Clear(.1f, .1f, .1f, 1);
+            
+        /*RenderCommand::SetClearColor({ .1f, .1f, .1f, 1 });
+        RenderCommand::Clear();*/
         Renderer2D::BeginScene(m_CameraController.GetCamera());
 
         // update scnee
         m_ActiveScene->OnUpdate();
 
         Renderer2D::DrawQuad(
-            { 0.0f, 0.0f, 0.1f }, glm::radians(-45.0f), { 0.1f, 0.1f }, 
+            { 0.0f, 0.0f, 0.1f }, glm::radians(-45.0f), { 0.5f, 0.5f }, 
             nullptr, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f }
         );
         
@@ -91,7 +103,12 @@ namespace Ares
 
     void EditorLayer::OnImGuiDraw()
     {
-#if 0
+
+        /*ImGui::Begin("GameLayer");
+        ImGui::ColorEdit4("Clear Color", m_ClearColor);
+        ImGui::End();*/
+
+#if 1
         static bool dockspaceOpen = true;
 
         static bool opt_fullscreen_persistant = true;
@@ -208,6 +225,12 @@ namespace Ares
             ImGui::Text("Frametime: %.2fms", Time::GetDeltaTime() * 1000.0); // get in milliseconds
 
             ImGui::Text("FPS: %d", Time::GetFPS());
+
+
+            auto& caps = RendererAPI::GetCapabilities();
+            ImGui::Text("Vendor: %s", caps.Vendor.c_str());
+            ImGui::Text("Renderer: %s", caps.Renderer.c_str());
+            ImGui::Text("Version: %s", caps.Version.c_str());
 
             ImGui::End();
         }

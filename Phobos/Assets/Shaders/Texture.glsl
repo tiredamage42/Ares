@@ -37,6 +37,8 @@ uniform sampler2D u_Textures[32];
 
 void main()
 {
+	/*color = vec4(1, 0, 1, 1);
+	return;*/
 
 	vec4 texColor = v_Color;
 	switch (int(v_TexIndex))

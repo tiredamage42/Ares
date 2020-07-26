@@ -4,26 +4,38 @@
 
 #include "Platform/OpenGL/OpenGLVertexArray.h"
 #include <glad/glad.h>
-
+#include "Ares/Renderer/Renderer.h"
 namespace Ares {
 
 
 	OpenGLVertexArray::OpenGLVertexArray()
 	{
-		glCreateVertexArrays(1, &m_RendererID);
+		Renderer::Submit([this]() mutable {
+			glCreateVertexArrays(1, &this->m_RendererID);
+			});
 	}
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
-		glDeleteVertexArrays(1, &m_RendererID);
+		GLuint rendererID = m_RendererID;
+
+		Renderer::Submit([rendererID]() {
+		glDeleteVertexArrays(1, &rendererID);
+			});
 	}
 
 	void OpenGLVertexArray::Bind() const
 	{
-		glBindVertexArray(m_RendererID);
+		Renderer::Submit([this]() {
+
+			//ARES_CORE_LOG("Binding VA {0}", this->m_RendererID);
+		glBindVertexArray(this->m_RendererID);
+			});
 	}
 	void OpenGLVertexArray::Unbind() const
 	{
+		Renderer::Submit([=]() {
 		glBindVertexArray(0);
+			});
 	}
 
 	static GLenum ShaderDataType2OpenGLBaseType(ShaderDataType type) {
@@ -47,13 +59,14 @@ namespace Ares {
 
 	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& buffer)
 	{
-		ARES_PROFILE_FUNCTION();
-
 		ARES_CORE_ASSERT(buffer->GetLayout().GetElements().size(), "Vertex Buffer Has No Layout!");
 		
-		glBindVertexArray(m_RendererID);
+		Bind();
+		//glBindVertexArray(m_RendererID);
 		buffer->Bind();
 
+
+		Renderer::Submit([this, buffer]() mutable {
 		const auto& layout = buffer->GetLayout();
 
 		for (const auto& element : layout)
@@ -81,14 +94,14 @@ namespace Ares {
 			case ShaderDataType::Int4:
 			case ShaderDataType::Bool:
 			{
-				glEnableVertexAttribArray(m_VertexBufferIndex);
-				glVertexAttribPointer(m_VertexBufferIndex,
+				glEnableVertexAttribArray(this->m_VertexBufferIndex);
+				glVertexAttribPointer(this->m_VertexBufferIndex,
 					element.GetComponentCount(),
 					ShaderDataType2OpenGLBaseType(element.Type),
 					element.Normalized ? GL_TRUE : GL_FALSE,
 					layout.GetStride(),
 					(const void*)element.Offset);
-				m_VertexBufferIndex++;
+				this->m_VertexBufferIndex++;
 				break;
 			}
 			case ShaderDataType::Mat3:
@@ -97,15 +110,15 @@ namespace Ares {
 				uint8_t count = element.GetComponentCount();
 				for (uint8_t i = 0; i < count; i++)
 				{
-					glEnableVertexAttribArray(m_VertexBufferIndex);
-					glVertexAttribPointer(m_VertexBufferIndex,
+					glEnableVertexAttribArray(this->m_VertexBufferIndex);
+					glVertexAttribPointer(this->m_VertexBufferIndex,
 						count,
 						ShaderDataType2OpenGLBaseType(element.Type),
 						element.Normalized ? GL_TRUE : GL_FALSE,
 						layout.GetStride(),
 						(const void*)(sizeof(float) * count * i));
-					glVertexAttribDivisor(m_VertexBufferIndex, 1);
-					m_VertexBufferIndex++;
+					glVertexAttribDivisor(this->m_VertexBufferIndex, 1);
+					this->m_VertexBufferIndex++;
 				}
 				break;
 			}
@@ -113,13 +126,13 @@ namespace Ares {
 				ARES_CORE_ASSERT(false, "Unknown ShaderDataType!");
 			}
 		}
+			});
 		m_VertexBuffers.push_back(buffer);
 	}
 	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& buffer)
 	{
-		ARES_PROFILE_FUNCTION();
-
-		glBindVertexArray(m_RendererID);
+		Bind();
+		//glBindVertexArray(m_RendererID);
 		buffer->Bind();
 		m_IndexBuffer = buffer;
 	}

@@ -28,6 +28,7 @@ namespace Ares {
 
         void PushLayer(Layer* layer);
         void PushOverlay(Layer* layer);
+        void RenderImGui();
 
         inline Window& GetWindow() { return *m_Window; };
         

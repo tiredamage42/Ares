@@ -25,7 +25,12 @@ namespace Ares {
 			s_RendererAPI->Clear();
 		}
 
-		inline static unsigned int Clear(void* datablock)
+		inline static void Clear(float r, float g, float b, float a)
+		{
+			s_RendererAPI->Clear(r, g, b, a);
+		}
+
+		/*inline static unsigned int Clear(void* datablock)
 		{
 			float* data = (float*)datablock;
 
@@ -37,12 +42,16 @@ namespace Ares {
 			s_RendererAPI->Clear(r, g, b, a);
 
 			return sizeof(float) * 4;
-		}
+		}*/
 
 
-		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0)
+		/*inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0)
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, indexCount);
+		}*/
+		inline static void DrawIndexed(uint32_t indexCount)
+		{
+			s_RendererAPI->DrawIndexed(indexCount);
 		}
 
 	private:

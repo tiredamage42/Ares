@@ -26,7 +26,7 @@ namespace Ares {
 
 		GLFWwindow* m_Window;
 
-		Scope<GraphicsContext> m_Context;
+		//Scope<GraphicsContext> m_Context;
 
 		struct WindowData {
 			std::string Title;

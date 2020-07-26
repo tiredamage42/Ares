@@ -2,6 +2,8 @@
 
 
 #include "Ares/Renderer/Buffer.h"
+#include "Ares/Core/Buffer.h"
+
 namespace Ares {
 
 	class OpenGLVertexBuffer : public VertexBuffer
@@ -19,7 +21,7 @@ namespace Ares {
 		virtual const BufferLayout& GetLayout() const override { return m_Layout; }
 		virtual void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
 
-		virtual void SetData(const void* data, uint32_t size) const override;
+		virtual void SetData(void* data, uint32_t size) override;
 
 
 
@@ -27,6 +29,8 @@ namespace Ares {
 	private:
 		uint32_t m_RendererID;
 		BufferLayout m_Layout;
+
+		Buffer m_LocalData;
 	};
 
 	class OpenGLIndexBuffer : public IndexBuffer
@@ -46,6 +50,8 @@ namespace Ares {
 	private:
 		uint32_t m_RendererID;
 		uint32_t m_Count;
+
+		Buffer m_LocalData;
 	};
 
 	
