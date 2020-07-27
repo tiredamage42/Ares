@@ -48,6 +48,9 @@ namespace Ares {
 		
 		glEnable(GL_DEPTH_TEST);
 
+		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+		glFrontFace(GL_CCW);
+
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -87,8 +90,13 @@ namespace Ares {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 	
-	void OpenGLRendererAPI::DrawIndexed(uint32_t indexCount)
+	void OpenGLRendererAPI::DrawIndexed(uint32_t indexCount, bool depthTest)
 	{
+		if (depthTest)
+			glEnable(GL_DEPTH_TEST);
+		else
+			glDisable(GL_DEPTH_TEST);
+
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
 	}
 }

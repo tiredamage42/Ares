@@ -25,9 +25,9 @@ namespace Ares {
 		{
 			s_RendererAPI->Clear(r, g, b, a);
 		}
-		inline static void DrawIndexed(uint32_t indexCount)
+		inline static void DrawIndexed(uint32_t indexCount, bool depthTest)
 		{
-			s_RendererAPI->DrawIndexed(indexCount);
+			s_RendererAPI->DrawIndexed(indexCount, depthTest);
 		}
 	private:
 		static Scope<RendererAPI> s_RendererAPI;

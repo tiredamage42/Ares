@@ -11,6 +11,6 @@ namespace Ares {
 		virtual void SetClearColor(const glm::vec4& color) override;
 		virtual void Clear() override;
 		virtual void Clear(float r, float g, float b, float a) override;
-		virtual void DrawIndexed(uint32_t indexCount) override;
+		virtual void DrawIndexed(uint32_t indexCount, bool depthTest) override;
 	};
 }
