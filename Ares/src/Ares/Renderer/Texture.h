@@ -26,6 +26,9 @@ namespace Ares {
 		virtual uint32_t GetRendererID() const = 0;		
 		static uint32_t GetBPP(TextureFormat format);
 		virtual bool operator==(const Texture& other) const = 0;
+
+		static int CalculateMipMapCount(int width, int height);
+
 	};
 
 	class Texture2D : public Texture

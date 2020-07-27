@@ -75,4 +75,14 @@ namespace Ares
 		*tiling = { (spriteSize.x * cellSize.x) / width, (spriteSize.y * cellSize.y) / height };
 		*offset = { (coords.x * cellSize.x) / width, (coords.y * cellSize.y) / height };
 	}
+
+	int Texture::CalculateMipMapCount(int width, int height)
+	{
+		int levels = 1;
+		while ((width | height) >> levels) {
+			levels++;
+		}
+		return levels;
+	}
+
 }

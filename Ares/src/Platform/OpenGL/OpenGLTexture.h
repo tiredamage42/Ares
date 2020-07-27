@@ -45,4 +45,35 @@ namespace Ares {
 		std::string m_Path;
 	};
 
+
+
+	class OpenGLTextureCube : public TextureCube
+	{
+	public:
+		OpenGLTextureCube(const std::string& path);
+		virtual ~OpenGLTextureCube();
+
+		virtual void Bind(uint32_t slot = 0) const;
+
+		virtual TextureFormat GetFormat() const { return m_Format; }
+		virtual uint32_t GetWidth() const { return m_Width; }
+		virtual uint32_t GetHeight() const { return m_Height; }
+		
+		virtual const std::string& GetPath() const override { return m_FilePath; }
+
+		virtual uint32_t GetRendererID() const override { return m_RendererID; }
+
+		virtual bool operator==(const Texture& other) const override
+		{
+			return m_RendererID == ((OpenGLTextureCube&)other).m_RendererID;
+		}
+	private:
+		uint32_t m_RendererID;
+		TextureFormat m_Format;
+		uint32_t m_Width, m_Height;
+
+		unsigned char* m_ImageData;
+
+		std::string m_FilePath;
+	};
 }
