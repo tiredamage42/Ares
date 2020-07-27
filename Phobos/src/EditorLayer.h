@@ -43,7 +43,7 @@ namespace Ares
 		//Ref<Shader> m_PBRShader;
 		//Ref<Shader> m_SimplePBRShader;
 		Ref<Shader> m_QuadShader;
-		//Ref<Shader> m_HDRShader;
+		Ref<Shader> m_HDRShader;
 		//Ref<Mesh> m_Mesh;
 		//Ref<Mesh> m_SphereMesh;
 		//Ref<Texture2D> m_BRDFLUT;
@@ -81,7 +81,7 @@ namespace Ares
 		//};
 		//RoughnessInput m_RoughnessInput;
 
-		//Ref<FrameBuffer> m_FrameBuffer;
+		Ref<FrameBuffer> m_FrameBuffer;
 		Ref<FrameBuffer> m_FinalPresentBuffer;
 
 		/*Ref<VertexBuffer> m_VertexBuffer;
@@ -106,9 +106,8 @@ namespace Ares
 		// PBR params
 		float m_Exposure = 1.0f;
 
-		bool m_RadiancePrefilter = false;
-
-		float m_EnvMapRotation = 0.0f;
+		/*bool m_RadiancePrefilter = false;
+		float m_EnvMapRotation = 0.0f;*/
 
 		enum class Scene : uint32_t
 		{

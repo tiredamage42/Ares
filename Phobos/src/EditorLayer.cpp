@@ -40,7 +40,7 @@ namespace Ares
         //m_QuadShader = Shader::Create("assets/shaders/quad.glsl");
         m_QuadShader = Shader::Create("Assets/Shaders/CubemapSkybox.glsl");
 
-        //m_HDRShader = Shader::Create("assets/shaders/hdr.glsl");
+        m_HDRShader = Shader::Create("Assets/Shaders/hdr.glsl");
 
 
         //m_Mesh = Mesh::Create("assets/meshes/cerberus.fbx");
@@ -52,8 +52,8 @@ namespace Ares
         // Environment
         //m_EnvironmentCubeMap = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Radiance.tga");
         //m_EnvironmentIrradiance = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Irradiance.tga", false);
+        m_EnvironmentIrradiance = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Radiance.tga", false);
         
-        m_EnvironmentIrradiance = TextureCube::Create("Assets/Textures/DebugCubeMap.tga", false);
 
         //m_BRDFLUT = Texture2D::Create("assets/textures/BRDF_LUT.tga");
 
@@ -62,7 +62,7 @@ namespace Ares
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
 
-        //m_FrameBuffer = FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA16F);
+        m_FrameBuffer = FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA16F);
         m_FinalPresentBuffer = FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA8);
 
         // Create Quad
@@ -198,8 +198,8 @@ namespace Ares
         auto viewProjection = m_Camera.GetProjectionMatrix() * m_Camera.GetViewMatrix();
 
 
-        //m_FrameBuffer->Bind();
-        m_FinalPresentBuffer->Bind();
+        m_FrameBuffer->Bind();
+        //m_FinalPresentBuffer->Bind();
 
         Renderer::Clear(1, 0, 1, 1);
 
@@ -255,6 +255,15 @@ namespace Ares
         //if (m_MetalnessInput.TextureMap) m_MetalnessInput.TextureMap->Bind(3);
         //if (m_RoughnessInput.TextureMap) m_RoughnessInput.TextureMap->Bind(4);
 
+        //UploadUniformInt("u_EnvRadianceTex", 10);
+        //UploadUniformInt("u_EnvIrradianceTex", 11);
+        //UploadUniformInt("u_BRDFLUTTexture", 15);
+
+        //m_EnvironmentCubeMap->Bind(10);
+        //m_EnvironmentIrradiance->Bind(11);
+        //m_BRDFLUT->Bind(15);
+
+
         //if (m_Scene == Scene::Spheres)
         //{
         //    // Metals
@@ -292,28 +301,20 @@ namespace Ares
         //}
 
 
-        //m_FrameBuffer->Unbind();
-        //m_FinalPresentBuffer->Bind();
-        //
-        //
-        //// Bind default texture unit
-        //UploadUniformInt("u_Texture", 0);
-
-        //UploadUniformInt("u_EnvRadianceTex", 10);
-        //UploadUniformInt("u_EnvIrradianceTex", 11);
-        //UploadUniformInt("u_BRDFLUTTexture", 15);
-
-        //m_EnvironmentCubeMap->Bind(10);
-        //m_EnvironmentIrradiance->Bind(11);
-        //m_BRDFLUT->Bind(15);
-
-        //
-        //m_HDRShader->Bind();
-        //m_HDRShader->SetFloat("u_Exposure", m_Exposure);
-        //m_FrameBuffer->BindTexture();
+        m_FrameBuffer->Unbind();
+        m_FinalPresentBuffer->Bind();
+        
+        m_HDRShader->Bind();
+        m_HDRShader->SetFloat("u_Exposure", m_Exposure);
+        m_HDRShader->SetInt("u_Texture", 0);
+        
+        // bind original frame buffer as textur 0
+        m_FrameBuffer->BindTexture();
+        
+        m_QuadVertexArray->Bind();
         //m_VertexBuffer->Bind();
         //m_IndexBuffer->Bind();
-        //Renderer::DrawIndexed(m_IndexBuffer->GetCount(), false);
+        Renderer::DrawIndexed(m_QuadVertexArray->GetIndexBuffer()->GetCount(), false);
         m_FinalPresentBuffer->Unbind();
     }
 #endif
@@ -549,8 +550,8 @@ namespace Ares
         ImGui::Separator();
 
         ImGui::Text("Shader Parameters");
-        ImGui::Checkbox("Radiance Prefiltering", &m_RadiancePrefilter);
-        ImGui::SliderFloat("Env Map Rotation", &m_EnvMapRotation, -360.0f, 360.0f);
+        /*ImGui::Checkbox("Radiance Prefiltering", &m_RadiancePrefilter);
+        ImGui::SliderFloat("Env Map Rotation", &m_EnvMapRotation, -360.0f, 360.0f);*/
 
         ImGui::Separator();
 
