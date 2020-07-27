@@ -38,6 +38,7 @@ namespace Ares
 		virtual uint32_t GetColorAttachmentRendererID() const = 0;
 		virtual uint32_t GetDepthAttachmentRendererID() const = 0;
 		
+
 		static Ref<FrameBuffer> Create(const FrameBufferSpecs& specs, FramebufferFormat format);
 	};
 
