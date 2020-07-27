@@ -9,7 +9,7 @@ namespace Ares
 	void InitializeCore()
 	{
 		ARES_LOG_INIT();
-		ARES_CORE_LOG("Hazel Engine {}", ARES_BUILD_ID);
+		ARES_CORE_LOG("Ares Engine {}", ARES_BUILD_ID);
 		ARES_CORE_LOG("Initializing...");
 	}
 

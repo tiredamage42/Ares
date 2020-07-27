@@ -25,6 +25,7 @@
 #include "Ares/Renderer/VertexArray.h"
 #include "Ares/Renderer/Texture.h"
 #include "Ares/Renderer/Shader.h"
+#include "Ares/Renderer/Mesh.h"
 #include "Ares/Renderer/Camera.h"
 
 #include "Ares/Core/Entity.h"

@@ -33,7 +33,7 @@ namespace Ares {
 	{
 	public:
 
-		OpenGLIndexBuffer(uint32_t* vertices, uint32_t count);
+		OpenGLIndexBuffer(uint32_t* indicies, uint32_t count);
 
 		virtual ~OpenGLIndexBuffer();
 

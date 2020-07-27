@@ -88,7 +88,7 @@ namespace Ares {
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
 		float zoomLevel = m_ZoomLevel - e.GetYOffset() * m_ZoomSpeed;
-		/* Hazel's current "Zoom Level" definition makes std::clamp confuses:
+		/* Ares's current "Zoom Level" definition makes std::clamp confuses:
 		 *   - 0.25f Zoom Level -> 4x magnification
 		 *   - 2.0f Zoom Level -> 0.5x magnification
 		 * so the min and max value of "Zoom Level" and "Magnification Level" is the invertion of each other.
