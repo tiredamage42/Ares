@@ -6,7 +6,7 @@
 namespace Ares {
 	std::vector<Ref<Shader>> Shader::s_AllShaders;
 
-	Ref<Shader> Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
+	/*Ref<Shader> Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -23,7 +23,7 @@ namespace Ares {
 
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");
 		return nullptr;
-	}
+	}*/
 	Ref<Shader> Shader::Create(const std::string& filePath)
 	{
 		switch (Renderer::GetAPI())
