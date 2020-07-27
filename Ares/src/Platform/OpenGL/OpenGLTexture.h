@@ -50,7 +50,7 @@ namespace Ares {
 	class OpenGLTextureCube : public TextureCube
 	{
 	public:
-		OpenGLTextureCube(const std::string& path);
+		OpenGLTextureCube(const std::string& path, bool srgb);
 		virtual ~OpenGLTextureCube();
 
 		virtual void Bind(uint32_t slot = 0) const;

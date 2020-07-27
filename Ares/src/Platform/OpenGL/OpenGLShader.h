@@ -42,7 +42,7 @@ namespace Ares {
 		virtual void SetFloat3(const std::string& name, glm::vec3 value) override;
 		virtual void SetFloat4(const std::string& name, glm::vec4 value) override;
 		virtual void SetMat3(const std::string& name, glm::mat3 value) override;
-		virtual void SetMat4(const std::string& name, glm::mat4 value) override;
+		virtual void SetMat4(const std::string& name, const glm::mat4& value) override;
 
 		virtual void UploadUniformBuffer(const UniformBufferBase& uniformBuffer) override;
 
@@ -56,7 +56,7 @@ namespace Ares {
 		void UploadUniformFloat4(const std::string& name, glm::vec4 value);
 
 		void UploadUniformMat3(const std::string& name, glm::mat3 value);
-		void UploadUniformMat4(const std::string& name, glm::mat4 value);
+		void UploadUniformMat4(const std::string& name, const glm::mat4& value);
 
 	private:
 
@@ -75,7 +75,7 @@ namespace Ares {
 		mutable std::unordered_map<std::string, GLint> m_UniformLocationMap;
 
 		// unique id in opengl
-		uint32_t m_RendererID;
+		uint32_t m_RendererID = 0;
 		std::string m_Name, m_AssetPath;
 		std::string m_ShaderSource;
 

@@ -1,4 +1,3 @@
-// Simple Textured Quad Shader
 #type vertex
 #version 430
 

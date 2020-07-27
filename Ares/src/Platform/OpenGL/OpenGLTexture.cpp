@@ -174,7 +174,7 @@ namespace Ares {
 
 
 
-	OpenGLTextureCube::OpenGLTextureCube(const std::string& path)
+	OpenGLTextureCube::OpenGLTextureCube(const std::string& path, bool srgb)
 		: m_FilePath(path)
 	{
 		int width, height, channels;

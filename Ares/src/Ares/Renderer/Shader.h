@@ -120,7 +120,7 @@ namespace Ares {
 		virtual void SetFloat4(const std::string& name, glm::vec4 value) = 0;
 		
 		virtual void SetMat3(const std::string& name, glm::mat3 value) = 0;
-		virtual void SetMat4(const std::string& name, glm::mat4 value) = 0;
+		virtual void SetMat4(const std::string& name, const glm::mat4& value) = 0;
 
 		static Ref<Shader> Create(const std::string& filePath);
 		//static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);

@@ -40,51 +40,57 @@ namespace Ares
 
 
 
-		Ref<Shader> m_PBRShader;
-		Ref<Shader> m_SimplePBRShader;
+		//Ref<Shader> m_PBRShader;
+		//Ref<Shader> m_SimplePBRShader;
 		Ref<Shader> m_QuadShader;
-		Ref<Shader> m_HDRShader;
-		Ref<Mesh> m_Mesh;
-		Ref<Mesh> m_SphereMesh;
-		Ref<Texture2D> m_BRDFLUT;
+		//Ref<Shader> m_HDRShader;
+		//Ref<Mesh> m_Mesh;
+		//Ref<Mesh> m_SphereMesh;
+		//Ref<Texture2D> m_BRDFLUT;
 
-		struct AlbedoInput
-		{
-			// Silver, from https://docs.unrealengine.com/en-us/Engine/Rendering/Materials/PhysicallyBased
-			glm::vec3 Color = { 0.972f, 0.96f, 0.915f }; 
-			Ref<Texture2D> TextureMap;
-			bool SRGB = true;
-			bool UseTexture = false;
-		};
-		AlbedoInput m_AlbedoInput;
+		//struct AlbedoInput
+		//{
+		//	// Silver, from https://docs.unrealengine.com/en-us/Engine/Rendering/Materials/PhysicallyBased
+		//	glm::vec3 Color = { 0.972f, 0.96f, 0.915f }; 
+		//	Ref<Texture2D> TextureMap;
+		//	bool SRGB = true;
+		//	bool UseTexture = false;
+		//};
+		//AlbedoInput m_AlbedoInput;
 
-		struct NormalInput
-		{
-			Ref<Texture2D> TextureMap;
-			bool UseTexture = false;
-		};
-		NormalInput m_NormalInput;
+		//struct NormalInput
+		//{
+		//	Ref<Texture2D> TextureMap;
+		//	bool UseTexture = false;
+		//};
+		//NormalInput m_NormalInput;
 
-		struct MetalnessInput
-		{
-			float Value = 1.0f;
-			Ref<Texture2D> TextureMap;
-			bool UseTexture = false;
-		};
-		MetalnessInput m_MetalnessInput;
+		//struct MetalnessInput
+		//{
+		//	float Value = 1.0f;
+		//	Ref<Texture2D> TextureMap;
+		//	bool UseTexture = false;
+		//};
+		//MetalnessInput m_MetalnessInput;
 
-		struct RoughnessInput
-		{
-			float Value = 0.5f;
-			Ref<Texture2D> TextureMap;
-			bool UseTexture = false;
-		};
-		RoughnessInput m_RoughnessInput;
+		//struct RoughnessInput
+		//{
+		//	float Value = 0.5f;
+		//	Ref<Texture2D> TextureMap;
+		//	bool UseTexture = false;
+		//};
+		//RoughnessInput m_RoughnessInput;
 
-		Ref<FrameBuffer> m_FrameBuffer, m_FinalPresentBuffer;
-		Ref<VertexBuffer> m_VertexBuffer;
-		Ref<IndexBuffer> m_IndexBuffer;
-		Ref<TextureCube> m_EnvironmentCubeMap, m_EnvironmentIrradiance;
+		//Ref<FrameBuffer> m_FrameBuffer;
+		Ref<FrameBuffer> m_FinalPresentBuffer;
+
+		/*Ref<VertexBuffer> m_VertexBuffer;
+		Ref<IndexBuffer> m_IndexBuffer;*/
+
+		Ref<VertexArray> m_QuadVertexArray;
+		
+		//Ref<TextureCube> m_EnvironmentCubeMap;
+		Ref<TextureCube> m_EnvironmentIrradiance;
 
 		Camera m_Camera;
 

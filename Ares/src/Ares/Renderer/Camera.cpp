@@ -43,14 +43,15 @@ namespace Ares {
 		m_RotationSpeed = 0.002f;
 		m_ZoomSpeed = 0.2f;
 
-		m_Position = { -100, 100, 100 };
-		m_Rotation = glm::vec3(90.0f, 0.0f, 0.0f);
+		//m_Position = { -100, 100, 100 };
+		//m_Rotation = glm::vec3(90.0f, 0.0f, 0.0f);
 
 		m_FocalPoint = glm::vec3(0.0f);
 		m_Distance = glm::distance(m_Position, m_FocalPoint);
 
-		m_Yaw = 3.0f * (float)M_PI / 4.0f;
-		m_Pitch = M_PI / 4.0f;
+
+		/*m_Yaw = 3.0f * (float)M_PI / 4.0f;
+		m_Pitch = M_PI / 4.0f;*/
 	}
 
 	void Camera::Focus()

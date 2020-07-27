@@ -35,28 +35,34 @@ namespace Ares
 
         m_SquareEntity = square;
 #else
-        m_SimplePBRShader = Shader::Create("assets/shaders/simplepbr.glsl");
-        m_QuadShader = Shader::Create("assets/shaders/quad.glsl");
-        m_HDRShader = Shader::Create("assets/shaders/hdr.glsl");
+        //m_SimplePBRShader = Shader::Create("assets/shaders/simplepbr.glsl");
+        
+        //m_QuadShader = Shader::Create("assets/shaders/quad.glsl");
+        m_QuadShader = Shader::Create("Assets/Shaders/CubemapSkybox.glsl");
+
+        //m_HDRShader = Shader::Create("assets/shaders/hdr.glsl");
 
 
-        m_Mesh = Mesh::Create("assets/meshes/cerberus.fbx");
-        m_SphereMesh = Mesh::Create("assets/models/Sphere.fbx");
+        //m_Mesh = Mesh::Create("assets/meshes/cerberus.fbx");
+        //m_SphereMesh = Mesh::Create("assets/models/Sphere.fbx");
 
         // Editor
-        m_CheckerboardTex = Texture2D::Create("assets/editor/Checkerboard.tga");
+        m_CheckerboardTex = Texture2D::Create("Assets/Textures/Checkerboard.png");
 
         // Environment
-        m_EnvironmentCubeMap = TextureCube::Create("assets/textures/environments/Arches_E_PineTree_Radiance.tga");
-        m_EnvironmentIrradiance = TextureCube::Create("assets/textures/environments/Arches_E_PineTree_Irradiance.tga");
-        m_BRDFLUT = Texture2D::Create("assets/textures/BRDF_LUT.tga");
+        //m_EnvironmentCubeMap = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Radiance.tga");
+        //m_EnvironmentIrradiance = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Irradiance.tga", false);
+        
+        m_EnvironmentIrradiance = TextureCube::Create("Assets/Textures/DebugCubeMap.tga", false);
+
+        //m_BRDFLUT = Texture2D::Create("assets/textures/BRDF_LUT.tga");
 
 
         FrameBufferSpecs fbSpec;
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
 
-        m_FrameBuffer = FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA16F);
+        //m_FrameBuffer = FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA16F);
         m_FinalPresentBuffer = FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA8);
 
         // Create Quad
@@ -82,12 +88,54 @@ namespace Ares
         data[3].Position = glm::vec3(x, y + height, 0);
         data[3].TexCoord = glm::vec2(0, 1);
 
-        m_VertexBuffer = VertexBuffer::Create(4 * sizeof(QuadVertex));
+        /*m_VertexBuffer = VertexBuffer::Create(4 * sizeof(QuadVertex));
         m_VertexBuffer->SetData(data, 4 * sizeof(QuadVertex));
 
         uint32_t* indices = new uint32_t[6]{ 0, 1, 2, 2, 3, 0, };
-        m_IndexBuffer = IndexBuffer::Create(indices, 6);
+        m_IndexBuffer = IndexBuffer::Create(indices, 6);*/
         //m_IndexBuffer->SetData(indices, 6 * sizeof(unsigned int));
+
+
+        
+
+        m_QuadVertexArray = VertexArray::Create();
+
+        // VERTEX BUFFER =============================================================================
+        Ref<VertexBuffer> quadVertexBuffer = VertexBuffer::Create(4 * sizeof(QuadVertex));
+        quadVertexBuffer->SetData(data, 4 * sizeof(QuadVertex));
+
+        quadVertexBuffer->SetLayout({
+            { ShaderDataType::Float3, "a_Position" },
+            { ShaderDataType::Float2, "a_TexCoord" }
+        });
+
+        m_QuadVertexArray->AddVertexBuffer(quadVertexBuffer);
+
+        // INDEX BUFFER =============================================================================
+        uint32_t* quadIndicies = new uint32_t[6]{ 0, 1, 2, 2, 3, 0, };
+
+        Ref<IndexBuffer> quadIB = IndexBuffer::Create(quadIndicies, 6);
+        m_QuadVertexArray->SetIndexBuffer(quadIB);
+        delete[] quadIndicies;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         m_Light.Direction = { -0.5f, -0.5f, 1.0f };
         m_Light.Radiance = { 1.0f, 1.0f, 1.0f };
@@ -140,6 +188,7 @@ namespace Ares
 #else
     void EditorLayer::OnUpdate()
     {
+
         // THINGS TO LOOK AT:
         // - BRDF LUT
         // - Cubemap mips and filtering
@@ -156,17 +205,22 @@ namespace Ares
 
 
         // draw skybox
+        m_QuadShader->Bind();
 
-        UniformBufferDeclaration<sizeof(glm::mat4), 1> quadShaderUB;
-        quadShaderUB.Push("u_InverseVP", inverse(viewProjection));
-        m_QuadShader->UploadUniformBuffer(quadShaderUB);
+        /*UniformBufferDeclaration<sizeof(glm::mat4), 1> quadShaderUB;
+        quadShaderUB.Push("u_InverseVP", glm::inverse(viewProjection));
+        m_QuadShader->UploadUniformBuffer(quadShaderUB);*/
+
+        m_QuadShader->SetMat4("u_InverseVP", glm::inverse(viewProjection));
         m_QuadShader->SetInt("u_Texture", 0);
 
-        m_QuadShader->Bind();
         m_EnvironmentIrradiance->Bind(0);
-        m_VertexBuffer->Bind();
-        m_IndexBuffer->Bind();
-        Renderer::DrawIndexed(m_IndexBuffer->GetCount(), false);
+
+        m_QuadVertexArray->Bind();
+        /*m_VertexBuffer->Bind();
+        m_IndexBuffer->Bind();*/
+        //Renderer::DrawIndexed(m_IndexBuffer->GetCount(), false);
+        Renderer::DrawIndexed(m_QuadVertexArray->GetIndexBuffer()->GetCount(), false);
 
 
 
@@ -478,19 +532,19 @@ namespace Ares
         ImGui::Separator();
         {
             ImGui::Text("Mesh");
-            std::string fullpath = m_Mesh ? m_Mesh->GetFilePath() : "None";
-            size_t found = fullpath.find_last_of("/\\");
-            std::string path = found != std::string::npos ? fullpath.substr(found + 1) : fullpath;
-            ImGui::Text(path.c_str()); ImGui::SameLine();
-            if (ImGui::Button("...##Mesh"))
-            {
-                std::string filename = Application::Get().OpenFile("");
-                if (filename != "")
-                {
-                    ARES_INFO("Would Load File '{0}'", filename);
-                    //m_Mesh = Mesh::Create(filename);
-                }
-            }
+            //std::string fullpath = m_Mesh ? m_Mesh->GetFilePath() : "None";
+            //size_t found = fullpath.find_last_of("/\\");
+            //std::string path = found != std::string::npos ? fullpath.substr(found + 1) : fullpath;
+            //ImGui::Text(path.c_str()); ImGui::SameLine();
+            //if (ImGui::Button("...##Mesh"))
+            //{
+            //    std::string filename = Application::Get().OpenFile("");
+            //    if (filename != "")
+            //    {
+            //        ARES_INFO("Would Load File '{0}'", filename);
+            //        //m_Mesh = Mesh::Create(filename);
+            //    }
+            //}
         }
         ImGui::Separator();
 
@@ -505,7 +559,7 @@ namespace Ares
             // Albedo
             if (ImGui::CollapsingHeader("Albedo", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
             {
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+                /*ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
                 ImGui::Image(m_AlbedoInput.TextureMap ? (void*)m_AlbedoInput.TextureMap->GetRendererID() : (void*)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
                 ImGui::PopStyleVar();
                 if (ImGui::IsItemHovered())
@@ -536,14 +590,14 @@ namespace Ares
                 }
                 ImGui::EndGroup();
                 ImGui::SameLine();
-                ImGui::ColorEdit3("Color##Albedo", glm::value_ptr(m_AlbedoInput.Color), ImGuiColorEditFlags_NoInputs);
+                ImGui::ColorEdit3("Color##Albedo", glm::value_ptr(m_AlbedoInput.Color), ImGuiColorEditFlags_NoInputs);*/
             }
         }
         {
             // Normals
             if (ImGui::CollapsingHeader("Normals", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
             {
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+                /*ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
                 ImGui::Image(m_NormalInput.TextureMap ? (void*)m_NormalInput.TextureMap->GetRendererID() : (void*)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
                 ImGui::PopStyleVar();
                 if (ImGui::IsItemHovered())
@@ -565,14 +619,14 @@ namespace Ares
                     }
                 }
                 ImGui::SameLine();
-                ImGui::Checkbox("Use##NormalMap", &m_NormalInput.UseTexture);
+                ImGui::Checkbox("Use##NormalMap", &m_NormalInput.UseTexture);*/
             }
         }
         {
             // Metalness
             if (ImGui::CollapsingHeader("Metalness", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
             {
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+                /*ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
                 ImGui::Image(m_MetalnessInput.TextureMap ? (void*)m_MetalnessInput.TextureMap->GetRendererID() : (void*)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
                 ImGui::PopStyleVar();
                 if (ImGui::IsItemHovered())
@@ -596,14 +650,14 @@ namespace Ares
                 ImGui::SameLine();
                 ImGui::Checkbox("Use##MetalnessMap", &m_MetalnessInput.UseTexture);
                 ImGui::SameLine();
-                ImGui::SliderFloat("Value##MetalnessInput", &m_MetalnessInput.Value, 0.0f, 1.0f);
+                ImGui::SliderFloat("Value##MetalnessInput", &m_MetalnessInput.Value, 0.0f, 1.0f);*/
             }
         }
         {
             // Roughness
             if (ImGui::CollapsingHeader("Roughness", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
             {
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+                /*ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
                 ImGui::Image(m_RoughnessInput.TextureMap ? (void*)m_RoughnessInput.TextureMap->GetRendererID() : (void*)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
                 ImGui::PopStyleVar();
                 if (ImGui::IsItemHovered())
@@ -627,7 +681,7 @@ namespace Ares
                 ImGui::SameLine();
                 ImGui::Checkbox("Use##RoughnessMap", &m_RoughnessInput.UseTexture);
                 ImGui::SameLine();
-                ImGui::SliderFloat("Value##RoughnessInput", &m_RoughnessInput.Value, 0.0f, 1.0f);
+                ImGui::SliderFloat("Value##RoughnessInput", &m_RoughnessInput.Value, 0.0f, 1.0f);*/
             }
         }
 
@@ -643,7 +697,7 @@ namespace Ares
         Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
 
         auto viewportSize = ImGui::GetContentRegionAvail();
-        m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        //m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
         m_FinalPresentBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 
         m_Camera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));

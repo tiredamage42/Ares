@@ -74,6 +74,7 @@ namespace Ares {
 	{
 		GLuint rendererID = m_RendererID;
 		Renderer::Submit([rendererID]() {
+
 			glDeleteProgram(rendererID);
 		});
 	}
@@ -512,7 +513,7 @@ namespace Ares {
 			UploadUniformMat3(name, value);
 		});
 	}
-	void OpenGLShader::SetMat4(const std::string& name, glm::mat4 value)
+	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
 	{
 		Renderer::Submit([=]() {
 			UploadUniformMat4(name, value);
@@ -621,9 +622,12 @@ namespace Ares {
 		GLint location = GetUniformLocation(name);
 		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(value));
 	}
-	void OpenGLShader::UploadUniformMat4(const std::string& name, glm::mat4 value)
+	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& value)
 	{
 		GLint location = GetUniformLocation(name);
+
+		//ARES_CORE_INFO("UPLOADING MATRIX {0}", name);
+
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
 	}
 

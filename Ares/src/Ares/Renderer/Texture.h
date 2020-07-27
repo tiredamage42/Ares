@@ -55,7 +55,7 @@ namespace Ares {
 	class TextureCube : public Texture
 	{
 	public:
-		static Ref<TextureCube> Create(const std::string& path);
+		static Ref<TextureCube> Create(const std::string& path, bool srgb);
 
 		virtual TextureFormat GetFormat() const = 0;
 		virtual uint32_t GetWidth() const = 0;

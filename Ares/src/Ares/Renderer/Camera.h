@@ -63,7 +63,7 @@ namespace Ares {
 		glm::quat GetOrientation();
 	private:
 		glm::mat4 m_ProjectionMatrix, m_ViewMatrix;
-		glm::vec3 m_Position, m_Rotation, m_FocalPoint;
+		glm::vec3 m_Position{ 0 }, m_Rotation{ 0 }, m_FocalPoint;
 
 		bool m_Panning, m_Rotating;
 		glm::vec2 m_InitialMousePosition;
@@ -72,7 +72,7 @@ namespace Ares {
 		float m_Distance;
 		float m_PanSpeed, m_RotationSpeed, m_ZoomSpeed;
 
-		float m_Pitch, m_Yaw;
+		float m_Pitch=0, m_Yaw=0;
 	};
 
 }
