@@ -9,7 +9,6 @@
 
 namespace Ares {
 
-
 	static GLenum ShaderTypeFromString(const std::string& type)
 	{
 		if (type == "vertex")
@@ -22,6 +21,7 @@ namespace Ares {
 	}
 
 	OpenGLShader::OpenGLShader(const std::string& filepath)
+		: m_AssetPath(filepath)
 	{
 		// extract name from filepath `assets/shaders/shader.glsl`
 		// find last of forward slash or back slash
@@ -31,12 +31,13 @@ namespace Ares {
 		auto count = lastDotI == std::string::npos ? filepath.size() - lastSlashI : lastDotI - lastSlashI;
 		m_Name = filepath.substr(lastSlashI, count);
 
+		Reload();
 
-		ReadShaderFromFile(filepath);
+		/*ReadShaderFromFile(filepath);
 
 		Renderer::Submit([this]() {
 			CompileAndUploadShader();
-		});
+		});*/
 		
 		/*std::string source = ReadFile(filepath);
 		std::unordered_map<GLenum, std::string> sources = PreProcess(source);
@@ -44,6 +45,17 @@ namespace Ares {
 		Renderer::Submit([=]() {
 			Compile(sources);
 		});*/
+	}
+
+	void OpenGLShader::Reload()
+	{
+		ReadShaderFromFile(m_AssetPath);
+		
+		Renderer::Submit([this]() {
+			if (this->m_RendererID)
+				glDeleteShader(this->m_RendererID);
+			this->CompileAndUploadShader();
+		});
 	}
 
 	/*OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)

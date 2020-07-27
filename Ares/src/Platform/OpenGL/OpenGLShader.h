@@ -27,6 +27,8 @@ namespace Ares {
 		OpenGLShader(const std::string& filePath);
 		//OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 
+		virtual void Reload() override;
+
 		virtual void Bind() override;
 		virtual void Unbind() const override;
 
@@ -74,7 +76,7 @@ namespace Ares {
 
 		// unique id in opengl
 		uint32_t m_RendererID;
-		std::string m_Name;
+		std::string m_Name, m_AssetPath;
 		std::string m_ShaderSource;
 
 	};
