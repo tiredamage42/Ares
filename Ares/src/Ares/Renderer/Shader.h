@@ -55,6 +55,7 @@ namespace Ares {
 		byte Buffer[N];
 		UniformDecl Uniforms[U];
 		std::ptrdiff_t Cursor = 0;
+		int Index = 0;
 
 		virtual const byte* GetBuffer() const override { return Buffer; }
 		virtual const UniformDecl* GetUniforms() const override { return Uniforms; }
@@ -66,17 +67,30 @@ namespace Ares {
 		template<>
 		void Push(const std::string& name, const float& data)
 		{
-			Uniforms[0] = { UniformType::Float, Cursor, name };
+			Uniforms[Index++] = { UniformType::Float, Cursor, name };
 			memcpy(Buffer + Cursor, &data, sizeof(float));
 			Cursor += sizeof(float);
 		}
-
+		template<>
+		void Push(const std::string& name, const glm::vec3& data)
+		{
+			Uniforms[Index++] = { UniformType::Float3, Cursor, name };
+			memcpy(Buffer + Cursor, glm::value_ptr(data), sizeof(glm::vec3));
+			Cursor += sizeof(glm::vec3);
+		}
 		template<>
 		void Push(const std::string& name, const glm::vec4& data)
 		{
-			Uniforms[0] = { UniformType::Float4, Cursor, name };
+			Uniforms[Index++] = { UniformType::Float4, Cursor, name };
 			memcpy(Buffer + Cursor, glm::value_ptr(data), sizeof(glm::vec4));
 			Cursor += sizeof(glm::vec4);
+		}
+		template<>
+		void Push(const std::string& name, const glm::mat4& data)
+		{
+			Uniforms[Index++] = { UniformType::Matrix4x4, Cursor, name };
+			memcpy(Buffer + Cursor, glm::value_ptr(data), sizeof(glm::mat4));
+			Cursor += sizeof(glm::mat4);
 		}
 
 	};
@@ -86,6 +100,8 @@ namespace Ares {
 	{
 	public:
 		virtual ~Shader() = default;
+
+		virtual void Reload() = 0;
 
 		virtual void Bind() = 0;
 		virtual void Unbind() const = 0;
@@ -107,12 +123,12 @@ namespace Ares {
 		virtual void SetMat4(const std::string& name, glm::mat4 value) = 0;
 
 		static Ref<Shader> Create(const std::string& filePath);
-		static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
+		//static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 
 		static std::vector<Ref<Shader>> s_AllShaders;
 	};
 
-	class ShaderLibrary
+	/*class ShaderLibrary
 	{
 	public:
 		void Add(const Ref<Shader>& shader);
@@ -126,6 +142,6 @@ namespace Ares {
 		bool Exists(const std::string& name);
 	private:
 		std::unordered_map<std::string, Ref<Shader>> m_Shaders;
-	};
+	};*/
 
 }

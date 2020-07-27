@@ -20,10 +20,10 @@ namespace Ares {
 		Renderer2D::Shutdown();
 	}
 
-	void Renderer::DrawIndexed(uint32_t count)
+	void Renderer::DrawIndexed(uint32_t count, bool depthTest)
 	{
 		Submit([=]() {
-			RenderCommand::DrawIndexed(count);
+			RenderCommand::DrawIndexed(count, depthTest);
 		});
 	}
 

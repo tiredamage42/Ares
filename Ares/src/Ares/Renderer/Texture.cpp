@@ -38,7 +38,22 @@ namespace Ares
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");
 		return nullptr;
 	}
+	Ref<TextureCube> TextureCube::Create(const std::string& path, bool srgb)
+	{
+		switch (Renderer::GetAPI())
+		{
 
+		case RendererAPI::API::None:
+			ARES_CORE_ASSERT(false, "RendererAPI::None is currently not supported!");
+			return nullptr;
+
+		case RendererAPI::API::OpenGL:
+			return CreateRef<OpenGLTextureCube>(path, srgb);
+		}
+
+		ARES_CORE_ASSERT(false, "Unknow RendererAPI");
+		return nullptr;
+	}
 
 	uint32_t Texture::GetBPP(TextureFormat format)
 	{

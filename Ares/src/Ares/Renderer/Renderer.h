@@ -34,7 +34,7 @@ namespace Ares {
 
 		static void Clear(float r, float g, float b, float a);
 		static void WaitAndRender();
-		static void DrawIndexed(uint32_t count);
+		static void DrawIndexed(uint32_t count, bool depthTest = true);
 
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 	private:
