@@ -24,6 +24,8 @@ IncludeDir["ImGui"] = "Ares/vendor/imgui"
 IncludeDir["glm"] = "Ares/vendor/glm"
 IncludeDir["stb_image"] = "Ares/vendor/stb_image"
 IncludeDir["entt"] = "Ares/vendor/entt/include"
+IncludeDir["assimp"] = "Ares/vendor/assimp/include"
+
 
 group "Dependencies"
     include "Ares/vendor/GLFW"
@@ -71,7 +73,9 @@ project "Ares"
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.stb_image}",
-        "%{IncludeDir.entt}"
+        "%{IncludeDir.entt}",
+        "%{IncludeDir.assimp}"
+        
     }
     links
     {
@@ -129,7 +133,9 @@ project "Sandbox"
 
     links
     {
-        "Ares"
+        "Ares",
+        "Ares/vendor/assimp/win64/assimp.lib"
+
     } 
 
     filter "system:windows"
@@ -179,7 +185,9 @@ project "Phobos"
 
     links
     {
-        "Ares"
+        "Ares",
+        "Ares/vendor/assimp/win64/assimp.lib"
+
     } 
 
     filter "system:windows"

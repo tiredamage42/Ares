@@ -8,11 +8,14 @@ namespace Ares
 
     EditorLayer::EditorLayer()
         : Layer("Sandbox2D"), 
-        m_CameraController(1280.0f / 720.0f)
+        m_CameraController(1280.0f / 720.0f),
+        m_Scene(Scene::Spheres),
+        m_Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f))
     {
     }
     void EditorLayer::OnAttach()
     {
+#if _2D
         FrameBufferSpecs fbSpec;
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
@@ -31,12 +34,70 @@ namespace Ares
         spriteRenderer.Texture = spriteSheet;
 
         m_SquareEntity = square;
+#else
+        m_SimplePBRShader = Shader::Create("assets/shaders/simplepbr.glsl");
+        m_QuadShader = Shader::Create("assets/shaders/quad.glsl");
+        m_HDRShader = Shader::Create("assets/shaders/hdr.glsl");
+        m_Mesh = Mesh::Create("assets/meshes/cerberus.fbx");
+        m_SphereMesh = Mesh::Create("assets/models/Sphere.fbx");
+
+        // Editor
+        m_CheckerboardTex = Texture2D::Create("assets/editor/Checkerboard.tga");
+
+        // Environment
+        m_EnvironmentCubeMap = TextureCube::Create("assets/textures/environments/Arches_E_PineTree_Radiance.tga");
+        m_EnvironmentIrradiance = TextureCube::Create("assets/textures/environments/Arches_E_PineTree_Irradiance.tga");
+        m_BRDFLUT = Texture2D::Create("assets/textures/BRDF_LUT.tga");
+
+
+        FrameBufferSpecs fbSpec;
+        fbSpec.Width = 1280;
+        fbSpec.Height = 720;
+
+        m_FrameBuffer = FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA16F);
+        m_FinalPresentBuffer = FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA8);
+
+        // Create Quad
+        float x = -1, y = -1;
+        float width = 2, height = 2;
+        struct QuadVertex
+        {
+            glm::vec3 Position;
+            glm::vec2 TexCoord;
+        };
+
+        QuadVertex* data = new QuadVertex[4];
+
+        data[0].Position = glm::vec3(x, y, 0);
+        data[0].TexCoord = glm::vec2(0, 0);
+
+        data[1].Position = glm::vec3(x + width, y, 0);
+        data[1].TexCoord = glm::vec2(1, 0);
+
+        data[2].Position = glm::vec3(x + width, y + height, 0);
+        data[2].TexCoord = glm::vec2(1, 1);
+
+        data[3].Position = glm::vec3(x, y + height, 0);
+        data[3].TexCoord = glm::vec2(0, 1);
+
+        m_VertexBuffer = VertexBuffer::Create(4 * sizeof(QuadVertex));
+        m_VertexBuffer->SetData(data, 4 * sizeof(QuadVertex));
+
+        uint32_t* indices = new uint32_t[6]{ 0, 1, 2, 2, 3, 0, };
+        m_IndexBuffer = IndexBuffer::Create(indices, 6);
+        //m_IndexBuffer->SetData(indices, 6 * sizeof(unsigned int));
+
+        m_Light.Direction = { -0.5f, -0.5f, 1.0f };
+        m_Light.Radiance = { 1.0f, 1.0f, 1.0f };
+#endif
     }
 
     void EditorLayer::OnDetach()
     {
         
     }
+
+#if _2D
     void EditorLayer::OnUpdate()
     {
         
@@ -48,10 +109,9 @@ namespace Ares
             from m_Framebuffer.Width/Height before updating and rendering.
             This results in never rendering an empty (black) framebuffer.
         */
-        FrameBufferSpecs spec = m_FrameBuffer->GetSpecs();
         // zero sized framebuffer is invalid
-        if (m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y))
-            m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+        /*if (m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y))
+            m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);*/
         
         if (m_ViewportFocused)
             m_CameraController.OnUpdate();
@@ -75,6 +135,136 @@ namespace Ares
 
         m_FrameBuffer->Unbind();
     }
+#else
+    void EditorLayer::OnUpdate()
+    {
+        // THINGS TO LOOK AT:
+        // - BRDF LUT
+        // - Cubemap mips and filtering
+        // - Tonemapping and proper HDR pipeline
+        
+        m_Camera.Update();
+        auto viewProjection = m_Camera.GetProjectionMatrix() * m_Camera.GetViewMatrix();
+
+        m_FrameBuffer->Bind();
+
+        Renderer::Clear(1, 0, 1, 1);
+
+        UniformBufferDeclaration<sizeof(glm::mat4), 1> quadShaderUB;
+        quadShaderUB.Push("u_InverseVP", inverse(viewProjection));
+        m_QuadShader->UploadUniformBuffer(quadShaderUB);
+
+        m_QuadShader->Bind();
+        m_EnvironmentIrradiance->Bind(0);
+        m_VertexBuffer->Bind();
+        m_IndexBuffer->Bind();
+        Renderer::DrawIndexed(m_IndexBuffer->GetCount(), false);
+
+        UniformBufferDeclaration<sizeof(glm::mat4) * 2 + sizeof(glm::vec3) * 4 + sizeof(float) * 8, 14> simplePbrShaderUB;
+        simplePbrShaderUB.Push("u_ViewProjectionMatrix", viewProjection);
+        simplePbrShaderUB.Push("u_ModelMatrix", glm::mat4(1.0f));
+        simplePbrShaderUB.Push("u_AlbedoColor", m_AlbedoInput.Color);
+        simplePbrShaderUB.Push("u_Metalness", m_MetalnessInput.Value);
+        simplePbrShaderUB.Push("u_Roughness", m_RoughnessInput.Value);
+        simplePbrShaderUB.Push("lights.Direction", m_Light.Direction);
+        simplePbrShaderUB.Push("lights.Radiance", m_Light.Radiance * m_LightMultiplier);
+        simplePbrShaderUB.Push("u_CameraPosition", m_Camera.GetPosition());
+        simplePbrShaderUB.Push("u_RadiancePrefilter", m_RadiancePrefilter ? 1.0f : 0.0f);
+        simplePbrShaderUB.Push("u_AlbedoTexToggle", m_AlbedoInput.UseTexture ? 1.0f : 0.0f);
+        simplePbrShaderUB.Push("u_NormalTexToggle", m_NormalInput.UseTexture ? 1.0f : 0.0f);
+        simplePbrShaderUB.Push("u_MetalnessTexToggle", m_MetalnessInput.UseTexture ? 1.0f : 0.0f);
+        simplePbrShaderUB.Push("u_RoughnessTexToggle", m_RoughnessInput.UseTexture ? 1.0f : 0.0f);
+        simplePbrShaderUB.Push("u_EnvMapRotation", m_EnvMapRotation);
+        m_SimplePBRShader->UploadUniformBuffer(simplePbrShaderUB);
+
+        m_EnvironmentCubeMap->Bind(10);
+        m_EnvironmentIrradiance->Bind(11);
+        m_BRDFLUT->Bind(15);
+
+        m_SimplePBRShader->Bind();
+        if (m_AlbedoInput.TextureMap)
+            m_AlbedoInput.TextureMap->Bind(1);
+        if (m_NormalInput.TextureMap)
+            m_NormalInput.TextureMap->Bind(2);
+        if (m_MetalnessInput.TextureMap)
+            m_MetalnessInput.TextureMap->Bind(3);
+        if (m_RoughnessInput.TextureMap)
+            m_RoughnessInput.TextureMap->Bind(4);
+
+        if (m_Scene == Scene::Spheres)
+        {
+            // Metals
+            float roughness = 0.0f;
+            float x = -88.0f;
+            for (int i = 0; i < 8; i++)
+            {
+                m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
+                m_SimplePBRShader->SetFloat("u_Roughness", roughness);
+                m_SimplePBRShader->SetFloat("u_Metalness", 1.0f);
+                m_SphereMesh->Render();
+
+                roughness += 0.15f;
+                x += 22.0f;
+            }
+
+            // Dielectrics
+            roughness = 0.0f;
+            x = -88.0f;
+            for (int i = 0; i < 8; i++)
+            {
+                m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 22.0f, 0.0f)));
+                m_SimplePBRShader->SetFloat("u_Roughness", roughness);
+                m_SimplePBRShader->SetFloat("u_Metalness", 0.0f);
+                m_SphereMesh->Render();
+
+                roughness += 0.15f;
+                x += 22.0f;
+            }
+
+        }
+        else if (m_Scene == Scene::Model)
+        {
+            m_Mesh->Render();
+        }
+
+
+        m_FrameBuffer->Unbind();
+        m_FinalPresentBuffer->Bind();
+        m_HDRShader->Bind();
+        m_HDRShader->SetFloat("u_Exposure", m_Exposure);
+        m_FrameBuffer->BindTexture();
+        m_VertexBuffer->Bind();
+        m_IndexBuffer->Bind();
+        Renderer::DrawIndexed(m_IndexBuffer->GetCount(), false);
+        m_FinalPresentBuffer->Unbind();
+    }
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     void EditorLayer::OnImGuiDraw()
     {
@@ -211,10 +401,239 @@ namespace Ares
             ImGui::End();
         }
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0,0 });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // Editor Panel ------------------------------------------------------------------------------
+        ImGui::Begin("Settings");
+        if (ImGui::TreeNode("Shaders"))
+        {
+            auto& shaders = Shader::s_AllShaders;
+            for (auto& shader : shaders)
+            {
+                if (ImGui::TreeNode(shader->GetName().c_str()))
+                {
+                    std::string buttonName = "Reload##" + shader->GetName();
+                    if (ImGui::Button(buttonName.c_str()))
+                        shader->Reload();
+                    ImGui::TreePop();
+                }
+            }
+            ImGui::TreePop();
+        }
+
+        ImGui::RadioButton("Spheres", (int*)&m_Scene, (int)Scene::Spheres);
+        ImGui::SameLine();
+        ImGui::RadioButton("Model", (int*)&m_Scene, (int)Scene::Model);
+
+        ImGui::SliderFloat3("Light Dir", glm::value_ptr(m_Light.Direction), -1, 1);
+        ImGui::ColorEdit3("Light Radiance", glm::value_ptr(m_Light.Radiance));
+        ImGui::SliderFloat("Light Multiplier", &m_LightMultiplier, 0.0f, 5.0f);
+        ImGui::SliderFloat("Exposure", &m_Exposure, 0.0f, 10.0f);
+
+        auto cameraForward = m_Camera.GetForwardDirection();
+        ImGui::Text("Camera Forward: %.2f, %.2f, %.2f", cameraForward.x, cameraForward.y, cameraForward.z);
+
+        ImGui::Separator();
+        {
+            ImGui::Text("Mesh");
+            std::string fullpath = m_Mesh ? m_Mesh->GetFilePath() : "None";
+            size_t found = fullpath.find_last_of("/\\");
+            std::string path = found != std::string::npos ? fullpath.substr(found + 1) : fullpath;
+            ImGui::Text(path.c_str()); ImGui::SameLine();
+            if (ImGui::Button("...##Mesh"))
+            {
+                std::string filename = Application::Get().OpenFile("");
+                if (filename != "")
+                    m_Mesh = Mesh::Create(filename);
+            }
+        }
+        ImGui::Separator();
+
+        ImGui::Text("Shader Parameters");
+        ImGui::Checkbox("Radiance Prefiltering", &m_RadiancePrefilter);
+        ImGui::SliderFloat("Env Map Rotation", &m_EnvMapRotation, -360.0f, 360.0f);
+
+        ImGui::Separator();
+
+        // Textures ------------------------------------------------------------------------------
+        {
+            // Albedo
+            if (ImGui::CollapsingHeader("Albedo", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+                ImGui::Image(m_AlbedoInput.TextureMap ? (void*)m_AlbedoInput.TextureMap->GetRendererID() : (void*)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
+                ImGui::PopStyleVar();
+                if (ImGui::IsItemHovered())
+                {
+                    if (m_AlbedoInput.TextureMap)
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                        ImGui::TextUnformatted(m_AlbedoInput.TextureMap->GetPath().c_str());
+                        ImGui::PopTextWrapPos();
+                        ImGui::Image((void*)m_AlbedoInput.TextureMap->GetRendererID(), ImVec2(384, 384));
+                        ImGui::EndTooltip();
+                    }
+                    if (ImGui::IsItemClicked())
+                    {
+                        std::string filename = Application::Get().OpenFile("");
+                        if (filename != "")
+                            m_AlbedoInput.TextureMap = Texture2D::Create(filename, m_AlbedoInput.SRGB);
+                    }
+                }
+                ImGui::SameLine();
+                ImGui::BeginGroup();
+                ImGui::Checkbox("Use##AlbedoMap", &m_AlbedoInput.UseTexture);
+                if (ImGui::Checkbox("sRGB##AlbedoMap", &m_AlbedoInput.SRGB))
+                {
+                    if (m_AlbedoInput.TextureMap)
+                        m_AlbedoInput.TextureMap = Texture2D::Create(m_AlbedoInput.TextureMap->GetPath(), m_AlbedoInput.SRGB);
+                }
+                ImGui::EndGroup();
+                ImGui::SameLine();
+                ImGui::ColorEdit3("Color##Albedo", glm::value_ptr(m_AlbedoInput.Color), ImGuiColorEditFlags_NoInputs);
+            }
+        }
+        {
+            // Normals
+            if (ImGui::CollapsingHeader("Normals", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+                ImGui::Image(m_NormalInput.TextureMap ? (void*)m_NormalInput.TextureMap->GetRendererID() : (void*)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
+                ImGui::PopStyleVar();
+                if (ImGui::IsItemHovered())
+                {
+                    if (m_NormalInput.TextureMap)
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                        ImGui::TextUnformatted(m_NormalInput.TextureMap->GetPath().c_str());
+                        ImGui::PopTextWrapPos();
+                        ImGui::Image((void*)m_NormalInput.TextureMap->GetRendererID(), ImVec2(384, 384));
+                        ImGui::EndTooltip();
+                    }
+                    if (ImGui::IsItemClicked())
+                    {
+                        std::string filename = Application::Get().OpenFile("");
+                        if (filename != "")
+                            m_NormalInput.TextureMap = Texture2D::Create(filename);
+                    }
+                }
+                ImGui::SameLine();
+                ImGui::Checkbox("Use##NormalMap", &m_NormalInput.UseTexture);
+            }
+        }
+        {
+            // Metalness
+            if (ImGui::CollapsingHeader("Metalness", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+                ImGui::Image(m_MetalnessInput.TextureMap ? (void*)m_MetalnessInput.TextureMap->GetRendererID() : (void*)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
+                ImGui::PopStyleVar();
+                if (ImGui::IsItemHovered())
+                {
+                    if (m_MetalnessInput.TextureMap)
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                        ImGui::TextUnformatted(m_MetalnessInput.TextureMap->GetPath().c_str());
+                        ImGui::PopTextWrapPos();
+                        ImGui::Image((void*)m_MetalnessInput.TextureMap->GetRendererID(), ImVec2(384, 384));
+                        ImGui::EndTooltip();
+                    }
+                    if (ImGui::IsItemClicked())
+                    {
+                        std::string filename = Application::Get().OpenFile("");
+                        if (filename != "")
+                            m_MetalnessInput.TextureMap = Texture2D::Create(filename);
+                    }
+                }
+                ImGui::SameLine();
+                ImGui::Checkbox("Use##MetalnessMap", &m_MetalnessInput.UseTexture);
+                ImGui::SameLine();
+                ImGui::SliderFloat("Value##MetalnessInput", &m_MetalnessInput.Value, 0.0f, 1.0f);
+            }
+        }
+        {
+            // Roughness
+            if (ImGui::CollapsingHeader("Roughness", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+                ImGui::Image(m_RoughnessInput.TextureMap ? (void*)m_RoughnessInput.TextureMap->GetRendererID() : (void*)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
+                ImGui::PopStyleVar();
+                if (ImGui::IsItemHovered())
+                {
+                    if (m_RoughnessInput.TextureMap)
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                        ImGui::TextUnformatted(m_RoughnessInput.TextureMap->GetPath().c_str());
+                        ImGui::PopTextWrapPos();
+                        ImGui::Image((void*)m_RoughnessInput.TextureMap->GetRendererID(), ImVec2(384, 384));
+                        ImGui::EndTooltip();
+                    }
+                    if (ImGui::IsItemClicked())
+                    {
+                        std::string filename = Application::Get().OpenFile("");
+                        if (filename != "")
+                            m_RoughnessInput.TextureMap = Texture2D::Create(filename);
+                    }
+                }
+                ImGui::SameLine();
+                ImGui::Checkbox("Use##RoughnessMap", &m_RoughnessInput.UseTexture);
+                ImGui::SameLine();
+                ImGui::SliderFloat("Value##RoughnessInput", &m_RoughnessInput.Value, 0.0f, 1.0f);
+            }
+        }
+
+        ImGui::Separator();
+
+        ImGui::End();
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::Begin("Viewport");
 
+        m_ViewportFocused = ImGui::IsWindowFocused();
+        m_ViewportHovered = ImGui::IsWindowHovered();
+        Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
+
+        auto viewportSize = ImGui::GetContentRegionAvail();
+        m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        m_FinalPresentBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+
+        m_Camera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
+
+        // from 2d on resize
+        m_CameraController.OnResize(viewportSize.x, viewportSize.y);
+
+
+
+        ImGui::Image((void*)m_FinalPresentBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
+        ImGui::End();
+        ImGui::PopStyleVar();
+
+
+
+        /*ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0,0 });
+        ImGui::Begin("Viewport");
         m_ViewportFocused = ImGui::IsWindowFocused();
         m_ViewportHovered = ImGui::IsWindowHovered();
         Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
@@ -226,7 +645,17 @@ namespace Ares
         uint32_t textureID = m_FrameBuffer->GetColorAttachmentRendererID();
         ImGui::Image((void*)textureID, viewportSize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::End();
-        ImGui::PopStyleVar();
+        ImGui::PopStyleVar();*/
+
+
+
+
+
+
+
+
+
+
 
         ImGui::End();
 
