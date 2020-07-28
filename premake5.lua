@@ -24,7 +24,7 @@ IncludeDir["ImGui"] = "Ares/vendor/imgui"
 IncludeDir["glm"] = "Ares/vendor/glm"
 IncludeDir["stb_image"] = "Ares/vendor/stb_image"
 IncludeDir["entt"] = "Ares/vendor/entt/include"
-IncludeDir["assimp"] = "Ares/vendor/assimp/include"
+-- IncludeDir["assimp"] = "Ares/vendor/assimp/include"
 
 
 group "Dependencies"
@@ -74,7 +74,8 @@ project "Ares"
         "%{IncludeDir.glm}",
         "%{IncludeDir.stb_image}",
         "%{IncludeDir.entt}",
-        "%{IncludeDir.assimp}"
+        "%{prj.name}/vendor/assimp/include"
+        -- "%{IncludeDir.assimp}"
         
     }
     links
@@ -135,8 +136,11 @@ project "Sandbox"
     {
         "Ares",
         "Ares/vendor/assimp/win64/assimp.lib"
-
     } 
+    postbuildcommands 
+    {
+        '{COPY} "../Ares/vendor/assimp/win64/assimp.lib" "%{cfg.targetdir}"',
+    }
 
     filter "system:windows"
         systemversion "latest"
@@ -146,16 +150,41 @@ project "Sandbox"
         defines "ARES_DEBUG"
         runtime "Debug"
         symbols "on"
+        links
+		{
+			"Ares/vendor/assimp/bin/Debug/assimp-vc141-mtd.lib"
+		}
+
+		postbuildcommands 
+		{
+			'{COPY} "../Ares/vendor/assimp/bin/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"',
+		}
 
     filter "configurations:Release"
         defines "ARES_RELEASE"
         runtime "Release"
         optimize "on"
+        links
+		{
+			"Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+		}
+		postbuildcommands 
+		{
+			'{COPY} "../Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+		}
 
     filter "configurations:Dist"
         defines "ARES_DIST"
         runtime "Release"
         optimize "on"
+        links
+		{
+			"Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+		}
+		postbuildcommands 
+		{
+			'{COPY} "../Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+		}
 
 
 project "Phobos"
@@ -189,6 +218,11 @@ project "Phobos"
         "Ares/vendor/assimp/win64/assimp.lib"
 
     } 
+    postbuildcommands 
+    {
+        '{COPY} "../Ares/vendor/assimp/win64/assimp.dll" "%{cfg.targetdir}"',
+    }
+
 
     filter "system:windows"
         systemversion "latest"
@@ -198,13 +232,38 @@ project "Phobos"
         defines "ARES_DEBUG"
         runtime "Debug"
         symbols "on"
+        links
+		{
+			"Ares/vendor/assimp/bin/Debug/assimp-vc141-mtd.lib"
+		}
+
+		postbuildcommands 
+		{
+			'{COPY} "../Ares/vendor/assimp/bin/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"',
+		}
 
     filter "configurations:Release"
         defines "ARES_RELEASE"
         runtime "Release"
         optimize "on"
+        links
+		{
+			"Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+		}
+		postbuildcommands 
+		{
+			'{COPY} "../Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+		}
 
     filter "configurations:Dist"
         defines "ARES_DIST"
         runtime "Release"
         optimize "on"
+        links
+		{
+			"Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+		}
+		postbuildcommands 
+		{
+			'{COPY} "../Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+		}

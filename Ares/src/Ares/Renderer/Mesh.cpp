@@ -43,6 +43,233 @@ namespace Ares {
 		}
 	};
 
+
+
+	Mesh::Mesh()
+	{
+		const uint32_t numVertices = 36;
+
+
+		glm::vec3 points[] = {
+			glm::vec3(-.5f, -.5f,  .5f),
+			glm::vec3(.5f,  -.5f,  .5f),
+			glm::vec3(.5f,  -.5f, -.5f),
+			glm::vec3(-.5f, -.5f, -.5f),
+			glm::vec3(-.5f,  .5f,  .5f),
+			glm::vec3(.5f,   .5f,  .5f),
+			glm::vec3(.5f,   .5f, -.5f),
+			glm::vec3(-.5f,  .5f, -.5f)
+		};
+
+
+		//4) Define the vertices that the cube is composed of:
+		//I have used 16 vertices (4 vertices per side). 
+		//This is because I want the vertices of each side to have separate normals.
+		//(so the object renders light/shade correctly) 
+		glm::vec3 verts[] = {
+			points[0], points[1], points[2], points[3], // Bottom
+			points[7], points[4], points[0], points[3], // Left
+			points[4], points[5], points[1], points[0], // Front
+			points[6], points[7], points[3], points[2], // Back
+			points[5], points[6], points[2], points[1], // Right
+			points[7], points[6], points[5], points[4]  // Top
+		};
+
+
+		//5) Define each vertex's Normal
+		glm::vec3 up =		{  0,  1,  0 };
+		glm::vec3 down =	{  0, -1,  0 };
+		glm::vec3 forward = {  0,  0,  1 };
+		glm::vec3 back =	{  0,  0, -1 };
+		glm::vec3 left =	{ -1,  0,  0 };
+		glm::vec3 right =	{  1,  0,  0 };
+
+
+		glm::vec3 normals[] = {
+
+			down, down, down, down,             // Bottom
+			left, left, left, left,             // Left
+			forward, forward, forward, forward,	// Front
+			back, back, back, back,             // Back
+			right, right, right, right,         // Right
+			up, up, up, up	                    // Top
+		};
+
+		//6) Define each vertex's UV co-ordinates
+		glm::vec2 uv00 = { 0, 0 };
+		glm::vec2 uv10 = { 1, 0 };
+		glm::vec2 uv01 = { 0, 1 };
+		glm::vec2 uv11 = { 1, 1 };
+
+		glm::vec2 uvs[] = {
+			uv11, uv01, uv00, uv10, // Bottom
+			uv11, uv01, uv00, uv10, // Left
+			uv11, uv01, uv00, uv10, // Front
+			uv11, uv01, uv00, uv10, // Back	        
+			uv11, uv01, uv00, uv10, // Right 
+			uv11, uv01, uv00, uv10  // Top
+		};
+
+
+		//7) Define the Polygons (triangles) that make up the our Mesh (cube)
+		//IMPORTANT: Unity uses a 'Clockwise Winding Order' for determining front-facing polygons.
+		//This means that a polygon's vertices must be defined in 
+		//a clockwise order (relative to the camera) in order to be rendered/visible.
+		
+		
+		uint32_t tris[] = {
+			3,  1,  0,		3,  2,  1,      // Bottom	
+			7,  5,  4,		7,  6,  5,      // Left
+			11, 9,  8,		11, 10, 9,      // Front
+			15, 13, 12,		15, 14, 13,     // Back
+			19, 17, 16,		19, 18, 17,	    // Right
+			23, 21, 20,		23, 22, 21,	    // Top
+		};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			/*glm::vec3 a0 = glm::vec3( .5f,  .5f,  .5f);
+			glm::vec3 a1 = glm::vec3(-.5f,  .5f,  .5f);
+			glm::vec3 a2 = glm::vec3(-.5f, -.5f,  .5f);
+			glm::vec3 a3 = glm::vec3( .5f, -.5f,  .5f);
+
+			glm::vec3 a4 = glm::vec3( .5f,  .5f, -.5f);
+			glm::vec3 a5 = glm::vec3(-.5f,  .5f, -.5f);
+			glm::vec3 a6 = glm::vec3(-.5f, -.5f, -.5f);
+			glm::vec3 a7 = glm::vec3( .5f, -.5f, -.5f);
+
+			glm::vec3 verts[numVertices] = {
+				a1, a2, a3, a3, a0, a1,
+				a2, a6, a7, a7, a3, a2,
+				a6, a5, a4, a4, a7, a6,
+				a5, a1, a0, a0, a4, a5,
+				a0, a3, a7, a7, a4, a0,
+				a5, a6, a2, a2, a1, a5
+			};
+
+			glm::vec2 texc[numVertices] = {
+				glm::vec2(0,1), glm::vec2(0,0), glm::vec2(1,0), glm::vec2(1,0), glm::vec2(1,1), glm::vec2(0,1),
+				glm::vec2(0,1), glm::vec2(0,0), glm::vec2(1,0), glm::vec2(1,0), glm::vec2(1,1), glm::vec2(0,1),
+				glm::vec2(1,0), glm::vec2(1,1), glm::vec2(0,1), glm::vec2(0,1), glm::vec2(0,0), glm::vec2(1,0),
+				glm::vec2(0,1), glm::vec2(0,0), glm::vec2(1,0), glm::vec2(1,0), glm::vec2(1,1), glm::vec2(0,1),
+				glm::vec2(0,0), glm::vec2(1,0), glm::vec2(1,1), glm::vec2(1,1), glm::vec2(0,1), glm::vec2(0,0),
+				glm::vec2(1,1), glm::vec2(0,1), glm::vec2(0,0), glm::vec2(0,0), glm::vec2(1,0), glm::vec2(1,1),
+			};
+
+			glm::vec3 norm[numVertices];
+
+			for (int i = 0; i < numVertices; i += 3)
+			{
+				glm::vec3 normal = glm::normalize(
+					glm::cross(
+						glm::vec3(verts[i + 1]) - glm::vec3(verts[i]),
+						glm::vec3(verts[i + 2]) - glm::vec3(verts[i])
+					)
+				);
+
+				norm[i] = normal;
+				norm[i + 1] = normal;
+				norm[i + 2] = normal;
+			}*/
+
+			m_Vertices.reserve(numVertices);
+
+			for (size_t i = 0; i < m_Vertices.capacity(); i++)
+			{
+				Vertex vertex;
+				vertex.Position = verts[i];
+				vertex.Normal = normals[i];
+				vertex.Texcoord = uvs[i];
+				m_Vertices.push_back(vertex);
+			}
+
+			m_VertexArray = VertexArray::Create();
+
+			/*
+			struct Vertex
+			{
+				glm::vec3 Position;
+				glm::vec3 Normal;
+				glm::vec3 Tangent;
+				glm::vec3 Binormal;
+				glm::vec2 Texcoord;
+			};
+			*/
+			// VERTEX BUFFER =============================================================================
+			Ref<VertexBuffer> vertBuffer = VertexBuffer::Create(m_Vertices.size() * sizeof(Vertex));
+			vertBuffer->SetData(m_Vertices.data(), m_Vertices.size() * sizeof(Vertex));
+
+			vertBuffer->SetLayout({
+				{ ShaderDataType::Float3, "a_Position" },
+				{ ShaderDataType::Float3, "a_Normal" },
+				{ ShaderDataType::Float3, "a_Tangent" },
+				{ ShaderDataType::Float3, "a_Binormal" },
+				{ ShaderDataType::Float2, "a_TexCoord" },
+			});
+
+			m_VertexArray->AddVertexBuffer(vertBuffer);
+
+
+
+			// Extract indices from model
+			m_Indices.reserve(numVertices);
+			for (size_t i = 0; i < m_Indices.capacity(); i++)
+			{
+				m_Indices.push_back(tris[i]);
+			}
+
+			Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.capacity());
+			m_VertexArray->SetIndexBuffer(indexBuffer);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	}
+
 	Mesh::Mesh(const std::string& filename)
 		: m_FilePath(filename)
 	{
@@ -105,7 +332,7 @@ namespace Ares {
 			{ ShaderDataType::Float3, "a_Normal" },
 			{ ShaderDataType::Float3, "a_Tangent" },
 			{ ShaderDataType::Float3, "a_Binormal" },
-			{ ShaderDataType::Float2, "a_UV" },
+			{ ShaderDataType::Float2, "a_TexCoord" },
 		});
 
 		m_VertexArray->AddVertexBuffer(vertBuffer);

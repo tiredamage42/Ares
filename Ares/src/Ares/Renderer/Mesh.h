@@ -29,6 +29,7 @@ namespace Ares {
 		//static_assert(sizeof(Index) == 3 * sizeof(uint32_t));
 
 		Mesh(const std::string& filename);
+		Mesh();
 		~Mesh();
 
 		void Render();

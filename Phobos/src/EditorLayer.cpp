@@ -35,7 +35,7 @@ namespace Ares
 
         m_SquareEntity = square;
 #else
-        //m_SimplePBRShader = Shader::Create("assets/shaders/simplepbr.glsl");
+        m_SimplePBRShader = Shader::Create("Assets/Shaders/pbr.glsl");
         
         //m_QuadShader = Shader::Create("assets/shaders/quad.glsl");
         m_QuadShader = Shader::Create("Assets/Shaders/CubemapSkybox.glsl");
@@ -44,18 +44,18 @@ namespace Ares
 
 
         //m_Mesh = Mesh::Create("assets/meshes/cerberus.fbx");
-        //m_SphereMesh = Mesh::Create("assets/models/Sphere.fbx");
+        m_SphereMesh = CreateRef<Mesh>();// "assets/models/Sphere.fbx");
 
         // Editor
         m_CheckerboardTex = Texture2D::Create("Assets/Textures/Checkerboard.png");
 
         // Environment
-        //m_EnvironmentCubeMap = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Radiance.tga");
-        //m_EnvironmentIrradiance = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Irradiance.tga", false);
-        m_EnvironmentIrradiance = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Radiance.tga", false);
+        m_EnvironmentCubeMap = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Radiance.tga", false);
+        m_EnvironmentIrradiance = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Irradiance.tga", false);
+        //m_EnvironmentIrradiance = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Radiance.tga", false);
         
 
-        //m_BRDFLUT = Texture2D::Create("assets/textures/BRDF_LUT.tga");
+        m_BRDFLUT = Texture2D::Create("Assets/Textures/BRDF_LUT.tga");
 
 
         FrameBufferSpecs fbSpec;
@@ -225,74 +225,79 @@ namespace Ares
 
 
 
+        m_SimplePBRShader->Bind();
 
-        //UniformBufferDeclaration<sizeof(glm::mat4) * 2 + sizeof(glm::vec3) * 4 + sizeof(float) * 8, 14> simplePbrShaderUB;
-        //simplePbrShaderUB.Push("u_ViewProjectionMatrix", viewProjection);
-        //simplePbrShaderUB.Push("u_ModelMatrix", glm::mat4(1.0f));
-        //simplePbrShaderUB.Push("u_AlbedoColor", m_AlbedoInput.Color);
-        //simplePbrShaderUB.Push("u_Metalness", m_MetalnessInput.Value);
-        //simplePbrShaderUB.Push("u_Roughness", m_RoughnessInput.Value);
-        //simplePbrShaderUB.Push("lights.Direction", m_Light.Direction);
-        //simplePbrShaderUB.Push("lights.Radiance", m_Light.Radiance * m_LightMultiplier);
-        //simplePbrShaderUB.Push("u_CameraPosition", m_Camera.GetPosition());
-        //simplePbrShaderUB.Push("u_RadiancePrefilter", m_RadiancePrefilter ? 1.0f : 0.0f);
-        //simplePbrShaderUB.Push("u_AlbedoTexToggle", m_AlbedoInput.UseTexture ? 1.0f : 0.0f);
-        //simplePbrShaderUB.Push("u_NormalTexToggle", m_NormalInput.UseTexture ? 1.0f : 0.0f);
-        //simplePbrShaderUB.Push("u_MetalnessTexToggle", m_MetalnessInput.UseTexture ? 1.0f : 0.0f);
-        //simplePbrShaderUB.Push("u_RoughnessTexToggle", m_RoughnessInput.UseTexture ? 1.0f : 0.0f);
-        //simplePbrShaderUB.Push("u_EnvMapRotation", m_EnvMapRotation);
-        //m_SimplePBRShader->UploadUniformBuffer(simplePbrShaderUB);
-        //// PBR shader textures
-        //m_SimplePBRShader->SetInt("u_AlbedoTexture", 1);
-        //m_SimplePBRShader->SetInt("u_NormalTexture", 2);
-        //m_SimplePBRShader->SetInt("u_MetalnessTexture", 3);
-        //m_SimplePBRShader->SetInt("u_RoughnessTexture", 4);
+        UniformBufferDeclaration<sizeof(glm::mat4) * 2 + sizeof(glm::vec3) * 4 + sizeof(float) * 8, 14> simplePbrShaderUB;
+        simplePbrShaderUB.Push("u_ViewProjectionMatrix", viewProjection);
+        simplePbrShaderUB.Push("u_ModelMatrix", glm::mat4(1.0f));
+        simplePbrShaderUB.Push("u_AlbedoColor", m_AlbedoInput.Color);
+        simplePbrShaderUB.Push("u_Metalness", m_MetalnessInput.Value);
+        simplePbrShaderUB.Push("u_Roughness", m_RoughnessInput.Value);
+        simplePbrShaderUB.Push("lights.Direction", m_Light.Direction);
+        simplePbrShaderUB.Push("lights.Radiance", m_Light.Radiance * m_LightMultiplier);
+        simplePbrShaderUB.Push("u_CameraPosition", m_Camera.GetPosition());
+        simplePbrShaderUB.Push("u_RadiancePrefilter", m_RadiancePrefilter ? 1.0f : 0.0f);
+        simplePbrShaderUB.Push("u_AlbedoTexToggle", m_AlbedoInput.UseTexture ? 1.0f : 0.0f);
+        simplePbrShaderUB.Push("u_NormalTexToggle", m_NormalInput.UseTexture ? 1.0f : 0.0f);
+        simplePbrShaderUB.Push("u_MetalnessTexToggle", m_MetalnessInput.UseTexture ? 1.0f : 0.0f);
+        simplePbrShaderUB.Push("u_RoughnessTexToggle", m_RoughnessInput.UseTexture ? 1.0f : 0.0f);
+        simplePbrShaderUB.Push("u_EnvMapRotation", m_EnvMapRotation);
+        m_SimplePBRShader->UploadUniformBuffer(simplePbrShaderUB);
+        
+        // PBR shader textures
+        m_SimplePBRShader->SetInt("u_AlbedoTexture", 1);
+        m_SimplePBRShader->SetInt("u_NormalTexture", 2);
+        m_SimplePBRShader->SetInt("u_MetalnessTexture", 3);
+        m_SimplePBRShader->SetInt("u_RoughnessTexture", 4);
 
+        m_SimplePBRShader->SetInt("u_EnvRadianceTex", 10);
+        m_SimplePBRShader->SetInt("u_EnvIrradianceTex", 11);
+        m_SimplePBRShader->SetInt("u_BRDFLUTTexture", 15);
 
-        //m_SimplePBRShader->Bind();
-        //if (m_AlbedoInput.TextureMap) m_AlbedoInput.TextureMap->Bind(1);
-        //if (m_NormalInput.TextureMap) m_NormalInput.TextureMap->Bind(2);
-        //if (m_MetalnessInput.TextureMap) m_MetalnessInput.TextureMap->Bind(3);
-        //if (m_RoughnessInput.TextureMap) m_RoughnessInput.TextureMap->Bind(4);
-
-        //UploadUniformInt("u_EnvRadianceTex", 10);
-        //UploadUniformInt("u_EnvIrradianceTex", 11);
-        //UploadUniformInt("u_BRDFLUTTexture", 15);
-
-        //m_EnvironmentCubeMap->Bind(10);
-        //m_EnvironmentIrradiance->Bind(11);
-        //m_BRDFLUT->Bind(15);
+        if (m_AlbedoInput.TextureMap) m_AlbedoInput.TextureMap->Bind(1);
+        if (m_NormalInput.TextureMap) m_NormalInput.TextureMap->Bind(2);
+        if (m_MetalnessInput.TextureMap) m_MetalnessInput.TextureMap->Bind(3);
+        if (m_RoughnessInput.TextureMap) m_RoughnessInput.TextureMap->Bind(4);
+        m_EnvironmentCubeMap->Bind(10);
+        m_EnvironmentIrradiance->Bind(11);
+        m_BRDFLUT->Bind(15);
 
 
         //if (m_Scene == Scene::Spheres)
         //{
-        //    // Metals
-        //    float roughness = 0.0f;
-        //    float x = -88.0f;
-        //    for (int i = 0; i < 8; i++)
-        //    {
-        //        m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
-        //        m_SimplePBRShader->SetFloat("u_Roughness", roughness);
-        //        m_SimplePBRShader->SetFloat("u_Metalness", 1.0f);
-        //        m_SphereMesh->Render();
+            // Metals
+            float roughness = 0.0f;
+            //float x = -88.0f;
+            float x = -8;
+            for (int i = 0; i < 8; i++)
+            {
+                //m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
+                m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
+                m_SimplePBRShader->SetFloat("u_Roughness", roughness);
+                m_SimplePBRShader->SetFloat("u_Metalness", 1.0f);
+                m_SphereMesh->Render();
 
-        //        roughness += 0.15f;
-        //        x += 22.0f;
-        //    }
+                roughness += 0.15f;
+                //x += 22.0f;
+                x += 2;
+            }
 
-        //    // Dielectrics
-        //    roughness = 0.0f;
-        //    x = -88.0f;
-        //    for (int i = 0; i < 8; i++)
-        //    {
-        //        m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 22.0f, 0.0f)));
-        //        m_SimplePBRShader->SetFloat("u_Roughness", roughness);
-        //        m_SimplePBRShader->SetFloat("u_Metalness", 0.0f);
-        //        m_SphereMesh->Render();
+            // Dielectrics
+            roughness = 0.0f;
+            //x = -88.0f;
+            x = -8;
+            for (int i = 0; i < 8; i++)
+            {
+                //m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 22.0f, 0.0f)));
+                m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 2, 0)));
+                m_SimplePBRShader->SetFloat("u_Roughness", roughness);
+                m_SimplePBRShader->SetFloat("u_Metalness", 0.0f);
+                m_SphereMesh->Render();
 
-        //        roughness += 0.15f;
-        //        x += 22.0f;
-        //    }
+                roughness += 0.15f;
+                //x += 22.0f;
+                x += 2;
+            }
 
         //}
         //else if (m_Scene == Scene::Model)
@@ -550,8 +555,8 @@ namespace Ares
         ImGui::Separator();
 
         ImGui::Text("Shader Parameters");
-        /*ImGui::Checkbox("Radiance Prefiltering", &m_RadiancePrefilter);
-        ImGui::SliderFloat("Env Map Rotation", &m_EnvMapRotation, -360.0f, 360.0f);*/
+        ImGui::Checkbox("Radiance Prefiltering", &m_RadiancePrefilter);
+        ImGui::SliderFloat("Env Map Rotation", &m_EnvMapRotation, -360.0f, 360.0f);
 
         ImGui::Separator();
 
@@ -560,7 +565,7 @@ namespace Ares
             // Albedo
             if (ImGui::CollapsingHeader("Albedo", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
             {
-                /*ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
                 ImGui::Image(m_AlbedoInput.TextureMap ? (void*)m_AlbedoInput.TextureMap->GetRendererID() : (void*)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
                 ImGui::PopStyleVar();
                 if (ImGui::IsItemHovered())
@@ -591,14 +596,14 @@ namespace Ares
                 }
                 ImGui::EndGroup();
                 ImGui::SameLine();
-                ImGui::ColorEdit3("Color##Albedo", glm::value_ptr(m_AlbedoInput.Color), ImGuiColorEditFlags_NoInputs);*/
+                ImGui::ColorEdit3("Color##Albedo", glm::value_ptr(m_AlbedoInput.Color), ImGuiColorEditFlags_NoInputs);
             }
         }
         {
             // Normals
             if (ImGui::CollapsingHeader("Normals", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
             {
-                /*ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
                 ImGui::Image(m_NormalInput.TextureMap ? (void*)m_NormalInput.TextureMap->GetRendererID() : (void*)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
                 ImGui::PopStyleVar();
                 if (ImGui::IsItemHovered())
@@ -620,14 +625,14 @@ namespace Ares
                     }
                 }
                 ImGui::SameLine();
-                ImGui::Checkbox("Use##NormalMap", &m_NormalInput.UseTexture);*/
+                ImGui::Checkbox("Use##NormalMap", &m_NormalInput.UseTexture);
             }
         }
         {
             // Metalness
             if (ImGui::CollapsingHeader("Metalness", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
             {
-                /*ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
                 ImGui::Image(m_MetalnessInput.TextureMap ? (void*)m_MetalnessInput.TextureMap->GetRendererID() : (void*)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
                 ImGui::PopStyleVar();
                 if (ImGui::IsItemHovered())
@@ -651,14 +656,14 @@ namespace Ares
                 ImGui::SameLine();
                 ImGui::Checkbox("Use##MetalnessMap", &m_MetalnessInput.UseTexture);
                 ImGui::SameLine();
-                ImGui::SliderFloat("Value##MetalnessInput", &m_MetalnessInput.Value, 0.0f, 1.0f);*/
+                ImGui::SliderFloat("Value##MetalnessInput", &m_MetalnessInput.Value, 0.0f, 1.0f);
             }
         }
         {
             // Roughness
             if (ImGui::CollapsingHeader("Roughness", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
             {
-                /*ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
                 ImGui::Image(m_RoughnessInput.TextureMap ? (void*)m_RoughnessInput.TextureMap->GetRendererID() : (void*)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
                 ImGui::PopStyleVar();
                 if (ImGui::IsItemHovered())
@@ -682,7 +687,7 @@ namespace Ares
                 ImGui::SameLine();
                 ImGui::Checkbox("Use##RoughnessMap", &m_RoughnessInput.UseTexture);
                 ImGui::SameLine();
-                ImGui::SliderFloat("Value##RoughnessInput", &m_RoughnessInput.Value, 0.0f, 1.0f);*/
+                ImGui::SliderFloat("Value##RoughnessInput", &m_RoughnessInput.Value, 0.0f, 1.0f);
             }
         }
 
