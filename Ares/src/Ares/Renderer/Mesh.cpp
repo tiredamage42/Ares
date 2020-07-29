@@ -1,6 +1,11 @@
 #include "AresPCH.h" 
 
 #include "Mesh.h"
+
+
+//#define AI_CONFIG_PP_SBP_REMOVE "PP_SBP_REMOVE"
+//#define AI_CONFIG_PP_SBP_REMOVE aiPrimitiveType_LINE | aiPrimitiveType_POINT
+
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
@@ -12,8 +17,21 @@
 #include "Ares/Renderer/Renderer.h"
 
 namespace Ares {
+	static const uint32_t s_MeshImportFlags =
+		aiProcess_CalcTangentSpace |        // Create binormals/tangents just in case
+		aiProcess_Triangulate |             // Make sure we're triangles
+		aiProcess_SortByPType |             // Split meshes by primitive type
+		aiProcess_GenNormals |              // Make sure we have legit normals
+		aiProcess_GenUVCoords |             // Convert UVs if required 
+		aiProcess_OptimizeMeshes |          // Batch draws where possible
+		aiProcess_ValidateDataStructure |	// Validation
 
-	namespace {
+		aiProcess_RemoveRedundantMaterials |
+		//aiProcess_PreTransformVertices |
+		//aiProcess_OptimizeGraph |
+		aiProcess_JoinIdenticalVertices
+		;    
+	/*namespace {
 		const unsigned int ImportFlags =
 			aiProcess_CalcTangentSpace |
 			aiProcess_Triangulate |
@@ -23,8 +41,9 @@ namespace Ares {
 			aiProcess_GenUVCoords |
 			aiProcess_OptimizeMeshes |
 			aiProcess_Debone |
-			aiProcess_ValidateDataStructure;
-	}
+			aiProcess_ValidateDataStructure |
+			aiProcess_JoinIdenticalVertices;
+	}*/
 
 	struct LogStream : public Assimp::LogStream
 	{
@@ -279,7 +298,7 @@ namespace Ares {
 
 		Assimp::Importer importer;
 
-		const aiScene* scene = importer.ReadFile(filename, ImportFlags);
+		const aiScene* scene = importer.ReadFile(filename, s_MeshImportFlags);
 		if (!scene || !scene->HasMeshes())
 			ARES_CORE_ERROR("Failed to load mesh file: {0}", filename);
 
@@ -340,10 +359,25 @@ namespace Ares {
 
 
 		// Extract indices from model
-		m_Indices.reserve(mesh->mNumFaces);
-		for (size_t i = 0; i < m_Indices.capacity(); i++)
+		m_Indices.reserve(mesh->mNumFaces * 3);
+
+		ARES_WARN("Num Faces: {0}", mesh->mNumFaces);
+		ARES_WARN("indicies cap: {0}", m_Indices.capacity());
+
+		for (uint32_t i = 0; i < mesh->mNumFaces; i++)
 		{
+
+			bool rightIndicies = mesh->mFaces[i].mNumIndices == 3;
+			//bool rightIndicies = mesh->mFaces->mNumIndices == 3;
+
+			if (!rightIndicies)
+			{
+				ARES_CORE_ERROR("Need 3 Indicies per face, found: {0}", mesh->mFaces[i].mNumIndices);
+			}
+
+			
 			ARES_CORE_ASSERT(mesh->mFaces[i].mNumIndices == 3, "Must have 3 indices.");
+			//ARES_CORE_ASSERT(mesh->mFaces->mNumIndices == 3, "Must have 3 indices.");
 			m_Indices.push_back(mesh->mFaces[i].mIndices[0] );
 			m_Indices.push_back(mesh->mFaces[i].mIndices[1] );
 			m_Indices.push_back(mesh->mFaces[i].mIndices[2] );

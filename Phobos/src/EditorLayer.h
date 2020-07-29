@@ -44,7 +44,7 @@ namespace Ares
 		Ref<Shader> m_SimplePBRShader;
 		Ref<Shader> m_QuadShader;
 		Ref<Shader> m_HDRShader;
-		//Ref<Mesh> m_Mesh;
+		Ref<Mesh> m_Mesh;
 		Ref<Mesh> m_SphereMesh;
 		Ref<Texture2D> m_BRDFLUT;
 

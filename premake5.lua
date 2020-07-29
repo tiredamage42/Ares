@@ -135,12 +135,12 @@ project "Sandbox"
     links
     {
         "Ares",
-        "Ares/vendor/assimp/win64/assimp.lib"
+        -- "Ares/vendor/assimp/win64/assimp.lib"
     } 
-    postbuildcommands 
-    {
-        '{COPY} "../Ares/vendor/assimp/win64/assimp.lib" "%{cfg.targetdir}"',
-    }
+    -- postbuildcommands 
+    -- {
+    --     '{COPY} "../Ares/vendor/assimp/win64/assimp.lib" "%{cfg.targetdir}"',
+    -- }
 
     filter "system:windows"
         systemversion "latest"
@@ -215,13 +215,13 @@ project "Phobos"
     links
     {
         "Ares",
-        "Ares/vendor/assimp/win64/assimp.lib"
+        -- "Ares/vendor/assimp/win64/assimp.lib"
 
     } 
-    postbuildcommands 
-    {
-        '{COPY} "../Ares/vendor/assimp/win64/assimp.dll" "%{cfg.targetdir}"',
-    }
+    -- postbuildcommands 
+    -- {
+    --     '{COPY} "../Ares/vendor/assimp/win64/assimp.dll" "%{cfg.targetdir}"',
+    -- }
 
 
     filter "system:windows"

@@ -44,6 +44,8 @@ namespace Ares
 
 
         //m_Mesh = Mesh::Create("assets/meshes/cerberus.fbx");
+
+        m_Mesh = CreateRef<Mesh>();// "Assets/Models/m1911/m1911.fbx");
         m_SphereMesh = CreateRef<Mesh>();// "assets/models/Sphere.fbx");
 
         // Editor
@@ -194,7 +196,10 @@ namespace Ares
         // - Cubemap mips and filtering
         // - Tonemapping and proper HDR pipeline
         
-        m_Camera.Update();
+
+        if (m_ViewportFocused)
+            m_Camera.Update();
+
         auto viewProjection = m_Camera.GetProjectionMatrix() * m_Camera.GetViewMatrix();
 
 
@@ -263,8 +268,8 @@ namespace Ares
         m_BRDFLUT->Bind(15);
 
 
-        //if (m_Scene == Scene::Spheres)
-        //{
+        if (m_Scene == Scene::Spheres)
+        {
             // Metals
             float roughness = 0.0f;
             //float x = -88.0f;
@@ -299,11 +304,11 @@ namespace Ares
                 x += 2;
             }
 
-        //}
-        //else if (m_Scene == Scene::Model)
-        //{
-        //    m_Mesh->Render();
-        //}
+        }
+        else if (m_Scene == Scene::Model)
+        {
+            m_Mesh->Render();
+        }
 
 
         m_FrameBuffer->Unbind();
@@ -427,6 +432,7 @@ namespace Ares
             ImGui::EndMenuBar();
         }
 
+#if _2D
         ImGui::Begin("Stats");
         {
             auto stats = Ares::Renderer2D::GetStats();
@@ -467,6 +473,7 @@ namespace Ares
             
             ImGui::End();
         }
+#endif
 
         ImGui::Begin("Renderer Performance:");
         {
@@ -538,19 +545,19 @@ namespace Ares
         ImGui::Separator();
         {
             ImGui::Text("Mesh");
-            //std::string fullpath = m_Mesh ? m_Mesh->GetFilePath() : "None";
-            //size_t found = fullpath.find_last_of("/\\");
-            //std::string path = found != std::string::npos ? fullpath.substr(found + 1) : fullpath;
-            //ImGui::Text(path.c_str()); ImGui::SameLine();
-            //if (ImGui::Button("...##Mesh"))
-            //{
-            //    std::string filename = Application::Get().OpenFile("");
-            //    if (filename != "")
-            //    {
-            //        ARES_INFO("Would Load File '{0}'", filename);
-            //        //m_Mesh = Mesh::Create(filename);
-            //    }
-            //}
+            std::string fullpath = m_Mesh ? m_Mesh->GetFilePath() : "None";
+            size_t found = fullpath.find_last_of("/\\");
+            std::string path = found != std::string::npos ? fullpath.substr(found + 1) : fullpath;
+            ImGui::Text(path.c_str()); ImGui::SameLine();
+            if (ImGui::Button("...##Mesh"))
+            {
+                std::string filename = Application::Get().OpenFile("");
+                if (filename != "")
+                {
+                    //ARES_INFO("Would Load File '{0}'", filename);
+                    m_Mesh = CreateRef<Mesh>(filename);
+                }
+            }
         }
         ImGui::Separator();
 
