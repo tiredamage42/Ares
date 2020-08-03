@@ -3,14 +3,17 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+
+#define _2D 1
+
 namespace Ares
 {
 
     EditorLayer::EditorLayer()
         : Layer("Sandbox2D"), 
-        m_CameraController(1280.0f / 720.0f),
-        m_Scene(Scene::Spheres),
-        m_Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f))
+        m_CameraController(1280.0f / 720.0f)//,
+        //m_Scene(Scene::Spheres),
+        //m_Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f))
     {
     }
     void EditorLayer::OnAttach()
@@ -19,7 +22,7 @@ namespace Ares
         FrameBufferSpecs fbSpec;
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
-        m_FrameBuffer = Ares::FrameBuffer::Create(fbSpec);
+        m_FrameBuffer = Ares::FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA8);
 
         memset(m_FrameTimeGraph, 0, sizeof(float) * 100);
 
@@ -27,7 +30,7 @@ namespace Ares
         
         auto square = m_ActiveScene->CreateEntity("Custom Entity");
        
-        Ref<Texture2D> spriteSheet = Texture2D::Create("Assets/Game/Textures/RPGpack_sheet_2X.png");
+        Ref<Texture2D> spriteSheet = Texture2D::Create("Assets/Textures/RPGpack_sheet_2X.png");
 
         SpriteRendererComponent& spriteRenderer = square.AddComponent<SpriteRendererComponent>();        
         spriteRenderer.Color = glm::vec4{ 0, 1, 0, 1 };
@@ -162,8 +165,8 @@ namespace Ares
             This results in never rendering an empty (black) framebuffer.
         */
         // zero sized framebuffer is invalid
-        /*if (m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y))
-            m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);*/
+        if (m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y))
+            m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
         
         if (m_ViewportFocused)
             m_CameraController.OnUpdate();
@@ -511,6 +514,9 @@ namespace Ares
 
 
 
+#if _2D
+
+#else
 
         // Editor Panel ------------------------------------------------------------------------------
         ImGui::Begin("Settings");
@@ -701,6 +707,7 @@ namespace Ares
         ImGui::Separator();
 
         ImGui::End();
+#endif
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::Begin("Viewport");
@@ -710,17 +717,27 @@ namespace Ares
         Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
 
         auto viewportSize = ImGui::GetContentRegionAvail();
-        //m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
-        m_FinalPresentBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 
-        m_Camera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
 
+#if _2D
+        m_ViewportSize = { viewportSize.x, viewportSize.y };
         // from 2d on resize
-        m_CameraController.OnResize(viewportSize.x, viewportSize.y);
+        //m_CameraController.OnResize(viewportSize.x, viewportSize.y);
+        ImGui::Image((void*)m_FrameBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
+#else
 
-
-
+        m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        m_FinalPresentBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        m_Camera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
         ImGui::Image((void*)m_FinalPresentBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
+#endif
+
+
+
+
+
+
+        
         ImGui::End();
         ImGui::PopStyleVar();
 

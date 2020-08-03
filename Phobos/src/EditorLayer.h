@@ -27,7 +27,7 @@ namespace Ares
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 
-		//glm::vec2 m_ViewportSize = { 0,0 };
+		glm::vec2 m_ViewportSize = { 0,0 };
 
 		int32_t m_MaxQuadsPerDraw = 10000;
 		int32_t m_NumberOfSprites = 10;
@@ -92,7 +92,7 @@ namespace Ares
 		Ref<TextureCube> m_EnvironmentCubeMap;
 		Ref<TextureCube> m_EnvironmentIrradiance;
 
-		Camera m_Camera;
+		//Camera m_Camera;
 
 
 		struct Light
@@ -109,11 +109,11 @@ namespace Ares
 		bool m_RadiancePrefilter = false;
 		float m_EnvMapRotation = 0.0f;
 
-		enum class Scene : uint32_t
+		/*enum class Scene : uint32_t
 		{
 			Spheres = 0, Model = 1
-		};
-		Scene m_Scene;
+		};*/
+		//Scene m_Scene;
 
 		// Editor resources
 		Ref<Texture2D> m_CheckerboardTex;

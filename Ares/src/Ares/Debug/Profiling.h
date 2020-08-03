@@ -215,9 +215,12 @@ namespace Ares {
 
     #define ARES_PROFILE_BEGIN_SESSION(name, filepath) ::Ares::Profiling::BeginSession(name, filepath)
     #define ARES_PROFILE_END_SESSION() ::Ares::Profiling::EndSession()
-    //#define ARES_PROFILE_SCOPE(name) ::Ares::Profiler timer##__LINE__(name);
-    #define HZ_PROFILE_SCOPE(name) constexpr auto fixedName = ::Ares::ProfilerUtils::CleanupOutputString(name, "__cdecl ");\
-									::Ares::Profiler timer##__LINE__(fixedName.Data)
+    
+    #define ARES_PROFILE_SCOPE_LINE2(name, line) constexpr auto fixedName##line = ::Ares::ProfilerUtils::CleanupOutputString(name, "__cdecl ");\
+									    ::Ares::Profiler timer##line(fixedName##line.Data)
+    #define ARES_PROFILE_SCOPE_LINE(name, line) ARES_PROFILE_SCOPE_LINE2(name, line)
+    #define ARES_PROFILE_SCOPE(name) ARES_PROFILE_SCOPE_LINE(name, __LINE__)
+
     #define ARES_PROFILE_FUNCTION() ARES_PROFILE_SCOPE(ARES_FUNC_SIG)
 #else
     #define ARES_PROFILE_BEGIN_SESSION(name, filepath)
