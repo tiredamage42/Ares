@@ -32,15 +32,26 @@ namespace Ares {
 			glGenTextures(1, &this->m_RendererID);
 			glBindTexture(GL_TEXTURE_2D, this->m_RendererID);
 		
+			//// if image is larger or smaller than actual size, what kind of filtering to use?
+			//// if shrinking image
+			//glTextureParameteri(this->m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			//// if enlarging image
+			//glTextureParameteri(this->m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			//glTextureParameteri(this->m_RendererID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			//glTextureParameteri(this->m_RendererID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			//glTextureParameterf(this->m_RendererID, GL_TEXTURE_MAX_ANISOTROPY, RendererAPI::GetCapabilities().MaxAnisotropy);
+
 			// if image is larger or smaller than actual size, what kind of filtering to use?
 			// if shrinking image
-			glTextureParameteri(this->m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			// if enlarging image
-			glTextureParameteri(this->m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-			glTextureParameteri(this->m_RendererID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTextureParameteri(this->m_RendererID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			GLenum wrap = this->m_Wrap == TextureWrap::Clamp ? GL_CLAMP_TO_EDGE : GL_REPEAT;
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
 			glTextureParameterf(this->m_RendererID, GL_TEXTURE_MAX_ANISOTROPY, RendererAPI::GetCapabilities().MaxAnisotropy);
+
 
 			glTexImage2D(GL_TEXTURE_2D, 0, Ares2OpenGLTextureFormat(this->m_Format), this->m_Width, this->m_Height, 0, Ares2OpenGLTextureFormat(this->m_Format), GL_UNSIGNED_BYTE, nullptr);
 			
@@ -277,9 +288,9 @@ namespace Ares {
 	void OpenGLTextureCube::Bind(uint32_t slot) const
 	{
 		Renderer::Submit([this, slot]() {
-			//glBindTextureUnit(slot, this->m_RendererID);
-			glActiveTexture(GL_TEXTURE0 + slot);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, this->m_RendererID);
+			glBindTextureUnit(slot, this->m_RendererID);
+			/*glActiveTexture(GL_TEXTURE0 + slot);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, this->m_RendererID);*/
 		});
 	}
 }
