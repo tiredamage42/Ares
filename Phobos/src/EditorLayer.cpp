@@ -37,6 +37,20 @@ namespace Ares
         spriteRenderer.Texture = spriteSheet;
 
         m_SquareEntity = square;
+
+
+
+        m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
+
+        CameraComponent& cam = m_CameraEntity.AddComponent<CameraComponent>();
+        float zoomLevel = 1.0f;
+        float aspectRatio = 1280.0f / 720.0f; // width / height;
+        cam.Camera.SetProjectionMatrix(glm::ortho(-aspectRatio * zoomLevel, aspectRatio * zoomLevel, -zoomLevel, zoomLevel, -1.0f, 1.0f));
+
+
+        m_Camera.SetProjection(-aspectRatio * zoomLevel, aspectRatio * zoomLevel, -zoomLevel, zoomLevel)
+
+
 #else
         m_SimplePBRShader = Shader::Create("Assets/Shaders/pbr.glsl");
         
@@ -176,17 +190,17 @@ namespace Ares
 
         Renderer::Clear(.1f, .1f, .1f, 1);
             
-        Renderer2D::BeginScene(m_CameraController.GetCamera());
+        //Renderer2D::BeginScene(m_CameraController.GetCamera());
 
         // update scnee
         m_ActiveScene->OnUpdate();
 
-        Renderer2D::DrawQuad(
+        /*Renderer2D::DrawQuad(
             { 0.0f, 0.0f, 0.1f }, glm::radians(-45.0f), { 0.5f, 0.5f }, 
             nullptr, glm::vec2(1.0f), glm::vec2(0.0f), { 1.0f, 0.0f, 1.0f, 1.0f }
         );
         
-        Renderer2D::EndScene();
+        Renderer2D::EndScene();*/
 
         m_FrameBuffer->Unbind();
     }

@@ -116,18 +116,32 @@ namespace Ares
 	{
 		delete[] s_Data.QuadVertexBufferBase;
 	}
-	void Renderer2D::BeginScene(const OrthographicCamera& camera)
+	void Renderer2D::BeginScene(const glm::mat4& projection, const glm::mat4& transform) 
 	{
 		// reset stats
 		memset(&s_Data.Stats, 0, sizeof(Renderer2D::Statistics));
 
+		glm::mat4 viewProj = projection * glm::inverse(transform);
+
 		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
+		s_Data.TextureShader->SetMat4("u_ViewProjectionMatrix", viewProj);
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 		s_Data.TextureSlotIndex = 1;
 	}
+	//void Renderer2D::BeginScene(const OrthographicCamera& camera)
+	//{
+	//	// reset stats
+	//	memset(&s_Data.Stats, 0, sizeof(Renderer2D::Statistics));
+
+	//	s_Data.TextureShader->Bind();
+	//	s_Data.TextureShader->SetMat4("u_ViewProjectionMatrix", camera.GetViewProjectionMatrix());
+
+	//	s_Data.QuadIndexCount = 0;
+	//	s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+	//	s_Data.TextureSlotIndex = 1;
+	//}
 	void Renderer2D::FlushAndReset()
 	{
 		EndScene();

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "entt.hpp"
-
+#include "Ares/Renderer/Camera.h"
 namespace Ares
 {
 	class Entity;
