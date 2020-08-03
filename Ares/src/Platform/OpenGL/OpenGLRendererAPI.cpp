@@ -13,12 +13,15 @@ namespace Ares {
 		{
 		case GL_DEBUG_SEVERITY_HIGH:         
 			ARES_CORE_CRITICAL("[OpenGL Debug HIGH] {0}", message);
+			ARES_CORE_ASSERT(false, "");
 			return;
 		case GL_DEBUG_SEVERITY_MEDIUM:       
 			ARES_CORE_ERROR("[OpenGL Debug MEDIUM] {0}", message);
+			ARES_CORE_ASSERT(false, "");
 			return;
 		case GL_DEBUG_SEVERITY_LOW:          
 			ARES_CORE_WARN("[OpenGL Debug LOW] {0}", message);
+			ARES_CORE_ASSERT(false, "");
 			return;
 		case GL_DEBUG_SEVERITY_NOTIFICATION: 
 			ARES_CORE_LOG("[OpenGL Debug NOTIFICATION] {0}", message);
@@ -92,11 +95,12 @@ namespace Ares {
 	
 	void OpenGLRendererAPI::DrawIndexed(uint32_t indexCount, bool depthTest)
 	{
-		if (depthTest)
-			glEnable(GL_DEPTH_TEST);
-		else
+		if (!depthTest)
 			glDisable(GL_DEPTH_TEST);
-
+		
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
+
+		if (!depthTest)
+			glEnable(GL_DEPTH_TEST);
 	}
 }
