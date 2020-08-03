@@ -277,6 +277,11 @@ vec3 IBL(vec3 F0, vec3 Lr)
 
 void main()
 {
+	/*color = vec4(vs_Input.TexCoord, 0, 1);
+	return;*/
+	/*color = vec4(abs(vs_Input.Normal), 1);
+	return;*/
+
 	// Standard PBR inputs
 	m_Params.Albedo = u_AlbedoTexToggle > 0.5 ? texture(u_AlbedoTexture, vs_Input.TexCoord).rgb : u_AlbedoColor;
 	m_Params.Metalness = u_MetalnessTexToggle > 0.5 ? texture(u_MetalnessTexture, vs_Input.TexCoord).r : u_Metalness;

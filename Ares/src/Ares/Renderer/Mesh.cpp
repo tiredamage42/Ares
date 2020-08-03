@@ -98,8 +98,8 @@ namespace Ares {
 		//5) Define each vertex's Normal
 		glm::vec3 up =		{  0,  1,  0 };
 		glm::vec3 down =	{  0, -1,  0 };
-		glm::vec3 forward = {  0,  0,  1 };
-		glm::vec3 back =	{  0,  0, -1 };
+		glm::vec3 forward = {  0,  0, -1 };
+		glm::vec3 back =	{  0,  0,  1 };
 		glm::vec3 left =	{ -1,  0,  0 };
 		glm::vec3 right =	{  1,  0,  0 };
 
@@ -121,12 +121,20 @@ namespace Ares {
 		glm::vec2 uv11 = { 1, 1 };
 
 		glm::vec2 uvs[] = {
-			uv11, uv01, uv00, uv10, // Bottom
-			uv11, uv01, uv00, uv10, // Left
-			uv11, uv01, uv00, uv10, // Front
-			uv11, uv01, uv00, uv10, // Back	        
-			uv11, uv01, uv00, uv10, // Right 
-			uv11, uv01, uv00, uv10  // Top
+			//uv11, uv01, uv00, uv10, // Bottom
+			//uv11, uv01, uv00, uv10, // Left
+			//uv11, uv01, uv00, uv10, // Front
+			//uv11, uv01, uv00, uv10, // Back	        
+			//uv11, uv01, uv00, uv10, // Right 
+			//uv11, uv01, uv00, uv10  // Top
+
+
+			uv01, uv11, uv10, uv00, // Bottom
+			uv01, uv11, uv10, uv00, // Left
+			uv01, uv11, uv10, uv00, // Front
+			uv01, uv11, uv10, uv00, // Back	        
+			uv01, uv11, uv10, uv00, // Right 
+			uv01, uv11, uv10, uv00  // Top
 		};
 
 
