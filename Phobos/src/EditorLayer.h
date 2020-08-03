@@ -21,6 +21,8 @@ namespace Ares
 		OrthographicCameraController m_CameraController;
 		Ref<Texture2D> m_Texture, m_SpriteSheet;
 		//Ref<FrameBuffer> m_FrameBuffer;
+
+		float m_MeshScale = 1.0f;
 		
 		Ref<Scene> m_ActiveScene;
 		Entity m_SquareEntity;
@@ -48,6 +50,11 @@ namespace Ares
 		Ref<Mesh> m_Mesh;
 		Ref<Mesh> m_SphereMesh;
 		Ref<Texture2D> m_BRDFLUT;
+
+		Ref<Material> m_PBRMaterial;
+		std::vector<Ref<MaterialInstance>> m_MetalSphereMaterialInstances;
+		std::vector<Ref<MaterialInstance>> m_DielectricSphereMaterialInstances;
+
 
 		struct AlbedoInput
 		{

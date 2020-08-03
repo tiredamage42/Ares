@@ -56,7 +56,7 @@ namespace Ares {
 			}
 		}
 
-		void write(const char* message) override
+		virtual void write(const char* message) override
 		{
 			ARES_CORE_ERROR("Assimp error: {0}", message);
 		}

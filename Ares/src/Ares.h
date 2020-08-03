@@ -27,6 +27,8 @@
 #include "Ares/Renderer/Shader.h"
 #include "Ares/Renderer/Mesh.h"
 #include "Ares/Renderer/Camera.h"
+#include "Ares/Renderer/Material.h"
+
 
 #include "Ares/Core/Entity.h"
 #include "Ares/Core/Scene.h"

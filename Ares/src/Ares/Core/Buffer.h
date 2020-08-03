@@ -39,33 +39,33 @@ namespace Ares {
 			Size = size;
 		}
 
-		/*void ZeroInitialize()
+		void ZeroInitialize()
 		{
 			if (Data)
 				memset(Data, 0, Size);
-		}*/
+		}
 
 		void Write(void* data, uint32_t size, uint32_t offset = 0)
 		{
-			ARES_CORE_ERROR("Cap {0} Try {1}", Size, size);
-			ARES_CORE_ASSERT(offset + size <= Size, "Buffer overflow!");
+			/*ARES_CORE_ERROR("Cap {0} Try {1}", Size, size);
+			ARES_CORE_ASSERT(offset + size <= Size, "Buffer overflow!");*/
 			memcpy(Data + offset, data, size);
 		}
 
-		/*operator bool() const
+		operator bool() const
 		{
 			return Data;
-		}*/
+		}
 
-		/*uint8_t& operator[](int index)
+		uint8_t& operator[](int index)
 		{
 			return Data[index];
-		}*/
+		}
 
-		/*uint8_t operator[](int index) const
+		uint8_t operator[](int index) const
 		{
 			return Data[index];
-		}*/
+		}
 
 		/*template<typename T>
 		T* As()

@@ -81,6 +81,53 @@ namespace Ares
         m_FrameBuffer = FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA16F);
         m_FinalPresentBuffer = FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA8);
 
+
+        // set up pbr materials for demo
+        m_PBRMaterial = CreateRef<Material>(m_SimplePBRShader);
+
+        {
+            float x = -8.0f;
+            float roughness = 0.0f;
+            for (int i = 0; i < 8; i++)
+            {
+                Ref<MaterialInstance> mi = CreateRef<MaterialInstance>(m_PBRMaterial);
+                mi->Set("u_Metalness", 1.0f);
+                mi->Set("u_Roughness", roughness);
+                //mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
+                mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
+
+                //x += 1.1f;
+                x += 2;
+                roughness += 0.15f;
+                m_MetalSphereMaterialInstances.push_back(mi);
+            }
+
+            x = -8.0f;
+            roughness = 0.0f;
+            for (int i = 0; i < 8; i++)
+            {
+                Ref<MaterialInstance> mi = CreateRef<MaterialInstance>(m_PBRMaterial);
+                mi->Set("u_Metalness", 0.0f);
+                mi->Set("u_Roughness", roughness);
+                //mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 1.2f, 0.0f)));
+                mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 2, 0)));
+                //x += 1.1f;
+                x += 2;
+                roughness += 0.15f;
+                m_DielectricSphereMaterialInstances.push_back(mi);
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
         // Create Quad
         float x = -1, y = -1;
         float width = 2, height = 2;
@@ -211,8 +258,8 @@ namespace Ares
         // - Tonemapping and proper HDR pipeline
         
 
-        if (m_ViewportFocused)
-            m_Camera.Update();
+        //if (m_ViewportFocused)
+        m_Camera.Update();
 
         auto viewProjection = m_Camera.GetProjectionMatrix() * m_Camera.GetViewMatrix();
 
@@ -242,87 +289,129 @@ namespace Ares
         Renderer::DrawIndexed(m_QuadVertexArray->GetIndexBuffer()->GetCount(), false);
 
 
+        //m_PBRMaterial->Bind();
+
+        m_PBRMaterial->Set("u_AlbedoColor", m_AlbedoInput.Color);
+        m_PBRMaterial->Set("u_Metalness", m_MetalnessInput.Value);
+        m_PBRMaterial->Set("u_Roughness", m_RoughnessInput.Value);
+        m_PBRMaterial->Set("u_ViewProjectionMatrix", viewProjection);
+        m_PBRMaterial->Set("u_ModelMatrix", glm::scale(glm::mat4(1.0f), glm::vec3(m_MeshScale)));
+        m_PBRMaterial->Set("lights", m_Light);
+        m_PBRMaterial->Set("u_CameraPosition", m_Camera.GetPosition());
+        m_PBRMaterial->Set("u_RadiancePrefilter", m_RadiancePrefilter ? 1.0f : 0.0f);
+        m_PBRMaterial->Set("u_AlbedoTexToggle", m_AlbedoInput.UseTexture ? 1.0f : 0.0f);
+        m_PBRMaterial->Set("u_NormalTexToggle", m_NormalInput.UseTexture ? 1.0f : 0.0f);
+        m_PBRMaterial->Set("u_MetalnessTexToggle", m_MetalnessInput.UseTexture ? 1.0f : 0.0f);
+        m_PBRMaterial->Set("u_RoughnessTexToggle", m_RoughnessInput.UseTexture ? 1.0f : 0.0f);
+        m_PBRMaterial->Set("u_EnvMapRotation", m_EnvMapRotation);
 
 
-        m_SimplePBRShader->Bind();
+        //m_SimplePBRShader->Bind();
+        //UniformBufferDeclaration<sizeof(glm::mat4) * 2 + sizeof(glm::vec3) * 4 + sizeof(float) * 8, 14> simplePbrShaderUB;
+        //simplePbrShaderUB.Push("u_ViewProjectionMatrix", viewProjection);
+        //simplePbrShaderUB.Push("u_ModelMatrix", glm::mat4(1.0f));
+        //simplePbrShaderUB.Push("u_AlbedoColor", m_AlbedoInput.Color);
+        //simplePbrShaderUB.Push("u_Metalness", m_MetalnessInput.Value);
+        //simplePbrShaderUB.Push("u_Roughness", m_RoughnessInput.Value);
+        //simplePbrShaderUB.Push("lights.Direction", m_Light.Direction);
+        //simplePbrShaderUB.Push("lights.Radiance", m_Light.Radiance * m_LightMultiplier);
+        //simplePbrShaderUB.Push("u_CameraPosition", m_Camera.GetPosition());
+        //simplePbrShaderUB.Push("u_RadiancePrefilter", m_RadiancePrefilter ? 1.0f : 0.0f);
+        //simplePbrShaderUB.Push("u_AlbedoTexToggle", m_AlbedoInput.UseTexture ? 1.0f : 0.0f);
+        //simplePbrShaderUB.Push("u_NormalTexToggle", m_NormalInput.UseTexture ? 1.0f : 0.0f);
+        //simplePbrShaderUB.Push("u_MetalnessTexToggle", m_MetalnessInput.UseTexture ? 1.0f : 0.0f);
+        //simplePbrShaderUB.Push("u_RoughnessTexToggle", m_RoughnessInput.UseTexture ? 1.0f : 0.0f);
+        //simplePbrShaderUB.Push("u_EnvMapRotation", m_EnvMapRotation);
+        //m_SimplePBRShader->UploadUniformBuffer(simplePbrShaderUB);
+        //
+        //// PBR shader textures
+        //m_SimplePBRShader->SetInt("u_AlbedoTexture", 1);
+        //m_SimplePBRShader->SetInt("u_NormalTexture", 2);
+        //m_SimplePBRShader->SetInt("u_MetalnessTexture", 3);
+        //m_SimplePBRShader->SetInt("u_RoughnessTexture", 4);
 
-        UniformBufferDeclaration<sizeof(glm::mat4) * 2 + sizeof(glm::vec3) * 4 + sizeof(float) * 8, 14> simplePbrShaderUB;
-        simplePbrShaderUB.Push("u_ViewProjectionMatrix", viewProjection);
-        simplePbrShaderUB.Push("u_ModelMatrix", glm::mat4(1.0f));
-        simplePbrShaderUB.Push("u_AlbedoColor", m_AlbedoInput.Color);
-        simplePbrShaderUB.Push("u_Metalness", m_MetalnessInput.Value);
-        simplePbrShaderUB.Push("u_Roughness", m_RoughnessInput.Value);
-        simplePbrShaderUB.Push("lights.Direction", m_Light.Direction);
-        simplePbrShaderUB.Push("lights.Radiance", m_Light.Radiance * m_LightMultiplier);
-        simplePbrShaderUB.Push("u_CameraPosition", m_Camera.GetPosition());
-        simplePbrShaderUB.Push("u_RadiancePrefilter", m_RadiancePrefilter ? 1.0f : 0.0f);
-        simplePbrShaderUB.Push("u_AlbedoTexToggle", m_AlbedoInput.UseTexture ? 1.0f : 0.0f);
-        simplePbrShaderUB.Push("u_NormalTexToggle", m_NormalInput.UseTexture ? 1.0f : 0.0f);
-        simplePbrShaderUB.Push("u_MetalnessTexToggle", m_MetalnessInput.UseTexture ? 1.0f : 0.0f);
-        simplePbrShaderUB.Push("u_RoughnessTexToggle", m_RoughnessInput.UseTexture ? 1.0f : 0.0f);
-        simplePbrShaderUB.Push("u_EnvMapRotation", m_EnvMapRotation);
-        m_SimplePBRShader->UploadUniformBuffer(simplePbrShaderUB);
-        
-        // PBR shader textures
-        m_SimplePBRShader->SetInt("u_AlbedoTexture", 1);
-        m_SimplePBRShader->SetInt("u_NormalTexture", 2);
-        m_SimplePBRShader->SetInt("u_MetalnessTexture", 3);
-        m_SimplePBRShader->SetInt("u_RoughnessTexture", 4);
+        //m_SimplePBRShader->SetInt("u_EnvRadianceTex", 10);
+        //m_SimplePBRShader->SetInt("u_EnvIrradianceTex", 11);
+        //m_SimplePBRShader->SetInt("u_BRDFLUTTexture", 15);
 
-        m_SimplePBRShader->SetInt("u_EnvRadianceTex", 10);
-        m_SimplePBRShader->SetInt("u_EnvIrradianceTex", 11);
-        m_SimplePBRShader->SetInt("u_BRDFLUTTexture", 15);
-
-        if (m_AlbedoInput.TextureMap) m_AlbedoInput.TextureMap->Bind(1);
-        if (m_NormalInput.TextureMap) m_NormalInput.TextureMap->Bind(2);
-        if (m_MetalnessInput.TextureMap) m_MetalnessInput.TextureMap->Bind(3);
-        if (m_RoughnessInput.TextureMap) m_RoughnessInput.TextureMap->Bind(4);
-        m_EnvironmentCubeMap->Bind(10);
-        m_EnvironmentIrradiance->Bind(11);
-        m_BRDFLUT->Bind(15);
+        //if (m_AlbedoInput.TextureMap) m_AlbedoInput.TextureMap->Bind(1);
+        //if (m_NormalInput.TextureMap) m_NormalInput.TextureMap->Bind(2);
+        //if (m_MetalnessInput.TextureMap) m_MetalnessInput.TextureMap->Bind(3);
+        //if (m_RoughnessInput.TextureMap) m_RoughnessInput.TextureMap->Bind(4);
+        //m_EnvironmentCubeMap->Bind(10);
+        //m_EnvironmentIrradiance->Bind(11);
+        //m_BRDFLUT->Bind(15);
 
 
-        if (m_SceneType == SceneType::Spheres)
-        {
+        m_PBRMaterial->Set("u_EnvRadianceTex", m_EnvironmentCubeMap);
+        m_PBRMaterial->Set("u_EnvIrradianceTex", m_EnvironmentIrradiance);
+        m_PBRMaterial->Set("u_BRDFLUTTexture", m_BRDFLUT);
+
+        if (m_AlbedoInput.TextureMap)
+            m_PBRMaterial->Set("u_AlbedoTexture", m_AlbedoInput.TextureMap);
+        if (m_NormalInput.TextureMap)
+            m_PBRMaterial->Set("u_NormalTexture", m_NormalInput.TextureMap);
+        if (m_MetalnessInput.TextureMap)
+            m_PBRMaterial->Set("u_MetalnessTexture", m_MetalnessInput.TextureMap);
+        if (m_RoughnessInput.TextureMap)
+            m_PBRMaterial->Set("u_RoughnessTexture", m_RoughnessInput.TextureMap);
+
+
+
+        /*if (m_SceneType == SceneType::Spheres)
+        {*/
             // Metals
-            float roughness = 0.0f;
+            //float roughness = 0.0f;
             //float x = -88.0f;
-            float x = -8;
+            //float x = -8;
             for (int i = 0; i < 8; i++)
             {
-                //m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
-                m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
-                m_SimplePBRShader->SetFloat("u_Roughness", roughness);
-                m_SimplePBRShader->SetFloat("u_Metalness", 1.0f);
+                //m_PBRMaterial->Bind();
+                m_MetalSphereMaterialInstances[i]->Bind();
                 m_SphereMesh->Render();
+            
+                //m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
+                //m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
+                //m_SimplePBRShader->SetFloat("u_Roughness", roughness);
+                //m_SimplePBRShader->SetFloat("u_Metalness", 1.0f);
+                //m_SphereMesh->Render();
 
-                roughness += 0.15f;
-                //x += 22.0f;
-                x += 2;
+                //roughness += 0.15f;
+                ////x += 22.0f;
+                //x += 2;
             }
 
             // Dielectrics
-            roughness = 0.0f;
+            //roughness = 0.0f;
             //x = -88.0f;
-            x = -8;
+            //x = -8;
             for (int i = 0; i < 8; i++)
             {
-                //m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 22.0f, 0.0f)));
-                m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 2, 0)));
-                m_SimplePBRShader->SetFloat("u_Roughness", roughness);
-                m_SimplePBRShader->SetFloat("u_Metalness", 0.0f);
+                //m_PBRMaterial->Bind();
+                m_DielectricSphereMaterialInstances[i]->Bind();
                 m_SphereMesh->Render();
+            
+                //m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 22.0f, 0.0f)));
+                //m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 2, 0)));
+                //m_SimplePBRShader->SetFloat("u_Roughness", roughness);
+                //m_SimplePBRShader->SetFloat("u_Metalness", 0.0f);
+                //m_SphereMesh->Render();
 
-                roughness += 0.15f;
-                //x += 22.0f;
-                x += 2;
+                //roughness += 0.15f;
+                ////x += 22.0f;
+                //x += 2;
             }
 
-        }
-        else if (m_SceneType == SceneType::Model)
-        {
-            m_Mesh->Render();
-        }
+        //}
+        //else if (m_SceneType == SceneType::Model)
+        //{
+        //    if (m_Mesh)
+        //    {
+        //        m_PBRMaterial->Bind();
+        //        m_Mesh->Render();
+        //    }
+        //    //m_Mesh->Render();
+        //}
 
 
         m_FrameBuffer->Unbind();
@@ -625,6 +714,8 @@ namespace Ares
         Property("Light Multiplier", m_LightMultiplier, 0.0f, 5.0f);
         Property("Exposure", m_Exposure, 0.0f, 5.0f);
 
+        //Property("Mesh Scale", m_MeshScale, 0.0f, 2.0f);
+
 
         /*ImGui::SliderFloat3("Light Dir", glm::value_ptr(m_Light.Direction), -1, 1);
         ImGui::ColorEdit3("Light Radiance", glm::value_ptr(m_Light.Radiance));
@@ -882,6 +973,10 @@ namespace Ares
 
 
         ImGui::End();
+
+        /*if (m_Mesh)
+            m_Mesh->OnImGuiRender();*/
+
 
     }
 
