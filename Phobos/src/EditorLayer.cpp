@@ -4,16 +4,16 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
-#define _2D 1
+#define _2D 0
 
 namespace Ares
 {
 
     EditorLayer::EditorLayer()
         : Layer("Sandbox2D"), 
-        m_CameraController(1280.0f / 720.0f)//,
-        //m_Scene(Scene::Spheres),
-        //m_Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f))
+        m_CameraController(1280.0f / 720.0f),
+        m_SceneType(SceneType::Spheres),
+        m_Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f))
     {
     }
     void EditorLayer::OnAttach()
@@ -46,9 +46,6 @@ namespace Ares
         float zoomLevel = 1.0f;
         float aspectRatio = 1280.0f / 720.0f; // width / height;
         cam.Camera.SetProjectionMatrix(glm::ortho(-aspectRatio * zoomLevel, aspectRatio * zoomLevel, -zoomLevel, zoomLevel, -1.0f, 1.0f));
-
-
-        m_Camera.SetProjection(-aspectRatio * zoomLevel, aspectRatio * zoomLevel, -zoomLevel, zoomLevel)
 
 
 #else
@@ -285,7 +282,7 @@ namespace Ares
         m_BRDFLUT->Bind(15);
 
 
-        if (m_Scene == Scene::Spheres)
+        if (m_SceneType == SceneType::Spheres)
         {
             // Metals
             float roughness = 0.0f;
@@ -322,7 +319,7 @@ namespace Ares
             }
 
         }
-        else if (m_Scene == Scene::Model)
+        else if (m_SceneType == SceneType::Model)
         {
             m_Mesh->Render();
         }
@@ -369,7 +366,85 @@ namespace Ares
 
 
 
+#if _2D
 
+#else
+    enum class PropertyFlag
+    {
+        None = 0, ColorProperty = 1
+    };
+
+    void Property(const std::string& name, bool& value)
+    {
+        ImGui::Text(name.c_str());
+        ImGui::NextColumn();
+        ImGui::PushItemWidth(-1);
+
+        std::string id = "##" + name;
+        ImGui::Checkbox(id.c_str(), &value);
+
+        ImGui::PopItemWidth();
+        ImGui::NextColumn();
+    }
+
+    void Property(const std::string& name, float& value, float min = -1.0f, float max = 1.0f, PropertyFlag flags = PropertyFlag::None)
+    {
+        ImGui::Text(name.c_str());
+        ImGui::NextColumn();
+        ImGui::PushItemWidth(-1);
+
+        std::string id = "##" + name;
+        ImGui::SliderFloat(id.c_str(), &value, min, max);
+
+        ImGui::PopItemWidth();
+        ImGui::NextColumn();
+    }
+
+    
+
+    void Property(const std::string& name, glm::vec3& value, float min = -1.0f, float max = 1.0f, PropertyFlag flags = PropertyFlag::None)
+    {
+        ImGui::Text(name.c_str());
+        ImGui::NextColumn();
+        ImGui::PushItemWidth(-1);
+
+        std::string id = "##" + name;
+        if ((int)flags & (int)PropertyFlag::ColorProperty)
+            ImGui::ColorEdit3(id.c_str(), glm::value_ptr(value), ImGuiColorEditFlags_NoInputs);
+        else
+            ImGui::SliderFloat3(id.c_str(), glm::value_ptr(value), min, max);
+
+        ImGui::PopItemWidth();
+        ImGui::NextColumn();
+    }
+    void Property(const std::string& name, glm::vec3& value, PropertyFlag flags)
+    {
+        Property(name, value, -1.0f, 1.0f, flags);
+    }
+
+    
+    void Property(const std::string& name, glm::vec4& value, float min = -1.0f, float max = 1.0f, PropertyFlag flags = PropertyFlag::None)
+    {
+        ImGui::Text(name.c_str());
+        ImGui::NextColumn();
+        ImGui::PushItemWidth(-1);
+
+        std::string id = "##" + name;
+        if ((int)flags & (int)PropertyFlag::ColorProperty)
+            ImGui::ColorEdit4(id.c_str(), glm::value_ptr(value), ImGuiColorEditFlags_NoInputs);
+        else
+            ImGui::SliderFloat4(id.c_str(), glm::value_ptr(value), min, max);
+
+        ImGui::PopItemWidth();
+        ImGui::NextColumn();
+    }
+    void Property(const std::string& name, glm::vec4& value, PropertyFlag flags)
+    {
+        Property(name, value, -1.0f, 1.0f, flags);
+    }
+
+
+#endif
 
 
     void EditorLayer::OnImGuiDraw()
@@ -534,33 +609,39 @@ namespace Ares
 
         // Editor Panel ------------------------------------------------------------------------------
         ImGui::Begin("Settings");
-        if (ImGui::TreeNode("Shaders"))
-        {
-            auto& shaders = Shader::s_AllShaders;
-            for (auto& shader : shaders)
-            {
-                if (ImGui::TreeNode(shader->GetName().c_str()))
-                {
-                    std::string buttonName = "Reload##" + shader->GetName();
-                    if (ImGui::Button(buttonName.c_str()))
-                        shader->Reload();
-                    ImGui::TreePop();
-                }
-            }
-            ImGui::TreePop();
-        }
+        
 
-        ImGui::RadioButton("Spheres", (int*)&m_Scene, (int)Scene::Spheres);
+        ImGui::RadioButton("Spheres", (int*)&m_SceneType, (int)SceneType::Spheres);
         ImGui::SameLine();
-        ImGui::RadioButton("Model", (int*)&m_Scene, (int)Scene::Model);
+        ImGui::RadioButton("Model", (int*)&m_SceneType, (int)SceneType::Model);
 
-        ImGui::SliderFloat3("Light Dir", glm::value_ptr(m_Light.Direction), -1, 1);
+        ImGui::Begin("Environment");
+
+        ImGui::Columns(2);
+        ImGui::AlignTextToFramePadding();
+
+        Property("Light Direction", m_Light.Direction);
+        Property("Light Radiance", m_Light.Radiance, PropertyFlag::ColorProperty);
+        Property("Light Multiplier", m_LightMultiplier, 0.0f, 5.0f);
+        Property("Exposure", m_Exposure, 0.0f, 5.0f);
+
+
+        /*ImGui::SliderFloat3("Light Dir", glm::value_ptr(m_Light.Direction), -1, 1);
         ImGui::ColorEdit3("Light Radiance", glm::value_ptr(m_Light.Radiance));
         ImGui::SliderFloat("Light Multiplier", &m_LightMultiplier, 0.0f, 5.0f);
-        ImGui::SliderFloat("Exposure", &m_Exposure, 0.0f, 10.0f);
+        ImGui::SliderFloat("Exposure", &m_Exposure, 0.0f, 10.0f);*/
 
-        auto cameraForward = m_Camera.GetForwardDirection();
-        ImGui::Text("Camera Forward: %.2f, %.2f, %.2f", cameraForward.x, cameraForward.y, cameraForward.z);
+        //auto cameraForward = m_Camera.GetForwardDirection();
+        //ImGui::Text("Camera Forward: %.2f, %.2f, %.2f", cameraForward.x, cameraForward.y, cameraForward.z);
+
+        Property("Radiance Prefiltering", m_RadiancePrefilter);
+        Property("Env Map Rotation", m_EnvMapRotation, -360.0f, 360.0f);
+
+
+        ImGui::Columns(1);
+
+        ImGui::End();
+
 
         ImGui::Separator();
         {
@@ -581,11 +662,11 @@ namespace Ares
         }
         ImGui::Separator();
 
-        ImGui::Text("Shader Parameters");
+        /*ImGui::Text("Shader Parameters");
         ImGui::Checkbox("Radiance Prefiltering", &m_RadiancePrefilter);
         ImGui::SliderFloat("Env Map Rotation", &m_EnvMapRotation, -360.0f, 360.0f);
 
-        ImGui::Separator();
+        ImGui::Separator();*/
 
         // Textures ------------------------------------------------------------------------------
         {
@@ -719,6 +800,24 @@ namespace Ares
         }
 
         ImGui::Separator();
+
+
+        if (ImGui::TreeNode("Shaders"))
+        {
+            auto& shaders = Shader::s_AllShaders;
+            for (auto& shader : shaders)
+            {
+                if (ImGui::TreeNode(shader->GetName().c_str()))
+                {
+                    std::string buttonName = "Reload##" + shader->GetName();
+                    if (ImGui::Button(buttonName.c_str()))
+                        shader->Reload();
+                    ImGui::TreePop();
+                }
+            }
+            ImGui::TreePop();
+        }
+
 
         ImGui::End();
 #endif

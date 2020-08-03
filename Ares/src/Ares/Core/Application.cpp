@@ -119,12 +119,13 @@ namespace Ares {
             {
                 for (Layer* layer : m_LayerStack)
                     layer->OnUpdate();
+
+                // Render ImGui on render thread
+                Renderer::Submit([this]() { this->RenderImGui(); });
+            
+                Renderer::WaitAndRender();
             }
 
-            // Render ImGui on render thread
-            Renderer::Submit([this]() { this->RenderImGui(); });
-            
-            Renderer::WaitAndRender();
             
             m_Window->OnUpdate();
         }

@@ -93,7 +93,7 @@ namespace Ares
 		Ref<TextureCube> m_EnvironmentCubeMap;
 		Ref<TextureCube> m_EnvironmentIrradiance;
 
-		//Camera m_Camera;
+		Camera m_Camera;
 
 
 		struct Light
@@ -110,11 +110,11 @@ namespace Ares
 		bool m_RadiancePrefilter = false;
 		float m_EnvMapRotation = 0.0f;
 
-		/*enum class Scene : uint32_t
+		enum class SceneType : uint32_t
 		{
 			Spheres = 0, Model = 1
-		};*/
-		//Scene m_Scene;
+		};
+		SceneType m_SceneType;
 
 		// Editor resources
 		Ref<Texture2D> m_CheckerboardTex;
