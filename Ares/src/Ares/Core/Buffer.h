@@ -67,13 +67,13 @@ namespace Ares {
 			return Data[index];
 		}
 
-		/*template<typename T>
+		template<typename T>
 		T* As()
 		{
 			return (T*)Data;
-		}*/
+		}
 
-		//inline uint32_t GetSize() const { return Size; }
+		inline uint32_t GetSize() const { return Size; }
 	};
 
 }

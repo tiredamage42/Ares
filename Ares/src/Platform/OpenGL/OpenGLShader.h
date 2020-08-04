@@ -81,6 +81,7 @@ namespace Ares {
 		void UploadUniformFloat4(uint32_t location, glm::vec4 value);
 		void UploadUniformMat3(uint32_t location, glm::mat3 value);
 		void UploadUniformMat4(uint32_t location, const glm::mat4& value);
+		void UploadUniformMat4Array(uint32_t location, const glm::mat4& values, uint32_t count);
 
 		void UploadUniformStruct(OpenGLShaderUniformDeclaration* uniform, byte* buffer, uint32_t offset);
 
@@ -114,7 +115,7 @@ namespace Ares {
 
 		void ResolveAndSetUniforms(const Scope<OpenGLShaderUniformBufferDeclaration>& decl, Buffer buffer);
 		void ResolveAndSetUniform(OpenGLShaderUniformDeclaration* uniform, Buffer buffer);
-		//void ResolveAndSetUniformArray(OpenGLShaderUniformDeclaration* uniform, Buffer buffer);
+		void ResolveAndSetUniformArray(OpenGLShaderUniformDeclaration* uniform, Buffer buffer);
 		void ResolveAndSetUniformField(const OpenGLShaderUniformDeclaration& field, byte* data, int32_t offset);
 
 		//std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);

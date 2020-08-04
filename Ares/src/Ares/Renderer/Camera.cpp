@@ -43,7 +43,7 @@ namespace Ares {
 		// Sensible defaults
 		m_PanSpeed = 0.15f;
 		m_RotationSpeed = 0.3f;
-		m_ZoomSpeed = 1.0f;
+		m_ZoomSpeed = 10.0f;
 
 		//m_Position = { -100, 100, 100 };
 		//m_Rotation = glm::vec3(90.0f, 0.0f, 0.0f);

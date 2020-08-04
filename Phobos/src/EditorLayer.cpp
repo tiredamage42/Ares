@@ -57,11 +57,11 @@ namespace Ares
 
         m_HDRShader = Shader::Create("Assets/Shaders/hdr.glsl");
 
-        m_PlaneMesh = CreateRef<Mesh>(Mesh::PrimitiveType::Plane);
+        m_PlaneMesh = CreateRef<Mesh>(PrimitiveType::Plane);
         //m_Mesh = Mesh::Create("assets/meshes/cerberus.fbx");
 
         //m_Mesh = CreateRef<Mesh>();// "Assets/Models/m1911/m1911.fbx");
-        m_SphereMesh = CreateRef<Mesh>(Mesh::PrimitiveType::Cube);// "assets/models/Sphere.fbx");
+        m_SphereMesh = CreateRef<Mesh>(PrimitiveType::Cube);// "assets/models/Sphere.fbx");
 
         // Editor
         m_CheckerboardTex = Texture2D::Create("Assets/Textures/Checkerboard.png");
@@ -369,7 +369,7 @@ namespace Ares
             {
                 //m_PBRMaterial->Bind();
                 m_MetalSphereMaterialInstances[i]->Bind();
-                m_SphereMesh->Render();
+                m_SphereMesh->Render(m_SimplePBRShader);
             
                 //m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
                 //m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
@@ -390,7 +390,7 @@ namespace Ares
             {
                 //m_PBRMaterial->Bind();
                 m_DielectricSphereMaterialInstances[i]->Bind();
-                m_SphereMesh->Render();
+                m_SphereMesh->Render(m_SimplePBRShader);
             
                 //m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 22.0f, 0.0f)));
                 //m_SimplePBRShader->SetMat4("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 2, 0)));
@@ -409,7 +409,7 @@ namespace Ares
             if (m_Mesh)
             {
                 m_PBRMaterial->Bind();
-                m_Mesh->Render();
+                m_Mesh->Render(m_SimplePBRShader);
             }
             //m_Mesh->Render();
         }
@@ -422,7 +422,7 @@ namespace Ares
 
         m_GridShader->SetFloat("u_Scale", m_GridScale);
         m_GridShader->SetFloat("u_Res", m_GridSize);
-        m_PlaneMesh->Render();
+        m_PlaneMesh->Render(nullptr);
 
 
         m_FrameBuffer->Unbind();
@@ -442,6 +442,7 @@ namespace Ares
         //m_VertexBuffer->Bind();
         //m_IndexBuffer->Bind();
         Renderer::DrawIndexed(m_QuadVertexArray->GetIndexBuffer()->GetCount(), false);
+
         m_FinalPresentBuffer->Unbind();
     }
 #endif
@@ -1003,8 +1004,8 @@ namespace Ares
 
         ImGui::End();
 
-        /*if (m_Mesh)
-            m_Mesh->OnImGuiRender();*/
+        if (m_Mesh)
+            m_Mesh->OnImGuiRender();
 
 
     }

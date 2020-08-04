@@ -748,8 +748,8 @@ namespace Ares {
 			if (uniform->IsArray())
 			{
 
-				ARES_CORE_ASSERT(false, "arrays not implemented yet...");
-				//ResolveAndSetUniformArray(uniform, buffer);
+				//ARES_CORE_ASSERT(false, "arrays not implemented yet...");
+				ResolveAndSetUniformArray(uniform, buffer);
 			}
 			else
 			{
@@ -798,12 +798,12 @@ namespace Ares {
 		}
 	}
 
-	/*void OpenGLShader::ResolveAndSetUniformArray(OpenGLShaderUniformDeclaration* uniform, Buffer buffer)
+	void OpenGLShader::ResolveAndSetUniformArray(OpenGLShaderUniformDeclaration* uniform, Buffer buffer)
 	{
 		uint32_t offset = uniform->GetOffset();
 		switch (uniform->GetType())
 		{
-		case OpenGLShaderUniformDeclaration::Type::FLOAT32:
+		/*case OpenGLShaderUniformDeclaration::Type::FLOAT32:
 			UploadUniformFloat(uniform->GetLocation(), *(float*)&buffer.Data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::INT32:
@@ -817,20 +817,20 @@ namespace Ares {
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC4:
 			UploadUniformFloat4(uniform->GetLocation(), *(glm::vec4*) & buffer.Data[offset]);
-			break;
-		case OpenGLShaderUniformDeclaration::Type::MAT3:
+			break;*/
+		/*case OpenGLShaderUniformDeclaration::Type::MAT3:
 			UploadUniformMat3(uniform->GetLocation(), *(glm::mat3*) & buffer.Data[offset]);
-			break;
+			break;*/
 		case OpenGLShaderUniformDeclaration::Type::MAT4:
 			UploadUniformMat4Array(uniform->GetLocation(), *(glm::mat4*) & buffer.Data[offset], uniform->GetCount());
 			break;
-		case OpenGLShaderUniformDeclaration::Type::STRUCT:
+		/*case OpenGLShaderUniformDeclaration::Type::STRUCT:
 			UploadUniformStruct(uniform, buffer.Data, offset);
-			break;
+			break;*/
 		default:
 			ARES_CORE_ASSERT(false, "Unknown uniform type!");
 		}
-	}*/
+	}
 
 	void OpenGLShader::ResolveAndSetUniformField(const OpenGLShaderUniformDeclaration& field, byte* data, int32_t offset)
 	{
@@ -1249,6 +1249,11 @@ namespace Ares {
 	void OpenGLShader::UploadUniformMat4(uint32_t location, const glm::mat4& value)
 	{
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+	}
+
+	void OpenGLShader::UploadUniformMat4Array(uint32_t location, const glm::mat4& values, uint32_t count)
+	{
+		glUniformMatrix4fv(location, count, GL_FALSE, glm::value_ptr(values));
 	}
 
 	void OpenGLShader::UploadUniformStruct(OpenGLShaderUniformDeclaration* uniform, byte* buffer, uint32_t offset)

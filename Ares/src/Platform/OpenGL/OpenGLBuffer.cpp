@@ -9,14 +9,17 @@ namespace Ares {
 	// =====================================================
 	// VERTEX BUFFERS =======================================
 	// =====================================================
-	OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)
+	OpenGLVertexBuffer::OpenGLVertexBuffer(void* vertices, uint32_t size)
 	{
+
+		m_LocalData = Buffer::Copy(vertices, size);
+		
 		Renderer::Submit([this, size, vertices]() mutable {
 
 			glCreateBuffers(1, &this->m_RendererID);
 			glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 			// upload to gpu
-			glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, size, this->m_LocalData.Data, GL_STATIC_DRAW);
 		});
 	}
 	// dynamic buffer
