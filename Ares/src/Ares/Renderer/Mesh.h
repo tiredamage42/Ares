@@ -11,6 +11,12 @@ namespace Ares {
 	class Mesh
 	{
 	public:
+
+		enum class PrimitiveType
+		{
+			Plane, Cube
+		};
+
 		struct Vertex
 		{
 			glm::vec3 Position;
@@ -22,7 +28,7 @@ namespace Ares {
 	
 
 		Mesh(const std::string& filename);
-		Mesh();
+		Mesh(PrimitiveType primitiveType);
 		~Mesh();
 
 		void Render();

@@ -22,6 +22,9 @@ namespace Ares
 		Ref<Texture2D> m_Texture, m_SpriteSheet;
 		//Ref<FrameBuffer> m_FrameBuffer;
 
+		int m_GridScale = 16;
+		//float m_GridScale = 16.025f, 
+			float m_GridSize = 0.025f;
 		float m_MeshScale = 1.0f;
 		
 		Ref<Scene> m_ActiveScene;
@@ -44,11 +47,11 @@ namespace Ares
 
 
 		//Ref<Shader> m_PBRShader;
-		Ref<Shader> m_SimplePBRShader;
+		Ref<Shader> m_SimplePBRShader, m_GridShader;
 		Ref<Shader> m_QuadShader;
 		Ref<Shader> m_HDRShader;
 		Ref<Mesh> m_Mesh;
-		Ref<Mesh> m_SphereMesh;
+		Ref<Mesh> m_SphereMesh, m_PlaneMesh;
 		Ref<Texture2D> m_BRDFLUT;
 
 		Ref<Material> m_PBRMaterial;

@@ -50,17 +50,18 @@ namespace Ares
 
 #else
         m_SimplePBRShader = Shader::Create("Assets/Shaders/pbr.glsl");
+        m_GridShader = Shader::Create("Assets/Shaders/grid.glsl");
         
         //m_QuadShader = Shader::Create("assets/shaders/quad.glsl");
         m_QuadShader = Shader::Create("Assets/Shaders/CubemapSkybox.glsl");
 
         m_HDRShader = Shader::Create("Assets/Shaders/hdr.glsl");
 
-
+        m_PlaneMesh = CreateRef<Mesh>(Mesh::PrimitiveType::Plane);
         //m_Mesh = Mesh::Create("assets/meshes/cerberus.fbx");
 
-        m_Mesh = CreateRef<Mesh>();// "Assets/Models/m1911/m1911.fbx");
-        m_SphereMesh = CreateRef<Mesh>();// "assets/models/Sphere.fbx");
+        //m_Mesh = CreateRef<Mesh>();// "Assets/Models/m1911/m1911.fbx");
+        m_SphereMesh = CreateRef<Mesh>(Mesh::PrimitiveType::Cube);// "assets/models/Sphere.fbx");
 
         // Editor
         m_CheckerboardTex = Texture2D::Create("Assets/Textures/Checkerboard.png");
@@ -358,8 +359,8 @@ namespace Ares
 
 
 
-        /*if (m_SceneType == SceneType::Spheres)
-        {*/
+        if (m_SceneType == SceneType::Spheres)
+        {
             // Metals
             //float roughness = 0.0f;
             //float x = -88.0f;
@@ -402,19 +403,32 @@ namespace Ares
                 //x += 2;
             }
 
-        //}
-        //else if (m_SceneType == SceneType::Model)
-        //{
-        //    if (m_Mesh)
-        //    {
-        //        m_PBRMaterial->Bind();
-        //        m_Mesh->Render();
-        //    }
-        //    //m_Mesh->Render();
-        //}
+        }
+        else if (m_SceneType == SceneType::Model)
+        {
+            if (m_Mesh)
+            {
+                m_PBRMaterial->Bind();
+                m_Mesh->Render();
+            }
+            //m_Mesh->Render();
+        }
+
+
+        m_GridShader->Bind();
+
+        //m_GridShader->SetMat4("u_MVP", viewProjection * glm::scale(glm::mat4(1.0f), glm::vec3(16.0f)));
+        m_GridShader->SetMat4("u_MVP", viewProjection * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
+
+        m_GridShader->SetFloat("u_Scale", m_GridScale);
+        m_GridShader->SetFloat("u_Res", m_GridSize);
+        m_PlaneMesh->Render();
 
 
         m_FrameBuffer->Unbind();
+
+
+
         m_FinalPresentBuffer->Bind();
         
         m_HDRShader->Bind();
@@ -484,6 +498,18 @@ namespace Ares
 
         std::string id = "##" + name;
         ImGui::SliderFloat(id.c_str(), &value, min, max);
+
+        ImGui::PopItemWidth();
+        ImGui::NextColumn();
+    }
+    void Property(const std::string& name, int& value, int min = -1, int max = 1, PropertyFlag flags = PropertyFlag::None)
+    {
+        ImGui::Text(name.c_str());
+        ImGui::NextColumn();
+        ImGui::PushItemWidth(-1);
+
+        std::string id = "##" + name;
+        ImGui::SliderInt(id.c_str(), &value, min, max);
 
         ImGui::PopItemWidth();
         ImGui::NextColumn();
@@ -714,7 +740,10 @@ namespace Ares
         Property("Light Multiplier", m_LightMultiplier, 0.0f, 5.0f);
         Property("Exposure", m_Exposure, 0.0f, 5.0f);
 
-        //Property("Mesh Scale", m_MeshScale, 0.0f, 2.0f);
+        Property("Mesh Scale", m_MeshScale, 0.0f, 2.0f);
+
+        Property("Grid Scale", m_GridScale, 0, 20);
+        Property("Grid Size", m_GridSize, 0.0f, 0.1f);
 
 
         /*ImGui::SliderFloat3("Light Dir", glm::value_ptr(m_Light.Direction), -1, 1);

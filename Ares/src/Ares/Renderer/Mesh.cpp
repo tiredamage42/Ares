@@ -44,11 +44,10 @@ namespace Ares {
 	};
 
 
-
-	Mesh::Mesh()
+	static void GetCubeVertInfo(std::vector<Mesh::Vertex>& m_Vertices, std::vector<uint32_t>& m_Indices)
 	{
-		const uint32_t numVertices = 36;
 
+		
 		glm::vec3 points[] = {
 			glm::vec3(-.5f, -.5f,  .5f),
 			glm::vec3(.5f,  -.5f,  .5f),
@@ -69,12 +68,12 @@ namespace Ares {
 			points[7], points[6], points[5], points[4]  // Top
 		};
 
-		glm::vec3 up =		{  0,  1,  0 };
-		glm::vec3 down =	{  0, -1,  0 };
-		glm::vec3 forward = {  0,  0, -1 };
-		glm::vec3 back =	{  0,  0,  1 };
-		glm::vec3 left =	{ -1,  0,  0 };
-		glm::vec3 right =	{  1,  0,  0 };
+		glm::vec3 up = { 0,  1,  0 };
+		glm::vec3 down = { 0, -1,  0 };
+		glm::vec3 forward = { 0,  0, -1 };
+		glm::vec3 back = { 0,  0,  1 };
+		glm::vec3 left = { -1,  0,  0 };
+		glm::vec3 right = { 1,  0,  0 };
 
 		glm::vec3 normals[] = {
 			down, down, down, down,             // Bottom
@@ -99,7 +98,24 @@ namespace Ares {
 			uv01, uv11, uv10, uv00  // Top
 		};
 
-		uint32_t tris[] = {
+
+		const uint32_t numVertices = 36;
+
+		m_Vertices.reserve(numVertices);
+
+		for (size_t i = 0; i < numVertices; i++)
+		{
+			Mesh::Vertex vertex;
+			vertex.Position = verts[i];
+			vertex.Normal = normals[i];
+			vertex.Texcoord = uvs[i];
+			m_Vertices.push_back(vertex);
+		}
+
+
+		m_Indices = 
+		//uint32_t tris[] = 
+		{
 			3,  1,  0,		3,  2,  1,      // Bottom	
 			7,  5,  4,		7,  6,  5,      // Left
 			11, 9,  8,		11, 10, 9,      // Front
@@ -107,8 +123,123 @@ namespace Ares {
 			19, 17, 16,		19, 18, 17,	    // Right
 			23, 21, 20,		23, 22, 21,	    // Top
 		};
+		/*m_Indices.reserve(numVertices);
+		for (size_t i = 0; i < m_Indices.capacity(); i++)
+		{
+			m_Indices.push_back(tris[i]);
+		}*/
+
+	}
+
+	static void GetPlaneVertInfo(std::vector<Mesh::Vertex>& m_Vertices, std::vector<uint32_t>& m_Indices)
+	{
+		glm::vec3 verts[] = {
+			{ -.5f, 0, -.5f },
+			{  .5f, 0, -.5f },
+			{  .5f, 0,  .5f },
+			{ -.5f, 0,  .5f }
+		};
+
+		glm::vec3 up = { 0,  1,  0 };
+		glm::vec3 normals[] = { up, up, up, up };
+
+		glm::vec2 uvs[] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
+
+		const uint32_t numVertices = 4;
 
 		m_Vertices.reserve(numVertices);
+
+		for (size_t i = 0; i < numVertices; i++)
+		{
+			Mesh::Vertex vertex;
+			vertex.Position = verts[i];
+			vertex.Normal = normals[i];
+			vertex.Texcoord = uvs[i];
+			m_Vertices.push_back(vertex);
+		}
+
+		m_Indices = { 0, 1, 2, 2, 3, 0 };
+	}
+
+
+	Mesh::Mesh(PrimitiveType primitiveType)
+	{
+		//uint32_t numVertices = 0;
+		switch (primitiveType)
+		{
+		case PrimitiveType::Cube:
+			GetCubeVertInfo(m_Vertices, m_Indices);
+
+			//numVertices = 36;
+
+			//glm::vec3 points[] = {
+			//	glm::vec3(-.5f, -.5f,  .5f),
+			//	glm::vec3(.5f,  -.5f,  .5f),
+			//	glm::vec3(.5f,  -.5f, -.5f),
+			//	glm::vec3(-.5f, -.5f, -.5f),
+			//	glm::vec3(-.5f,  .5f,  .5f),
+			//	glm::vec3(.5f,   .5f,  .5f),
+			//	glm::vec3(.5f,   .5f, -.5f),
+			//	glm::vec3(-.5f,  .5f, -.5f)
+			//};
+
+			//glm::vec3 verts[] = {
+			//	points[0], points[1], points[2], points[3], // Bottom
+			//	points[7], points[4], points[0], points[3], // Left
+			//	points[4], points[5], points[1], points[0], // Front
+			//	points[6], points[7], points[3], points[2], // Back
+			//	points[5], points[6], points[2], points[1], // Right
+			//	points[7], points[6], points[5], points[4]  // Top
+			//};
+
+			//glm::vec3 up =		{  0,  1,  0 };
+			//glm::vec3 down =	{  0, -1,  0 };
+			//glm::vec3 forward = {  0,  0, -1 };
+			//glm::vec3 back =	{  0,  0,  1 };
+			//glm::vec3 left =	{ -1,  0,  0 };
+			//glm::vec3 right =	{  1,  0,  0 };
+
+			//glm::vec3 normals[] = {
+			//	down, down, down, down,             // Bottom
+			//	left, left, left, left,             // Left
+			//	forward, forward, forward, forward,	// Front
+			//	back, back, back, back,             // Back
+			//	right, right, right, right,         // Right
+			//	up, up, up, up	                    // Top
+			//};
+
+			//glm::vec2 uv00 = { 0, 0 };
+			//glm::vec2 uv10 = { 1, 0 };
+			//glm::vec2 uv01 = { 0, 1 };
+			//glm::vec2 uv11 = { 1, 1 };
+
+			//glm::vec2 uvs[] = {
+			//	uv01, uv11, uv10, uv00, // Bottom
+			//	uv01, uv11, uv10, uv00, // Left
+			//	uv01, uv11, uv10, uv00, // Front
+			//	uv01, uv11, uv10, uv00, // Back	        
+			//	uv01, uv11, uv10, uv00, // Right 
+			//	uv01, uv11, uv10, uv00  // Top
+			//};
+
+			//uint32_t tris[] = {
+			//	3,  1,  0,		3,  2,  1,      // Bottom	
+			//	7,  5,  4,		7,  6,  5,      // Left
+			//	11, 9,  8,		11, 10, 9,      // Front
+			//	15, 13, 12,		15, 14, 13,     // Back
+			//	19, 17, 16,		19, 18, 17,	    // Right
+			//	23, 21, 20,		23, 22, 21,	    // Top
+			//};
+			break;
+		case PrimitiveType::Plane:
+			GetPlaneVertInfo(m_Vertices, m_Indices);
+			break;
+		default:
+			ARES_CORE_ASSERT(false, "Unknown Primitive Type!");
+			break;
+		}
+
+		/*m_Vertices.reserve(numVertices);
 
 		for (size_t i = 0; i < m_Vertices.capacity(); i++)
 		{
@@ -117,7 +248,7 @@ namespace Ares {
 			vertex.Normal = normals[i];
 			vertex.Texcoord = uvs[i];
 			m_Vertices.push_back(vertex);
-		}
+		}*/
 
 		m_VertexArray = VertexArray::Create();
 
@@ -136,11 +267,11 @@ namespace Ares {
 		m_VertexArray->AddVertexBuffer(vertBuffer);
 
 		// Extract indices from model
-		m_Indices.reserve(numVertices);
+		/*m_Indices.reserve(numVertices);
 		for (size_t i = 0; i < m_Indices.capacity(); i++)
 		{
 			m_Indices.push_back(tris[i]);
-		}
+		}*/
 
 		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.capacity());
 		m_VertexArray->SetIndexBuffer(indexBuffer);
