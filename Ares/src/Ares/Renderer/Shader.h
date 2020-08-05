@@ -114,7 +114,6 @@ namespace Ares {
 
 		//virtual void UploadUniformBuffer(const UniformBufferBase& uniformBuffer) = 0;
 
-
 		virtual const std::string& GetName() const = 0;
 
 		virtual void SetInt(const std::string& name, int value) = 0;
@@ -126,8 +125,6 @@ namespace Ares {
 		virtual void SetMat3(const std::string& name, glm::mat3 value) = 0;
 		virtual void SetMat4(const std::string& name, const glm::mat4& value) = 0;
 		
-		
-
 		virtual void SetIntFromRenderThread(const std::string& name, int value) = 0;
 		virtual void SetIntArrayFromRenderThread(const std::string& name, int* values, uint32_t count, bool deleteFromMem = true) = 0;
 		virtual void SetFloatFromRenderThread(const std::string& name, float value) = 0;
@@ -148,10 +145,16 @@ namespace Ares {
 		virtual void AddShaderReloadedCallback(const ShaderReloadedCallback& callback) = 0;
 
 
-		static Ref<Shader> Create(const std::string& filePath);
-		//static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
+
 
 		static std::vector<Ref<Shader>> s_AllShaders;
+		static std::unordered_map<std::string, Ref<Shader>> s_ShaderMap;
+
+		static Ref<Shader> Find(const std::string& filepath);
+
+	private:
+		static Ref<Shader> Create(const std::string& filePath);
+		//static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 	};
 
 	/*class ShaderLibrary

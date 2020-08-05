@@ -5,6 +5,7 @@
 #include "Platform/OpenGL/OpenGLShader.h"
 namespace Ares {
 	std::vector<Ref<Shader>> Shader::s_AllShaders;
+	std::unordered_map<std::string, Ref<Shader>> Shader::s_ShaderMap;
 
 	/*Ref<Shader> Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
@@ -42,6 +43,20 @@ namespace Ares {
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");
 		return nullptr;
 	}
+
+	Ref<Shader> Shader::Find(const std::string& filePath)
+	{
+
+		if (s_ShaderMap.find(filePath) != s_ShaderMap.end())
+			return s_ShaderMap[filePath];
+		
+		Ref<Shader> shader = Create(filePath);
+
+		s_ShaderMap[filePath] = shader;
+
+		return shader;
+	}
+
 
 
 	//void ShaderLibrary::Add(const std::string& name, const Ref<Shader>& shader)

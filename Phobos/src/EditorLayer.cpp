@@ -50,13 +50,13 @@ namespace Ares
         
 
 #else
-        m_SimplePBRShader = Shader::Create("Assets/Shaders/pbr.glsl");
-        m_GridShader = Shader::Create("Assets/Shaders/grid.glsl");
+        m_SimplePBRShader = Shader::Find("Assets/Shaders/pbr.glsl");
+        m_GridShader = Shader::Find("Assets/Shaders/grid.glsl");
         
-        //m_QuadShader = Shader::Create("assets/shaders/quad.glsl");
-        m_QuadShader = Shader::Create("Assets/Shaders/CubemapSkybox.glsl");
+        //m_QuadShader = Shader::Find("assets/shaders/quad.glsl");
+        m_QuadShader = Shader::Find("Assets/Shaders/CubemapSkybox.glsl");
 
-        m_HDRShader = Shader::Create("Assets/Shaders/hdr.glsl");
+        m_HDRShader = Shader::Find("Assets/Shaders/hdr.glsl");
 
         m_PlaneMesh = CreateRef<Mesh>(PrimitiveType::Plane);
         //m_Mesh = Mesh::Create("assets/meshes/cerberus.fbx");

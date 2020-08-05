@@ -91,7 +91,7 @@ namespace Ares
 		for (uint32_t i = 0; i < Renderer2DData::MAX_TEXTURE_SLOTS; i++)
 			samplers[i] = i;
 
-		s_Data.TextureShader = Shader::Create("Assets/Shaders/Texture.glsl");
+		s_Data.TextureShader = Shader::Find("Assets/Shaders/Texture.glsl");
 		s_Data.TextureShader->Bind();
 		s_Data.TextureShader->SetIntArray("u_Textures", samplers, Renderer2DData::MAX_TEXTURE_SLOTS);
 		
