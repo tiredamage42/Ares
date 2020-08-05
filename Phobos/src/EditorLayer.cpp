@@ -18,35 +18,36 @@ namespace Ares
     }
     void EditorLayer::OnAttach()
     {
+        memset(m_FrameTimeGraph, 0, sizeof(float) * 100);
+
 #if _2D
+        // create a frame buffer
         FrameBufferSpecs fbSpec;
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
         m_FrameBuffer = Ares::FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA8);
 
-        memset(m_FrameTimeGraph, 0, sizeof(float) * 100);
-
+        // create scene
         m_ActiveScene = CreateRef<Scene>();
         
-        auto square = m_ActiveScene->CreateEntity("Custom Entity");
-       
-        Ref<Texture2D> spriteSheet = Texture2D::Create("Assets/Textures/RPGpack_sheet_2X.png");
+        // create sprite entity to draw
+        {
+            m_SquareEntity = m_ActiveScene->CreateEntity("Custom Entity");
+            // add a sprite renderer component
+            SpriteRendererComponent& spriteRenderer = m_SquareEntity.AddComponent<SpriteRendererComponent>();
+            Ref<Texture2D> spriteSheet = Texture2D::Create("Assets/Textures/RPGpack_sheet_2X.png");
+            spriteRenderer.Texture = spriteSheet;
+        }
 
-        SpriteRendererComponent& spriteRenderer = square.AddComponent<SpriteRendererComponent>();        
-        spriteRenderer.Color = glm::vec4{ 0, 1, 0, 1 };
-        spriteRenderer.Texture = spriteSheet;
+        // create a camera entity
+        {
+            m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
+            // add a camera component
+            m_CameraEntity.AddComponent<CameraComponent>();
+        }
 
-        m_SquareEntity = square;
 
-
-
-        m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
-
-        CameraComponent& cam = m_CameraEntity.AddComponent<CameraComponent>();
-        //float zoomLevel = 1.0f;
-        //float aspectRatio = 1280.0f / 720.0f; // width / height;
-        //cam.Camera.SetProjectionMatrix(glm::ortho(-aspectRatio * zoomLevel, aspectRatio * zoomLevel, -zoomLevel, zoomLevel, -1.0f, 1.0f));
-
+        
 
 #else
         m_SimplePBRShader = Shader::Create("Assets/Shaders/pbr.glsl");
@@ -216,40 +217,23 @@ namespace Ares
     {
         
         // Resize
-        /*
-            This solution will render the 'old' sized framebuffer onto the 'new' sized ImGuiPanel
-            and store the 'new' size in m_ViewportSize.
-            The next frame will first resize the framebuffer as m_ViewportSize differs
-            from m_Framebuffer.Width/Height before updating and rendering.
-            This results in never rendering an empty (black) framebuffer.
-        */
-        // zero sized framebuffer is invalid
         if (m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y))
         {
-
             m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-            //m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+            m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
         }
         
-        /*if (m_ViewportFocused)
-            m_CameraController.OnUpdate();*/
+        if (m_ViewportFocused)
+            m_CameraController.OnUpdate();
 
         // render
         m_FrameBuffer->Bind();
 
         Renderer::Clear(.1f, .1f, .1f, 1);
             
-        //Renderer2D::BeginScene(m_CameraController.GetCamera());
-
-        // update scnee
+        // update scene (starts and ends renderer2D scene)
         m_ActiveScene->OnUpdate();
 
-        /*Renderer2D::DrawQuad(
-            { 0.0f, 0.0f, 0.1f }, glm::radians(-45.0f), { 0.5f, 0.5f }, 
-            nullptr, glm::vec2(1.0f), glm::vec2(0.0f), { 1.0f, 0.0f, 1.0f, 1.0f }
-        );
-        
-        Renderer2D::EndScene();*/
 
         m_FrameBuffer->Unbind();
     }
@@ -570,8 +554,6 @@ namespace Ares
     void EditorLayer::OnImGuiDraw()
     {
 
-    
-
         static bool dockspaceOpen = true;
 
         static bool opt_fullscreen_persistant = true;
@@ -660,7 +642,6 @@ namespace Ares
             }
             ImGui::SliderInt("Num Sprites", &m_NumberOfSprites, 0, 1000);
 
-
             if (m_SquareEntity)
             {
                 ImGui::Separator();
@@ -698,11 +679,13 @@ namespace Ares
 
         ImGui::Begin("Renderer Performance:");
         {
-            m_FrameTimeGraph[values_offset] = (float)(Time::GetDeltaTime() * 1000.0); // get in milliseconds
+            float frameTimeMS = (float)(Time::GetDeltaTime() * 1000.0);
+            
+            m_FrameTimeGraph[values_offset] = frameTimeMS;
             values_offset = (values_offset + 1) % 100;
 
             ImGui::PlotLines("##Frametime", m_FrameTimeGraph, 100, values_offset, "Frametime (ms)", 0.0f, 66.6f, ImVec2(0, 100));
-            ImGui::Text("Frametime: %.2fms", Time::GetDeltaTime() * 1000.0); // get in milliseconds
+            ImGui::Text("Frametime: %.2fms", frameTimeMS);
             ImGui::Text("FPS: %d", Time::GetFPS());
 
             auto& caps = RendererAPI::GetCapabilities();
@@ -968,8 +951,6 @@ namespace Ares
 
 #if _2D
         m_ViewportSize = { viewportSize.x, viewportSize.y };
-        // from 2d on resize
-        //m_CameraController.OnResize(viewportSize.x, viewportSize.y);
         ImGui::Image((void*)m_FrameBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
 #else
 
@@ -979,48 +960,13 @@ namespace Ares
         ImGui::Image((void*)m_FinalPresentBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
 #endif
 
-
-
-
-
-
-        
         ImGui::End();
         ImGui::PopStyleVar();
-
-
-
-        /*ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0,0 });
-        ImGui::Begin("Viewport");
-        m_ViewportFocused = ImGui::IsWindowFocused();
-        m_ViewportHovered = ImGui::IsWindowHovered();
-        Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
-
-        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-
-        m_ViewportSize = { viewportSize.x, viewportSize.y };
-
-        uint32_t textureID = m_FrameBuffer->GetColorAttachmentRendererID();
-        ImGui::Image((void*)textureID, viewportSize, ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::End();
-        ImGui::PopStyleVar();*/
-
-
-
-
-
-
-
-
-
-
 
         ImGui::End();
 
         if (m_Mesh)
             m_Mesh->OnImGuiRender();
-
-
     }
 
     void EditorLayer::OnEvent(Ares::Event& e)
