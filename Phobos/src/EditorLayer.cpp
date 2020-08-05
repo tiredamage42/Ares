@@ -4,7 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
-#define _2D 0
+#define _2D 1
 
 namespace Ares
 {
@@ -43,9 +43,9 @@ namespace Ares
         m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
 
         CameraComponent& cam = m_CameraEntity.AddComponent<CameraComponent>();
-        float zoomLevel = 1.0f;
-        float aspectRatio = 1280.0f / 720.0f; // width / height;
-        cam.Camera.SetProjectionMatrix(glm::ortho(-aspectRatio * zoomLevel, aspectRatio * zoomLevel, -zoomLevel, zoomLevel, -1.0f, 1.0f));
+        //float zoomLevel = 1.0f;
+        //float aspectRatio = 1280.0f / 720.0f; // width / height;
+        //cam.Camera.SetProjectionMatrix(glm::ortho(-aspectRatio * zoomLevel, aspectRatio * zoomLevel, -zoomLevel, zoomLevel, -1.0f, 1.0f));
 
 
 #else
@@ -225,10 +225,14 @@ namespace Ares
         */
         // zero sized framebuffer is invalid
         if (m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y))
-            m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+        {
+
+            m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            //m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+        }
         
-        if (m_ViewportFocused)
-            m_CameraController.OnUpdate();
+        /*if (m_ViewportFocused)
+            m_CameraController.OnUpdate();*/
 
         // render
         m_FrameBuffer->Bind();
@@ -676,6 +680,15 @@ namespace Ares
                 if (ImGui::SliderInt2("Sprite Size", glm::value_ptr(m_SpriteSize), 1, 3)) 
                     spriteRenderer.SetSpriteSheetCoords(m_SpriteSheetCoord, { 128, 128 }, m_SpriteSize);
                 
+
+                CameraComponent& cameraComponent = m_CameraEntity.GetComponent<CameraComponent>();
+                float orthoSize = cameraComponent.Camera.GetOrthoSize();
+
+                if (ImGui::SliderFloat("Camera Ortho Size", &orthoSize, .001f, 10))
+                {
+                    cameraComponent.Camera.SetOrthoSize(orthoSize);
+                }
+
                 ImGui::Separator();
             }
             

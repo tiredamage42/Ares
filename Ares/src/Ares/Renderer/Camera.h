@@ -37,34 +37,43 @@ namespace Ares {
 	class Camera
 	{
 	public:
-		Camera(const glm::mat4& projectionMatrix);
 
-		void Focus();
+		Camera() = default;
+		Camera(const glm::mat4& projectionMatrix);
+		virtual ~Camera() = default;
+
+
+		//inline void SetProjectionMatrix(const glm::mat4& projectionMatrix) { m_ProjectionMatrix = projectionMatrix; }
+		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
+		
+		
+		/*void Focus();
 		void Update();
 
 		inline float GetDistance() const { return m_Distance; }
 		inline void SetDistance(float distance) { m_Distance = distance; }
 
-		inline void SetProjectionMatrix(const glm::mat4& projectionMatrix) { m_ProjectionMatrix = projectionMatrix; }
-
-		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
 
 		glm::vec3 GetUpDirection();
 		glm::vec3 GetRightDirection();
 		glm::vec3 GetForwardDirection();
-		const glm::vec3& GetPosition() const { return m_Position; }
+		const glm::vec3& GetPosition() const { return m_Position; }*/
 	private:
-		void MousePan(const glm::vec2& delta);
+		/*void MousePan(const glm::vec2& delta);
 		void MouseRotate(const glm::vec2& delta);
 		void MouseZoom(float delta);
 
 		glm::vec3 CalculatePosition();
-		glm::quat GetOrientation();
-	private:
-		glm::mat4 m_ProjectionMatrix, m_ViewMatrix;
-		glm::vec3 m_Position{ 0 }, m_Rotation{ 0 }, m_FocalPoint;
+		glm::quat GetOrientation();*/
+	protected:
+		glm::mat4 m_ProjectionMatrix = glm::mat4(1.0f);
 
+
+	private:
+		/*glm::mat4 m_ViewMatrix;
+
+		glm::vec3 m_Position{ 0 }, m_Rotation{ 0 }, m_FocalPoint;
 		bool m_Panning, m_Rotating;
 		glm::vec2 m_InitialMousePosition;
 		glm::vec3 m_InitialFocalPoint, m_InitialRotation;
@@ -72,7 +81,7 @@ namespace Ares {
 		float m_Distance;
 		float m_PanSpeed, m_RotationSpeed, m_ZoomSpeed;
 
-		float m_Pitch=0, m_Yaw=0;
+		float m_Pitch=0, m_Yaw=0;*/
 	};
 
 }

@@ -27,6 +27,7 @@ namespace Ares {
 	{
 		Renderer::Submit([this, size]() mutable {
 
+			ARES_CORE_LOG("Creating dynamic draw vertex buffer");
 			glCreateBuffers(1, &this->m_RendererID);
 			glBindBuffer(GL_ARRAY_BUFFER, this->m_RendererID);
 			// upload to gpu

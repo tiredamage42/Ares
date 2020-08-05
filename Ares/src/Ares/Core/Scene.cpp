@@ -23,16 +23,35 @@ namespace Ares
         entity.AddComponent<TransformComponent>();
         return entity;
     }
+    void Scene::OnViewportResize(uint32_t width, uint32_t height)
+    {
+        m_ViewportWidth = width;
+        m_ViewportHeight = height;
+
+        // resize our non fixed aspect ratio cameras
+
+        auto view = m_Registry.view<CameraComponent>();
+        for (auto entity : view)
+        {
+            auto& cameraComponent = view.get<CameraComponent>(entity);
+
+            if (!cameraComponent.FixedAspectRatio)
+            {
+                cameraComponent.Camera.SetViewportSize(width, height);
+            }
+        }
+        
+    }
     void Scene::OnUpdate()
     {
         // Render 2D
         Camera* mainCamera = nullptr;
         glm::mat4* cameraTransform = nullptr;
         {
-            auto group = m_Registry.view<TransformComponent, CameraComponent>();
-            for (auto entity : group)
+            auto view = m_Registry.view<TransformComponent, CameraComponent>();
+            for (auto entity : view)
             {
-                auto& [transform, camera] = group.get<TransformComponent, CameraComponent>(entity);
+                auto& [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
 
                 if (camera.Primary)
                 {
@@ -45,12 +64,15 @@ namespace Ares
 
         if (mainCamera)
         {
+
             Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), *cameraTransform);
 
             auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
         
             for (auto entity : group)
             {
+                //ARES_CORE_LOG("Rendering sprite");
+
                 auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
             
                 Renderer2D::DrawQuad(transform, sprite.Texture, sprite.Tiling, sprite.Offset, sprite.Color);

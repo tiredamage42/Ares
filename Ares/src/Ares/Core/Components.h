@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Ares/Renderer/Texture.h"
-#include "Ares/Renderer/Camera.h"
+#include "Ares/Renderer/SceneCamera.h"
 #include <glm/glm.hpp>
 namespace Ares
 {
@@ -49,12 +49,15 @@ namespace Ares
 
     struct CameraComponent
     {
-        Camera Camera;
+        SceneCamera Camera;
+        //Camera Camera;
         bool Primary = true;
+        bool FixedAspectRatio = false;
+
         CameraComponent() = default;
         CameraComponent(const CameraComponent&) = default;
-        CameraComponent(const glm::mat4& proj)
-            : Camera(proj) {}
+        /*CameraComponent(const glm::mat4& proj)
+            : Camera(proj) {}*/
     };
         
 }
