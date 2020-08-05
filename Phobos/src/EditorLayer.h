@@ -24,7 +24,7 @@ namespace Ares
 
 		int m_GridScale = 16;
 		//float m_GridScale = 16.025f, 
-			float m_GridSize = 0.025f;
+		float m_GridSize = 0.025f;
 		float m_MeshScale = 1.0f;
 		
 		Ref<Scene> m_ActiveScene;
@@ -47,17 +47,23 @@ namespace Ares
 
 
 		//Ref<Shader> m_PBRShader;
-		Ref<Shader> m_SimplePBRShader, m_GridShader;
+		//Ref<Shader> m_SimplePBRShader, 
+
+		Ref<Shader> m_PBRShaderStatic, m_PBRShaderAnim;
+			
+		Ref<Shader> m_GridShader;
+
+
 		Ref<Shader> m_QuadShader;
 		Ref<Shader> m_HDRShader;
 		Ref<Mesh> m_Mesh;
 		Ref<Mesh> m_SphereMesh, m_PlaneMesh;
 		Ref<Texture2D> m_BRDFLUT;
 
-		Ref<Material> m_PBRMaterial;
+		Ref<Material> m_PBRMaterialStatic, m_PBRMaterialAnim;
+
 		std::vector<Ref<MaterialInstance>> m_MetalSphereMaterialInstances;
 		std::vector<Ref<MaterialInstance>> m_DielectricSphereMaterialInstances;
-
 
 		struct AlbedoInput
 		{

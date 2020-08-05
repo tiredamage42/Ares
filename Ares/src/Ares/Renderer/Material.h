@@ -21,8 +21,12 @@ namespace Ares {
 		void Set(const std::string& name, const T& value)
 		{
 			auto decl = FindUniformDeclaration(name);
-			// ARES_CORE_ASSERT(decl, "Could not find uniform with name '{0}'", name);
-			ARES_CORE_ASSERT(decl, "Could not find uniform with name 'x'");
+			if (!decl)
+			{
+				ARES_CORE_ERROR("Could not find uniform with name '{0}'", name);
+				ARES_CORE_ASSERT(false, "");
+			}
+
 			auto& buffer = GetUniformBufferTarget(decl);
 			buffer.Write((byte*)&value, decl->GetSize(), decl->GetOffset());
 
@@ -78,8 +82,11 @@ namespace Ares {
 		void Set(const std::string& name, const T& value)
 		{
 			auto decl = m_Material->FindUniformDeclaration(name);
-			// ARES_CORE_ASSERT(decl, "Could not find uniform with name '{0}'", name);
-			ARES_CORE_ASSERT(decl, "Could not find uniform with name 'x'");
+			if (!decl)
+			{
+				ARES_CORE_ERROR("Could not find uniform with name '{0}'", name);
+				ARES_CORE_ASSERT(false, "");
+			}
 			auto& buffer = GetUniformBufferTarget(decl);
 			buffer.Write((byte*)&value, decl->GetSize(), decl->GetOffset());
 

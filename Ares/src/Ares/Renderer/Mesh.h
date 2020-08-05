@@ -6,6 +6,7 @@
 
 #include "Ares/Renderer/VertexArray.h"
 #include "Ares/Renderer/Shader.h"
+//#include "Ares/Renderer/Material.h"
 
 
 struct aiNode;
@@ -31,7 +32,14 @@ namespace Ares {
 		glm::vec3 Tangent;
 		glm::vec3 Binormal;
 		glm::vec2 Texcoord;
-
+	};
+	struct AnimatedVertex
+	{
+		glm::vec3 Position;
+		glm::vec3 Normal;
+		glm::vec3 Tangent;
+		glm::vec3 Binormal;
+		glm::vec2 Texcoord;
 
 		uint32_t IDs[4] = { 0, 0, 0, 0 };
 		float Weights[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -94,6 +102,8 @@ namespace Ares {
 		uint32_t BaseIndex;
 		uint32_t MaterialIndex;
 		uint32_t IndexCount;
+
+		glm::mat4 Transform;
 	};
 
 	class Mesh
@@ -106,7 +116,11 @@ namespace Ares {
 		Mesh(PrimitiveType primitiveType);
 		~Mesh();
 
-		void Render(Ref<Shader> shader);
+		inline const bool IsAnimated() const { return m_IsAnimated; }
+
+		void Render(Ref<Shader> shader, const glm::mat4& transform = glm::mat4(1.0f));
+		//void Render(Ref<MaterialInstance> materialInstance, const glm::mat4& transform = glm::mat4(1.0f));
+
 		void OnImGuiRender();
 		void DumpVertexBuffer();
 
@@ -116,6 +130,7 @@ namespace Ares {
 
 		void BoneTransform(float time);
 		void ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const glm::mat4& ParentTransform);
+		void TraverseNodes(aiNode* node, int level = 0);
 
 		const aiNodeAnim* FindNodeAnim(const aiAnimation* animation, const std::string& nodeName);
 		uint32_t FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim);
@@ -141,6 +156,7 @@ namespace Ares {
 		const aiScene* m_Scene = nullptr;
 
 		// Animation
+		bool m_IsAnimated = false;
 		float m_AnimationTime = 0.0f;
 		float m_WorldTime = 0.0f;
 		float m_TimeMultiplier = 1.0f;
@@ -148,8 +164,12 @@ namespace Ares {
 
 
 
-		std::vector<Vertex> m_Vertices;
+		//std::vector<Vertex> m_Vertices;
+		std::vector<Vertex> m_StaticVertices;
+		std::vector<AnimatedVertex> m_AnimatedVertices;
 		std::vector<uint32_t> m_Indices;
+
+
 
 		Ref<VertexArray> m_VertexArray;
 		Ref<VertexBuffer> m_VertexBuffer;
