@@ -1,21 +1,22 @@
 #include "AresPCH.h"
 #include "Platform/Windows/WindowsWindow.h"
 
-#include "Ares/Core/Input.h"
+//#include "Ares/Core/Input.h"
 
 #include "Ares/Events/ApplicationEvent.h"
 #include "Ares/Events/MouseEvent.h"
 #include "Ares/Events/KeyEvent.h"
-
 #include "Ares/Renderer/Renderer.h"
 
 #include <glad/glad.h>
+#include <imgui.h>
 
 namespace Ares {
 
 	static uint8_t s_GLFWWindowCount = 0;
 
-	static void GLFWErrorCallback(int error, const char* description) {
+	static void GLFWErrorCallback(int error, const char* description) 
+	{
 		ARES_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
 	}
 
@@ -44,16 +45,15 @@ namespace Ares {
 			glfwSetErrorCallback(GLFWErrorCallback);
 		}
 
-		{	
 #if defined(ARES_DEBUG)
-			if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
-				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+		if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
+			glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
-			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-			s_GLFWWindowCount++;
-		}
-
+		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+		s_GLFWWindowCount++;
+		
 		glfwMakeContextCurrent(m_Window);
+
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		ARES_CORE_ASSERT(status, "Could not initialize Glad!");
 
@@ -81,7 +81,8 @@ namespace Ares {
 		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-			switch (action) {
+			switch (action) 
+			{
 				case GLFW_PRESS:
 				{
 					KeyPressedEvent event(static_cast<KeyCode>(key), 0);
@@ -140,6 +141,23 @@ namespace Ares {
 			MouseMovedEvent event((float)xPos, (float)yPos);
 			data.EventCallback(event);
 		});
+
+
+		m_ImGuiMouseCursors[ImGuiMouseCursor_Arrow] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+		m_ImGuiMouseCursors[ImGuiMouseCursor_TextInput] = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeAll] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);   // FIXME: GLFW doesn't have this.
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeNS] = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeEW] = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeNESW] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);  // FIXME: GLFW doesn't have this.
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeNWSE] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);  // FIXME: GLFW doesn't have this.
+		m_ImGuiMouseCursors[ImGuiMouseCursor_Hand] = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+	}
+	
+	std::pair<float, float> WindowsWindow::GetWindowPos() const
+	{
+		int x, y;
+		glfwGetWindowPos(m_Window, &x, &y);
+		return { x, y };
 	}
 
 	void WindowsWindow::Shutdown()
@@ -158,7 +176,13 @@ namespace Ares {
 	{
 		glfwPollEvents();
 		glfwSwapBuffers(m_Window);
+
+		ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
+		glfwSetCursor(m_Window, m_ImGuiMouseCursors[imgui_cursor] ? m_ImGuiMouseCursors[imgui_cursor] : m_ImGuiMouseCursors[ImGuiMouseCursor_Arrow]);
+		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
+
+
 	void WindowsWindow::SetVSync(bool enabled)
 	{
 		if (enabled)

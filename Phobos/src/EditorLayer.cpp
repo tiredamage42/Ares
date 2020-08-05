@@ -4,7 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
-#define _2D 1
+#define _2D 0
 
 namespace Ares
 {
@@ -119,15 +119,6 @@ namespace Ares
                 m_DielectricSphereMaterialInstances.push_back(mi);
             }
         }
-
-
-
-
-
-
-
-
-
 
 
         // Create Quad
