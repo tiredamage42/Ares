@@ -47,6 +47,8 @@ namespace Ares {
 		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 		
 		
+		inline void SetViewportSize(uint32_t width, uint32_t height) { m_ViewportWidth = width; m_ViewportHeight = height; }
+
 		void Focus();
 		void Update();
 
@@ -60,6 +62,11 @@ namespace Ares {
 		glm::vec3 GetForwardDirection();
 		const glm::vec3& GetPosition() const { return m_Position; }
 	private:
+
+		std::pair<float, float> PanSpeed() const;
+		float RotationSpeed() const;
+		float ZoomSpeed() const;
+
 		void MousePan(const glm::vec2& delta);
 		void MouseRotate(const glm::vec2& delta);
 		void MouseZoom(float delta);
@@ -79,9 +86,10 @@ namespace Ares {
 		glm::vec3 m_InitialFocalPoint, m_InitialRotation;
 
 		float m_Distance;
-		float m_PanSpeed, m_RotationSpeed, m_ZoomSpeed;
+		//float m_PanSpeed, m_RotationSpeed, m_ZoomSpeed;
 
-		float m_Pitch=0, m_Yaw=0;
+		float m_Pitch = 0, m_Yaw = 0;
+		uint32_t m_ViewportWidth = 1280, m_ViewportHeight = 720;
 	};
 
 }
