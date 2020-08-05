@@ -15,6 +15,8 @@ namespace Ares {
 		Material(const Ref<Shader>& shader);
 		virtual ~Material();
 
+		inline const Ref<Shader> GetShader() const { return m_Shader; }
+
 		void Bind() const;
 
 		template <typename T>
@@ -77,6 +79,9 @@ namespace Ares {
 	public:
 		MaterialInstance(const Ref<Material>& material);
 		virtual ~MaterialInstance();
+
+
+		inline const Ref<Shader> GetShader() const { return m_Material->GetShader(); }
 
 		template <typename T>
 		void Set(const std::string& name, const T& value)

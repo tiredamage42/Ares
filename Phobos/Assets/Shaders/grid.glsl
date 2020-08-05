@@ -36,6 +36,7 @@ float grid(vec2 st, float res)
 void main()
 {
 	float scale = u_Scale + u_Res;
+	//scale = 16 + u_Res;
 	float resolution = u_Res;
 
 	float x = grid(v_TexCoord * scale, resolution);

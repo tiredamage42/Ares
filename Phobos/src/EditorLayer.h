@@ -48,20 +48,21 @@ namespace Ares
 
 		//Ref<Shader> m_PBRShader;
 		//Ref<Shader> m_SimplePBRShader, 
+		//Ref<Shader> m_PBRShaderStatic, m_PBRShaderAnim;
 
-		Ref<Shader> m_PBRShaderStatic, m_PBRShaderAnim;
 			
-		Ref<Shader> m_GridShader;
+		//Ref<Shader> m_GridShader;
+		Ref<Material> m_GridMaterial;
 
 
 		Ref<Shader> m_QuadShader;
 		Ref<Shader> m_HDRShader;
+
 		Ref<Mesh> m_Mesh;
-		Ref<Mesh> m_SphereMesh, m_PlaneMesh;
+		Ref<Mesh> m_CubeMesh, m_PlaneMesh;
 		Ref<Texture2D> m_BRDFLUT;
 
 		Ref<Material> m_PBRMaterialStatic, m_PBRMaterialAnim;
-
 		std::vector<Ref<MaterialInstance>> m_MetalSphereMaterialInstances;
 		std::vector<Ref<MaterialInstance>> m_DielectricSphereMaterialInstances;
 
@@ -134,6 +135,8 @@ namespace Ares
 
 		// Editor resources
 		Ref<Texture2D> m_CheckerboardTex;
+	private:
+		void SetPBRMaterialValues(Ref<Material> material, const glm::mat4& viewProjection) const;
 
 	};
 }
