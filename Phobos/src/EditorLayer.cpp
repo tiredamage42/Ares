@@ -2,7 +2,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
+#include "EditorGUI.h"
 
 #define _2D 0
 
@@ -274,96 +274,6 @@ namespace Ares
     }
 #endif
 
-
-    enum class PropertyFlag
-    {
-        None = 0, ColorProperty = 1
-    };
-
-    void Property(const std::string& name, bool& value)
-    {
-        ImGui::Text(name.c_str());
-        ImGui::NextColumn();
-        ImGui::PushItemWidth(-1);
-
-        std::string id = "##" + name;
-        ImGui::Checkbox(id.c_str(), &value);
-
-        ImGui::PopItemWidth();
-        ImGui::NextColumn();
-    }
-
-    void Property(const std::string& name, float& value, float min = -1.0f, float max = 1.0f, PropertyFlag flags = PropertyFlag::None)
-    {
-        ImGui::Text(name.c_str());
-        ImGui::NextColumn();
-        ImGui::PushItemWidth(-1);
-
-        std::string id = "##" + name;
-        ImGui::SliderFloat(id.c_str(), &value, min, max);
-
-        ImGui::PopItemWidth();
-        ImGui::NextColumn();
-    }
-    void Property(const std::string& name, int& value, int min = -1, int max = 1, PropertyFlag flags = PropertyFlag::None)
-    {
-        ImGui::Text(name.c_str());
-        ImGui::NextColumn();
-        ImGui::PushItemWidth(-1);
-
-        std::string id = "##" + name;
-        ImGui::SliderInt(id.c_str(), &value, min, max);
-
-        ImGui::PopItemWidth();
-        ImGui::NextColumn();
-    }
-
-    
-
-    void Property(const std::string& name, glm::vec3& value, float min = -1.0f, float max = 1.0f, PropertyFlag flags = PropertyFlag::None)
-    {
-        ImGui::Text(name.c_str());
-        ImGui::NextColumn();
-        ImGui::PushItemWidth(-1);
-
-        std::string id = "##" + name;
-        if ((int)flags & (int)PropertyFlag::ColorProperty)
-            ImGui::ColorEdit3(id.c_str(), glm::value_ptr(value), ImGuiColorEditFlags_NoInputs);
-        else
-            ImGui::SliderFloat3(id.c_str(), glm::value_ptr(value), min, max);
-
-        ImGui::PopItemWidth();
-        ImGui::NextColumn();
-    }
-    void Property(const std::string& name, glm::vec3& value, PropertyFlag flags)
-    {
-        Property(name, value, -1.0f, 1.0f, flags);
-    }
-
-    
-    void Property(const std::string& name, glm::vec4& value, float min = -1.0f, float max = 1.0f, PropertyFlag flags = PropertyFlag::None)
-    {
-        ImGui::Text(name.c_str());
-        ImGui::NextColumn();
-        ImGui::PushItemWidth(-1);
-
-        std::string id = "##" + name;
-        if ((int)flags & (int)PropertyFlag::ColorProperty)
-            ImGui::ColorEdit4(id.c_str(), glm::value_ptr(value), ImGuiColorEditFlags_NoInputs);
-        else
-            ImGui::SliderFloat4(id.c_str(), glm::value_ptr(value), min, max);
-
-        ImGui::PopItemWidth();
-        ImGui::NextColumn();
-    }
-    void Property(const std::string& name, glm::vec4& value, PropertyFlag flags)
-    {
-        Property(name, value, -1.0f, 1.0f, flags);
-    }
-
-
-
-
     void EditorLayer::OnImGuiDraw()
     {
         static bool dockspaceOpen = true;
@@ -421,8 +331,26 @@ namespace Ares
 
                 ImGui::EndMenu();
             }
-            /*
-            HelpMarker(
+            if (ImGui::BeginMenu("Docking"))
+            {
+                // Disabling fullscreen would allow the window to be moved to the front of other windows, 
+                // which we can't undo at the moment without finer window depth/z control.
+                //ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
+
+                if (ImGui::MenuItem("Flag: NoSplit", "", (dockspace_flags & ImGuiDockNodeFlags_NoSplit) != 0))                 
+                    dockspace_flags ^= ImGuiDockNodeFlags_NoSplit;
+                if (ImGui::MenuItem("Flag: NoDockingInCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0))  
+                    dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
+                if (ImGui::MenuItem("Flag: NoResize", "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))                
+                    dockspace_flags ^= ImGuiDockNodeFlags_NoResize;
+                if (ImGui::MenuItem("Flag: AutoHideTabBar", "", (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))          
+                    dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar;
+                ImGui::Separator();
+                if (ImGui::MenuItem("Close DockSpace", NULL, false, dockspaceOpen != NULL))
+                    dockspaceOpen = false;
+
+            }
+            EditorGUI::ShowTooltip(
                 "When docking is enabled, you can ALWAYS dock MOST window into another! Try it now!" "\n\n"
                 " > if io.ConfigDockingWithShift==false (default):" "\n"
                 "   drag windows from title bar to dock" "\n"
@@ -433,7 +361,7 @@ namespace Ares
                 "ImGui::DockSpace() comes with one hard constraint: it needs to be submitted _before_ any window which may be docked into it. Therefore, if you use a dock spot as the central point of your application, you'll probably want it to be part of the very first window you are submitting to imgui every frame." "\n\n"
                 "(NB: because of this constraint, the implicit \"Debug\" window can not be docked into an explicit DockSpace() node, because that window is submitted as part of the NewFrame() call. An easy workaround is that you can create your own implicit \"Debug##2\" window after calling DockSpace() and leave it in the window stack for anyone to use.)"
             );
-            */
+            
 
             ImGui::EndMenuBar();
         }
@@ -522,19 +450,21 @@ namespace Ares
         ImGui::Columns(2);
         ImGui::AlignTextToFramePadding();
 
-        Property("Light Direction", m_Light.Direction);
-        Property("Light Radiance", m_Light.Radiance, PropertyFlag::ColorProperty);
-        Property("Light Multiplier", m_LightMultiplier, 0.0f, 5.0f);
-        Property("Exposure", m_Exposure, 0.0f, 5.0f);
 
-        Property("Mesh Scale", m_MeshScale, 0.0f, 2.0f);
+        EditorGUI::Vec3("Light Direction", m_Light.Direction);
+        EditorGUI::Color3("Light Radiance", m_Light.Radiance);
+        EditorGUI::FloatSlider("Light Multiplier", m_LightMultiplier, 0.0f, 5.0f);
+        EditorGUI::FloatSlider("Exposure", m_Exposure, 0.0f, 5.0f);
 
-        Property("Grid Scale", m_GridScale, 0, 20);
-        Property("Grid Size", m_GridSize, 0.0f, 0.1f);
+        EditorGUI::FloatSlider("Mesh Scale", m_MeshScale, 0.0f, 2.0f);
 
-        Property("Radiance Prefiltering", m_RadiancePrefilter);
-        Property("Env Map Rotation", m_EnvMapRotation, -360.0f, 360.0f);
+        EditorGUI::IntSlider("Grid Scale", m_GridScale, 0, 20);
+        EditorGUI::FloatSlider("Grid Size", m_GridSize, 0.0f, 0.1f);
 
+        EditorGUI::Toggle("Radiance Prefiltering", m_RadiancePrefilter);
+        EditorGUI::FloatSlider("Env Map Rotation", m_EnvMapRotation, -360.0f, 360.0f);
+
+        EditorGUI::Color4("Test Color", testColor);
 
         ImGui::Columns(1);
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <Ares.h>
+#include "imgui/imgui_internal.h"
 
 namespace Ares
 {
@@ -99,6 +100,8 @@ namespace Ares
 		Camera m_Camera;
 
 
+
+		glm::vec4 testColor;
 		struct Light
 		{
 			glm::vec3 Direction;
