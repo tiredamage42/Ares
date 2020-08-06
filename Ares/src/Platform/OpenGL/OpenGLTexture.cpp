@@ -32,18 +32,9 @@ namespace Ares {
 			glGenTextures(1, &this->m_RendererID);
 			glBindTexture(GL_TEXTURE_2D, this->m_RendererID);
 		
-			//// if image is larger or smaller than actual size, what kind of filtering to use?
-			//// if shrinking image
-			//glTextureParameteri(this->m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			//// if enlarging image
-			//glTextureParameteri(this->m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			//glTextureParameteri(this->m_RendererID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			//glTextureParameteri(this->m_RendererID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			//glTextureParameterf(this->m_RendererID, GL_TEXTURE_MAX_ANISOTROPY, RendererAPI::GetCapabilities().MaxAnisotropy);
-
 			// if image is larger or smaller than actual size, what kind of filtering to use?
 			// if shrinking image
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			// if enlarging image
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -51,7 +42,6 @@ namespace Ares {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
 			glTextureParameterf(this->m_RendererID, GL_TEXTURE_MAX_ANISOTROPY, RendererAPI::GetCapabilities().MaxAnisotropy);
-
 
 			glTexImage2D(GL_TEXTURE_2D, 0, Ares2OpenGLTextureFormat(this->m_Format), this->m_Width, this->m_Height, 0, Ares2OpenGLTextureFormat(this->m_Format), GL_UNSIGNED_BYTE, nullptr);
 			
@@ -74,13 +64,26 @@ namespace Ares {
 
 		int width, height, channels;
 
-		m_ImageData.Data = stbi_load(path.c_str(), &width, &height, &channels, srgb ? STBI_rgb : STBI_rgb_alpha);
+
+		if (stbi_is_hdr(path.c_str()))
+		{
+			ARES_CORE_INFO("Loading HDR texture {0}, srgb={1}", path, srgb);
+			m_ImageData.Data = (byte*)stbi_loadf(path.c_str(), &width, &height, &channels, 0);
+			m_Format = TextureFormat::Float16;
+			m_IsHDR = true;
+		}
+		else
+		{
+			ARES_CORE_INFO("Loading texture {0}, srgb={1}", path, srgb);
+			m_ImageData.Data = stbi_load(path.c_str(), &width, &height, &channels, srgb ? STBI_rgb : STBI_rgb_alpha);
+			m_Format = (srgb ? TextureFormat::RGB : TextureFormat::RGBA);
+		}
 		ARES_CORE_ASSERT(m_ImageData.Data, "Failed to load image!");
-		
+
+		m_Loaded = true;
 		m_Width = width;
 		m_Height = height;
 
-		m_Format = (srgb ? TextureFormat::RGB : TextureFormat::RGBA);
 		
 		Renderer::Submit([this, srgb]() mutable {
 
@@ -129,8 +132,14 @@ namespace Ares {
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-				glTexImage2D(GL_TEXTURE_2D, 0, Ares2OpenGLTextureFormat(this->m_Format), this->m_Width, this->m_Height, 0, srgb ? GL_SRGB8 : Ares2OpenGLTextureFormat(this->m_Format), GL_UNSIGNED_BYTE, this->m_ImageData.Data);
+				GLenum internalFormat = Ares2OpenGLTextureFormat(m_Format);
+				GLenum format = srgb ? GL_SRGB8 : (m_IsHDR ? GL_RGB : Ares2OpenGLTextureFormat(m_Format)); // HDR = GL_RGB for now
+				GLenum type = internalFormat == GL_RGBA16F ? GL_FLOAT : GL_UNSIGNED_BYTE;
+				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_Width, m_Height, 0, format, type, m_ImageData.Data);
+				//glTexImage2D(GL_TEXTURE_2D, 0, Ares2OpenGLTextureFormat(this->m_Format), this->m_Width, this->m_Height, 0, srgb ? GL_SRGB8 : Ares2OpenGLTextureFormat(this->m_Format), GL_UNSIGNED_BYTE, this->m_ImageData.Data);
+
 				glGenerateMipmap(GL_TEXTURE_2D);
 
 				glBindTexture(GL_TEXTURE_2D, 0);
@@ -172,10 +181,24 @@ namespace Ares {
 		});
 	}
 
+	void OpenGLTexture2D::Resize(uint32_t width, uint32_t height)
+	{
+		ARES_CORE_ASSERT(m_Locked, "Texture must be locked!");
+
+		m_ImageData.Allocate(width * height * Texture::GetBPP(m_Format));
+#if HZ_DEBUG
+		m_ImageData.ZeroInitialize();
+#endif
+	}
+
 	Buffer OpenGLTexture2D::GetWriteableBuffer()
 	{
 		ARES_CORE_ASSERT(m_Locked, "Texture must be locked!");
 		return m_ImageData;
+	}
+	uint32_t OpenGLTexture2D::GetMipLevelCount() const
+	{
+		return CalculateMipMapCount(m_Width, m_Height);
 	}
 
 
@@ -183,9 +206,29 @@ namespace Ares {
 
 
 
+	OpenGLTextureCube::OpenGLTextureCube(TextureFormat format, uint32_t width, uint32_t height)
+	{
+		m_Width = width;
+		m_Height = height;
+		m_Format = format;
+
+		uint32_t levels = CalculateMipMapCount(width, height);
+
+		Renderer::Submit([=]() {
+			glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_RendererID);
+			glTextureStorage2D(m_RendererID, levels, Ares2OpenGLTextureFormat(m_Format), width, height);
+			glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, levels > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+			glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+			// glTextureParameterf(m_RendererID, GL_TEXTURE_MAX_ANISOTROPY, 16);
+		});
+	}
 
 
-	OpenGLTextureCube::OpenGLTextureCube(const std::string& path, bool srgb)
+	OpenGLTextureCube::OpenGLTextureCube(const std::string& path)
 		: m_FilePath(path)
 	{
 		int width, height, channels;
@@ -201,8 +244,8 @@ namespace Ares {
 			x x x x    Format
  			  x
 		*/
-		unsigned int faceWidth = m_Width / 4;
-		unsigned int faceHeight = m_Height / 3;
+		uint32_t faceWidth = m_Width / 4;
+		uint32_t faceHeight = m_Height / 3;
 		ARES_CORE_ASSERT(faceWidth == faceHeight, "Non-square faces!");
 
 		const uint32_t bytesPerPixel = 3;
@@ -256,6 +299,8 @@ namespace Ares {
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
 			glTextureParameterf(this->m_RendererID, GL_TEXTURE_MAX_ANISOTROPY, RendererAPI::GetCapabilities().MaxAnisotropy);
 
 			auto format = Ares2OpenGLTextureFormat(this->m_Format);
@@ -292,5 +337,9 @@ namespace Ares {
 			/*glActiveTexture(GL_TEXTURE0 + slot);
 			glBindTexture(GL_TEXTURE_CUBE_MAP, this->m_RendererID);*/
 		});
+	}
+	uint32_t OpenGLTextureCube::GetMipLevelCount() const
+	{
+		return CalculateMipMapCount(m_Width, m_Height);
 	}
 }

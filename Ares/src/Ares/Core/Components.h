@@ -2,6 +2,7 @@
 
 #include "Ares/Renderer/Texture.h"
 #include "Ares/Renderer/SceneCamera.h"
+#include "Ares/Renderer/Mesh.h"
 #include <glm/glm.hpp>
 namespace Ares
 {
@@ -45,6 +46,17 @@ namespace Ares
 
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
+    };
+
+    struct MeshRendererComponent
+    {
+        Ref<Mesh> Mesh = nullptr;
+        //Ref<MaterialInstance> Material = nullptr;
+        std::vector<Ref<MaterialInstance>> MaterialOverrides;
+
+        
+        MeshRendererComponent() = default;
+        MeshRendererComponent(const MeshRendererComponent&) = default;
     };
 
     struct CameraComponent

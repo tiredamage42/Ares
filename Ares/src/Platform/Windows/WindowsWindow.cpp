@@ -54,6 +54,8 @@ namespace Ares {
 		
 		glfwMakeContextCurrent(m_Window);
 
+		glfwMaximizeWindow(m_Window);
+
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		ARES_CORE_ASSERT(status, "Could not initialize Glad!");
 

@@ -45,7 +45,7 @@ void main()
 	float theta = acos(v.y);
 
 	// sample equirectangular texture
-	vec4 color = texture(u_EquirectangularTex, vec2(phi / TwoPi + 0.5, theta / PI));
+	vec4 color = texture(u_EquirectangularTex, vec2(phi / TwoPI + 0.5, 1.0 - theta / PI));
 
 	// write out color to output cubemap
 	imageStore(o_Cubemap, ivec3(gl_GlobalInvocationID), color);

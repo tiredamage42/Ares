@@ -20,42 +20,49 @@ namespace Ares
 		bool OnKeyPressedEvent(KeyPressedEvent& e);
 
 	private:
-		OrthographicCameraController m_CameraController;
-		Ref<Texture2D> m_Texture, m_SpriteSheet;
-		
-		int m_GridScale = 16;
-		float m_GridSize = 0.025f;
-		float m_MeshScale = 1.0f;
-		
-		Ref<Scene> m_ActiveScene;
-		Entity m_SquareEntity;
-		Entity m_CameraEntity;
-
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
-
-		glm::vec2 m_ViewportSize = { 0,0 };
-
-		int32_t m_MaxQuadsPerDraw = 10000;
-		int32_t m_NumberOfSprites = 10;
-
 		float m_FrameTimeGraph[100];
 		int values_offset = 0;
-
+		glm::vec2 m_ViewportSize = { 0,0 };
+		
+		// 2d
+		OrthographicCameraController m_CameraController;
+		Ref<Texture2D> m_Texture, m_SpriteSheet;
+		Entity m_SquareEntity;
+		Entity m_CameraEntity;
+		int32_t m_MaxQuadsPerDraw = 10000;
+		int32_t m_NumberOfSprites = 10;
 		glm::vec4 m_SquareColor = { 1.0f, .5f, 0, 1 };
 		glm::ivec2 m_SpriteSheetCoord{ 0 }, m_SpriteSize{ 1 };
+		
+		// 3d
+		//float m_MeshScale = 1.0f;
+		//Ref<Scene> m_ActiveScene;
+		/*int m_GridScale = 16;
+		float m_GridSize = 0.025f;*/
 
-		Ref<Material> m_GridMaterial;
+		//Ref<Material> m_GridMaterial;
 
-		Ref<Shader> m_SkyboxShader;
-		Ref<Shader> m_HDRShader;
+		/*Ref<Shader> m_SkyboxShader;
+		Ref<Shader> m_HDRShader;*/
 
-		Ref<Mesh> m_Mesh;
-		Ref<Mesh> m_CubeMesh, m_PlaneMesh;
-		Ref<Texture2D> m_BRDFLUT;
 
-		Ref<Material> m_PBRMaterialStatic, m_PBRMaterialAnim;
-		std::vector<Ref<MaterialInstance>> m_MetalSphereMaterialInstances;
-		std::vector<Ref<MaterialInstance>> m_DielectricSphereMaterialInstances;
+		//Scope<SceneHierarchyPane> m_SceneHierarchyPanel;
+		Ref<Scene> m_Scene;
+		Ref<Scene> m_SpheresScene;
+		Ref<Scene> m_ActiveScene;
+		Entity m_MeshEntity;
+		Ref<Mesh> m_PlaneMesh;
+
+		//Ref<Mesh> m_Mesh;
+		//Ref<Mesh> m_CubeMesh, m_PlaneMesh;
+		//Ref<Texture2D> m_BRDFLUT;
+
+		Ref<Material> m_SphereBaseMaterial, m_MeshMaterial;
+
+		//Ref<Material> m_PBRMaterialStatic, m_PBRMaterialAnim;
+		/*std::vector<Ref<MaterialInstance>> m_MetalSphereMaterialInstances;
+		std::vector<Ref<MaterialInstance>> m_DielectricSphereMaterialInstances;*/
 
 		struct AlbedoInput
 		{
@@ -84,27 +91,27 @@ namespace Ares
 
 		struct RoughnessInput
 		{
-			float Value = 0.5f;
+			float Value = 0.2f;
 			Ref<Texture2D> TextureMap;
 			bool UseTexture = false;
 		};
 		RoughnessInput m_RoughnessInput;
 
-		Ref<RenderPass> m_GeoPass, m_CompositePass;
+		//Ref<RenderPass> m_GeoPass, m_CompositePass;
 		/*Ref<FrameBuffer> m_FrameBuffer;
 		Ref<FrameBuffer> m_FinalPresentBuffer;*/
 
 
-		Ref<VertexArray> m_FullScreenQuadVAO;
+		//Ref<VertexArray> m_FullScreenQuadVAO;
 		
-		Ref<TextureCube> m_EnvironmentCubeMap;
+		/*Ref<TextureCube> m_EnvironmentCubeMap;
 		Ref<TextureCube> m_EnvironmentIrradiance;
-
-		Camera m_Camera;
-
+		Camera m_Camera;*/
 
 
-		glm::vec4 testColor;
+
+
+		//glm::vec4 testColor;
 		struct Light
 		{
 			glm::vec3 Direction;
@@ -114,7 +121,7 @@ namespace Ares
 		float m_LightMultiplier = 0.3f;
 
 		// PBR params
-		float m_Exposure = 1.0f;
+		//float m_Exposure = 1.0f;
 
 		bool m_RadiancePrefilter = false;
 		float m_EnvMapRotation = 0.0f;
@@ -129,10 +136,10 @@ namespace Ares
 		Ref<Texture2D> m_CheckerboardTex;
 
 		int m_GizmoType = -1; // -1 = no gizmo
-		glm::mat4 m_Transform;
+		//glm::mat4 m_Transform;
 
 	private:
-		void SetPBRMaterialValues(Ref<Material> material, const glm::mat4& viewProjection) const;
+		void SetPBRMaterialValues(Ref<Material> material) const;//, const glm::mat4& viewProjection) const;
 
 	};
 }

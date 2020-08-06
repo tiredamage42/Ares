@@ -14,8 +14,8 @@ namespace Ares
     EditorLayer::EditorLayer()
         : Layer("Sandbox2D"), 
         m_CameraController(1280.0f / 720.0f),
-        m_SceneType(SceneType::Spheres),
-        m_Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f))
+        m_SceneType(SceneType::Model)//,
+        //m_Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f))
     {
     }
     void EditorLayer::OnAttach()
@@ -99,28 +99,53 @@ namespace Ares
 
 #else
 
-        Ref<Shader> m_PBRShaderAnim = Shader::Find("Assets/Shaders/pbr_anim.glsl");
-        Ref<Shader> m_PBRShaderStatic = Shader::Find("Assets/Shaders/pbr_static.glsl");
-        
-        m_GridMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/grid.glsl"));
+        auto _ = Shader::Find("Assets/Shaders/pbr_anim.glsl");
 
+
+        auto environment = Environment::Load("Assets/Textures/birchwood_4k.hdr");
+
+        auto skyboxShader = Shader::Find("Assets/Shaders/CubemapSkybox.glsl");
+        auto skyboxMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(skyboxShader));
+        skyboxMaterial->SetFlag(MaterialFlag::DepthTest, false);
+
+        // Model Scene
+        {
+            m_Scene = CreateRef<Scene>("Model Scene");
+            m_Scene->SetCamera(Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
+            m_Scene->SetSkyboxMaterial(skyboxMaterial);
+            m_Scene->SetEnvironment(environment);
+
+            m_MeshEntity = m_Scene->CreateEntity();
+            MeshRendererComponent& mrComponent = m_MeshEntity.AddComponent<MeshRendererComponent>();
+            //mrComponent.Mesh = nullptr;
+            //mrComponent.MaterialInstances = nullptr;
+            m_MeshMaterial = nullptr;
+        }
+
+            
+
+
+        /*Ref<Shader> m_PBRShaderAnim = Shader::Find("Assets/Shaders/pbr_anim.glsl");
+        Ref<Shader> m_PBRShaderStatic = Shader::Find("Assets/Shaders/pbr_static.glsl");*/
+        
+        /*m_GridMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/grid.glsl"));
         m_SkyboxShader = Shader::Find("Assets/Shaders/CubemapSkybox.glsl");
 
         m_HDRShader = Shader::Find("Assets/Shaders/hdr.glsl");
 
         m_PlaneMesh = CreateRef<Mesh>(PrimitiveType::Plane);
-        m_CubeMesh = CreateRef<Mesh>(PrimitiveType::Cube);
+        m_CubeMesh = CreateRef<Mesh>(PrimitiveType::Cube);*/
 
         // Editor
         m_CheckerboardTex = Texture2D::Create("Assets/Textures/Checkerboard.png");
 
         // Environment
-        m_EnvironmentCubeMap = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Radiance.tga", false);
+        /*m_EnvironmentCubeMap = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Radiance.tga", false);
         m_EnvironmentIrradiance = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Irradiance.tga", false);
+        m_BRDFLUT = Texture2D::Create("Assets/Textures/BRDF_LUT.tga");*/
         
-        m_BRDFLUT = Texture2D::Create("Assets/Textures/BRDF_LUT.tga");
 
-        {
+        /*{
             FrameBufferSpecs fbSpec;
             fbSpec.Width = 1280;
             fbSpec.Height = 720;
@@ -141,42 +166,70 @@ namespace Ares
             RenderPassSpecs rpSpecs;
             rpSpecs.TargetFrameBuffer = FrameBuffer::Create(fbSpec);
             m_CompositePass = CreateRef<RenderPass>(rpSpecs);
-        }
+        }*/
 
         // set up pbr materials for demo
-        m_PBRMaterialStatic = CreateRef<Material>(m_PBRShaderStatic);
-        m_PBRMaterialAnim = CreateRef<Material>(m_PBRShaderAnim);
+        /*m_PBRMaterialStatic = CreateRef<Material>(m_PBRShaderStatic);
+        m_PBRMaterialAnim = CreateRef<Material>(m_PBRShaderAnim);*/
 
         {
+
+            m_SpheresScene = CreateRef<Scene>("PBR Sphere Scene");
+            m_SpheresScene->SetCamera(Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
+            
+            m_SpheresScene->SetSkyboxMaterial(skyboxMaterial);
+            
+            m_SpheresScene->SetEnvironment(environment);
+
+            auto sphereMesh = CreateRef<Mesh>(PrimitiveType::Cube);
+            m_SphereBaseMaterial = sphereMesh->GetMaterial();
+
             float x = -8.0f;
             float roughness = 0.0f;
             for (int i = 0; i < 8; i++)
             {
-                Ref<MaterialInstance> mi = CreateRef<MaterialInstance>(m_PBRMaterialStatic);
+
+                auto sphereEntity = m_SpheresScene->CreateEntity();
+                MeshRendererComponent& mrComponent = sphereEntity.AddComponent<MeshRendererComponent>();
+
+                Ref<MaterialInstance> mi = CreateRef<MaterialInstance>(m_SphereBaseMaterial);
                 mi->Set("u_Metalness", 1.0f);
                 mi->Set("u_Roughness", roughness);
-                mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
+                //mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
                 x += 2;
                 roughness += 0.15f;
-                m_MetalSphereMaterialInstances.push_back(mi);
+                //m_MetalSphereMaterialInstances.push_back(mi);
+
+
+                mrComponent.Mesh = sphereMesh;
+                mrComponent.MaterialOverrides = { mi };
+                sphereEntity.Transform() = glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f));
             }
 
             x = -8.0f;
             roughness = 0.0f;
             for (int i = 0; i < 8; i++)
             {
-                Ref<MaterialInstance> mi = CreateRef<MaterialInstance>(m_PBRMaterialStatic);
+                auto sphereEntity = m_SpheresScene->CreateEntity();
+                MeshRendererComponent& mrComponent = sphereEntity.AddComponent<MeshRendererComponent>();
+
+                Ref<MaterialInstance> mi = CreateRef<MaterialInstance>(m_SphereBaseMaterial);
                 mi->Set("u_Metalness", 0.0f);
                 mi->Set("u_Roughness", roughness);
-                mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 2, 0)));
+                //mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 2, 0)));
                 x += 2;
                 roughness += 0.15f;
-                m_DielectricSphereMaterialInstances.push_back(mi);
+                //m_DielectricSphereMaterialInstances.push_back(mi);
+
+
+                mrComponent.Mesh = sphereMesh;
+                mrComponent.MaterialOverrides = { mi };
+                sphereEntity.Transform() = glm::translate(glm::mat4(1.0f), glm::vec3(x, 2.0f, 0.0f));
             }
         }
 
         // Create Quad
-        float* data = new float[4 * 2] {
+        /*float* data = new float[4 * 2] {
             -1, -1,
              1, -1,
              1,  1,
@@ -194,12 +247,18 @@ namespace Ares
         uint32_t* quadIndicies = new uint32_t[6]{ 0, 1, 2, 2, 3, 0, };
         m_FullScreenQuadVAO->SetIndexBuffer(IndexBuffer::Create(quadIndicies, 6));
         delete[] quadIndicies;
-        delete[] data;
+        delete[] data;*/
+
+
+
+
+        m_ActiveScene = m_Scene;
+        //m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>(m_ActiveScene);
 
         m_Light.Direction = { -0.5f, -0.5f, 1.0f };
         m_Light.Radiance = { 1.0f, 1.0f, 1.0f };
 
-        m_Transform = glm::scale(glm::mat4(1.0f), glm::vec3(m_MeshScale));
+        //m_Transform = glm::scale(glm::mat4(1.0f), glm::vec3(m_MeshScale));
 #endif
     }
 
@@ -236,15 +295,15 @@ namespace Ares
 #else
 
 
-    void EditorLayer::SetPBRMaterialValues(Ref<Material> material, const glm::mat4& viewProjection) const
+    void EditorLayer::SetPBRMaterialValues(Ref<Material> material) const//, const glm::mat4& viewProjection) const
     {
         material->Set("u_AlbedoColor", m_AlbedoInput.Color);
         material->Set("u_Metalness", m_MetalnessInput.Value);
         material->Set("u_Roughness", m_RoughnessInput.Value);
-        material->Set("u_ViewProjectionMatrix", viewProjection);
-        material->Set("u_ModelMatrix", glm::scale(glm::mat4(1.0f), glm::vec3(m_MeshScale)));
+        //material->Set("u_ViewProjectionMatrix", viewProjection);
+        //material->Set("u_ModelMatrix", glm::scale(glm::mat4(1.0f), glm::vec3(m_MeshScale)));
         material->Set("lights", m_Light);
-        material->Set("u_CameraPosition", m_Camera.GetPosition());
+        //material->Set("u_CameraPosition", m_Camera.GetPosition());
         material->Set("u_RadiancePrefilter", m_RadiancePrefilter ? 1.0f : 0.0f);
         material->Set("u_AlbedoTexToggle", m_AlbedoInput.UseTexture ? 1.0f : 0.0f);
         material->Set("u_NormalTexToggle", m_NormalInput.UseTexture ? 1.0f : 0.0f);
@@ -252,9 +311,9 @@ namespace Ares
         material->Set("u_RoughnessTexToggle", m_RoughnessInput.UseTexture ? 1.0f : 0.0f);
         material->Set("u_EnvMapRotation", m_EnvMapRotation);
 
-        material->Set("u_EnvRadianceTex", m_EnvironmentCubeMap);
-        material->Set("u_EnvIrradianceTex", m_EnvironmentIrradiance);
-        material->Set("u_BRDFLUTTexture", m_BRDFLUT);
+        //material->Set("u_EnvRadianceTex", m_EnvironmentCubeMap);
+        //material->Set("u_EnvIrradianceTex", m_EnvironmentIrradiance);
+        //material->Set("u_BRDFLUTTexture", m_BRDFLUT);
 
         if (m_AlbedoInput.TextureMap)    material->Set("u_AlbedoTexture", m_AlbedoInput.TextureMap);
         if (m_NormalInput.TextureMap)    material->Set("u_NormalTexture", m_NormalInput.TextureMap);
@@ -271,93 +330,102 @@ namespace Ares
         // - Cubemap mips and filtering
         // - Tonemapping and proper HDR pipeline
         
-        m_Camera.Update();
+        //m_Camera.Update();
 
-        auto viewProjection = m_Camera.GetProjectionMatrix() * m_Camera.GetViewMatrix();
+        /*auto viewProjection = m_Camera.GetProjectionMatrix() * m_Camera.GetViewMatrix();
 
         if (m_Mesh)
         {
             m_Mesh->OnUpdate();
-        }
+        }*/
 
 
         //m_FrameBuffer->Bind();
-        Renderer::BeginRenderPass(m_GeoPass);
+        //Renderer::BeginRenderPass(m_GeoPass);
         //Renderer::Clear(1, 0, 1, 1);
 
 
 
         // draw skybox
-        m_SkyboxShader->Bind();
+        /*m_SkyboxShader->Bind();
         m_SkyboxShader->SetMat4("u_InverseVP", glm::inverse(viewProjection));
         m_SkyboxShader->SetInt("u_Texture", 0);
         m_EnvironmentIrradiance->Bind(0);
         m_FullScreenQuadVAO->Bind();
-        Renderer::DrawIndexed(m_FullScreenQuadVAO->GetIndexBuffer()->GetCount(), false);
+        Renderer::DrawIndexed(m_FullScreenQuadVAO->GetIndexBuffer()->GetCount(), false);*/
 
-        SetPBRMaterialValues(m_PBRMaterialStatic, viewProjection);
-        SetPBRMaterialValues(m_PBRMaterialAnim, viewProjection);
+        //SetPBRMaterialValues(m_PBRMaterialStatic);// , viewProjection);
+        //SetPBRMaterialValues(m_PBRMaterialAnim);// , viewProjection);
 
-        if (m_SceneType == SceneType::Spheres)
+        if (m_MeshMaterial)
         {
-            // Metals
-            for (int i = 0; i < 8; i++)
-            {
-                m_MetalSphereMaterialInstances[i]->Bind();
-
-                Renderer::SubmitMesh(m_CubeMesh, glm::mat4(1.0f), m_MetalSphereMaterialInstances[i]->GetShader());
-                //m_CubeMesh->Render(m_MetalSphereMaterialInstances[i]->GetShader());
-            }
-
-            // Dielectrics
-            for (int i = 0; i < 8; i++)
-            {
-                m_DielectricSphereMaterialInstances[i]->Bind();
-                Renderer::SubmitMesh(m_CubeMesh, glm::mat4(1.0f), m_DielectricSphereMaterialInstances[i]->GetShader());
-                //m_CubeMesh->Render(m_DielectricSphereMaterialInstances[i]->GetShader());
-
-            }
-
+            SetPBRMaterialValues(m_MeshMaterial);// , viewProjection);
         }
-        else if (m_SceneType == SceneType::Model)
-        {
-            if (m_Mesh)
-            {
-                Ref<Material> material = m_Mesh->IsAnimated() ? m_PBRMaterialAnim : m_PBRMaterialStatic;
-                material->Bind();
-                Renderer::SubmitMesh(m_Mesh, m_Transform, material->GetShader());
-                //m_Mesh->Render(material->GetShader(), m_Transform);   
-            }
-        }
-
-        m_GridMaterial->Set("u_MVP", viewProjection * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
-        m_GridMaterial->Set("u_Scale", (float)m_GridScale);
-        m_GridMaterial->Set("u_Res", m_GridSize);
-        m_GridMaterial->Bind();
-        //m_PlaneMesh->Render(nullptr);
-        Renderer::SubmitMesh(m_Mesh, glm::mat4(1.0f), nullptr);
+        SetPBRMaterialValues(m_SphereBaseMaterial);// , viewProjection);
 
 
-        /*m_FrameBuffer->Unbind();
-        m_FinalPresentBuffer->Bind();*/
+        //if (m_SceneType == SceneType::Spheres)
+        //{
+        //    // Metals
+        //    for (int i = 0; i < 8; i++)
+        //    {
+        //        m_MetalSphereMaterialInstances[i]->Bind();
 
-        Renderer::EndRenderPass();
-        Renderer::BeginRenderPass(m_CompositePass);
+        //        Renderer::SubmitMesh(m_CubeMesh, glm::mat4(1.0f), m_MetalSphereMaterialInstances[i]->GetShader());
+        //        //m_CubeMesh->Render(m_MetalSphereMaterialInstances[i]->GetShader());
+        //    }
 
-        
-        m_HDRShader->Bind();
-        m_HDRShader->SetFloat("u_Exposure", m_Exposure);
-        m_HDRShader->SetInt("u_Texture", 0);
-        
-        // bind original frame buffer as textur 0
-        //m_FrameBuffer->BindAsTexture();
-        m_GeoPass->GetSpecs().TargetFrameBuffer->BindAsTexture();
-        
-        m_FullScreenQuadVAO->Bind();
-        Renderer::DrawIndexed(m_FullScreenQuadVAO->GetIndexBuffer()->GetCount(), false);
+        //    // Dielectrics
+        //    for (int i = 0; i < 8; i++)
+        //    {
+        //        m_DielectricSphereMaterialInstances[i]->Bind();
+        //        Renderer::SubmitMesh(m_CubeMesh, glm::mat4(1.0f), m_DielectricSphereMaterialInstances[i]->GetShader());
+        //        //m_CubeMesh->Render(m_DielectricSphereMaterialInstances[i]->GetShader());
 
-        //m_FinalPresentBuffer->Unbind();
-        Renderer::EndRenderPass();
+        //    }
+
+        //}
+        //else if (m_SceneType == SceneType::Model)
+        //{
+        //    if (m_Mesh)
+        //    {
+        //        Ref<Material> material = m_Mesh->IsAnimated() ? m_PBRMaterialAnim : m_PBRMaterialStatic;
+        //        material->Bind();
+        //        Renderer::SubmitMesh(m_Mesh, m_Transform, material->GetShader());
+        //        //m_Mesh->Render(material->GetShader(), m_Transform);   
+        //    }
+        //}
+
+        //m_GridMaterial->Set("u_MVP", viewProjection * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
+        //m_GridMaterial->Set("u_Scale", (float)m_GridScale);
+        //m_GridMaterial->Set("u_Res", m_GridSize);
+        //m_GridMaterial->Bind();
+        ////m_PlaneMesh->Render(nullptr);
+        //Renderer::SubmitMesh(m_Mesh, glm::mat4(1.0f), nullptr);
+
+
+        ///*m_FrameBuffer->Unbind();
+        //m_FinalPresentBuffer->Bind();*/
+
+        //Renderer::EndRenderPass();
+        //Renderer::BeginRenderPass(m_CompositePass);
+
+        //
+        //m_HDRShader->Bind();
+        //m_HDRShader->SetFloat("u_Exposure", m_Exposure);
+        //m_HDRShader->SetInt("u_Texture", 0);
+        //
+        //// bind original frame buffer as textur 0
+        ////m_FrameBuffer->BindAsTexture();
+        //m_GeoPass->GetSpecs().TargetFrameBuffer->BindAsTexture();
+        //
+        //m_FullScreenQuadVAO->Bind();
+        //Renderer::DrawIndexed(m_FullScreenQuadVAO->GetIndexBuffer()->GetCount(), false);
+
+        ////m_FinalPresentBuffer->Unbind();
+        //Renderer::EndRenderPass();
+
+        m_ActiveScene->OnUpdate();
     }
 #endif
 
@@ -528,11 +596,23 @@ namespace Ares
         // Editor Panel ------------------------------------------------------------------------------
         ImGui::Begin("Settings");
         
-        ImGui::RadioButton("Spheres", (int*)&m_SceneType, (int)SceneType::Spheres);
+        if (ImGui::RadioButton("Spheres", (int*)&m_SceneType, (int)SceneType::Spheres))
+            m_ActiveScene = m_SpheresScene;
         ImGui::SameLine();
-        ImGui::RadioButton("Model", (int*)&m_SceneType, (int)SceneType::Model);
+        if (ImGui::RadioButton("Model", (int*)&m_SceneType, (int)SceneType::Model))
+            m_ActiveScene = m_Scene;
 
         ImGui::Begin("Environment");
+
+        if (ImGui::Button("Load Environment Map"))
+        {
+            std::string filename = Application::Get().OpenFile("*.hdr");
+            if (filename != "")
+                m_ActiveScene->SetEnvironment(Environment::Load(filename));
+        }
+
+        ImGui::SliderFloat("Skybox LOD", &m_ActiveScene->GetSkyboxLod(), 0.0f, 11.0f);
+
 
         ImGui::Columns(2);
         ImGui::AlignTextToFramePadding();
@@ -541,17 +621,20 @@ namespace Ares
         EditorGUI::Vec3("Light Direction", m_Light.Direction);
         EditorGUI::Color3("Light Radiance", m_Light.Radiance);
         EditorGUI::FloatSlider("Light Multiplier", m_LightMultiplier, 0.0f, 5.0f);
-        EditorGUI::FloatSlider("Exposure", m_Exposure, 0.0f, 5.0f);
 
-        EditorGUI::FloatSlider("Mesh Scale", m_MeshScale, 0.0f, 2.0f);
 
-        EditorGUI::IntSlider("Grid Scale", m_GridScale, 0, 20);
-        EditorGUI::FloatSlider("Grid Size", m_GridSize, 0.0f, 0.1f);
+        EditorGUI::FloatSlider("Exposure", m_ActiveScene->GetExposure(), 0.0f, 5.0f);
+        //EditorGUI::FloatSlider("Exposure", m_Exposure, 0.0f, 5.0f);
+
+        //EditorGUI::FloatSlider("Mesh Scale", m_MeshScale, 0.0f, 2.0f);
+
+        /*EditorGUI::IntSlider("Grid Scale", m_GridScale, 0, 20);
+        EditorGUI::FloatSlider("Grid Size", m_GridSize, 0.0f, 0.1f);*/
 
         EditorGUI::Toggle("Radiance Prefiltering", m_RadiancePrefilter);
         EditorGUI::FloatSlider("Env Map Rotation", m_EnvMapRotation, -360.0f, 360.0f);
 
-        EditorGUI::Color4("Test Color", testColor);
+        //EditorGUI::Color4("Test Color", testColor);
 
         ImGui::Columns(1);
 
@@ -561,7 +644,11 @@ namespace Ares
         ImGui::Separator();
         {
             ImGui::Text("Mesh");
-            std::string fullpath = m_Mesh ? m_Mesh->GetFilePath() : "None";
+
+            auto mesh = m_MeshEntity.GetComponent<MeshRendererComponent>().Mesh;
+            //std::string fullpath = m_Mesh ? m_Mesh->GetFilePath() : "None";
+            std::string fullpath = mesh ? mesh->GetFilePath() : "None";
+
             size_t found = fullpath.find_last_of("/\\");
             std::string path = found != std::string::npos ? fullpath.substr(found + 1) : fullpath;
             ImGui::Text(path.c_str()); ImGui::SameLine();
@@ -570,8 +657,11 @@ namespace Ares
                 std::string filename = Application::Get().OpenFile("");
                 if (filename != "")
                 {
-                    //ARES_INFO("Would Load File '{0}'", filename);
-                    m_Mesh = CreateRef<Mesh>(filename);
+                    MeshRendererComponent& mrComponent = m_MeshEntity.GetComponent<MeshRendererComponent>();
+                    mrComponent.Mesh = CreateRef<Mesh>(filename);
+                    // set material from load..
+                    m_MeshMaterial = mrComponent.Mesh->GetMaterial();
+                    //m_Mesh = CreateRef<Mesh>(filename);
                 }
             }
         }
@@ -746,19 +836,23 @@ namespace Ares
         ImGui::Image((void*)m_FrameBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
 #else
 
+        SceneRenderer::SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        m_ActiveScene->GetCamera().SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        m_ActiveScene->GetCamera().SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
+        ImGui::Image((void*)SceneRenderer::GetFinalColorBufferRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
 
 
-        m_GeoPass->GetSpecs().TargetFrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
-        m_CompositePass->GetSpecs().TargetFrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        /*m_GeoPass->GetSpecs().TargetFrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        m_CompositePass->GetSpecs().TargetFrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);*/
         
         /*m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
         m_FinalPresentBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);*/
         
-        m_Camera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
-        m_Camera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
+        /*m_Camera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        m_Camera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));*/
 
         //ImGui::Image((void*)m_FinalPresentBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
-        ImGui::Image((void*)m_CompositePass->GetSpecs().TargetFrameBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
+        //ImGui::Image((void*)m_CompositePass->GetSpecs().TargetFrameBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
 #endif
 
         // Gizmos
@@ -769,17 +863,27 @@ namespace Ares
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist();
             ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, rw, rh);
-            ImGuizmo::Manipulate(glm::value_ptr(m_Camera.GetViewMatrix()), glm::value_ptr(m_Camera.GetProjectionMatrix()), (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(m_Transform));
+            //ImGuizmo::Manipulate(glm::value_ptr(m_Camera.GetViewMatrix()), glm::value_ptr(m_Camera.GetProjectionMatrix()), (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(m_Transform));
+            ImGuizmo::Manipulate(
+                glm::value_ptr(m_ActiveScene->GetCamera().GetViewMatrix()), // view
+                glm::value_ptr(m_ActiveScene->GetCamera().GetProjectionMatrix()), // projection
+                (ImGuizmo::OPERATION)m_GizmoType, // operation
+                ImGuizmo::LOCAL, // mode
+                glm::value_ptr(m_MeshEntity.Transform())
+            );
+
         }
 
 
         ImGui::End();
         ImGui::PopStyleVar();
 
+        //m_SceneHierarchyPanel->OnImGuiRender();
+
         ImGui::End();
 
-        if (m_Mesh)
-            m_Mesh->OnImGuiRender();
+        /*if (m_Mesh)
+            m_Mesh->OnImGuiRender();*/
     }
 
     void EditorLayer::OnEvent(Ares::Event& e)

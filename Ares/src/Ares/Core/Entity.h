@@ -3,7 +3,7 @@
 #include "Ares/Core/Scene.h"
 
 #include "entt.hpp"
-
+#include "Ares/Core/Components.h"
 namespace Ares
 {
 	/*
@@ -23,13 +23,13 @@ namespace Ares
 		Entity(const Entity& other) = default;
 
 		template <typename T>
-		bool HasComponent()
+		const bool HasComponent() const
 		{
 			return m_Scene->m_Registry.has<T>(m_EntityHandle);
 		}
 
 		template <typename T, typename... Args>
-		T& AddComponent(Args&&... args)
+		T& AddComponent(Args&&... args) const
 		{
 			ARES_CORE_ASSERT(!HasComponent<T>(), "Entity Already Has Component!");
 
@@ -38,7 +38,7 @@ namespace Ares
 
 		// maybe try_get
 		template <typename T>
-		T& GetComponent()
+		T& GetComponent() const
 		{
 			ARES_CORE_ASSERT(HasComponent<T>(), "Entity Doesn't Have Component!");
 
@@ -46,19 +46,20 @@ namespace Ares
 		}
 
 		template <typename T, typename... Args>
-		T& GetOrAddComponent(Args&&... args)
+		T& GetOrAddComponent(Args&&... args) const
 		{
 			return m_Scene->m_Registry.get_or_emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
 		}
 
 		template <typename T>
-		void RemoveComponent()
+		const void RemoveComponent() const
 		{
 			return m_Scene->m_Registry.remove_if_exists<T>(m_EntityHandle);
 		}
 
 		operator bool() const { return m_EntityHandle != entt::null; }
 
+		glm::mat4& Transform() { return GetComponent<TransformComponent>(); }
 
 
 		

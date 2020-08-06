@@ -3,11 +3,13 @@
 #include "Ares/Core/Scene.h"
 #include "Ares/Core/Components.h"
 #include "Ares/Renderer/Renderer2D.h"
+#include "Ares/Renderer/SceneRenderer.h"
 #include "Ares/Core/Entity.h"
 
 namespace Ares
 {
-    Scene::Scene()
+    Scene::Scene(const std::string& debugName)
+        : m_DebugName(debugName)
     {
 
     }
@@ -44,43 +46,107 @@ namespace Ares
     }
     void Scene::OnUpdate()
     {
-        // Render 2D
-        Camera* mainCamera = nullptr;
-        glm::mat4* cameraTransform = nullptr;
+        // 3d
+        if (true)
         {
-            auto view = m_Registry.view<TransformComponent, CameraComponent>();
+
+            m_Camera.Update();
+
+
+            // Update all entities
+
+            auto view = m_Registry.view<MeshRendererComponent>();
             for (auto entity : view)
             {
-                auto& [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
-
-                if (camera.Primary)
+                auto& meshComponent = view.get<MeshRendererComponent>(entity);
+                if (meshComponent.Mesh)
                 {
-                    mainCamera = &camera.Camera;
-                    cameraTransform = &transform.Transform;
-                    break;
-                }
+                    meshComponent.Mesh->OnUpdate();
+                }    
             }
-        }
 
-        if (mainCamera)
+            /*m_SkyboxMaterial->Set("u_TextureLod", GetSkyboxLod());
+            */
+            SceneRenderer::BeginScene(this);
+
+            // Render entities
+            
+            for (auto entity : view)
+            {
+                Entity entityS = { entity, this };
+                // TODO: Should we render (logically)
+                SceneRenderer::SubmitEntity(entityS);
+            }
+            
+            
+            SceneRenderer::EndScene();
+        }
+        else
         {
 
-            Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), *cameraTransform);
-
-            auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-        
-            for (auto entity : group)
+            // Render 2D
+            Camera* mainCamera = nullptr;
+            glm::mat4* cameraTransform = nullptr;
             {
-                //ARES_CORE_LOG("Rendering sprite");
+                auto view = m_Registry.view<TransformComponent, CameraComponent>();
+                for (auto entity : view)
+                {
+                    auto& [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
 
-                auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-            
-                Renderer2D::DrawQuad(transform, sprite.Texture, sprite.Tiling, sprite.Offset, sprite.Color);
+                    if (camera.Primary)
+                    {
+                        mainCamera = &camera.Camera;
+                        cameraTransform = &transform.Transform;
+                        break;
+                    }
+                }
             }
 
-            Renderer2D::EndScene();
+            if (mainCamera)
+            {
 
+                Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), *cameraTransform);
+
+                auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+        
+                for (auto entity : group)
+                {
+                    //ARES_CORE_LOG("Rendering sprite");
+
+                    auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+            
+                    Renderer2D::DrawQuad(transform, sprite.Texture, sprite.Tiling, sprite.Offset, sprite.Color);
+                }
+
+                Renderer2D::EndScene();
+
+            }
         }
 
+
+
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Environment Environment::Load(const std::string& filepath)
+	{
+		auto [radiance, irradiance] = SceneRenderer::CreateEnvironmentMap(filepath);
+		return { radiance, irradiance };
+	}
 }

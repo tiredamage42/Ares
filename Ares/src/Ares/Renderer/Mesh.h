@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 
 #include "Ares/Renderer/VertexArray.h"
-#include "Ares/Renderer/Shader.h"
+#include "Ares/Renderer/Material.h"
 
 struct aiNode;
 struct aiAnimation;
@@ -100,7 +100,7 @@ namespace Ares {
 		uint32_t BaseIndex;
 		uint32_t MaterialIndex;
 		uint32_t IndexCount;
-		glm::mat4 Transform;
+		glm::mat4 Transform{ 1.0f };
 	};
 
 	class Mesh
@@ -116,15 +116,22 @@ namespace Ares {
 		void OnUpdate();
 
 
-		void OnImGuiRender();
+		//void OnImGuiRender();
 		void DumpVertexBuffer();
 
+		Ref<Material> GetMaterial() { return m_BaseMaterial; }
+		std::vector<Ref<MaterialInstance>> GetMaterialOverrides() { return m_MaterialOverrides; }
+		const std::vector<Ref<Texture2D>>& GetTextures() const { return m_Textures; }
 		inline const std::string& GetFilePath() const { return m_FilePath; }
+
 
 	private:
 		void BoneTransform(float time);
 		void ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const glm::mat4& ParentTransform);
-		void TraverseNodes(aiNode* node);
+
+		//void TraverseNodes(aiNode* node);
+		void TraverseNodes(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.0f), uint32_t level = 0);
+
 
 		const aiNodeAnim* FindNodeAnim(const aiAnimation* animation, const std::string& nodeName);
 		uint32_t FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim);
@@ -160,6 +167,12 @@ namespace Ares {
 		Ref<VertexArray> m_VertexArray;
 
 		std::string m_FilePath;
+
+		Ref<Material> m_BaseMaterial;
+		std::vector<Ref<Texture2D>> m_Textures;
+		std::vector<Ref<Texture2D>> m_NormalMaps;
+		std::vector<Ref<MaterialInstance>> m_MaterialOverrides;
+
 
 		friend class Renderer;
 	};

@@ -32,7 +32,7 @@ namespace Ares {
 				// static_assert(std::is_trivially_destructible_v<FuncT>, "FuncT must be trivially destructible");
 				pFunc->~FuncT();
 			};
-			auto storageBuffer = s_CommandQueue.Allocate(renderCmd, sizeof(func));
+			auto storageBuffer = GetRenderCommandQueue().Allocate(renderCmd, sizeof(func));
 			new (storageBuffer) FuncT(std::forward<FuncT>(func));
 		}
 
@@ -44,8 +44,15 @@ namespace Ares {
 		// ~Actual~ Renderer here... TODO: remove confusion later
 		static void BeginRenderPass(const Ref<RenderPass>& renderPass);
 		static void EndRenderPass();
-		static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Shader>& overrideMaterial = nullptr);
 
+
+
+		static void SubmitQuad(const Ref<MaterialInstance>& material, const glm::mat4& transform = glm::mat4(1.0f));
+		static void SubmitFullscreenQuad(const Ref<MaterialInstance>& material);
+		static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform);
+		//static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Shader>& overrideMaterial = nullptr);
+		
+		static RenderCommandQueue& GetRenderCommandQueue();
 
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 	private:
@@ -55,8 +62,8 @@ namespace Ares {
 		};
 
 		static Scope<SceneData> s_SceneData;
-		static RenderCommandQueue s_CommandQueue;
-		static Ref<RenderPass> s_ActiveRenderPass;
+		//static RenderCommandQueue s_CommandQueue;
+		//static Ref<RenderPass> s_ActiveRenderPass;
 
 
 	};

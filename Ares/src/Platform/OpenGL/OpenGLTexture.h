@@ -18,15 +18,24 @@ namespace Ares {
 		inline virtual uint32_t GetWidth() const override { return m_Width; }
 		inline virtual uint32_t GetHeight() const override { return m_Height; }
 
+		// This function currently returns the expected number of mips based on image size,
+		// not present mips in data
+		virtual uint32_t GetMipLevelCount() const override;
+
 
 		virtual void Lock() override;
 		virtual void Unlock() override;
+		
+		virtual void Resize(uint32_t width, uint32_t height) override;
+
 		virtual Buffer GetWriteableBuffer() override;
+		virtual bool Loaded() const override { return m_Loaded; }
 
 		
 		virtual const std::string& GetPath() const override { return m_Path; }
 
 		inline virtual uint32_t GetRendererID() const override { return m_RendererID; }
+
 
 		virtual bool operator==(const Texture& other) const override
 		{
@@ -40,7 +49,9 @@ namespace Ares {
 		uint32_t m_Width, m_Height;
 
 		Buffer m_ImageData;
+		bool m_IsHDR = false;
 		bool m_Locked = false;
+		bool m_Loaded = false;
 
 		std::string m_Path;
 	};
@@ -50,7 +61,8 @@ namespace Ares {
 	class OpenGLTextureCube : public TextureCube
 	{
 	public:
-		OpenGLTextureCube(const std::string& path, bool srgb);
+		OpenGLTextureCube(TextureFormat format, uint32_t width, uint32_t height);
+		OpenGLTextureCube(const std::string& path);
 		virtual ~OpenGLTextureCube();
 
 		virtual void Bind(uint32_t slot = 0) const;
@@ -59,6 +71,10 @@ namespace Ares {
 		virtual uint32_t GetWidth() const { return m_Width; }
 		virtual uint32_t GetHeight() const { return m_Height; }
 		
+		// This function currently returns the expected number of mips based on image size,
+		// not present mips in data
+		virtual uint32_t GetMipLevelCount() const override;
+
 		virtual const std::string& GetPath() const override { return m_FilePath; }
 
 		virtual uint32_t GetRendererID() const override { return m_RendererID; }

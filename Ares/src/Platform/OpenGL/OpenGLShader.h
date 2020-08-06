@@ -33,6 +33,9 @@ namespace Ares {
 		virtual void Bind() override;
 		virtual void Unbind() const override;
 
+		virtual uint32_t GetRendererID() const override { return m_RendererID; }
+
+
 		virtual const std::string& GetName() const override { return m_Name; }
 
 		virtual void SetInt(const std::string& name, int value) override;
@@ -89,6 +92,10 @@ namespace Ares {
 
 		inline const ShaderUniformBufferList& GetVSRendererUniforms() const override { return m_VSRendererUniformBuffers; }
 		inline const ShaderUniformBufferList& GetPSRendererUniforms() const override { return m_PSRendererUniformBuffers; }
+		
+		virtual bool HasVSMaterialUniformBuffer() const override { return (bool)m_VSMaterialUniformBuffer; }
+		virtual bool HasPSMaterialUniformBuffer() const override { return (bool)m_PSMaterialUniformBuffer; }
+
 		inline const ShaderUniformBufferDeclaration& GetVSMaterialUniformBuffer() const override { return *m_VSMaterialUniformBuffer; }
 		inline const ShaderUniformBufferDeclaration& GetPSMaterialUniformBuffer() const override { return *m_PSMaterialUniformBuffer; }
 		inline const ShaderResourceList& GetResources() const override { return m_Resources; }
@@ -130,6 +137,7 @@ namespace Ares {
 		uint32_t m_RendererID = 0;
 		std::string m_Name, m_AssetPath;
 		//std::string m_ShaderSource;
+		bool m_IsCompute = false;
 
 		bool m_Loaded = false;
 

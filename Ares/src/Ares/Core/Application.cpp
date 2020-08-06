@@ -120,6 +120,7 @@ namespace Ares {
 
             if (!m_Minimized)
             {
+
                 for (Layer* layer : m_LayerStack)
                     layer->OnUpdate();
 

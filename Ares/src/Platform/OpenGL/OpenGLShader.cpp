@@ -15,6 +15,9 @@ namespace Ares {
 			return GL_VERTEX_SHADER;
 		if (type == "fragment")
 			return GL_FRAGMENT_SHADER;
+		if (type == "compute")
+			return GL_COMPUTE_SHADER;
+
 
 		ARES_CORE_ASSERT(false, "Unknown shader type!");
 		return 0;
@@ -51,7 +54,9 @@ namespace Ares {
 	{
 		std::string source = ReadShaderFromFile(m_AssetPath);
 		m_ShaderSource = PreProcess(source);
-		Parse();
+
+		if (!m_IsCompute)
+			Parse();
 		
 		Renderer::Submit([this]() {
 			if (this->m_RendererID)
@@ -59,9 +64,11 @@ namespace Ares {
 
 			
 			this->CompileAndUploadShader();
-
-			this->ResolveUniforms();
-			this->ValidateUniforms();
+			if (!m_IsCompute)
+			{
+				this->ResolveUniforms();
+				this->ValidateUniforms();
+			}
 
 
 			if (this->m_Loaded)
@@ -140,11 +147,14 @@ namespace Ares {
 			else
 			{
 				ARES_CORE_ERROR("Could not read from file '{0}'", filePath);
+				ARES_CORE_ASSERT(false, "");
 			}
 		}
 		else
 		{
 			ARES_CORE_ERROR("Could not open file: {0}", filePath);
+			ARES_CORE_ASSERT(false, "");
+
 		}
 		return result;
 	}
@@ -885,7 +895,9 @@ namespace Ares {
 
 			// the actual type as string
 			std::string type = source.substr(begin, eol - begin);
-			ARES_CORE_ASSERT(ShaderTypeFromString(type), "Invalid Shader Type Specified");
+			auto shaderType = ShaderTypeFromString(type);
+			
+			ARES_CORE_ASSERT(shaderType, "Invalid Shader Type Specified");
 
 			// get next line
 			size_t nextLinePos = source.find_first_not_of("\r\n", eol);
@@ -893,10 +905,17 @@ namespace Ares {
 
 			// find the next #type line
 			pos = source.find(typeToken, nextLinePos);
-
+			
 			// source shader code is from the next line, until either
 			// the end of the file, or the next line we found #type
-			shaderSources[ShaderTypeFromString(type)] = source.substr(nextLinePos, pos - (nextLinePos == std::string::npos ? source.size() - 1 : nextLinePos));
+			shaderSources[shaderType] = source.substr(nextLinePos, pos - (nextLinePos == std::string::npos ? source.size() - 1 : nextLinePos));
+
+			// Compute shaders cannot contain other types
+			if (shaderType == GL_COMPUTE_SHADER)
+			{
+				m_IsCompute = true;
+				break;
+			}
 		}
 
 		return shaderSources;

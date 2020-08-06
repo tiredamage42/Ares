@@ -112,6 +112,8 @@ namespace Ares {
 		virtual void Bind() = 0;
 		virtual void Unbind() const = 0;
 
+		virtual uint32_t GetRendererID() const = 0;
+
 		//virtual void UploadUniformBuffer(const UniformBufferBase& uniformBuffer) = 0;
 
 		virtual const std::string& GetName() const = 0;
@@ -136,10 +138,15 @@ namespace Ares {
 
 		virtual void SetVSMaterialUniformBuffer(Buffer buffer) = 0;
 		virtual void SetPSMaterialUniformBuffer(Buffer buffer) = 0;
+
 		virtual const ShaderUniformBufferList& GetVSRendererUniforms() const = 0;
 		virtual const ShaderUniformBufferList& GetPSRendererUniforms() const = 0;
+		virtual bool HasVSMaterialUniformBuffer() const = 0;
+		virtual bool HasPSMaterialUniformBuffer() const = 0;
+
 		virtual const ShaderUniformBufferDeclaration& GetVSMaterialUniformBuffer() const = 0;
 		virtual const ShaderUniformBufferDeclaration& GetPSMaterialUniformBuffer() const = 0;
+
 		virtual const ShaderResourceList& GetResources() const = 0;
 
 		virtual void AddShaderReloadedCallback(const ShaderReloadedCallback& callback) = 0;

@@ -66,9 +66,7 @@ namespace Ares
         #error "Platform doesn't support debugbreak yet!"
     #endif
 
-
     #define ARES_ENABLE_ASSERTS
-
 #else
 
 #endif
