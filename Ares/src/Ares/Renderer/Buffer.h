@@ -54,8 +54,8 @@ namespace Ares {
 				case Ares::ShaderDataType::Float2:	return 2;
 				case Ares::ShaderDataType::Float3:	return 3;
 				case Ares::ShaderDataType::Float4:	return 4;
-				case Ares::ShaderDataType::Mat3:	return 3;//(3*float3) //9;
-				case Ares::ShaderDataType::Mat4:	return 4;//(4*float4) //16;
+				case Ares::ShaderDataType::Mat3:	return 3 * 3;//(3*float3) //9;
+				case Ares::ShaderDataType::Mat4:	return 4 * 4;//(4*float4) //16;
 				case Ares::ShaderDataType::Int:		return 1;
 				case Ares::ShaderDataType::Int2:	return 2;
 				case Ares::ShaderDataType::Int3:	return 3;
@@ -105,22 +105,26 @@ namespace Ares {
 		uint32_t m_Stride = 0;
 	};
 	
+	enum class VertexBufferUsage
+	{
+		None = 0, Static = 1, Dynamic = 2
+	};
+
 	
 	class VertexBuffer
 	{
 	public:
 		virtual ~VertexBuffer() = default;
+		virtual void SetData(void* data, uint32_t size, uint32_t offset = 0) = 0;
 
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		virtual void SetLayout(const BufferLayout& layout) = 0;
 		virtual const BufferLayout& GetLayout() const = 0;
-
-		virtual void SetData(void* data, uint32_t size) = 0;
-
-		static Ref<VertexBuffer> Create(uint32_t size);
-		static Ref<VertexBuffer> Create(void* vertices, uint32_t size);
+		virtual void SetLayout(const BufferLayout& layout) = 0;
+		
+		static Ref<VertexBuffer> Create(void* data, uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
+		static Ref<VertexBuffer> Create(uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
 	};
 
 	

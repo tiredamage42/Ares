@@ -9,8 +9,8 @@ namespace Ares {
 	class OpenGLVertexBuffer : public VertexBuffer
 	{
 	public:
-		OpenGLVertexBuffer(uint32_t size);
-		OpenGLVertexBuffer(void* vertices, uint32_t size);
+		OpenGLVertexBuffer(void* vertices, uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
+		OpenGLVertexBuffer(uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
 
 		virtual ~OpenGLVertexBuffer();
 
@@ -20,7 +20,7 @@ namespace Ares {
 		virtual const BufferLayout& GetLayout() const override { return m_Layout; }
 		virtual void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
 
-		virtual void SetData(void* data, uint32_t size) override;
+		virtual void SetData(void* data, uint32_t size, uint32_t offset = 0) override;
 
 	private:
 		uint32_t m_RendererID;

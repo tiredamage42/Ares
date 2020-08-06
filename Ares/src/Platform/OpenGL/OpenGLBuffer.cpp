@@ -9,29 +9,31 @@ namespace Ares {
 	// =====================================================
 	// VERTEX BUFFERS =======================================
 	// =====================================================
-	OpenGLVertexBuffer::OpenGLVertexBuffer(void* vertices, uint32_t size)
+	static GLenum OpenGLUsage(VertexBufferUsage usage)
 	{
+		switch (usage)
+		{
+		case VertexBufferUsage::Static:    return GL_STATIC_DRAW;
+		case VertexBufferUsage::Dynamic:   return GL_DYNAMIC_DRAW;
+		}
+		ARES_CORE_ASSERT(false, "Unknown vertex buffer usage");
+		return 0;
+	}
 
+
+	OpenGLVertexBuffer::OpenGLVertexBuffer(void* vertices, uint32_t size, VertexBufferUsage usage)
+	{
 		m_LocalData = Buffer::Copy(vertices, size);
-		
-		Renderer::Submit([this, size, vertices]() mutable {
-
+		Renderer::Submit([this, size, vertices, usage]() mutable {
 			glCreateBuffers(1, &this->m_RendererID);
-			glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-			// upload to gpu
-			glBufferData(GL_ARRAY_BUFFER, size, this->m_LocalData.Data, GL_STATIC_DRAW);
+			glNamedBufferData(this->m_RendererID, size, this->m_LocalData.Data, OpenGLUsage(usage));
 		});
 	}
-	// dynamic buffer
-	OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size)
+	OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size, VertexBufferUsage usage)
 	{
-		Renderer::Submit([this, size]() mutable {
-
-			ARES_CORE_LOG("Creating dynamic draw vertex buffer");
+		Renderer::Submit([this, size, usage]() mutable {
 			glCreateBuffers(1, &this->m_RendererID);
-			glBindBuffer(GL_ARRAY_BUFFER, this->m_RendererID);
-			// upload to gpu
-			glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+			glNamedBufferData(this->m_RendererID, size, nullptr, OpenGLUsage(usage));
 		});
 	}
 	OpenGLVertexBuffer::~OpenGLVertexBuffer()
@@ -54,12 +56,11 @@ namespace Ares {
 		});
 	}
 
-	void OpenGLVertexBuffer::SetData(void* data, uint32_t size)
+	void OpenGLVertexBuffer::SetData(void* data, uint32_t size, uint32_t offset)
 	{
 		m_LocalData = Buffer::Copy(data, size);
-		Renderer::Submit([this, size]() {
-			glBindBuffer(GL_ARRAY_BUFFER, this->m_RendererID);
-			glBufferSubData(GL_ARRAY_BUFFER, 0, size, this->m_LocalData.Data);
+		Renderer::Submit([this, size, offset]() {
+			glNamedBufferSubData(this->m_RendererID, offset, size, this->m_LocalData.Data);
 		});
 	}
 	
@@ -71,15 +72,9 @@ namespace Ares {
 		: m_Count(count)
 	{
 		m_LocalData = Buffer::Copy(indicies, count * sizeof(uint32_t));
-
 		Renderer::Submit([this, count]() mutable {
-			// GL_ELEMENT_ARRAY_BUFFER is not valid without an actively bound VAO
-			// Binding with GL_ARRAY_BUFFER allows the data to be loaded regardless of VAO state
 			glCreateBuffers(1, &this->m_RendererID);
-			glBindBuffer(GL_ARRAY_BUFFER, this->m_RendererID);
-
-			// upload to gpu
-			glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), this->m_LocalData.Data, GL_STATIC_DRAW);
+			glNamedBufferData(this->m_RendererID, count * sizeof(uint32_t), this->m_LocalData.Data, GL_STATIC_DRAW);
 		});
 	}
 	OpenGLIndexBuffer::~OpenGLIndexBuffer()

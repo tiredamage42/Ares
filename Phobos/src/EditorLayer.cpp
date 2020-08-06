@@ -4,7 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "EditorGUI.h"
 
-#define _2D 0
+#define _2D 1
 
 namespace Ares
 {
@@ -54,7 +54,7 @@ namespace Ares
         
         m_GridMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/grid.glsl"));
 
-        m_QuadShader = Shader::Find("Assets/Shaders/CubemapSkybox.glsl");
+        m_SkyboxShader = Shader::Find("Assets/Shaders/CubemapSkybox.glsl");
 
         m_HDRShader = Shader::Find("Assets/Shaders/hdr.glsl");
 
@@ -117,16 +117,16 @@ namespace Ares
             -1,  1
         };
 
-        m_QuadVertexArray = VertexArray::Create();
+        m_FullScreenQuadVAO = VertexArray::Create();
 
         Ref<VertexBuffer> quadVertexBuffer = VertexBuffer::Create(data, 4 * 2 * sizeof(float));
         quadVertexBuffer->SetLayout({
             { ShaderDataType::Float2, "a_Position" },
         });
-        m_QuadVertexArray->AddVertexBuffer(quadVertexBuffer);
+        m_FullScreenQuadVAO->AddVertexBuffer(quadVertexBuffer);
 
         uint32_t* quadIndicies = new uint32_t[6]{ 0, 1, 2, 2, 3, 0, };
-        m_QuadVertexArray->SetIndexBuffer(IndexBuffer::Create(quadIndicies, 6));
+        m_FullScreenQuadVAO->SetIndexBuffer(IndexBuffer::Create(quadIndicies, 6));
         delete[] quadIndicies;
         delete[] data;
 
@@ -212,12 +212,12 @@ namespace Ares
         Renderer::Clear(1, 0, 1, 1);
 
         // draw skybox
-        m_QuadShader->Bind();
-        m_QuadShader->SetMat4("u_InverseVP", glm::inverse(viewProjection));
-        m_QuadShader->SetInt("u_Texture", 0);
+        m_SkyboxShader->Bind();
+        m_SkyboxShader->SetMat4("u_InverseVP", glm::inverse(viewProjection));
+        m_SkyboxShader->SetInt("u_Texture", 0);
         m_EnvironmentIrradiance->Bind(0);
-        m_QuadVertexArray->Bind();
-        Renderer::DrawIndexed(m_QuadVertexArray->GetIndexBuffer()->GetCount(), false);
+        m_FullScreenQuadVAO->Bind();
+        Renderer::DrawIndexed(m_FullScreenQuadVAO->GetIndexBuffer()->GetCount(), false);
 
         SetPBRMaterialValues(m_PBRMaterialStatic, viewProjection);
         SetPBRMaterialValues(m_PBRMaterialAnim, viewProjection);
@@ -267,8 +267,8 @@ namespace Ares
         // bind original frame buffer as textur 0
         m_FrameBuffer->BindTexture();
         
-        m_QuadVertexArray->Bind();
-        Renderer::DrawIndexed(m_QuadVertexArray->GetIndexBuffer()->GetCount(), false);
+        m_FullScreenQuadVAO->Bind();
+        Renderer::DrawIndexed(m_FullScreenQuadVAO->GetIndexBuffer()->GetCount(), false);
 
         m_FinalPresentBuffer->Unbind();
     }

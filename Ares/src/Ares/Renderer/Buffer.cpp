@@ -7,7 +7,7 @@
 
 namespace Ares 
 {
-	Ref<VertexBuffer> VertexBuffer::Create(uint32_t size)
+	Ref<VertexBuffer> VertexBuffer::Create(uint32_t size, VertexBufferUsage usage)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -17,14 +17,14 @@ namespace Ares
 			return nullptr;
 
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLVertexBuffer>(size);
+			return CreateRef<OpenGLVertexBuffer>(size, usage);
 
 		}
 
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");
 		return nullptr;
 	}
-	Ref<VertexBuffer> VertexBuffer::Create(void* vertices, uint32_t size)
+	Ref<VertexBuffer> VertexBuffer::Create(void* vertices, uint32_t size, VertexBufferUsage usage)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -34,7 +34,7 @@ namespace Ares
 			return nullptr;
 
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLVertexBuffer>(vertices, size);
+			return CreateRef<OpenGLVertexBuffer>(vertices, size, usage);
 
 		}
 

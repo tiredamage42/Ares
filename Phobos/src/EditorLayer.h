@@ -45,7 +45,7 @@ namespace Ares
 
 		Ref<Material> m_GridMaterial;
 
-		Ref<Shader> m_QuadShader;
+		Ref<Shader> m_SkyboxShader;
 		Ref<Shader> m_HDRShader;
 
 		Ref<Mesh> m_Mesh;
@@ -92,7 +92,7 @@ namespace Ares
 		Ref<FrameBuffer> m_FrameBuffer;
 		Ref<FrameBuffer> m_FinalPresentBuffer;
 
-		Ref<VertexArray> m_QuadVertexArray;
+		Ref<VertexArray> m_FullScreenQuadVAO;
 		
 		Ref<TextureCube> m_EnvironmentCubeMap;
 		Ref<TextureCube> m_EnvironmentIrradiance;
