@@ -64,7 +64,28 @@ namespace Ares {
 
 			for (const auto& element : layout)
 			{
-				switch (element.Type)
+				auto glBaseType = ShaderDataType2OpenGLBaseType(element.Type);
+				glEnableVertexAttribArray(this->m_VertexBufferIndex);
+				if (glBaseType == GL_INT)
+				{
+					glVertexAttribIPointer(this->m_VertexBufferIndex,
+						element.GetComponentCount(),
+						glBaseType,
+						layout.GetStride(),
+						(const void*)(intptr_t)element.Offset);
+				}
+				else
+				{
+					glVertexAttribPointer(this->m_VertexBufferIndex,
+						element.GetComponentCount(),
+						glBaseType,
+						element.Normalized ? GL_TRUE : GL_FALSE,
+						layout.GetStride(),
+						(const void*)(intptr_t)element.Offset);
+				}
+				this->m_VertexBufferIndex++;
+
+				/*switch (element.Type)
 				{
 				case ShaderDataType::Float:
 				case ShaderDataType::Float2:
@@ -106,7 +127,7 @@ namespace Ares {
 				}
 				default:
 					ARES_CORE_ASSERT(false, "Unknown ShaderDataType!");
-				}
+				}*/
 			}
 		});
 		m_VertexBuffers.push_back(buffer);
