@@ -2,6 +2,9 @@
 #include "Ares/ImGui/ImGuiLayer.h"
 
 #include <imgui.h>
+#include "ImGuizmo.h"
+
+#define IMGUI_IMPL_API
 #include <examples/imgui_impl_glfw.h>
 #include <examples/imgui_impl_opengl3.h>
 
@@ -84,9 +87,14 @@ namespace Ares {
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+		ImGuizmo::BeginFrame();
+
 	}
 	void ImGuiLayer::EndImGui()
 	{
+
+		//ImGuizmo::EndFrame();
+
 		// set up imgui display size
 		ImGuiIO& io = ImGui::GetIO();
 		Application& app = Application::Get();

@@ -17,6 +17,7 @@ namespace Ares
 		virtual void OnUpdate() override;// float deltaTime) override;
 		virtual void OnImGuiDraw() override;
 		virtual void OnEvent(Event& e) override;
+		bool OnKeyPressedEvent(KeyPressedEvent& e);
 
 	private:
 		OrthographicCameraController m_CameraController;
@@ -124,6 +125,10 @@ namespace Ares
 
 		// Editor resources
 		Ref<Texture2D> m_CheckerboardTex;
+
+		int m_GizmoType = -1; // -1 = no gizmo
+		glm::mat4 m_Transform;
+
 	private:
 		void SetPBRMaterialValues(Ref<Material> material, const glm::mat4& viewProjection) const;
 

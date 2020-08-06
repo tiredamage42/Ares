@@ -601,7 +601,7 @@ namespace Ares {
 
 				if (shader)
 				{
-					//shader->SetMat4FromRenderThread("u_ModelMatrix", transform * submesh.Transform);
+					shader->SetMat4FromRenderThread("u_ModelMatrix", transform * submesh.Transform);
 				}
 
 				glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
