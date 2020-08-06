@@ -1,11 +1,8 @@
 #include "AresPCH.h" 
-
 #include "Mesh.h"
-
 
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
@@ -31,10 +28,7 @@ namespace Ares {
 		aiProcess_GenNormals |              // Make sure we have legit normals
 		aiProcess_GenUVCoords |             // Convert UVs if required 
 		aiProcess_OptimizeMeshes |          // Batch draws where possible
-		aiProcess_ValidateDataStructure //|	// Validation
-
-		/*aiProcess_RemoveRedundantMaterials |
-		aiProcess_JoinIdenticalVertices*/
+		aiProcess_ValidateDataStructure		// Validation
 	;    
 	
 
@@ -122,7 +116,7 @@ namespace Ares {
 		};
 
 
-		const uint32_t numVertices = 36;
+		const uint32_t numVertices = 24;
 
 		m_Vertices.reserve(numVertices);
 
@@ -135,10 +129,7 @@ namespace Ares {
 			m_Vertices.push_back(vertex);
 		}
 
-
-		m_Indices = 
-		//uint32_t tris[] = 
-		{
+		m_Indices = {
 			3,  1,  0,		3,  2,  1,      // Bottom	
 			7,  5,  4,		7,  6,  5,      // Left
 			11, 9,  8,		11, 10, 9,      // Front
@@ -146,12 +137,6 @@ namespace Ares {
 			19, 17, 16,		19, 18, 17,	    // Right
 			23, 21, 20,		23, 22, 21,	    // Top
 		};
-		/*m_Indices.reserve(numVertices);
-		for (size_t i = 0; i < m_Indices.capacity(); i++)
-		{
-			m_Indices.push_back(tris[i]);
-		}*/
-
 	}
 
 	static void GetPlaneVertInfo(std::vector<Vertex>& m_Vertices, std::vector<uint32_t>& m_Indices)
@@ -187,72 +172,10 @@ namespace Ares {
 
 	Mesh::Mesh(PrimitiveType primitiveType)
 	{
-		//uint32_t numVertices = 0;
 		switch (primitiveType)
 		{
 		case PrimitiveType::Cube:
 			GetCubeVertInfo(m_StaticVertices, m_Indices);
-
-			//numVertices = 36;
-
-			//glm::vec3 points[] = {
-			//	glm::vec3(-.5f, -.5f,  .5f),
-			//	glm::vec3(.5f,  -.5f,  .5f),
-			//	glm::vec3(.5f,  -.5f, -.5f),
-			//	glm::vec3(-.5f, -.5f, -.5f),
-			//	glm::vec3(-.5f,  .5f,  .5f),
-			//	glm::vec3(.5f,   .5f,  .5f),
-			//	glm::vec3(.5f,   .5f, -.5f),
-			//	glm::vec3(-.5f,  .5f, -.5f)
-			//};
-
-			//glm::vec3 verts[] = {
-			//	points[0], points[1], points[2], points[3], // Bottom
-			//	points[7], points[4], points[0], points[3], // Left
-			//	points[4], points[5], points[1], points[0], // Front
-			//	points[6], points[7], points[3], points[2], // Back
-			//	points[5], points[6], points[2], points[1], // Right
-			//	points[7], points[6], points[5], points[4]  // Top
-			//};
-
-			//glm::vec3 up =		{  0,  1,  0 };
-			//glm::vec3 down =	{  0, -1,  0 };
-			//glm::vec3 forward = {  0,  0, -1 };
-			//glm::vec3 back =	{  0,  0,  1 };
-			//glm::vec3 left =	{ -1,  0,  0 };
-			//glm::vec3 right =	{  1,  0,  0 };
-
-			//glm::vec3 normals[] = {
-			//	down, down, down, down,             // Bottom
-			//	left, left, left, left,             // Left
-			//	forward, forward, forward, forward,	// Front
-			//	back, back, back, back,             // Back
-			//	right, right, right, right,         // Right
-			//	up, up, up, up	                    // Top
-			//};
-
-			//glm::vec2 uv00 = { 0, 0 };
-			//glm::vec2 uv10 = { 1, 0 };
-			//glm::vec2 uv01 = { 0, 1 };
-			//glm::vec2 uv11 = { 1, 1 };
-
-			//glm::vec2 uvs[] = {
-			//	uv01, uv11, uv10, uv00, // Bottom
-			//	uv01, uv11, uv10, uv00, // Left
-			//	uv01, uv11, uv10, uv00, // Front
-			//	uv01, uv11, uv10, uv00, // Back	        
-			//	uv01, uv11, uv10, uv00, // Right 
-			//	uv01, uv11, uv10, uv00  // Top
-			//};
-
-			//uint32_t tris[] = {
-			//	3,  1,  0,		3,  2,  1,      // Bottom	
-			//	7,  5,  4,		7,  6,  5,      // Left
-			//	11, 9,  8,		11, 10, 9,      // Front
-			//	15, 13, 12,		15, 14, 13,     // Back
-			//	19, 17, 16,		19, 18, 17,	    // Right
-			//	23, 21, 20,		23, 22, 21,	    // Top
-			//};
 			break;
 		case PrimitiveType::Plane:
 			GetPlaneVertInfo(m_StaticVertices, m_Indices);
@@ -262,28 +185,10 @@ namespace Ares {
 			break;
 		}
 
-		/*m_Vertices.reserve(numVertices);
-
-		for (size_t i = 0; i < m_Vertices.capacity(); i++)
-		{
-			Vertex vertex;
-			vertex.Position = verts[i];
-			vertex.Normal = normals[i];
-			vertex.Texcoord = uvs[i];
-			m_Vertices.push_back(vertex);
-		}*/
-
 		m_VertexArray = VertexArray::Create();
 
-		// VERTEX BUFFER =============================================================================
-		//Ref<VertexBuffer> vertBuffer 
-		//m_VertexBuffer = VertexBuffer::Create(m_Vertices.size() * sizeof(Vertex));
-		//m_VertexBuffer->SetData(m_Vertices.data(), m_Vertices.size() * sizeof(Vertex));
-
-		m_VertexBuffer = VertexBuffer::Create(m_StaticVertices.data(), m_StaticVertices.size() * sizeof(Vertex));
-
-
-		m_VertexBuffer->SetLayout({
+		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(m_StaticVertices.data(), m_StaticVertices.size() * sizeof(Vertex));
+		vertexBuffer->SetLayout({
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float3, "a_Normal" },
 			{ ShaderDataType::Float3, "a_Tangent" },
@@ -291,19 +196,10 @@ namespace Ares {
 			{ ShaderDataType::Float2, "a_TexCoord" },
 		});
 
-		m_VertexArray->AddVertexBuffer(m_VertexBuffer);
+		m_VertexArray->AddVertexBuffer(vertexBuffer);
 
-		// Extract indices from model
-		/*m_Indices.reserve(numVertices);
-		for (size_t i = 0; i < m_Indices.capacity(); i++)
-		{
-			m_Indices.push_back(tris[i]);
-		}*/
-
-		//Ref<IndexBuffer> indexBuffer 
-		m_IndexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.capacity());
-		m_VertexArray->SetIndexBuffer(m_IndexBuffer);
-
+		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.capacity());
+		m_VertexArray->SetIndexBuffer(indexBuffer);
 
 		Submesh submesh;
 		submesh.BaseVertex = 0;
@@ -311,24 +207,18 @@ namespace Ares {
 		submesh.MaterialIndex = 0;
 		submesh.IndexCount = m_Indices.capacity();
 		m_Submeshes.push_back(submesh);
-
 	}
 
 
 	Mesh::Mesh(const std::string& filename)
 		: m_FilePath(filename)
 	{
-
-
 		LogStream::Initialize();
 
 		ARES_CORE_INFO("Loading mesh: {0}", filename.c_str());
 
-
 		m_Importer = std::make_unique<Assimp::Importer>();
-		//Assimp::Importer importer;
-
-
+		
 		const aiScene* scene = m_Importer->ReadFile(filename, s_MeshImportFlags);
 		if (!scene || !scene->HasMeshes())
 			ARES_CORE_ERROR("Failed to load mesh file: {0}", filename);
@@ -343,7 +233,6 @@ namespace Ares {
 		m_Submeshes.reserve(scene->mNumMeshes);
 		for (size_t m = 0; m < scene->mNumMeshes; m++)
 		{
-
 			aiMesh* mesh = scene->mMeshes[m];
 
 			Submesh submesh;
@@ -359,27 +248,6 @@ namespace Ares {
 			ARES_CORE_ASSERT(mesh->HasPositions(), "Meshes require positions.");
 			ARES_CORE_ASSERT(mesh->HasNormals(), "Meshes require normals.");
 
-			//m_Vertices.reserve(mesh->mNumVertices);
-
-			// Extract vertices from model
-			/*for (size_t i = 0; i < mesh->mNumVertices; i++)
-			{
-				Vertex vertex;
-				vertex.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
-				vertex.Normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
-
-				if (mesh->HasTangentsAndBitangents())
-				{
-					vertex.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
-					vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
-				}
-				if (mesh->HasTextureCoords(0))
-				{
-					vertex.Texcoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
-				}
-
-				m_Vertices.push_back(vertex);
-			}*/
 			if (m_IsAnimated)
 			{
 				for (size_t i = 0; i < mesh->mNumVertices; i++)
@@ -421,8 +289,6 @@ namespace Ares {
 				}
 			}
 
-			//m_Indices.reserve(mesh->mNumFaces * 3);
-
 			for (uint32_t i = 0; i < mesh->mNumFaces; i++)
 			{
 				bool rightIndicies = mesh->mFaces[i].mNumIndices == 3;
@@ -442,9 +308,6 @@ namespace Ares {
 		ARES_CORE_LOG("-----------------------------");
 		TraverseNodes(scene->mRootNode);
 		ARES_CORE_LOG("-----------------------------");
-
-
-
 
 		// Bones
 		if (m_IsAnimated)
@@ -487,19 +350,14 @@ namespace Ares {
 			}
 		}
 
-
 		m_VertexArray = VertexArray::Create();
 
-		// VERTEX BUFFER =============================================================================
-		//Ref<VertexBuffer> vertBuffer 
+		Ref<VertexBuffer> vertBuffer = nullptr;
 		
-		/*m_VertexBuffer = VertexBuffer::Create(m_Vertices.size() * sizeof(Vertex));
-		m_VertexBuffer->SetData(m_Vertices.data(), m_Vertices.size() * sizeof(Vertex));*/
-
 		if (m_IsAnimated)
 		{
-			m_VertexBuffer = VertexBuffer::Create(m_AnimatedVertices.data(), m_AnimatedVertices.size() * sizeof(AnimatedVertex));
-			m_VertexBuffer->SetLayout({
+			vertBuffer = VertexBuffer::Create(m_AnimatedVertices.data(), m_AnimatedVertices.size() * sizeof(AnimatedVertex));
+			vertBuffer->SetLayout({
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float3, "a_Normal" },
 				{ ShaderDataType::Float3, "a_Tangent" },
@@ -511,8 +369,8 @@ namespace Ares {
 		}
 		else
 		{
-			m_VertexBuffer = VertexBuffer::Create(m_StaticVertices.data(), m_StaticVertices.size() * sizeof(Vertex));
-			m_VertexBuffer->SetLayout({
+			vertBuffer = VertexBuffer::Create(m_StaticVertices.data(), m_StaticVertices.size() * sizeof(Vertex));
+			vertBuffer->SetLayout({
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float3, "a_Normal" },
 				{ ShaderDataType::Float3, "a_Tangent" },
@@ -521,30 +379,10 @@ namespace Ares {
 			});
 		}
 
-
-		m_VertexArray->AddVertexBuffer(m_VertexBuffer);
-
-		// Extract indices from model
-		/*m_Indices.reserve(mesh->mNumFaces * 3);
-
-		for (uint32_t i = 0; i < mesh->mNumFaces; i++)
-		{
-			bool rightIndicies = mesh->mFaces[i].mNumIndices == 3;
-			if (!rightIndicies)
-			{
-				ARES_CORE_ERROR("Need 3 Indicies per face, found: {0}", mesh->mFaces[i].mNumIndices);
-				ARES_CORE_ASSERT(false, "Must have 3 indices.");
-			}
-
-			m_Indices.push_back(mesh->mFaces[i].mIndices[0] );
-			m_Indices.push_back(mesh->mFaces[i].mIndices[1] );
-			m_Indices.push_back(mesh->mFaces[i].mIndices[2] );
-		}*/
-
-			
-		//Ref<IndexBuffer> indexBuffer 
-		m_IndexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.capacity());
-		m_VertexArray->SetIndexBuffer(m_IndexBuffer);
+		m_VertexArray->AddVertexBuffer(vertBuffer);
+	
+		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.capacity());
+		m_VertexArray->SetIndexBuffer(indexBuffer);
 
 		m_Scene = scene;
 	}
@@ -573,42 +411,30 @@ namespace Ares {
 	}
 
 
-	uint32_t Mesh::FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim)
+	static uint32_t FindKey(float animTime, const aiVectorKey* keys, const unsigned int& numKeys)
 	{
-		for (uint32_t i = 0; i < pNodeAnim->mNumPositionKeys - 1; i++)
-		{
-			if (AnimationTime < (float)pNodeAnim->mPositionKeys[i + 1].mTime)
+		ARES_CORE_ASSERT(numKeys > 0, "");
+		for (uint32_t i = 0; i < numKeys - 1; i++)
+			if (animTime < (float)keys[i + 1].mTime)
 				return i;
-		}
-
 		return 0;
 	}
 
 
+	uint32_t Mesh::FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim)
+	{
+		return FindKey(AnimationTime, pNodeAnim->mPositionKeys, pNodeAnim->mNumPositionKeys);
+	}
+	uint32_t Mesh::FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim)
+	{
+		return FindKey(AnimationTime, pNodeAnim->mScalingKeys, pNodeAnim->mNumScalingKeys);
+	}
 	uint32_t Mesh::FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim)
 	{
 		ARES_CORE_ASSERT(pNodeAnim->mNumRotationKeys > 0, "");
-
 		for (uint32_t i = 0; i < pNodeAnim->mNumRotationKeys - 1; i++)
-		{
 			if (AnimationTime < (float)pNodeAnim->mRotationKeys[i + 1].mTime)
 				return i;
-		}
-
-		return 0;
-	}
-
-
-	uint32_t Mesh::FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		ARES_CORE_ASSERT(pNodeAnim->mNumScalingKeys > 0, "");
-
-		for (uint32_t i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++)
-		{
-			if (AnimationTime < (float)pNodeAnim->mScalingKeys[i + 1].mTime)
-				return i;
-		}
-
 		return 0;
 	}
 
@@ -741,8 +567,6 @@ namespace Ares {
 	}
 
 	void Mesh::Render(Ref<Shader> shader, const glm::mat4& transform)
-	//void Mesh::Render(Ref<MaterialInstance> materialInstance, const glm::mat4& transform)
-
 	{
 
 		if (m_IsAnimated)
@@ -760,49 +584,19 @@ namespace Ares {
 			BoneTransform(m_AnimationTime);
 		}
 
-
 		m_VertexArray->Bind();
-		/*m_VertexBuffer->Bind();
-		m_IndexBuffer->Bind();*/
-
-
-
+		
 		Renderer::Submit([this, shader, transform]() {
 			for (Submesh& submesh : this->m_Submeshes)
 			{
 
-				/*glEnableVertexAttribArray(0);
-				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Position));
-
-				glEnableVertexAttribArray(1);
-				glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Normal));
-
-				glEnableVertexAttribArray(2);
-				glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Tangent));
-
-				glEnableVertexAttribArray(3);
-				glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Binormal));
-
-				glEnableVertexAttribArray(4);
-				glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Texcoord));
-
-				glEnableVertexAttribArray(5);
-				glVertexAttribIPointer(5, 4, GL_INT, sizeof(Vertex), (const void*)offsetof(Vertex, IDs));
-
-				glEnableVertexAttribArray(6);
-				glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Weights));*/
-
 				if (m_IsAnimated)
 				{
-
-					/*if (this->m_Scene->mAnimations)
-					{*/
-						for (size_t i = 0; i < this->m_BoneTransforms.size(); i++)
-						{
-							std::string uniformName = std::string("u_BoneTransforms[") + std::to_string(i) + std::string("]");
-							shader->SetMat4FromRenderThread(uniformName, this->m_BoneTransforms[i]);
-						}
-					//}
+					for (size_t i = 0; i < this->m_BoneTransforms.size(); i++)
+					{
+						std::string uniformName = std::string("u_BoneTransforms[") + std::to_string(i) + std::string("]");
+						shader->SetMat4FromRenderThread(uniformName, this->m_BoneTransforms[i]);
+					}
 				}
 
 				if (shader)
@@ -813,8 +607,6 @@ namespace Ares {
 				glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
 			}
 		});
-		
-		//Renderer::DrawIndexed(m_VertexArray->GetIndexBuffer()->GetCount());
 	}
 
 	void Mesh::OnImGuiRender()

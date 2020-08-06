@@ -23,7 +23,7 @@ void main()
 {
 	vs_Output.WorldPosition = vec3(u_ModelMatrix * vec4(a_Position, 1.0));
 	vs_Output.Normal = a_Normal;
-	vs_Output.TexCoord = vec2(a_TexCoord.x, 1.0 - a_TexCoord.y);
+	vs_Output.TexCoord = vec2(a_TexCoord.x, a_TexCoord.y);
 	vs_Output.WorldNormals = mat3(u_ModelMatrix) * mat3(a_Tangent, a_Binormal, a_Normal);
 	vs_Output.Binormal = a_Binormal;
 

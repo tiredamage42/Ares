@@ -6,8 +6,6 @@
 
 #include "Ares/Renderer/VertexArray.h"
 #include "Ares/Renderer/Shader.h"
-//#include "Ares/Renderer/Material.h"
-
 
 struct aiNode;
 struct aiAnimation;
@@ -102,16 +100,12 @@ namespace Ares {
 		uint32_t BaseIndex;
 		uint32_t MaterialIndex;
 		uint32_t IndexCount;
-
 		glm::mat4 Transform;
 	};
 
 	class Mesh
 	{
 	public:
-
-	
-
 		Mesh(const std::string& filename);
 		Mesh(PrimitiveType primitiveType);
 		~Mesh();
@@ -119,15 +113,13 @@ namespace Ares {
 		inline const bool IsAnimated() const { return m_IsAnimated; }
 
 		void Render(Ref<Shader> shader, const glm::mat4& transform = glm::mat4(1.0f));
-		//void Render(Ref<MaterialInstance> materialInstance, const glm::mat4& transform = glm::mat4(1.0f));
-
+		
 		void OnImGuiRender();
 		void DumpVertexBuffer();
 
-
 		inline const std::string& GetFilePath() const { return m_FilePath; }
-	private:
 
+	private:
 		void BoneTransform(float time);
 		void ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const glm::mat4& ParentTransform);
 		void TraverseNodes(aiNode* node, int level = 0);
@@ -140,10 +132,7 @@ namespace Ares {
 		glm::quat InterpolateRotation(float animationTime, const aiNodeAnim* nodeAnim);
 		glm::vec3 InterpolateScale(float animationTime, const aiNodeAnim* nodeAnim);
 
-
-
 		std::vector<Submesh> m_Submeshes;
-
 		std::unique_ptr<Assimp::Importer> m_Importer;
 
 		glm::mat4 m_InverseTransform;
@@ -162,19 +151,11 @@ namespace Ares {
 		float m_TimeMultiplier = 1.0f;
 		bool m_AnimationPlaying = true;
 
-
-
-		//std::vector<Vertex> m_Vertices;
 		std::vector<Vertex> m_StaticVertices;
 		std::vector<AnimatedVertex> m_AnimatedVertices;
 		std::vector<uint32_t> m_Indices;
 
-
-
 		Ref<VertexArray> m_VertexArray;
-		Ref<VertexBuffer> m_VertexBuffer;
-		Ref<IndexBuffer> m_IndexBuffer;
-
 
 		std::string m_FilePath;
 	};
