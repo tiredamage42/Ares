@@ -222,6 +222,11 @@ project "Phobos"
     -- {
     --     '{COPY} "../Ares/vendor/assimp/win64/assimp.dll" "%{cfg.targetdir}"',
     -- }
+    postbuildcommands 
+	{
+		'{COPY} "../Phobos/Assets" "%{cfg.targetdir}/Assets"'
+	}
+	
 
 
     filter "system:windows"
