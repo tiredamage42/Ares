@@ -120,12 +120,28 @@ namespace Ares
         
         m_BRDFLUT = Texture2D::Create("Assets/Textures/BRDF_LUT.tga");
 
-        FrameBufferSpecs fbSpec;
-        fbSpec.Width = 1280;
-        fbSpec.Height = 720;
+        {
+            FrameBufferSpecs fbSpec;
+            fbSpec.Width = 1280;
+            fbSpec.Height = 720;
+            fbSpec.Format = FramebufferFormat::RGBA16F;
+            fbSpec.ClearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
 
-        m_FrameBuffer = FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA16F);
-        m_FinalPresentBuffer = FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA8);
+            RenderPassSpecs rpSpecs;
+            rpSpecs.TargetFrameBuffer = FrameBuffer::Create(fbSpec);
+            m_GeoPass = CreateRef<RenderPass>(rpSpecs);
+        }
+        {
+            FrameBufferSpecs fbSpec;
+            fbSpec.Width = 1280;
+            fbSpec.Height = 720;
+            fbSpec.Format = FramebufferFormat::RGBA8;
+            fbSpec.ClearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
+
+            RenderPassSpecs rpSpecs;
+            rpSpecs.TargetFrameBuffer = FrameBuffer::Create(fbSpec);
+            m_CompositePass = CreateRef<RenderPass>(rpSpecs);
+        }
 
         // set up pbr materials for demo
         m_PBRMaterialStatic = CreateRef<Material>(m_PBRShaderStatic);
@@ -259,7 +275,9 @@ namespace Ares
 
         auto viewProjection = m_Camera.GetProjectionMatrix() * m_Camera.GetViewMatrix();
 
-        m_FrameBuffer->Bind();
+        //m_FrameBuffer->Bind();
+        Renderer::BeginRenderPass(m_GeoPass);
+
 
         Renderer::Clear(1, 0, 1, 1);
 
@@ -308,21 +326,26 @@ namespace Ares
         m_PlaneMesh->Render(nullptr);
 
 
-        m_FrameBuffer->Unbind();
+        /*m_FrameBuffer->Unbind();
+        m_FinalPresentBuffer->Bind();*/
 
-        m_FinalPresentBuffer->Bind();
+        Renderer::EndRenderPass();
+        Renderer::BeginRenderPass(m_CompositePass);
+
         
         m_HDRShader->Bind();
         m_HDRShader->SetFloat("u_Exposure", m_Exposure);
         m_HDRShader->SetInt("u_Texture", 0);
         
         // bind original frame buffer as textur 0
-        m_FrameBuffer->BindTexture();
+        //m_FrameBuffer->BindAsTexture();
+        m_GeoPass->GetSpecs().TargetFrameBuffer->BindAsTexture();
         
         m_FullScreenQuadVAO->Bind();
         Renderer::DrawIndexed(m_FullScreenQuadVAO->GetIndexBuffer()->GetCount(), false);
 
-        m_FinalPresentBuffer->Unbind();
+        //m_FinalPresentBuffer->Unbind();
+        Renderer::EndRenderPass();
     }
 #endif
 
@@ -711,12 +734,19 @@ namespace Ares
         ImGui::Image((void*)m_FrameBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
 #else
 
-        m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
-        m_FinalPresentBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+
+
+        m_GeoPass->GetSpecs().TargetFrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        m_CompositePass->GetSpecs().TargetFrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        
+        /*m_FrameBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        m_FinalPresentBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);*/
+        
         m_Camera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
         m_Camera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
 
-        ImGui::Image((void*)m_FinalPresentBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
+        //ImGui::Image((void*)m_FinalPresentBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
+        ImGui::Image((void*)m_CompositePass->GetSpecs().TargetFrameBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
 #endif
 
         // Gizmos

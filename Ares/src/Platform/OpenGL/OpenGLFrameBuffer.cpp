@@ -8,8 +8,8 @@ namespace Ares
 {
 	static const uint32_t s_MaxFrameBufferSize = 8192;
 
-	OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferSpecs& specs, FramebufferFormat format)
-		: m_Specs(specs), m_Format(format)
+	OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferSpecs& specs)
+		: m_Specs(specs)
 	{
 		Resize(specs.Width, specs.Height, true);
 	}
@@ -40,7 +40,7 @@ namespace Ares
 		});
 	}
 
-	void OpenGLFrameBuffer::BindTexture(uint32_t slot) const
+	void OpenGLFrameBuffer::BindAsTexture(uint32_t slot) const
 	{
 		Renderer::Submit([this, slot]() {
 			glActiveTexture(GL_TEXTURE0 + slot);
@@ -78,11 +78,11 @@ namespace Ares
 			glBindTexture(GL_TEXTURE_2D, this->m_ColorAttachment);
 
 			// TODO: Create texture object based on format here
-			if (this->m_Format == FramebufferFormat::RGBA16F)
+			if (this->GetFormat() == FramebufferFormat::RGBA16F)
 			{
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, this->m_Specs.Width, this->m_Specs.Height, 0, GL_RGBA, GL_FLOAT, nullptr);
 			}
-			else if (this->m_Format == FramebufferFormat::RGBA8)
+			else if (this->GetFormat() == FramebufferFormat::RGBA8)
 			{
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->m_Specs.Width, this->m_Specs.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 			}

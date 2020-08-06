@@ -90,8 +90,10 @@ namespace Ares
 		};
 		RoughnessInput m_RoughnessInput;
 
-		Ref<FrameBuffer> m_FrameBuffer;
-		Ref<FrameBuffer> m_FinalPresentBuffer;
+		Ref<RenderPass> m_GeoPass, m_CompositePass;
+		/*Ref<FrameBuffer> m_FrameBuffer;
+		Ref<FrameBuffer> m_FinalPresentBuffer;*/
+
 
 		Ref<VertexArray> m_FullScreenQuadVAO;
 		

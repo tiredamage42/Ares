@@ -5,6 +5,9 @@
 #include "Ares/Renderer/Shader.h"
 #include "Ares/Renderer/RenderCommandQueue.h"
 
+#include "Ares/Renderer/RenderPass.h"
+#include "Ares/Renderer/Mesh.h"
+
 namespace Ares {
 
 	class Renderer
@@ -36,6 +39,13 @@ namespace Ares {
 		static void WaitAndRender();
 		static void DrawIndexed(uint32_t count, bool depthTest = true);
 
+
+		// ~Actual~ Renderer here... TODO: remove confusion later
+		static void BeginRenderPass(const Ref<RenderPass>& renderPass);
+		static void EndRenderPass();
+		static void SubmitMesh(const Ref<Mesh>& mesh);
+
+
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 	private:
 		struct SceneData
@@ -43,8 +53,10 @@ namespace Ares {
 			glm::mat4 ViewProjectionMatrix;
 		};
 
-		static Scope <SceneData> s_SceneData;
+		static Scope<SceneData> s_SceneData;
 		static RenderCommandQueue s_CommandQueue;
+		static Ref<RenderPass> s_ActiveRenderPass;
+
 
 	};
 }

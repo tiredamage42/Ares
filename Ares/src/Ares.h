@@ -20,6 +20,7 @@
 
 // renderer ===============
 #include "Ares/Renderer/Renderer.h"
+#include "Ares/Renderer/RenderPass.h"
 #include "Ares/Renderer/FrameBuffer.h"
 #include "Ares/Renderer/Buffer.h"
 #include "Ares/Renderer/VertexArray.h"

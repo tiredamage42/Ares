@@ -6,6 +6,7 @@ namespace Ares {
 	Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
 	
 	RenderCommandQueue Renderer::s_CommandQueue;
+	Ref<RenderPass> Renderer::s_ActiveRenderPass;
 
 	void Renderer::Init()
 	{
@@ -25,6 +26,25 @@ namespace Ares {
 		Submit([=]() {
 			RenderCommand::DrawIndexed(count, depthTest);
 		});
+	}
+
+	void Renderer::BeginRenderPass(const Ref<RenderPass>& renderPass)
+	{
+		// TODO: Convert all of this into a render command buffer
+		s_ActiveRenderPass = renderPass;
+
+		renderPass->GetSpecs().TargetFrameBuffer->Bind();
+	}
+
+	void Renderer::EndRenderPass()
+	{
+		ARES_CORE_ASSERT(s_ActiveRenderPass, "No active render pass! Have you called Renderer::EndRenderPass twice?");
+		s_ActiveRenderPass->GetSpecs().TargetFrameBuffer->Unbind();
+		s_ActiveRenderPass = nullptr;
+	}
+
+	void Renderer::SubmitMesh(const Ref<Mesh>& mesh)
+	{
 	}
 
 	void Renderer::OnWindowResize(uint32_t width, uint32_t height)

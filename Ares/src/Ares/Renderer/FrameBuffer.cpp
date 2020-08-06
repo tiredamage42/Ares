@@ -6,7 +6,7 @@
 #include "Platform/OpenGL/OpenGLFrameBuffer.h"
 namespace Ares
 {
-	Ref<FrameBuffer> FrameBuffer::Create(const FrameBufferSpecs& specs, FramebufferFormat format)
+	Ref<FrameBuffer> FrameBuffer::Create(const FrameBufferSpecs& specs)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -16,7 +16,7 @@ namespace Ares
 			return nullptr;
 
 		case RendererAPI::API::OpenGL:
-			Ref<FrameBuffer> result = CreateRef<OpenGLFrameBuffer>(specs, format);
+			Ref<FrameBuffer> result = CreateRef<OpenGLFrameBuffer>(specs);
 			FramebufferPool::GetGlobal()->Add(result);
 			return result;
 
@@ -39,13 +39,13 @@ namespace Ares
 
 	}
 
-	//std::weak_ptr<FrameBuffer> FramebufferPool::AllocateBuffer()
-	//{
-	//	// m_Pool.push_back();
-	//	return std::weak_ptr<FrameBuffer>();
-	//}
+	std::weak_ptr<FrameBuffer> FramebufferPool::AllocateBuffer()
+	{
+		// m_Pool.push_back();
+		return std::weak_ptr<FrameBuffer>();
+	}
 
-	void FramebufferPool::Add(Ref<FrameBuffer> framebuffer)
+	void FramebufferPool::Add(std::weak_ptr<FrameBuffer> framebuffer)
 	{
 		m_Pool.push_back(framebuffer);
 	}
