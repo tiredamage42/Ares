@@ -20,10 +20,8 @@ namespace Ares
 	private:
 		OrthographicCameraController m_CameraController;
 		Ref<Texture2D> m_Texture, m_SpriteSheet;
-		//Ref<FrameBuffer> m_FrameBuffer;
-
+		
 		int m_GridScale = 16;
-		//float m_GridScale = 16.025f, 
 		float m_GridSize = 0.025f;
 		float m_MeshScale = 1.0f;
 		
@@ -44,16 +42,7 @@ namespace Ares
 		glm::vec4 m_SquareColor = { 1.0f, .5f, 0, 1 };
 		glm::ivec2 m_SpriteSheetCoord{ 0 }, m_SpriteSize{ 1 };
 
-
-
-		//Ref<Shader> m_PBRShader;
-		//Ref<Shader> m_SimplePBRShader, 
-		//Ref<Shader> m_PBRShaderStatic, m_PBRShaderAnim;
-
-			
-		//Ref<Shader> m_GridShader;
 		Ref<Material> m_GridMaterial;
-
 
 		Ref<Shader> m_QuadShader;
 		Ref<Shader> m_HDRShader;
@@ -101,9 +90,6 @@ namespace Ares
 
 		Ref<FrameBuffer> m_FrameBuffer;
 		Ref<FrameBuffer> m_FinalPresentBuffer;
-
-		/*Ref<VertexBuffer> m_VertexBuffer;
-		Ref<IndexBuffer> m_IndexBuffer;*/
 
 		Ref<VertexArray> m_QuadVertexArray;
 		
