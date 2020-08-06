@@ -13,7 +13,7 @@
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/LogStream.hpp>
 
-#include <glad/glad.h>
+//#include <glad/glad.h>
 
 #include "Ares/Renderer/Renderer.h"
 #include "Ares/Core/Time.h"
@@ -304,10 +304,10 @@ namespace Ares {
 			}
 		}
 
-		ARES_CORE_LOG("NODES:");
-		ARES_CORE_LOG("-----------------------------");
+		/*ARES_CORE_LOG("NODES:");
+		ARES_CORE_LOG("-----------------------------");*/
 		TraverseNodes(scene->mRootNode);
-		ARES_CORE_LOG("-----------------------------");
+		//ARES_CORE_LOG("-----------------------------");
 
 		// Bones
 		if (m_IsAnimated)
@@ -391,12 +391,12 @@ namespace Ares {
 	{
 	}
 
-	void Mesh::TraverseNodes(aiNode* node, int level)
+	void Mesh::TraverseNodes(aiNode* node)//, int level)
 	{
-		std::string levelText;
+		/*std::string levelText;
 		for (int i = 0; i < level; i++)
 			levelText += "-";
-		ARES_CORE_LOG("{0}Node name: {1}", levelText, std::string(node->mName.data));
+		ARES_CORE_LOG("{0}Node name: {1}", levelText, std::string(node->mName.data));*/
 		for (uint32_t i = 0; i < node->mNumMeshes; i++)
 		{
 			uint32_t mesh = node->mMeshes[i];
@@ -406,7 +406,7 @@ namespace Ares {
 		for (uint32_t i = 0; i < node->mNumChildren; i++)
 		{
 			aiNode* child = node->mChildren[i];
-			TraverseNodes(child, level + 1);
+			TraverseNodes(child);// , level + 1);
 		}
 	}
 
@@ -566,9 +566,8 @@ namespace Ares {
 			m_BoneTransforms[i] = m_BoneInfo[i].FinalTransformation;
 	}
 
-	void Mesh::Render(Ref<Shader> shader, const glm::mat4& transform)
+	void Mesh::OnUpdate()
 	{
-
 		if (m_IsAnimated)
 		{
 
@@ -584,30 +583,50 @@ namespace Ares {
 			BoneTransform(m_AnimationTime);
 		}
 
-		m_VertexArray->Bind();
-		
-		Renderer::Submit([this, shader, transform]() {
-			for (Submesh& submesh : this->m_Submeshes)
-			{
-
-				if (m_IsAnimated)
-				{
-					for (size_t i = 0; i < this->m_BoneTransforms.size(); i++)
-					{
-						std::string uniformName = std::string("u_BoneTransforms[") + std::to_string(i) + std::string("]");
-						shader->SetMat4FromRenderThread(uniformName, this->m_BoneTransforms[i]);
-					}
-				}
-
-				/*if (shader)
-				{
-					shader->SetMat4FromRenderThread("u_ModelMatrix", transform * submesh.Transform);
-				}*/
-
-				glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
-			}
-		});
 	}
+
+	//void Mesh::Render(Ref<Shader> shader, const glm::mat4& transform)
+	//{
+
+	//	if (m_IsAnimated)
+	//	{
+
+	//		if (m_AnimationPlaying)
+	//		{
+	//			m_WorldTime += Time::GetDeltaTime();
+
+	//			float ticksPerSecond = (float)(m_Scene->mAnimations[0]->mTicksPerSecond != 0 ? m_Scene->mAnimations[0]->mTicksPerSecond : 25.0f) * m_TimeMultiplier;
+	//			m_AnimationTime += Time::GetDeltaTime() * ticksPerSecond;
+	//			m_AnimationTime = fmod(m_AnimationTime, (float)m_Scene->mAnimations[0]->mDuration);
+	//		}
+
+	//		BoneTransform(m_AnimationTime);
+	//	}
+
+	//	m_VertexArray->Bind();
+	//	
+	//	Renderer::Submit([this, shader, transform]() {
+	//		for (Submesh& submesh : this->m_Submeshes)
+	//		{
+
+	//			if (m_IsAnimated)
+	//			{
+	//				for (size_t i = 0; i < this->m_BoneTransforms.size(); i++)
+	//				{
+	//					std::string uniformName = std::string("u_BoneTransforms[") + std::to_string(i) + std::string("]");
+	//					shader->SetMat4FromRenderThread(uniformName, this->m_BoneTransforms[i]);
+	//				}
+	//			}
+
+	//			/*if (shader)
+	//			{
+	//				shader->SetMat4FromRenderThread("u_ModelMatrix", transform * submesh.Transform);
+	//			}*/
+
+	//			glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
+	//		}
+	//	});
+	//}
 
 	void Mesh::OnImGuiRender()
 	{

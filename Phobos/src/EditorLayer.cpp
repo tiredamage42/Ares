@@ -275,11 +275,17 @@ namespace Ares
 
         auto viewProjection = m_Camera.GetProjectionMatrix() * m_Camera.GetViewMatrix();
 
+        if (m_Mesh)
+        {
+            m_Mesh->OnUpdate();
+        }
+
+
         //m_FrameBuffer->Bind();
         Renderer::BeginRenderPass(m_GeoPass);
+        //Renderer::Clear(1, 0, 1, 1);
 
 
-        Renderer::Clear(1, 0, 1, 1);
 
         // draw skybox
         m_SkyboxShader->Bind();
@@ -298,14 +304,18 @@ namespace Ares
             for (int i = 0; i < 8; i++)
             {
                 m_MetalSphereMaterialInstances[i]->Bind();
-                m_CubeMesh->Render(m_MetalSphereMaterialInstances[i]->GetShader());
+
+                Renderer::SubmitMesh(m_CubeMesh, glm::mat4(1.0f), m_MetalSphereMaterialInstances[i]->GetShader());
+                //m_CubeMesh->Render(m_MetalSphereMaterialInstances[i]->GetShader());
             }
 
             // Dielectrics
             for (int i = 0; i < 8; i++)
             {
                 m_DielectricSphereMaterialInstances[i]->Bind();
-                m_CubeMesh->Render(m_DielectricSphereMaterialInstances[i]->GetShader());
+                Renderer::SubmitMesh(m_CubeMesh, glm::mat4(1.0f), m_DielectricSphereMaterialInstances[i]->GetShader());
+                //m_CubeMesh->Render(m_DielectricSphereMaterialInstances[i]->GetShader());
+
             }
 
         }
@@ -315,7 +325,8 @@ namespace Ares
             {
                 Ref<Material> material = m_Mesh->IsAnimated() ? m_PBRMaterialAnim : m_PBRMaterialStatic;
                 material->Bind();
-                m_Mesh->Render(material->GetShader(), m_Transform);   
+                Renderer::SubmitMesh(m_Mesh, m_Transform, material->GetShader());
+                //m_Mesh->Render(material->GetShader(), m_Transform);   
             }
         }
 
@@ -323,7 +334,8 @@ namespace Ares
         m_GridMaterial->Set("u_Scale", (float)m_GridScale);
         m_GridMaterial->Set("u_Res", m_GridSize);
         m_GridMaterial->Bind();
-        m_PlaneMesh->Render(nullptr);
+        //m_PlaneMesh->Render(nullptr);
+        Renderer::SubmitMesh(m_Mesh, glm::mat4(1.0f), nullptr);
 
 
         /*m_FrameBuffer->Unbind();

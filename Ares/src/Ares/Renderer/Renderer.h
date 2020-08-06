@@ -7,6 +7,7 @@
 
 #include "Ares/Renderer/RenderPass.h"
 #include "Ares/Renderer/Mesh.h"
+#include "Ares/Renderer/Material.h"
 
 namespace Ares {
 
@@ -43,7 +44,7 @@ namespace Ares {
 		// ~Actual~ Renderer here... TODO: remove confusion later
 		static void BeginRenderPass(const Ref<RenderPass>& renderPass);
 		static void EndRenderPass();
-		static void SubmitMesh(const Ref<Mesh>& mesh);
+		static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Shader>& overrideMaterial = nullptr);
 
 
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
