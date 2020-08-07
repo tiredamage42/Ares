@@ -34,7 +34,6 @@ namespace Ares {
 
 		static uint32_t GetBPP(TextureFormat format);
 		static int CalculateMipMapCount(int width, int height);
-
 	};
 
 	class Texture2D : public Texture

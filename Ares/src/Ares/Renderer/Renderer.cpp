@@ -62,14 +62,20 @@ namespace Ares {
 		Renderer2D::Shutdown();
 	}
 
-	void Renderer::DrawIndexed(uint32_t count, bool depthTest)
+	void Renderer::DrawIndexed(uint32_t count, PrimitiveType type, bool depthTest)
 	{
 		Submit([=]() {
-			RenderCommand::DrawIndexed(count, depthTest);
+			RenderCommand::DrawIndexed(count, type, depthTest);
+		});
+	}
+	void Renderer::SetLineThickness(float thickness)
+	{
+		Renderer::Submit([=]() {
+			RenderCommand::SetLineThickness(thickness);
 		});
 	}
 
-	void Renderer::BeginRenderPass(const Ref<RenderPass>& renderPass)
+	void Renderer::BeginRenderPass(const Ref<RenderPass>& renderPass, bool clear)
 	{
 		ARES_CORE_ASSERT(renderPass, "Render pass cannot be null!");
 
@@ -77,10 +83,13 @@ namespace Ares {
 		s_Data.m_ActiveRenderPass = renderPass;
 		renderPass->GetSpecs().TargetFrameBuffer->Bind();
 
-		const glm::vec4& clearColor = renderPass->GetSpecs().TargetFrameBuffer->GetSpecs().ClearColor;
-		Renderer::Submit([=]() {
-			RenderCommand::Clear(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-		});
+		if (clear)
+		{
+			const glm::vec4& clearColor = renderPass->GetSpecs().TargetFrameBuffer->GetSpecs().ClearColor;
+			Renderer::Submit([=]() {
+				RenderCommand::Clear(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+			});
+		}
 	}
 
 	void Renderer::EndRenderPass()
@@ -102,7 +111,7 @@ namespace Ares {
 		}
 
 		s_Data.m_FullscreenQuadVertexArray->Bind();
-		Renderer::DrawIndexed(6, depthTest);
+		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
 	}
 
 	void Renderer::SubmitFullscreenQuad(const Ref<MaterialInstance>& material)
@@ -115,7 +124,7 @@ namespace Ares {
 		}
 
 		s_Data.m_FullscreenQuadVertexArray->Bind();
-		Renderer::DrawIndexed(6, depthTest);
+		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
 	}
 	void Renderer::SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform)
 	{
@@ -184,5 +193,37 @@ namespace Ares {
 	{
 
 		s_Data.m_CommandQueue.Execute();
+	}
+
+	void Renderer::DrawAABB(const Ref<Mesh>& mesh, const glm::vec4& color)
+	{
+		for (Submesh& submesh : mesh->m_Submeshes)
+		{
+			const auto& transform = submesh.Transform;
+			glm::vec4 min = { submesh.Min.x, submesh.Min.y, submesh.Min.z, 1.0f };
+			glm::vec4 max = { submesh.Max.x, submesh.Max.y, submesh.Max.z, 1.0f };
+
+			glm::vec4 corners[8] =
+			{
+				transform * glm::vec4 { submesh.Min.x, submesh.Min.y, submesh.Max.z, 1.0f },
+				transform * glm::vec4 { submesh.Min.x, submesh.Max.y, submesh.Max.z, 1.0f },
+				transform * glm::vec4 { submesh.Max.x, submesh.Max.y, submesh.Max.z, 1.0f },
+				transform * glm::vec4 { submesh.Max.x, submesh.Min.y, submesh.Max.z, 1.0f },
+
+				transform * glm::vec4 { submesh.Min.x, submesh.Min.y, submesh.Min.z, 1.0f },
+				transform * glm::vec4 { submesh.Min.x, submesh.Max.y, submesh.Min.z, 1.0f },
+				transform * glm::vec4 { submesh.Max.x, submesh.Max.y, submesh.Min.z, 1.0f },
+				transform * glm::vec4 { submesh.Max.x, submesh.Min.y, submesh.Min.z, 1.0f }
+			};
+
+			for (uint32_t i = 0; i < 4; i++)
+				Renderer2D::DrawLine(corners[i], corners[(i + 1) % 4], color);
+
+			for (uint32_t i = 0; i < 4; i++)
+				Renderer2D::DrawLine(corners[i + 4], corners[((i + 1) % 4) + 4], color);
+
+			for (uint32_t i = 0; i < 4; i++)
+				Renderer2D::DrawLine(corners[i], corners[i + 4], color);
+		}
 	}
 }

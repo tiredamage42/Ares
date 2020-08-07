@@ -18,7 +18,7 @@ namespace Assimp {
 
 namespace Ares {
 
-	enum class PrimitiveType
+	enum class PrimitiveMeshType
 	{
 		Plane, Cube
 	};
@@ -101,13 +101,14 @@ namespace Ares {
 		uint32_t MaterialIndex;
 		uint32_t IndexCount;
 		glm::mat4 Transform{ 1.0f };
+		glm::vec3 Min, Max; // TODO: AABB
 	};
 
 	class Mesh
 	{
 	public:
 		Mesh(const std::string& filename);
-		Mesh(PrimitiveType primitiveType);
+		Mesh(PrimitiveMeshType primitiveType);
 		~Mesh();
 
 		inline const bool IsAnimated() const { return m_IsAnimated; }

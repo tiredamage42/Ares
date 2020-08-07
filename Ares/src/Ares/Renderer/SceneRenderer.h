@@ -3,6 +3,11 @@
 #include "RenderPass.h"
 
 namespace Ares {
+	struct SceneRendererOptions
+	{
+		bool ShowGrid = true;
+		bool ShowBoundingBoxes = false;
+	};
 
 	class SceneRenderer
 	{
@@ -19,9 +24,12 @@ namespace Ares {
 		static std::pair<Ref<TextureCube>, Ref<TextureCube>> CreateEnvironmentMap(const std::string& filepath);
 
 		//static Ref<Texture2D> GetFinalColorBuffer();
+		static Ref<RenderPass> GetFinalRenderPass();
 
 		// TODO: Temp
 		static uint32_t GetFinalColorBufferRendererID();
+
+		static SceneRendererOptions& GetOptions();
 	private:
 		static void FlushDrawList();
 		static void GeometryPass();

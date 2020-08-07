@@ -11,7 +11,8 @@ namespace Ares {
 		static void Shutdown();
 
 		//static void BeginScene(const OrthographicCamera& camera);
-		static void BeginScene(const glm::mat4& projection, const glm::mat4& transform);
+		//static void BeginScene(const glm::mat4& projection, const glm::mat4& transform);
+		static void BeginScene(const glm::mat4& viewProj, bool depthTest = true);
 
 		
 		static void EndScene();
@@ -35,10 +36,15 @@ namespace Ares {
 			const glm::vec4& color = glm::vec4(1.0f)
 		);
 
+		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color = glm::vec4(1.0f));
+
+
 		struct Statistics
 		{
 			uint32_t DrawCalls = 0;
 			uint32_t QuadCount = 0;
+			uint32_t LineCount = 0;
+
 			uint32_t GetTotalVertexCount() { return QuadCount * 4; }
 			uint32_t GetTotalIndexCount() { return QuadCount * 6; }
 		};
@@ -52,5 +58,6 @@ namespace Ares {
 		inline static uint32_t s_MaxQuadsPerDraw = 10000;
 
 		static void FlushAndReset();
+		static void FlushAndResetLines();
 	};
 }

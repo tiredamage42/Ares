@@ -25,10 +25,17 @@ namespace Ares {
 		{
 			s_RendererAPI->Clear(r, g, b, a);
 		}
-		inline static void DrawIndexed(uint32_t indexCount, bool depthTest)
+		inline static void DrawIndexed(uint32_t indexCount, PrimitiveType type, bool depthTest)
 		{
-			s_RendererAPI->DrawIndexed(indexCount, depthTest);
+			s_RendererAPI->DrawIndexed(indexCount, type, depthTest);
 		}
+		inline static void SetLineThickness(float thickness)
+		{
+			s_RendererAPI->SetLineThickness(thickness);
+		}
+
+
+
 	private:
 		static Scope<RendererAPI> s_RendererAPI;
 	};

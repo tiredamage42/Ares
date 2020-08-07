@@ -5,6 +5,11 @@
 
 namespace Ares {
 
+	// TODO: move into separate header
+	enum class PrimitiveType
+	{
+		None = 0, Triangles, Lines
+	};
 
 	struct RenderAPICapabilities
 	{
@@ -35,7 +40,8 @@ namespace Ares {
 
 		virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 
-		virtual void DrawIndexed(uint32_t indexCount, bool depthTest) = 0;
+		virtual void DrawIndexed(uint32_t indexCount, PrimitiveType type, bool depthTest) = 0;
+		virtual void SetLineThickness(float thickness) = 0;
 
 		static RenderAPICapabilities& GetCapabilities()
 		{

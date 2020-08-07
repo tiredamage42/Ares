@@ -33,6 +33,8 @@ namespace Ares
 		}
 
 
+		void OnEvent(Event& e);
+
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity EntityConstructor(const entt::entity& enttEntity);
 

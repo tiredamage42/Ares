@@ -1,5 +1,7 @@
 #pragma once
 
+
+#include "Ares/Events/MouseEvent.h"
 #include <glm/glm.hpp>
 
 namespace Ares {
@@ -44,24 +46,28 @@ namespace Ares {
 
 
 		inline void SetProjectionMatrix(const glm::mat4& projectionMatrix) { m_ProjectionMatrix = projectionMatrix; }
-		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 		
 		
 		inline void SetViewportSize(uint32_t width, uint32_t height) { m_ViewportWidth = width; m_ViewportHeight = height; }
 
 		void Focus();
 		void Update();
+		void OnEvent(Event& e);
+
 
 		inline float GetDistance() const { return m_Distance; }
 		inline void SetDistance(float distance) { m_Distance = distance; }
 
+		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
+		const glm::mat4& GetViewProjection() const { return m_ProjectionMatrix * m_ViewMatrix; }
 
 		glm::vec3 GetUpDirection();
 		glm::vec3 GetRightDirection();
 		glm::vec3 GetForwardDirection();
 		const glm::vec3& GetPosition() const { return m_Position; }
 	private:
+		bool OnMouseScroll(MouseScrolledEvent& e);
 
 		std::pair<float, float> PanSpeed() const;
 		float RotationSpeed() const;

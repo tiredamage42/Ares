@@ -18,6 +18,7 @@ namespace Ares
 		virtual void OnImGuiDraw() override;
 		virtual void OnEvent(Event& e) override;
 		bool OnKeyPressedEvent(KeyPressedEvent& e);
+		void ShowBoundingBoxes(bool show, bool onTop = false);
 
 	private:
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
@@ -137,6 +138,12 @@ namespace Ares
 
 		int m_GizmoType = -1; // -1 = no gizmo
 		//glm::mat4 m_Transform;
+
+		bool m_AllowViewportCameraEvents = false;
+		bool m_DrawOnTopBoundingBoxes = false;
+
+		bool m_UIShowBoundingBoxes = false;
+		bool m_UIShowBoundingBoxesOnTop = false;
 
 	private:
 		void SetPBRMaterialValues(Ref<Material> material) const;//, const glm::mat4& viewProjection) const;

@@ -115,6 +115,21 @@ namespace Ares {
 		m_ViewMatrix = glm::inverse(m_ViewMatrix);
 	}
 
+	void Camera::OnEvent(Event& e)
+	{
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<MouseScrolledEvent>(ARES_BIND_EVENT_FN(Camera::OnMouseScroll));
+	}
+
+	bool Camera::OnMouseScroll(MouseScrolledEvent& e)
+	{
+
+		float delta = e.GetYOffset() * 0.1f;
+		MouseZoom(delta);
+		return false;
+	}
+
+
 	void Camera::MousePan(const glm::vec2& delta)
 	{
 

@@ -38,11 +38,13 @@ namespace Ares {
 
 		static void Clear(float r, float g, float b, float a);
 		static void WaitAndRender();
-		static void DrawIndexed(uint32_t count, bool depthTest = true);
+		static void DrawIndexed(uint32_t count, PrimitiveType type, bool depthTest = true);
+		// For OpenGL
+		static void SetLineThickness(float thickness);
 
 
 		// ~Actual~ Renderer here... TODO: remove confusion later
-		static void BeginRenderPass(const Ref<RenderPass>& renderPass);
+		static void BeginRenderPass(const Ref<RenderPass>& renderPass, bool clear = true);
 		static void EndRenderPass();
 
 
@@ -51,7 +53,8 @@ namespace Ares {
 		static void SubmitFullscreenQuad(const Ref<MaterialInstance>& material);
 		static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform);
 		//static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Shader>& overrideMaterial = nullptr);
-		
+		static void DrawAABB(const Ref<Mesh>& mesh, const glm::vec4& color = glm::vec4(1.0f));
+
 		static RenderCommandQueue& GetRenderCommandQueue();
 
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }

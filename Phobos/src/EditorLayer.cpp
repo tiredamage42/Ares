@@ -181,7 +181,7 @@ namespace Ares
             
             m_SpheresScene->SetEnvironment(environment);
 
-            auto sphereMesh = CreateRef<Mesh>(PrimitiveType::Cube);
+            auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Cube);
             m_SphereBaseMaterial = sphereMesh->GetMaterial();
 
             float x = -8.0f;
@@ -425,9 +425,38 @@ namespace Ares
         ////m_FinalPresentBuffer->Unbind();
         //Renderer::EndRenderPass();
 
+        if (m_AllowViewportCameraEvents)
+            m_ActiveScene->GetCamera().Update();
+
         m_ActiveScene->OnUpdate();
+
+        if (m_DrawOnTopBoundingBoxes)
+        {
+            Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
+            auto viewProj = m_ActiveScene->GetCamera().GetViewProjection();
+            Renderer2D::BeginScene(viewProj, false);
+            // Renderer2D::DrawQuad({ 0, 0, 0 }, { 4.0f, 5.0f }, { 1.0f, 1.0f, 0.5f, 1.0f });
+            
+            auto mesh = m_MeshEntity.GetComponent<MeshRendererComponent>().Mesh;
+            if (mesh)
+            {
+                Renderer::DrawAABB(mesh);
+            }
+            
+            
+            Renderer2D::EndScene();
+            Renderer::EndRenderPass();
+        }
     }
+
+    void EditorLayer::ShowBoundingBoxes(bool show, bool onTop)
+    {
+        SceneRenderer::GetOptions().ShowBoundingBoxes = show && !onTop;
+        m_DrawOnTopBoundingBoxes = show && onTop;
+    }
+
 #endif
+
 
     void EditorLayer::OnImGuiDraw()
     {
@@ -633,6 +662,11 @@ namespace Ares
 
         EditorGUI::Toggle("Radiance Prefiltering", m_RadiancePrefilter);
         EditorGUI::FloatSlider("Env Map Rotation", m_EnvMapRotation, -360.0f, 360.0f);
+
+        if (EditorGUI::Toggle("Show Bounding Boxes", m_UIShowBoundingBoxes))
+            ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
+        if (m_UIShowBoundingBoxes && EditorGUI::Toggle("On Top", m_UIShowBoundingBoxesOnTop))
+            ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
 
         //EditorGUI::Color4("Test Color", testColor);
 
@@ -853,6 +887,14 @@ namespace Ares
 
         //ImGui::Image((void*)m_FinalPresentBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
         //ImGui::Image((void*)m_CompositePass->GetSpecs().TargetFrameBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
+
+
+        static int counter = 0;
+        auto windowSize = ImGui::GetWindowSize();
+        ImVec2 minBound = ImGui::GetWindowPos();
+        ImVec2 maxBound = { minBound.x + windowSize.x, minBound.y + windowSize.y };
+        m_AllowViewportCameraEvents = ImGui::IsMouseHoveringRect(minBound, maxBound);
+
 #endif
 
         // Gizmos
@@ -890,6 +932,9 @@ namespace Ares
     {
         m_CameraController.OnEvent(e);
 
+        if (m_AllowViewportCameraEvents)
+            m_ActiveScene->GetCamera().OnEvent(e);
+
         EventDispatcher dispatcher(e);
         dispatcher.Dispatch<KeyPressedEvent>(ARES_BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
     }
@@ -908,6 +953,20 @@ namespace Ares
             break;
         case ARES_KEY_R:
             m_GizmoType = ImGuizmo::OPERATION::SCALE;
+            break;
+
+        case ARES_KEY_G:
+            // Toggle grid
+            if (Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL))
+                SceneRenderer::GetOptions().ShowGrid = !SceneRenderer::GetOptions().ShowGrid;
+            break;
+        case ARES_KEY_B:
+            // Toggle bounding boxes 
+            if (Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL))
+            {
+                m_UIShowBoundingBoxes = !m_UIShowBoundingBoxes;
+                ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
+            }
             break;
         }
         return false;

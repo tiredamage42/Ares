@@ -4,7 +4,7 @@
 #include "Renderer.h"
 #include "Ares/Core/Entity.h"
 #include "Ares/Core/Components.h"
-
+#include "Ares/Renderer/Renderer2D.h"
 #include <glad/glad.h>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -46,6 +46,8 @@ namespace Ares {
 
 		// Grid
 		Ref<MaterialInstance> GridMaterial;
+
+		SceneRendererOptions Options;
 	};
 
 	static SceneRendererData s_Data;
@@ -219,7 +221,8 @@ namespace Ares {
 	{
 		Renderer::BeginRenderPass(s_Data.GeoPass);
 
-		auto viewProjection = s_Data.SceneData.SceneCamera.GetProjectionMatrix() * s_Data.SceneData.SceneCamera.GetViewMatrix();
+		//auto viewProjection = s_Data.SceneData.SceneCamera.GetProjectionMatrix() * s_Data.SceneData.SceneCamera.GetViewMatrix();
+		auto viewProjection = s_Data.SceneData.SceneCamera.GetViewProjection();
 
 		// Skybox
 		//auto skyboxShader = s_Data.SceneData.SkyboxMaterial->GetShader();
@@ -253,22 +256,32 @@ namespace Ares {
 		}
 
 		// Grid
+		if (GetOptions().ShowGrid)
+		{
 
 
-		//int m_GridScale = 8;
-		//float m_GridSize = 0.025f;
-		//float m_GridSize = 0.5f;
+			//int m_GridScale = 8;
+			//float m_GridSize = 0.025f;
+			//float m_GridSize = 0.5f;
 
-		s_Data.GridMaterial->Set("u_ViewProjection", viewProjection);
+			s_Data.GridMaterial->Set("u_ViewProjection", viewProjection);
 
 
-		//s_Data.GridMaterial->Set("u_MVP", viewProjection * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
+			//s_Data.GridMaterial->Set("u_MVP", viewProjection * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
 
-		// TODO: get scale from scene params
-		//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(16.0f)));
-		//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
-		Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(GRID_RESOLUTION * .5f + GRID_WIDTH * .5f)));
+			// TODO: get scale from scene params
+			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(16.0f)));
+			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
+			Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(GRID_RESOLUTION * .5f + GRID_WIDTH * .5f)));
+		}
 
+		if (GetOptions().ShowBoundingBoxes)
+		{
+			Renderer2D::BeginScene(viewProjection);
+			for (auto& dc : s_Data.DrawList)
+				Renderer::DrawAABB(dc.Mesh);
+			Renderer2D::EndScene();
+		}
 
 		Renderer::EndRenderPass();
 	}
@@ -285,11 +298,19 @@ namespace Ares {
 		Renderer::EndRenderPass();
 	}
 
-	
+	Ref<RenderPass> SceneRenderer::GetFinalRenderPass()
+	{
+		return s_Data.CompositePass;
+	}
+
 	
 	uint32_t SceneRenderer::GetFinalColorBufferRendererID()
 	{
 		return s_Data.CompositePass->GetSpecs().TargetFrameBuffer->GetColorAttachmentRendererID();
+	}
+	SceneRendererOptions& SceneRenderer::GetOptions()
+	{
+		return s_Data.Options;
 	}
 
 }

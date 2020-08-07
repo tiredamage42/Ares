@@ -26,88 +26,89 @@ namespace Ares
 	ImGui::PushItemWidth(-1); \
 	std::string id = "##" + name;
 
-#define END_FIELD() \
+#define END_FIELD(result) \
 	ImGui::PopItemWidth(); \
-	ImGui::NextColumn();
+	ImGui::NextColumn(); \
+	return result;
 
 
 
-	void EditorGUI::Toggle(const std::string& name, bool& value)
+	bool EditorGUI::Toggle(const std::string& name, bool& value)
 	{
 		START_FIELD(name)
-		ImGui::Checkbox(id.c_str(), &value);
-		END_FIELD()
+		bool result = ImGui::Checkbox(id.c_str(), &value);
+		END_FIELD(result)
 	}
-	void EditorGUI::Float(const std::string& name, float& value)
+	bool EditorGUI::Float(const std::string& name, float& value)
 	{
 		START_FIELD(name)
-		ImGui::DragFloat(id.c_str(), &value);
-		END_FIELD()
+		bool result = ImGui::DragFloat(id.c_str(), &value);
+		END_FIELD(result)
 	}
-	void EditorGUI::FloatSlider(const std::string& name, float& value, float min, float max)
+	bool EditorGUI::FloatSlider(const std::string& name, float& value, float min, float max)
 	{
 		START_FIELD(name)
-		ImGui::SliderFloat(id.c_str(), &value, min, max);
-		END_FIELD()
+		bool result = ImGui::SliderFloat(id.c_str(), &value, min, max);
+		END_FIELD(result)
 	}
-	void EditorGUI::Int(const std::string& name, int& value)
+	bool EditorGUI::Int(const std::string& name, int& value)
 	{
 		START_FIELD(name)
-		ImGui::DragInt(id.c_str(), &value);
-		END_FIELD()
+		bool result = ImGui::DragInt(id.c_str(), &value);
+		END_FIELD(result)
 	}
-	void EditorGUI::IntSlider(const std::string& name, int& value, int min, int max)
+	bool EditorGUI::IntSlider(const std::string& name, int& value, int min, int max)
 	{
 		START_FIELD(name)
-		ImGui::SliderInt(id.c_str(), &value, min, max);
-		END_FIELD()
+		bool result = ImGui::SliderInt(id.c_str(), &value, min, max);
+		END_FIELD(result)
 	}
-	void EditorGUI::Vec2(const std::string& name, glm::vec2& value)
+	bool EditorGUI::Vec2(const std::string& name, glm::vec2& value)
 	{
 		START_FIELD(name)
-		ImGui::DragFloat2(id.c_str(), glm::value_ptr(value));
-		END_FIELD()
+		bool result = ImGui::DragFloat2(id.c_str(), glm::value_ptr(value));
+		END_FIELD(result)
 	}
-	void EditorGUI::Vec2Slider(const std::string& name, glm::vec2& value, float min, float max)
+	bool EditorGUI::Vec2Slider(const std::string& name, glm::vec2& value, float min, float max)
 	{
 		START_FIELD(name)
-		ImGui::SliderFloat2(id.c_str(), glm::value_ptr(value), min, max);
-		END_FIELD()
+		bool result = ImGui::SliderFloat2(id.c_str(), glm::value_ptr(value), min, max);
+		END_FIELD(result)
 	}
-	void EditorGUI::Vec3(const std::string& name, glm::vec3& value)
+	bool EditorGUI::Vec3(const std::string& name, glm::vec3& value)
 	{
 		START_FIELD(name)
-		ImGui::DragFloat3(id.c_str(), glm::value_ptr(value));
-		END_FIELD()
+		bool result = ImGui::DragFloat3(id.c_str(), glm::value_ptr(value));
+		END_FIELD(result)
 	}
-	void EditorGUI::Vec3Slider(const std::string& name, glm::vec3& value, float min, float max)
+	bool EditorGUI::Vec3Slider(const std::string& name, glm::vec3& value, float min, float max)
 	{
 		START_FIELD(name)
-		ImGui::SliderFloat3(id.c_str(), glm::value_ptr(value), min, max);
-		END_FIELD()
+		bool result = ImGui::SliderFloat3(id.c_str(), glm::value_ptr(value), min, max);
+		END_FIELD(result)
 	}
-	void EditorGUI::Vec4(const std::string& name, glm::vec4& value)
+	bool EditorGUI::Vec4(const std::string& name, glm::vec4& value)
 	{
 		START_FIELD(name)
-		ImGui::DragFloat4(id.c_str(), glm::value_ptr(value));
-		END_FIELD()
+		bool result = ImGui::DragFloat4(id.c_str(), glm::value_ptr(value));
+		END_FIELD(result)
 	}
-	void EditorGUI::Vec4Slider(const std::string& name, glm::vec4& value, float min, float max)
+	bool EditorGUI::Vec4Slider(const std::string& name, glm::vec4& value, float min, float max)
 	{
 		START_FIELD(name)
-		ImGui::SliderFloat4(id.c_str(), glm::value_ptr(value), min, max);
-		END_FIELD()
+		bool result = ImGui::SliderFloat4(id.c_str(), glm::value_ptr(value), min, max);
+		END_FIELD(result)
 	}
-	void EditorGUI::Color3(const std::string& name, glm::vec3& value)
+	bool EditorGUI::Color3(const std::string& name, glm::vec3& value)
 	{
 		START_FIELD(name)
-		ImGui::ColorEdit3(id.c_str(), glm::value_ptr(value));// , ImGuiColorEditFlags_NoInputs);
-		END_FIELD()
+		bool result = ImGui::ColorEdit3(id.c_str(), glm::value_ptr(value));
+		END_FIELD(result)
 	}
-	void EditorGUI::Color4(const std::string& name, glm::vec4& value)
+	bool EditorGUI::Color4(const std::string& name, glm::vec4& value)
 	{
 		START_FIELD(name)
-		ImGui::ColorEdit4(id.c_str(), glm::value_ptr(value), ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
-		END_FIELD()
+		bool result = ImGui::ColorEdit4(id.c_str(), glm::value_ptr(value), ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
+		END_FIELD(result)
 	}
 }

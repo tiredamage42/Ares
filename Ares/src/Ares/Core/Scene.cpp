@@ -54,7 +54,7 @@ namespace Ares
         if (true)
         {
 
-            m_Camera.Update();
+            //m_Camera.Update();
 
 
             // Update all entities
@@ -109,7 +109,10 @@ namespace Ares
             if (mainCamera)
             {
 
-                Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), *cameraTransform);
+                glm::mat4 viewProj = mainCamera->GetProjectionMatrix() * glm::inverse(*cameraTransform);
+
+                Renderer2D::BeginScene(viewProj, true);
+                //Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), *cameraTransform);
 
                 auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
         
@@ -131,7 +134,10 @@ namespace Ares
 
     }
 
-
+    void Scene::OnEvent(Event& e)
+    {
+        m_Camera.OnEvent(e);
+    }
 
 
 
