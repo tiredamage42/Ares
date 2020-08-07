@@ -220,12 +220,29 @@ namespace Ares {
 		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.capacity());
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 
-		Submesh submesh;
+		//Submesh submesh;
+		Submesh& submesh = m_Submeshes.emplace_back();
+
 		submesh.BaseVertex = 0;
 		submesh.BaseIndex = 0;
 		submesh.MaterialIndex = 0;
 		submesh.IndexCount = m_Indices.capacity();
-		m_Submeshes.push_back(submesh);
+		//m_Submeshes.push_back(submesh);
+
+
+
+		submesh.Min = { FLT_MAX, FLT_MAX, FLT_MAX };
+		submesh.Max = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
+
+		for (size_t i = 0; i < m_StaticVertices.size(); i++)
+		{
+			submesh.Min.x = glm::min(m_StaticVertices[i].Position.x, submesh.Min.x);
+			submesh.Min.y = glm::min(m_StaticVertices[i].Position.y, submesh.Min.y);
+			submesh.Min.z = glm::min(m_StaticVertices[i].Position.z, submesh.Min.z);
+			submesh.Max.x = glm::max(m_StaticVertices[i].Position.x, submesh.Max.x);
+			submesh.Max.y = glm::max(m_StaticVertices[i].Position.y, submesh.Max.y);
+			submesh.Max.z = glm::max(m_StaticVertices[i].Position.z, submesh.Max.z);
+		}
 
 		Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/pbr_static.glsl");
 		m_BaseMaterial = CreateRef<Material>(m_MeshShader);
@@ -280,12 +297,14 @@ namespace Ares {
 		{
 			aiMesh* mesh = scene->mMeshes[m];
 
-			Submesh submesh;
+
+			//Submesh submesh;
+			Submesh& submesh = m_Submeshes.emplace_back();
 			submesh.BaseVertex = vertexCount;
 			submesh.BaseIndex = indexCount;
 			submesh.MaterialIndex = mesh->mMaterialIndex;
 			submesh.IndexCount = mesh->mNumFaces * 3;
-			m_Submeshes.push_back(submesh);
+			//m_Submeshes.push_back(submesh);
 
 			vertexCount += mesh->mNumVertices;
 			indexCount += submesh.IndexCount;
