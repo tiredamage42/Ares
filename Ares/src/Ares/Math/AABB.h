@@ -3,7 +3,9 @@
 #include <glm/glm.hpp>
 
 namespace Ares {
-
+	/*
+		axis aligned bounding box
+	*/
 	struct AABB
 	{
 		glm::vec3 Min, Max;
