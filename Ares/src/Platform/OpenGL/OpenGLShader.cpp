@@ -489,6 +489,7 @@ namespace Ares {
 	static bool IsTypeStringResource(const std::string& type)
 	{
 		if (type == "sampler2D")		return true;
+		if (type == "sampler2DMS")		return true;
 		if (type == "samplerCube")		return true;
 		if (type == "sampler2DShadow")	return true;
 		return false;
