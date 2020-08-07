@@ -47,7 +47,7 @@ namespace Ares
 		Ref<Shader> m_HDRShader;*/
 
 
-		//Scope<SceneHierarchyPane> m_SceneHierarchyPanel;
+		Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
 		Ref<Scene> m_Scene;
 		Ref<Scene> m_SpheresScene;
 		Ref<Scene> m_ActiveScene;

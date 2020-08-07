@@ -17,6 +17,7 @@
 #include "Ares/Core/MouseButtonCodes.h"
 
 #include "imgui/imgui.h"
+#include "Ares/Editor/SceneHierarchyPanel.h"
 
 // renderer ===============
 #include "Ares/Renderer/Renderer.h"

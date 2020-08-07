@@ -25,6 +25,10 @@ namespace Ares
         entity.AddComponent<TransformComponent>();
         return entity;
     }
+    Entity Scene::EntityConstructor(const entt::entity& enttEntity)
+    {
+        return { enttEntity, this };
+    }
     void Scene::OnViewportResize(uint32_t width, uint32_t height)
     {
         m_ViewportWidth = width;

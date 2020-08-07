@@ -34,6 +34,7 @@ namespace Ares
 
 
 		Entity CreateEntity(const std::string& name = std::string());
+		Entity EntityConstructor(const entt::entity& enttEntity);
 
 		void OnViewportResize(uint32_t width, uint32_t height);
 
@@ -62,7 +63,7 @@ namespace Ares
 
 
 		friend class SceneRenderer;
-		//friend class SceneHierarchyPanel;
+		friend class SceneHierarchyPanel;
 
 		friend class Entity;
 	};

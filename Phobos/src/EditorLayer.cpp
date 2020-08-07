@@ -253,7 +253,7 @@ namespace Ares
 
 
         m_ActiveScene = m_Scene;
-        //m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>(m_ActiveScene);
+        m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>(m_ActiveScene);
 
         m_Light.Direction = { -0.5f, -0.5f, 1.0f };
         m_Light.Radiance = { 1.0f, 1.0f, 1.0f };
@@ -878,7 +878,7 @@ namespace Ares
         ImGui::End();
         ImGui::PopStyleVar();
 
-        //m_SceneHierarchyPanel->OnImGuiRender();
+        m_SceneHierarchyPanel->OnImGuiRender();
 
         ImGui::End();
 

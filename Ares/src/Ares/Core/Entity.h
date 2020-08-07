@@ -61,6 +61,7 @@ namespace Ares
 
 		glm::mat4& Transform() { return GetComponent<TransformComponent>(); }
 
+		const std::string& GetName() const { return GetComponent<TagComponent>().Tag; }
 
 		
 	private:

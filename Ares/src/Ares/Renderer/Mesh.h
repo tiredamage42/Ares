@@ -175,5 +175,6 @@ namespace Ares {
 
 
 		friend class Renderer;
+		friend class SceneHierarchyPanel;
 	};
 }
