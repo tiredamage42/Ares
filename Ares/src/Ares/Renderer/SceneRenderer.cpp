@@ -28,6 +28,7 @@ namespace Ares {
 			float SkyboxLod, Exposure;
 			Ref<MaterialInstance> SkyboxMaterial;
 			Environment SceneEnvironment;
+			Light ActiveLight;
 		} SceneData;
 
 		Ref<Texture2D> BRDFLUT;
@@ -107,11 +108,13 @@ namespace Ares {
 
 		s_Data.ActiveScene = scene;
 
-		s_Data.SceneData.Exposure = scene->m_Exposure;
 		s_Data.SceneData.SceneCamera = scene->m_Camera;
 		s_Data.SceneData.SkyboxMaterial = scene->m_SkyboxMaterial;
-		s_Data.SceneData.SkyboxLod = scene->m_SkyboxLod;
 		s_Data.SceneData.SceneEnvironment = scene->m_Environment;
+		s_Data.SceneData.ActiveLight = scene->m_Light;
+
+		s_Data.SceneData.Exposure = scene->m_Exposure;
+		s_Data.SceneData.SkyboxLod = scene->m_SkyboxLod;
 	}
 
 	void SceneRenderer::EndScene()
@@ -248,6 +251,11 @@ namespace Ares {
 			baseMaterial->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
 			baseMaterial->Set("u_BRDFLUTTexture", s_Data.BRDFLUT);
 
+			//ARES_CORE_LOG("LGIHT {0}", s_Data.SceneData.ActiveLight.Multiplier);
+			// Set lights (TODO: move to light environment and don't do per mesh)
+			baseMaterial->Set("lights", s_Data.SceneData.ActiveLight);
+
+
 		//	//auto overrideMaterial = nullptr; // dc.Material;
 
 		//	//baseMaterial->Bind();
@@ -279,7 +287,7 @@ namespace Ares {
 		{
 			Renderer2D::BeginScene(viewProjection);
 			for (auto& dc : s_Data.DrawList)
-				Renderer::DrawAABB(dc.Mesh);
+				Renderer::DrawAABB(dc.Mesh, dc.Transform);
 			Renderer2D::EndScene();
 		}
 

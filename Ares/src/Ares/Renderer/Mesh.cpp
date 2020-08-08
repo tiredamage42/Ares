@@ -228,21 +228,35 @@ namespace Ares {
 		submesh.MaterialIndex = 0;
 		submesh.IndexCount = m_Indices.capacity();
 		//m_Submeshes.push_back(submesh);
+		submesh.MeshName = "PrimitiveType";
 
 
 
-		submesh.Min = { FLT_MAX, FLT_MAX, FLT_MAX };
-		submesh.Max = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
+
+		auto& aabb = submesh.BoundingBox;
+		aabb.Min = { FLT_MAX, FLT_MAX, FLT_MAX };
+		aabb.Max = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
 
 		for (size_t i = 0; i < m_StaticVertices.size(); i++)
 		{
-			submesh.Min.x = glm::min(m_StaticVertices[i].Position.x, submesh.Min.x);
-			submesh.Min.y = glm::min(m_StaticVertices[i].Position.y, submesh.Min.y);
-			submesh.Min.z = glm::min(m_StaticVertices[i].Position.z, submesh.Min.z);
-			submesh.Max.x = glm::max(m_StaticVertices[i].Position.x, submesh.Max.x);
-			submesh.Max.y = glm::max(m_StaticVertices[i].Position.y, submesh.Max.y);
-			submesh.Max.z = glm::max(m_StaticVertices[i].Position.z, submesh.Max.z);
+			
+			aabb.Min.x = glm::min(m_StaticVertices[i].Position.x, aabb.Min.x);
+			aabb.Min.y = glm::min(m_StaticVertices[i].Position.y, aabb.Min.y);
+			aabb.Min.z = glm::min(m_StaticVertices[i].Position.z, aabb.Min.z);
+			aabb.Max.x = glm::max(m_StaticVertices[i].Position.x, aabb.Max.x);
+			aabb.Max.y = glm::max(m_StaticVertices[i].Position.y, aabb.Max.y);
+			aabb.Max.z = glm::max(m_StaticVertices[i].Position.z, aabb.Max.z);
 		}
+
+		for (uint32_t i = 0; i < m_Indices.size(); i += 3)
+		{
+			m_TriangleCache[0].emplace_back(
+				m_StaticVertices[m_Indices[i + 0]],
+				m_StaticVertices[m_Indices[i + 1]],
+				m_StaticVertices[m_Indices[i + 2]]
+			);
+		}
+
 
 		Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/pbr_static.glsl");
 		m_BaseMaterial = CreateRef<Material>(m_MeshShader);
@@ -269,6 +283,8 @@ namespace Ares {
 		//double factor;
 		//scene->mMetaData->Get("UnitScaleFactor", factor);
 		//ARES_CORE_INFO("FBX Scene Scale: {0}", factor);
+
+		m_Scene = scene;
 
 		m_IsAnimated = scene->mAnimations != nullptr;
 
@@ -305,6 +321,8 @@ namespace Ares {
 			submesh.MaterialIndex = mesh->mMaterialIndex;
 			submesh.IndexCount = mesh->mNumFaces * 3;
 			//m_Submeshes.push_back(submesh);
+			submesh.MeshName = mesh->mName.C_Str();
+
 
 			vertexCount += mesh->mNumVertices;
 			indexCount += submesh.IndexCount;
@@ -334,8 +352,9 @@ namespace Ares {
 			}
 			else
 			{
-				submesh.Min = { FLT_MAX, FLT_MAX, FLT_MAX };
-				submesh.Max = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
+				auto& aabb = submesh.BoundingBox;
+				aabb.Min = { FLT_MAX, FLT_MAX, FLT_MAX };
+				aabb.Max = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
 
 				for (size_t i = 0; i < mesh->mNumVertices; i++)
 				{
@@ -343,12 +362,12 @@ namespace Ares {
 					vertex.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
 					vertex.Normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
 
-					submesh.Min.x = glm::min(vertex.Position.x, submesh.Min.x);
-					submesh.Min.y = glm::min(vertex.Position.y, submesh.Min.y);
-					submesh.Min.z = glm::min(vertex.Position.z, submesh.Min.z);
-					submesh.Max.x = glm::max(vertex.Position.x, submesh.Max.x);
-					submesh.Max.y = glm::max(vertex.Position.y, submesh.Max.y);
-					submesh.Max.z = glm::max(vertex.Position.z, submesh.Max.z);
+					aabb.Min.x = glm::min(vertex.Position.x, aabb.Min.x);
+					aabb.Min.y = glm::min(vertex.Position.y, aabb.Min.y);
+					aabb.Min.z = glm::min(vertex.Position.z, aabb.Min.z);
+					aabb.Max.x = glm::max(vertex.Position.x, aabb.Max.x);
+					aabb.Max.y = glm::max(vertex.Position.y, aabb.Max.y);
+					aabb.Max.z = glm::max(vertex.Position.z, aabb.Max.z);
 
 					if (mesh->HasTangentsAndBitangents())
 					{
@@ -375,6 +394,17 @@ namespace Ares {
 				m_Indices.push_back(mesh->mFaces[i].mIndices[0]);
 				m_Indices.push_back(mesh->mFaces[i].mIndices[1]);
 				m_Indices.push_back(mesh->mFaces[i].mIndices[2]);
+
+
+				if (!m_IsAnimated)
+				{
+					m_TriangleCache[m].emplace_back(
+						m_StaticVertices[mesh->mFaces[i].mIndices[0] + submesh.BaseVertex], 
+						m_StaticVertices[mesh->mFaces[i].mIndices[1] + submesh.BaseVertex],
+						m_StaticVertices[mesh->mFaces[i].mIndices[2] + submesh.BaseVertex]
+					);
+
+				}
 			}
 		}
 
@@ -427,6 +457,8 @@ namespace Ares {
 		// materials
 		if (scene->HasMaterials())
 		{
+			ARES_CORE_LOG("---- Materials - {0} ----", filename);
+
 			m_Textures.resize(scene->mNumMaterials);
 			m_MaterialOverrides.resize(scene->mNumMaterials);
 			for (uint32_t i = 0; i < scene->mNumMaterials; i++)
@@ -437,16 +469,27 @@ namespace Ares {
 				auto mi = CreateRef<MaterialInstance>(m_BaseMaterial);
 				m_MaterialOverrides[i] = mi;
 
-				ARES_CORE_INFO("Material Name = {0}; Index = {1}", aiMaterialName.data, i);
+				ARES_CORE_INFO(" {0}; Index = {1}", aiMaterialName.data, i);
 				aiString aiTexPath;
 				uint32_t textureCount = aiMaterial->GetTextureCount(aiTextureType_DIFFUSE);
 				ARES_CORE_LOG("  TextureCount = {0}", textureCount);
 
 				aiColor3D aiColor;
 				aiMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, aiColor);
-				ARES_CORE_LOG("COLOR = {0}, {1}, {2}", aiColor.r, aiColor.g, aiColor.b);
 
-				if (aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &aiTexPath) == AI_SUCCESS)
+
+				float shininess, metalness;
+				aiMaterial->Get(AI_MATKEY_SHININESS, shininess);
+				aiMaterial->Get(AI_MATKEY_REFLECTIVITY, metalness);
+
+				// float roughness = 1.0f - shininess * 0.01f;
+				// roughness *= roughness;
+				float roughness = 1.0f - glm::sqrt(shininess / 100.0f);
+				ARES_CORE_LOG("    COLOR = {0}, {1}, {2}", aiColor.r, aiColor.g, aiColor.b);
+				ARES_CORE_LOG("    ROUGHNESS = {0}", roughness);
+
+				bool hasAlbedoMap = aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &aiTexPath) == AI_SUCCESS;
+				if (hasAlbedoMap)
 				{
 					// TODO: Temp - this should be handled by our filesystem
 					std::filesystem::path path = filename;
@@ -454,11 +497,11 @@ namespace Ares {
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
 
+					ARES_CORE_LOG("  Albedo Texture Path = {0}", texturePath);
 					auto texture = Texture2D::Create(texturePath, true);
 					if (texture->Loaded())
 					{
 						m_Textures[i] = texture;
-						ARES_CORE_LOG("  Texture Path = {0}", texturePath);
 						mi->Set("u_AlbedoTexture", m_Textures[i]);
 						mi->Set("u_AlbedoTexToggle", 1.0f);
 					}
@@ -471,9 +514,9 @@ namespace Ares {
 				}
 				else
 				{
-					mi->Set("u_AlbedoTexToggle", 0.0f);
+					//mi->Set("u_AlbedoTexToggle", 0.0f);
 					mi->Set("u_AlbedoColor", glm::vec3{ aiColor.r, aiColor.g, aiColor.b });
-					ARES_CORE_LOG("Mesh has no albedo map");
+					ARES_CORE_LOG("		Mesh has no albedo map");
 				}
 
 				// Normal maps
@@ -484,11 +527,11 @@ namespace Ares {
 					auto parentPath = path.parent_path();
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
+					ARES_CORE_LOG("  Normal map path = {0}", texturePath);
 
 					auto texture = Texture2D::Create(texturePath);
 					if (texture->Loaded())
 					{
-						ARES_CORE_LOG("  Normal map path = {0}", texturePath);
 						mi->Set("u_NormalTexture", texture);
 						mi->Set("u_NormalTexToggle", 1.0f);
 					}
@@ -515,26 +558,27 @@ namespace Ares {
 					auto parentPath = path.parent_path();
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
+					ARES_CORE_LOG("  Roughness map path = {0}", texturePath);
 
 					auto texture = Texture2D::Create(texturePath);
 					if (texture->Loaded())
 					{
-						ARES_CORE_LOG("  Roughness map path = {0}", texturePath);
 						mi->Set("u_RoughnessTexture", texture);
 						mi->Set("u_RoughnessTexToggle", 1.0f);
 					}
 					else
 					{
-						ARES_CORE_ERROR("Could not load texture: {0}", texturePath);
+						ARES_CORE_ERROR("		Could not load texture: {0}", texturePath);
 						//mi->Set("u_RoughnessTexToggle", 1.0f);
-						mi->Set("u_Roughness", 0.5f);
+						mi->Set("u_Roughness", roughness);
 					}
 				}
 				else
 				{
-					ARES_CORE_LOG("Mesh has no roughness map");
+					ARES_CORE_LOG("		no roughness map");
+					mi->Set("u_Roughness", roughness);
 				}
-
+#if 0
 				// Metalness map
 				if (aiMaterial->Get("$raw.ReflectionFactor|file", aiPTI_String, 0, aiTexPath) == AI_SUCCESS)
 				{
@@ -543,27 +587,28 @@ namespace Ares {
 					auto parentPath = path.parent_path();
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
+					ARES_CORE_LOG("  Metalness map path = {0}", texturePath);
 
 					auto texture = Texture2D::Create(texturePath);
 					if (texture->Loaded())
 					{
-						ARES_CORE_LOG("  Metalness map path = {0}", texturePath);
 						mi->Set("u_MetalnessTexture", texture);
 						mi->Set("u_MetalnessTexToggle", 1.0f);
 					}
 					else
 					{
 						ARES_CORE_ERROR("Could not load texture: {0}", texturePath);
-						mi->Set("u_Metalness", 0.5f);
+						mi->Set("u_Metalness", metalness);
 						//mi->Set("u_MetalnessTexToggle", 1.0f);
 					}
 				}
 				else
 				{
 					ARES_CORE_LOG("Mesh has no metalness map");
+					mi->Set("u_Metalness", metalness);
 				}
-
-				continue;
+#endif
+				bool metalnessTextureFound = false;
 
 
 
@@ -572,8 +617,14 @@ namespace Ares {
 				for (uint32_t i = 0; i < aiMaterial->mNumProperties; i++)
 				{
 					auto prop = aiMaterial->mProperties[i];
+					
 					ARES_CORE_LOG("Material Property:");
 					ARES_CORE_LOG("  Name = {0}", prop->mKey.data);
+					ARES_CORE_LOG("  Type = {0}", prop->mType);
+					ARES_CORE_LOG("  Size = {0}", prop->mDataLength);
+					float data = *(float*)prop->mData;
+					ARES_CORE_LOG("  Value = {0}", data);
+
 
 					switch (prop->mSemantic)
 					{
@@ -596,36 +647,48 @@ namespace Ares {
 					{
 						uint32_t strLength = *(uint32_t*)prop->mData;
 						std::string str(prop->mData + 4, strLength);
-						ARES_CORE_LOG("  Value = {0}", str);
+						//ARES_CORE_LOG("  Value = {0}", str);
 
 						std::string key = prop->mKey.data;
 						if (key == "$raw.ReflectionFactor|file")
 						{
+
+							metalnessTextureFound = true;
+
 							// TODO: Temp - this should be handled by Hazel's filesystem
 							std::filesystem::path path = filename;
 							auto parentPath = path.parent_path();
 							parentPath /= str;
 							std::string texturePath = parentPath.string();
+							ARES_CORE_LOG("    Metalness map path = {0}", texturePath);
 
 							auto texture = Texture2D::Create(texturePath);
 							if (texture->Loaded())
 							{
-								ARES_CORE_LOG("  Metalness map path = {0}", texturePath);
+								//ARES_CORE_LOG("  Metalness map path = {0}", texturePath);
 								mi->Set("u_MetalnessTexture", texture);
 								mi->Set("u_MetalnessTexToggle", 1.0f);
 							}
 							else
 							{
 								ARES_CORE_ERROR("Could not load texture: {0}", texturePath);
-								mi->Set("u_Metalness", 0.5f);
+								mi->Set("u_Metalness", metalness);
 								//mi->Set("u_MetalnessTexToggle", 1.0f);
 							}
+							break;
 						}
 					}
 				}
+				if (!metalnessTextureFound)
+				{
+					ARES_CORE_LOG("    No metalness map");
 
-				
+					mi->Set("u_Metalness", metalness);
+					mi->Set("u_MetalnessTexToggle", 0.0f);
+				}
+
 			}
+			ARES_CORE_LOG("------------------------");
 		}
 
 		m_VertexArray = VertexArray::Create();
@@ -662,7 +725,7 @@ namespace Ares {
 		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.capacity());
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 
-		m_Scene = scene;
+		//m_Scene = scene;
 	}
 
 	Mesh::~Mesh()
@@ -685,7 +748,11 @@ namespace Ares {
 		for (uint32_t i = 0; i < node->mNumMeshes; i++)
 		{
 			uint32_t mesh = node->mMeshes[i];
-			m_Submeshes[mesh].Transform = transform;
+			//m_Submeshes[mesh].Transform = transform;
+
+			auto& submesh = m_Submeshes[mesh];
+			submesh.NodeName = node->mName.C_Str();
+			submesh.Transform = transform;
 		}
 
 		for (uint32_t i = 0; i < node->mNumChildren; i++)

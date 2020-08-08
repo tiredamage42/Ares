@@ -56,7 +56,7 @@ namespace Ares
 			ARES_CORE_WARN("Attempted to resize frame buffer to w: {0}, h: {1}", width, height);
 			return false;
 		}
-		if (m_Specs.Width == width && m_Specs.Height == height && !force)
+		if (!force && m_Specs.Width == width && m_Specs.Height == height)
 			return false;
 
 		m_Specs.Width = width;

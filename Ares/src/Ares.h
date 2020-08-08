@@ -11,6 +11,11 @@
 #include "Ares/Events/KeyEvent.h"
 #include "Ares/Events/MouseEvent.h"
 
+#include "Ares/Math/AABB.h"
+#include "Ares/Math/Ray.h"
+
+
+
 #include "Ares/Core/Core.h"
 #include "Ares/Core/Layer.h"
 #include "Ares/Core/Keycodes.h"

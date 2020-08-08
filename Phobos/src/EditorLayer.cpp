@@ -184,10 +184,10 @@ namespace Ares
             auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Cube);
             m_SphereBaseMaterial = sphereMesh->GetMaterial();
 
-            float x = -8.0f;
+            float x = 0;// -8.0f;
             float roughness = 0.0f;
-            for (int i = 0; i < 8; i++)
-            {
+            /*for (int i = 0; i < 8; i++)
+            {*/
 
                 auto sphereEntity = m_SpheresScene->CreateEntity();
                 MeshRendererComponent& mrComponent = sphereEntity.AddComponent<MeshRendererComponent>();
@@ -196,7 +196,6 @@ namespace Ares
                 mi->Set("u_Metalness", 1.0f);
                 mi->Set("u_Roughness", roughness);
                 //mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
-                x += 2;
                 roughness += 0.15f;
                 //m_MetalSphereMaterialInstances.push_back(mi);
 
@@ -204,28 +203,29 @@ namespace Ares
                 mrComponent.Mesh = sphereMesh;
                 mrComponent.MaterialOverrides = { mi };
                 sphereEntity.Transform() = glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f));
-            }
-
-            x = -8.0f;
-            roughness = 0.0f;
-            for (int i = 0; i < 8; i++)
-            {
-                auto sphereEntity = m_SpheresScene->CreateEntity();
-                MeshRendererComponent& mrComponent = sphereEntity.AddComponent<MeshRendererComponent>();
-
-                Ref<MaterialInstance> mi = CreateRef<MaterialInstance>(m_SphereBaseMaterial);
-                mi->Set("u_Metalness", 0.0f);
-                mi->Set("u_Roughness", roughness);
-                //mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 2, 0)));
                 x += 2;
-                roughness += 0.15f;
-                //m_DielectricSphereMaterialInstances.push_back(mi);
+            //}
+
+            //x = -8.0f;
+            //roughness = 0.0f;
+            //for (int i = 0; i < 8; i++)
+            //{
+            //    auto sphereEntity = m_SpheresScene->CreateEntity();
+            //    MeshRendererComponent& mrComponent = sphereEntity.AddComponent<MeshRendererComponent>();
+
+            //    Ref<MaterialInstance> mi = CreateRef<MaterialInstance>(m_SphereBaseMaterial);
+            //    mi->Set("u_Metalness", 0.0f);
+            //    mi->Set("u_Roughness", roughness);
+            //    //mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 2, 0)));
+            //    x += 2;
+            //    roughness += 0.15f;
+            //    //m_DielectricSphereMaterialInstances.push_back(mi);
 
 
-                mrComponent.Mesh = sphereMesh;
-                mrComponent.MaterialOverrides = { mi };
-                sphereEntity.Transform() = glm::translate(glm::mat4(1.0f), glm::vec3(x, 2.0f, 0.0f));
-            }
+            //    mrComponent.Mesh = sphereMesh;
+            //    mrComponent.MaterialOverrides = { mi };
+            //    sphereEntity.Transform() = glm::translate(glm::mat4(1.0f), glm::vec3(x, 2.0f, 0.0f));
+            //}
         }
 
         // Create Quad
@@ -255,8 +255,18 @@ namespace Ares
         m_ActiveScene = m_Scene;
         m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>(m_ActiveScene);
 
-        m_Light.Direction = { -0.5f, -0.5f, 1.0f };
-        m_Light.Radiance = { 1.0f, 1.0f, 1.0f };
+        auto& light = m_Scene->GetLight();
+        light.Direction = { -0.5f, -0.5f, 1.0f };
+        light.Radiance = { 1.0f, 1.0f, 1.0f };
+
+        auto& light2 = m_SpheresScene->GetLight();
+        light2.Direction = { -0.5f, -0.5f, 1.0f };
+        light2.Radiance = { 1.0f, 1.0f, 1.0f };
+
+
+        m_CurrentlySelectedTransform = nullptr;// &m_MeshEntity.GetComponent<TransformComponent>().Transform;
+        /*m_Light.Direction = { -0.5f, -0.5f, 1.0f };
+        m_Light.Radiance = { 1.0f, 1.0f, 1.0f };*/
 
         //m_Transform = glm::scale(glm::mat4(1.0f), glm::vec3(m_MeshScale));
 #endif
@@ -302,7 +312,7 @@ namespace Ares
         material->Set("u_Roughness", m_RoughnessInput.Value);
         //material->Set("u_ViewProjectionMatrix", viewProjection);
         //material->Set("u_ModelMatrix", glm::scale(glm::mat4(1.0f), glm::vec3(m_MeshScale)));
-        material->Set("lights", m_Light);
+        //material->Set("lights", m_Light);
         //material->Set("u_CameraPosition", m_Camera.GetPosition());
         material->Set("u_RadiancePrefilter", m_RadiancePrefilter ? 1.0f : 0.0f);
         material->Set("u_AlbedoTexToggle", m_AlbedoInput.UseTexture ? 1.0f : 0.0f);
@@ -430,20 +440,32 @@ namespace Ares
 
         m_ActiveScene->OnUpdate();
 
-        if (m_DrawOnTopBoundingBoxes)
+        //if (m_DrawOnTopBoundingBoxes)
+        //{
+        //    Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
+        //    auto viewProj = m_ActiveScene->GetCamera().GetViewProjection();
+        //    Renderer2D::BeginScene(viewProj, false);
+        //    // Renderer2D::DrawQuad({ 0, 0, 0 }, { 4.0f, 5.0f }, { 1.0f, 1.0f, 0.5f, 1.0f });
+        //    
+        //    auto mesh = m_MeshEntity.GetComponent<MeshRendererComponent>().Mesh;
+        //    if (mesh)
+        //    {
+        //        Renderer::DrawAABB(mesh, m_MeshEntity.GetComponent<TransformComponent>());
+        //    }
+
+        //    Renderer2D::EndScene();
+        //    Renderer::EndRenderPass();
+        //}
+
+        if (m_SelectedSubmeshes.size())
         {
             Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
             auto viewProj = m_ActiveScene->GetCamera().GetViewProjection();
             Renderer2D::BeginScene(viewProj, false);
-            // Renderer2D::DrawQuad({ 0, 0, 0 }, { 4.0f, 5.0f }, { 1.0f, 1.0f, 0.5f, 1.0f });
-            
-            auto mesh = m_MeshEntity.GetComponent<MeshRendererComponent>().Mesh;
-            if (mesh)
-            {
-                Renderer::DrawAABB(mesh);
-            }
-            
-            
+            auto& submesh = m_SelectedSubmeshes[0];
+            //Renderer::DrawAABB(submesh.Mesh->BoundingBox, m_MeshEntity.GetComponent<TransformComponent>().Transform * submesh.Mesh->Transform);
+            Renderer::DrawAABB(submesh.Mesh->BoundingBox, submesh.entity.GetComponent<TransformComponent>().Transform * submesh.Mesh->Transform);
+
             Renderer2D::EndScene();
             Renderer::EndRenderPass();
         }
@@ -647,9 +669,14 @@ namespace Ares
         ImGui::AlignTextToFramePadding();
 
 
-        EditorGUI::Vec3("Light Direction", m_Light.Direction);
+        auto& light = m_ActiveScene->GetLight();
+        EditorGUI::Vec3("Light Direction", light.Direction);
+        EditorGUI::Color3("Light Radiance", light.Radiance);
+        EditorGUI::FloatSlider("Light Multiplier", light.Multiplier, 0.0f, 5.0f);
+
+        /*EditorGUI::Vec3("Light Direction", m_Light.Direction);
         EditorGUI::Color3("Light Radiance", m_Light.Radiance);
-        EditorGUI::FloatSlider("Light Multiplier", m_LightMultiplier, 0.0f, 5.0f);
+        EditorGUI::FloatSlider("Light Multiplier", m_LightMultiplier, 0.0f, 5.0f);*/
 
 
         EditorGUI::FloatSlider("Exposure", m_ActiveScene->GetExposure(), 0.0f, 5.0f);
@@ -862,6 +889,7 @@ namespace Ares
         m_ViewportHovered = ImGui::IsWindowHovered();
         Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
 
+        auto viewportOffset = ImGui::GetCursorPos(); // includes tab bar
         auto viewportSize = ImGui::GetContentRegionAvail();
 
 
@@ -892,13 +920,19 @@ namespace Ares
         static int counter = 0;
         auto windowSize = ImGui::GetWindowSize();
         ImVec2 minBound = ImGui::GetWindowPos();
+        minBound.x += viewportOffset.x;
+        minBound.y += viewportOffset.y;
+
         ImVec2 maxBound = { minBound.x + windowSize.x, minBound.y + windowSize.y };
+        m_ViewportBounds[0] = { minBound.x, minBound.y };
+        m_ViewportBounds[1] = { maxBound.x, maxBound.y };
+
         m_AllowViewportCameraEvents = ImGui::IsMouseHoveringRect(minBound, maxBound);
 
 #endif
 
         // Gizmos
-        if (m_GizmoType != -1)
+        if (m_GizmoType != -1 && m_CurrentlySelectedTransform)
         {
             float rw = (float)ImGui::GetWindowWidth();
             float rh = (float)ImGui::GetWindowHeight();
@@ -906,13 +940,24 @@ namespace Ares
             ImGuizmo::SetDrawlist();
             ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, rw, rh);
             //ImGuizmo::Manipulate(glm::value_ptr(m_Camera.GetViewMatrix()), glm::value_ptr(m_Camera.GetProjectionMatrix()), (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(m_Transform));
+            //ImGuizmo::Manipulate(
+            //    glm::value_ptr(m_ActiveScene->GetCamera().GetViewMatrix()), // view
+            //    glm::value_ptr(m_ActiveScene->GetCamera().GetProjectionMatrix()), // projection
+            //    (ImGuizmo::OPERATION)m_GizmoType, // operation
+            //    ImGuizmo::LOCAL, // mode
+            //    glm::value_ptr(m_MeshEntity.Transform())
+            //);
+            bool snap = Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL);
             ImGuizmo::Manipulate(
-                glm::value_ptr(m_ActiveScene->GetCamera().GetViewMatrix()), // view
-                glm::value_ptr(m_ActiveScene->GetCamera().GetProjectionMatrix()), // projection
-                (ImGuizmo::OPERATION)m_GizmoType, // operation
-                ImGuizmo::LOCAL, // mode
-                glm::value_ptr(m_MeshEntity.Transform())
+                glm::value_ptr(m_ActiveScene->GetCamera().GetViewMatrix()),// * *m_CurrentlySelectedTransform),
+                glm::value_ptr(m_ActiveScene->GetCamera().GetProjectionMatrix()),
+                (ImGuizmo::OPERATION)m_GizmoType,
+                ImGuizmo::LOCAL,
+                glm::value_ptr(*m_CurrentlySelectedTransform),
+                nullptr,
+                snap ? &m_SnapValue : nullptr
             );
+
 
         }
 
@@ -937,6 +982,7 @@ namespace Ares
 
         EventDispatcher dispatcher(e);
         dispatcher.Dispatch<KeyPressedEvent>(ARES_BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
+        dispatcher.Dispatch<MouseButtonPressedEvent>(ARES_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
     }
     bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)
     {
@@ -970,6 +1016,101 @@ namespace Ares
             break;
         }
         return false;
+    }
+
+    bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
+    {
+        auto [mx, my] = Input::GetMousePosition();
+        if (e.GetMouseButton() == ARES_MOUSE_BUTTON_LEFT && !Input::IsKeyPressed(ARES_KEY_LEFT_ALT) && !ImGuizmo::IsOver())
+        {
+            //ARES_CORE_LOG("MouseButton Clicked");
+            auto [mouseX, mouseY] = GetMouseViewportSpace();
+            if (mouseX > -1.0f && mouseX < 1.0f && mouseY > -1.0f && mouseY < 1.0f)
+            {
+                //ARES_CORE_LOG("In Viewport space");
+                auto [origin, direction] = CastRay(mouseX, mouseY);
+
+                m_SelectedSubmeshes.clear();
+
+                m_ActiveScene->m_Registry.each([&](auto entity)
+                {
+
+                    
+                    Entity entityS = m_ActiveScene->EntityConstructor(entity);
+
+                    if (!entityS.HasComponent<MeshRendererComponent>())
+                        return;
+                    
+                    MeshRendererComponent& mrComponent = entityS.GetComponent<MeshRendererComponent>();
+                    if (!mrComponent.Mesh)
+                        return;
+
+                    auto mesh = entityS.GetComponent<MeshRendererComponent>().Mesh;
+                    auto& submeshes = mesh->GetSubmeshes();
+                    float lastT = std::numeric_limits<float>::max();
+                    for (uint32_t i = 0; i < submeshes.size(); i++)
+                    {
+                        auto& submesh = submeshes[i];
+                        Ray ray = {
+                            glm::inverse(
+                                entityS.GetComponent<TransformComponent>().Transform * submesh.Transform
+                            ) * glm::vec4(origin, 1.0f),
+                            glm::inverse(glm::mat3(entityS.GetComponent<TransformComponent>().Transform) * glm::mat3(submesh.Transform)) * direction
+                        };
+
+                        float t;
+                        bool intersects = ray.IntersectsAABB(submesh.BoundingBox, t);
+                        if (intersects)
+                        {
+                            const auto& triangleCache = mesh->GetTriangleCache(i);
+                            for (const auto& triangle : triangleCache)
+                            {
+                                if (ray.IntersectsTriangle(triangle.V0.Position, triangle.V1.Position, triangle.V2.Position, t))
+                                {
+                                    ARES_WARN("INTERSECTION: {0}, t={1}", submesh.NodeName, t);
+                                    m_SelectedSubmeshes.push_back({ entityS, &submesh, t });
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                });
+                std::sort(m_SelectedSubmeshes.begin(), m_SelectedSubmeshes.end(), [](auto& a, auto& b) { return a.Distance < b.Distance; });
+
+                // TODO: Handle mesh being deleted, etc.
+                if (m_SelectedSubmeshes.size())
+                    m_CurrentlySelectedTransform = &m_SelectedSubmeshes[0].Mesh->Transform;
+                else
+                    m_CurrentlySelectedTransform = nullptr;// &m_MeshEntity.GetComponent<TransformComponent>().Transform;
+
+            }
+        }
+        return false;
+    }
+
+    std::pair<float, float> EditorLayer::GetMouseViewportSpace()
+    {
+        auto [mx, my] = ImGui::GetMousePos(); // Input::GetMousePosition();
+        mx -= m_ViewportBounds[0].x;
+        my -= m_ViewportBounds[0].y;
+        auto viewportWidth = m_ViewportBounds[1].x - m_ViewportBounds[0].x;
+        auto viewportHeight = m_ViewportBounds[1].y - m_ViewportBounds[0].y;
+
+        return { (mx / viewportWidth) * 2.0f - 1.0f, ((my / viewportHeight) * 2.0f - 1.0f) * -1.0f };
+    }
+
+    std::pair<glm::vec3, glm::vec3> EditorLayer::CastRay(float mx, float my)
+    {
+        glm::vec4 mouseClipPos = { mx, my, -1.0f, 1.0f };
+
+        auto inverseProj = glm::inverse(m_Scene->GetCamera().GetProjectionMatrix());
+        auto inverseView = glm::inverse(glm::mat3(m_Scene->GetCamera().GetViewMatrix()));
+
+        glm::vec4 ray = inverseProj * mouseClipPos;
+        glm::vec3 rayPos = m_Scene->GetCamera().GetPosition();
+        glm::vec3 rayDir = inverseView * glm::vec3(ray);
+
+        return { rayPos, rayDir };
     }
 
 

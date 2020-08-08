@@ -195,25 +195,39 @@ namespace Ares {
 		s_Data.m_CommandQueue.Execute();
 	}
 
-	void Renderer::DrawAABB(const Ref<Mesh>& mesh, const glm::vec4& color)
+	void Renderer::DrawAABB(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color)
 	{
 		for (Submesh& submesh : mesh->m_Submeshes)
 		{
+			auto& aabb = submesh.BoundingBox;
+			auto aabbTransform = transform * submesh.Transform;
+			DrawAABB(aabb, aabbTransform, color);
+		}
+	}
+
+	void Renderer::DrawAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color /*= glm::vec4(1.0f)*/)
+
+	{
+		glm::vec4 min = { aabb.Min.x, aabb.Min.y, aabb.Min.z, 1.0f };
+		glm::vec4 max = { aabb.Max.x, aabb.Max.y, aabb.Max.z, 1.0f };
+
+		/*for (Submesh& submesh : mesh->m_Submeshes)
+		{
 			const auto& transform = submesh.Transform;
 			glm::vec4 min = { submesh.Min.x, submesh.Min.y, submesh.Min.z, 1.0f };
-			glm::vec4 max = { submesh.Max.x, submesh.Max.y, submesh.Max.z, 1.0f };
+			glm::vec4 max = { submesh.Max.x, submesh.Max.y, submesh.Max.z, 1.0f };*/
 
 			glm::vec4 corners[8] =
 			{
-				transform * glm::vec4 { submesh.Min.x, submesh.Min.y, submesh.Max.z, 1.0f },
-				transform * glm::vec4 { submesh.Min.x, submesh.Max.y, submesh.Max.z, 1.0f },
-				transform * glm::vec4 { submesh.Max.x, submesh.Max.y, submesh.Max.z, 1.0f },
-				transform * glm::vec4 { submesh.Max.x, submesh.Min.y, submesh.Max.z, 1.0f },
-
-				transform * glm::vec4 { submesh.Min.x, submesh.Min.y, submesh.Min.z, 1.0f },
-				transform * glm::vec4 { submesh.Min.x, submesh.Max.y, submesh.Min.z, 1.0f },
-				transform * glm::vec4 { submesh.Max.x, submesh.Max.y, submesh.Min.z, 1.0f },
-				transform * glm::vec4 { submesh.Max.x, submesh.Min.y, submesh.Min.z, 1.0f }
+				transform * glm::vec4 { aabb.Min.x, aabb.Min.y, aabb.Max.z, 1.0f },
+				transform * glm::vec4 { aabb.Min.x, aabb.Max.y, aabb.Max.z, 1.0f },
+				transform * glm::vec4 { aabb.Max.x, aabb.Max.y, aabb.Max.z, 1.0f },
+				transform * glm::vec4 { aabb.Max.x, aabb.Min.y, aabb.Max.z, 1.0f },
+													
+				transform * glm::vec4 { aabb.Min.x, aabb.Min.y, aabb.Min.z, 1.0f },
+				transform * glm::vec4 { aabb.Min.x, aabb.Max.y, aabb.Min.z, 1.0f },
+				transform * glm::vec4 { aabb.Max.x, aabb.Max.y, aabb.Min.z, 1.0f },
+				transform * glm::vec4 { aabb.Max.x, aabb.Min.y, aabb.Min.z, 1.0f }
 			};
 
 			for (uint32_t i = 0; i < 4; i++)
@@ -224,6 +238,6 @@ namespace Ares {
 
 			for (uint32_t i = 0; i < 4; i++)
 				Renderer2D::DrawLine(corners[i], corners[i + 4], color);
-		}
+		//}
 	}
 }

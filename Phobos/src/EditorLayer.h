@@ -18,8 +18,13 @@ namespace Ares
 		virtual void OnImGuiDraw() override;
 		virtual void OnEvent(Event& e) override;
 		bool OnKeyPressedEvent(KeyPressedEvent& e);
-		void ShowBoundingBoxes(bool show, bool onTop = false);
+		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
+		void ShowBoundingBoxes(bool show, bool onTop = false);
+	private:
+		void SetPBRMaterialValues(Ref<Material> material) const;//, const glm::mat4& viewProjection) const;
+		std::pair<float, float> GetMouseViewportSpace();
+		std::pair<glm::vec3, glm::vec3> CastRay(float mx, float my);
 	private:
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		float m_FrameTimeGraph[100];
@@ -113,13 +118,13 @@ namespace Ares
 
 
 		//glm::vec4 testColor;
-		struct Light
+		/*struct Light
 		{
 			glm::vec3 Direction;
 			glm::vec3 Radiance;
 		};
 		Light m_Light;
-		float m_LightMultiplier = 0.3f;
+		float m_LightMultiplier = 0.3f;*/
 
 		// PBR params
 		//float m_Exposure = 1.0f;
@@ -136,8 +141,11 @@ namespace Ares
 		// Editor resources
 		Ref<Texture2D> m_CheckerboardTex;
 
+		glm::vec2 m_ViewportBounds[2];
+
 		int m_GizmoType = -1; // -1 = no gizmo
 		//glm::mat4 m_Transform;
+		float m_SnapValue = 0.5f;
 
 		bool m_AllowViewportCameraEvents = false;
 		bool m_DrawOnTopBoundingBoxes = false;
@@ -145,8 +153,15 @@ namespace Ares
 		bool m_UIShowBoundingBoxes = false;
 		bool m_UIShowBoundingBoxesOnTop = false;
 
-	private:
-		void SetPBRMaterialValues(Ref<Material> material) const;//, const glm::mat4& viewProjection) const;
+		struct SelectedSubmesh
+		{
+			Entity entity;
+			Submesh* Mesh;
+			float Distance;
+		};
+		std::vector<SelectedSubmesh> m_SelectedSubmeshes;
+		glm::mat4* m_CurrentlySelectedTransform = nullptr;
 
+	
 	};
 }

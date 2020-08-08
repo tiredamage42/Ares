@@ -80,10 +80,14 @@ namespace Ares {
 		glm::vec3 CalculatePosition();
 		glm::quat GetOrientation();
 	protected:
+
+
 		glm::mat4 m_ProjectionMatrix = glm::mat4(1.0f);
 
 
 	private:
+		void UpdateCameraView();
+
 		glm::mat4 m_ViewMatrix;
 
 		glm::vec3 m_Position{ 0 }, m_Rotation{ 0 }, m_FocalPoint;

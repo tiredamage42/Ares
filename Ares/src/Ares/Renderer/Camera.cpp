@@ -54,6 +54,17 @@ namespace Ares {
 
 		/*m_Yaw = 3.0f * (float)M_PI / 4.0f;
 		m_Pitch = M_PI / 4.0f;*/
+
+		UpdateCameraView();
+	}
+	void Camera::UpdateCameraView()
+	{
+		m_Position = CalculatePosition();
+
+		glm::quat orientation = GetOrientation();
+		m_Rotation = glm::eulerAngles(orientation) * (180.0f / (float)M_PI);
+		m_ViewMatrix = glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(orientation);
+		m_ViewMatrix = glm::inverse(m_ViewMatrix);
 	}
 
 	std::pair<float, float> Camera::PanSpeed() const
@@ -105,14 +116,16 @@ namespace Ares {
 				MouseZoom(delta.y);
 		}
 
-		m_Position = CalculatePosition();
+		UpdateCameraView();
 
-		glm::quat orientation = GetOrientation();
-		m_Rotation = glm::eulerAngles(orientation) * (180.0f / (float)M_PI);
+		//m_Position = CalculatePosition();
 
-		//m_ViewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 1)) * glm::toMat4(glm::conjugate(orientation)) * glm::translate(glm::mat4(1.0f), -m_Position);
-		m_ViewMatrix = glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(orientation);
-		m_ViewMatrix = glm::inverse(m_ViewMatrix);
+		//glm::quat orientation = GetOrientation();
+		//m_Rotation = glm::eulerAngles(orientation) * (180.0f / (float)M_PI);
+
+		////m_ViewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 1)) * glm::toMat4(glm::conjugate(orientation)) * glm::translate(glm::mat4(1.0f), -m_Position);
+		//m_ViewMatrix = glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(orientation);
+		//m_ViewMatrix = glm::inverse(m_ViewMatrix);
 	}
 
 	void Camera::OnEvent(Event& e)
