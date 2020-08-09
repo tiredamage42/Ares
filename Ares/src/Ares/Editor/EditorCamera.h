@@ -28,7 +28,7 @@ namespace Ares
 		glm::vec3 GetRightDirection();
 		glm::vec3 GetForwardDirection();
 		const glm::vec3& GetPosition() const { return m_Position; }
-		glm::quat GetOrientation() const;
+		glm::quat GetOrientation() const ;
 
 		float GetPitch() const { return m_Pitch; }
 		float GetYaw() const { return m_Yaw; }
