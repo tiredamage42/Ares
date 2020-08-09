@@ -22,7 +22,7 @@ namespace Ares {
 		const Scene* ActiveScene = nullptr;
 		struct SceneInfo
 		{
-			Camera SceneCamera;
+			SceneRendererCamera SceneCamera;
 
 			// Resources
 			float SkyboxLod, Exposure;
@@ -40,13 +40,15 @@ namespace Ares {
 		struct DrawCommand
 		{
 			Ref<Mesh> Mesh;
-			std::vector<Ref<MaterialInstance>> MaterialOverrides;
+			Ref<MaterialInstance> MaterialOverride;
 			glm::mat4 Transform;
 		};
 		std::vector<DrawCommand> DrawList;
+		std::vector<DrawCommand> SelectedMeshDrawList;
 
 		// Grid
 		Ref<MaterialInstance> GridMaterial;
+		Ref<MaterialInstance> OutlineMaterial;
 
 		SceneRendererOptions Options;
 	};
@@ -94,6 +96,11 @@ namespace Ares {
 		s_Data.GridMaterial->Set("u_Scale", (float)GRID_RESOLUTION);
 		s_Data.GridMaterial->Set("u_Res", GRID_WIDTH);
 
+		// Outline
+		auto outlineShader = Shader::Find("Assets/Shaders/Outline.glsl");
+		s_Data.OutlineMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(outlineShader));
+		s_Data.OutlineMaterial->SetFlag(MaterialFlag::DepthTest, false);
+
 	}
 
 	void SceneRenderer::SetViewportSize(uint32_t width, uint32_t height)
@@ -102,7 +109,7 @@ namespace Ares {
 		s_Data.CompositePass->GetSpecs().TargetFrameBuffer->Resize(width, height);
 	}
 
-	void SceneRenderer::BeginScene(const Scene* scene, const Camera& camera)
+	void SceneRenderer::BeginScene(const Scene* scene, const SceneRendererCamera& camera)
 	{
 		ARES_CORE_ASSERT(!s_Data.ActiveScene, "");
 
@@ -133,10 +140,12 @@ namespace Ares {
 		CompositePass();
 
 		s_Data.DrawList.clear();
+		s_Data.SelectedMeshDrawList.clear();
+
 		s_Data.SceneData = {};
 	}
 
-	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, std::vector<Ref<MaterialInstance>> materialOverrides)
+	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> materialOverrides)
 
 	//void SceneRenderer::SubmitEntity(Entity& entity)
 	{
@@ -151,6 +160,10 @@ namespace Ares {
 			materialOverrides,
 			transform
 		});
+	}
+	void SceneRenderer::SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform)
+	{
+		s_Data.SelectedMeshDrawList.push_back({ mesh, nullptr, transform });
 	}
 
 	static Ref<Shader> equirectangularConversionShader, envFilteringShader, envIrradianceShader;
@@ -223,10 +236,33 @@ namespace Ares {
 
 	void SceneRenderer::GeometryPass()
 	{
+
+		bool outline = s_Data.SelectedMeshDrawList.size() > 0;
+
+		if (outline)
+		{
+			Renderer::Submit([]()
+			{
+				glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+			});
+		}
+
 		Renderer::BeginRenderPass(s_Data.GeoPass);
 
 		//auto viewProjection = s_Data.SceneData.SceneCamera.GetProjectionMatrix() * s_Data.SceneData.SceneCamera.GetViewMatrix();
-		auto viewProjection = s_Data.SceneData.SceneCamera.GetViewProjection();
+		//auto viewProjection = s_Data.SceneData.SceneCamera.GetViewProjection();
+
+		if (outline)
+		{
+			Renderer::Submit([]()
+			{
+				glStencilMask(0);
+			});
+		}
+
+		auto viewProjection = s_Data.SceneData.SceneCamera.Camera.GetProjectionMatrix() * s_Data.SceneData.SceneCamera.ViewMatrix;
+		glm::vec3 cameraPosition = glm::inverse(s_Data.SceneData.SceneCamera.ViewMatrix)[3];
+
 
 		// Skybox
 		//auto skyboxShader = s_Data.SceneData.SkyboxMaterial->GetShader();
@@ -245,7 +281,7 @@ namespace Ares {
 			auto baseMaterial = dc.Mesh->GetMaterial();
 		//	auto baseMaterial = dc.Material;// Mesh->GetMaterial();
 			baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
-			baseMaterial->Set("u_CameraPosition", s_Data.SceneData.SceneCamera.GetPosition());
+			baseMaterial->Set("u_CameraPosition", cameraPosition);
 
 			// Environment (TODO: don't do this per mesh)
 			baseMaterial->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
@@ -256,13 +292,81 @@ namespace Ares {
 			// Set lights (TODO: move to light environment and don't do per mesh)
 			baseMaterial->Set("lights", s_Data.SceneData.ActiveLight);
 
-
+			auto overrideMaterial = nullptr; // dc.Material;
+			Renderer::SubmitMesh(dc.Mesh, dc.Transform, overrideMaterial);
 		//	//auto overrideMaterial = nullptr; // dc.Material;
 
 		//	//baseMaterial->Bind();
-			Renderer::SubmitMesh(dc.Mesh, dc.Transform);// , baseMaterial->GetShader());
+			//Renderer::SubmitMesh(dc.Mesh, dc.Transform);// , baseMaterial->GetShader());
 		//	//Renderer::SubmitMesh(dc.Mesh, dc.Transform, overrideMaterial);
 		}
+
+		if (outline)
+		{
+			Renderer::Submit([]()
+				{
+					glStencilFunc(GL_ALWAYS, 1, 0xff);
+					glStencilMask(0xff);
+				});
+		}
+
+		for (auto& dc : s_Data.SelectedMeshDrawList)
+		{
+			auto baseMaterial = dc.Mesh->GetMaterial();
+			baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
+			baseMaterial->Set("u_CameraPosition", cameraPosition);
+
+			// Environment (TODO: don't do this per mesh)
+			baseMaterial->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
+			baseMaterial->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
+			baseMaterial->Set("u_BRDFLUTTexture", s_Data.BRDFLUT);
+
+			// Set lights (TODO: move to light environment and don't do per mesh)
+			baseMaterial->Set("lights", s_Data.SceneData.ActiveLight);
+
+			auto overrideMaterial = nullptr; // dc.Material;
+			Renderer::SubmitMesh(dc.Mesh, dc.Transform, overrideMaterial);
+		}
+
+		if (outline)
+		{
+			Renderer::Submit([]()
+				{
+					glStencilFunc(GL_NOTEQUAL, 1, 0xff);
+					glStencilMask(0);
+
+					glLineWidth(10);
+					glEnable(GL_LINE_SMOOTH);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+					glDisable(GL_DEPTH_TEST);
+				});
+
+			// Draw outline here
+			s_Data.OutlineMaterial->Set("u_ViewProjection", viewProjection);
+			for (auto& dc : s_Data.SelectedMeshDrawList)
+			{
+				Renderer::SubmitMesh(dc.Mesh, dc.Transform, s_Data.OutlineMaterial);
+			}
+
+			Renderer::Submit([]()
+				{
+					glPointSize(10);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+				});
+			for (auto& dc : s_Data.SelectedMeshDrawList)
+			{
+				Renderer::SubmitMesh(dc.Mesh, dc.Transform, s_Data.OutlineMaterial);
+			}
+
+			Renderer::Submit([]()
+				{
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					glStencilMask(0xff);
+					glStencilFunc(GL_ALWAYS, 1, 0xff);
+					glEnable(GL_DEPTH_TEST);
+				});
+		}
+
 
 		// Grid
 		if (GetOptions().ShowGrid)

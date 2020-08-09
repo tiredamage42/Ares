@@ -126,7 +126,7 @@ namespace Ares {
 		s_Data.m_FullscreenQuadVertexArray->Bind();
 		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
 	}
-	void Renderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform)
+	void Renderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> overrideMaterial)
 	{
 		// TODO: Sort this out
 		mesh->m_VertexArray->Bind();
@@ -137,7 +137,10 @@ namespace Ares {
 		for (Submesh& submesh : mesh->m_Submeshes)
 		{
 			// Material
-			auto material = materialOverrides[submesh.MaterialIndex];
+
+			auto material = overrideMaterial ? overrideMaterial : materialOverrides[submesh.MaterialIndex];
+			//auto material = materialOverrides[submesh.MaterialIndex];
+
 			auto shader = material->GetShader();
 			material->Bind();
 

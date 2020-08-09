@@ -142,7 +142,7 @@ namespace Ares {
 				// go to the beginning of the files
 				in.seekg(0, std::ios::beg);
 				in.read(&result[0], size);
-				in.close();
+				//in.close();
 			}
 			else
 			{
@@ -156,6 +156,7 @@ namespace Ares {
 			ARES_CORE_ASSERT(false, "");
 
 		}
+		in.close();
 		return result;
 	}
 
