@@ -14,3 +14,6 @@
 	path = Ares\\vendor\\glm
 	url = https://github.com/g-truc/glm
 	branch = master
+[submodule "Ares/vendor/FastNoise"]
+	path = Ares/vendor/FastNoise
+	url = https://github.com/Auburns/FastNoise

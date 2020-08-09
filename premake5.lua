@@ -24,6 +24,7 @@ IncludeDir["ImGui"] = "Ares/vendor/imgui"
 IncludeDir["glm"] = "Ares/vendor/glm"
 IncludeDir["stb_image"] = "Ares/vendor/stb_image"
 IncludeDir["entt"] = "Ares/vendor/entt/include"
+IncludeDir['FastNoise'] = "Ares/vendor/FastNoise"
 -- IncludeDir["assimp"] = "Ares/vendor/assimp/include"
 
 
@@ -56,7 +57,10 @@ project "Ares"
         "%{prj.name}/vendor/stb_image/**.cpp",
         
         "%{prj.name}/vendor/glm/glm/**.hpp",
-        "%{prj.name}/vendor/glm/glm/**.inl"
+        "%{prj.name}/vendor/glm/glm/**.inl",
+
+        "%{prj.name}/vendor/FastNoise/**.cpp"
+
     }
     defines
     {
@@ -74,6 +78,7 @@ project "Ares"
         "%{IncludeDir.glm}",
         "%{IncludeDir.stb_image}",
         "%{IncludeDir.entt}",
+        "%{IncludeDir.FastNoise}",
         "%{prj.name}/vendor/assimp/include"
         -- "%{IncludeDir.assimp}"
         
@@ -85,6 +90,9 @@ project "Ares"
         "ImGui",
         "opengl32.lib"
     }
+    filter "files:%{prj.name}/vendor/FastNoise/**.cpp"
+       	flags { "NoPCH" }
+
     
 	filter "system:windows"
         systemversion "latest"
