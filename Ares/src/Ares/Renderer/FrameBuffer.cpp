@@ -45,7 +45,7 @@ namespace Ares
 		return std::weak_ptr<FrameBuffer>();
 	}
 
-	void FramebufferPool::Add(std::weak_ptr<FrameBuffer> framebuffer)
+	void FramebufferPool::Add(const Ref<FrameBuffer>& framebuffer)
 	{
 		m_Pool.push_back(framebuffer);
 	}

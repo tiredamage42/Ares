@@ -60,12 +60,17 @@ namespace Ares {
 
 		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
-		const glm::mat4& GetViewProjection() const { return m_ProjectionMatrix * m_ViewMatrix; }
+		glm::mat4 GetViewProjection() const { return m_ProjectionMatrix * m_ViewMatrix; }
 
 		glm::vec3 GetUpDirection();
 		glm::vec3 GetRightDirection();
 		glm::vec3 GetForwardDirection();
 		const glm::vec3& GetPosition() const { return m_Position; }
+		glm::quat GetOrientation() const;
+
+		float GetPitch() const { return m_Pitch; }
+		float GetYaw() const { return m_Yaw; }
+
 	private:
 		bool OnMouseScroll(MouseScrolledEvent& e);
 
@@ -78,7 +83,6 @@ namespace Ares {
 		void MouseZoom(float delta);
 
 		glm::vec3 CalculatePosition();
-		glm::quat GetOrientation();
 	protected:
 
 

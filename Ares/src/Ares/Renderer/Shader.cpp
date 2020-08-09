@@ -48,7 +48,7 @@ namespace Ares {
 	{
 
 		if (s_ShaderMap.find(filePath) != s_ShaderMap.end())
-			return s_ShaderMap[filePath];
+			return s_ShaderMap.at(filePath);
 		
 		Ref<Shader> shader = Create(filePath);
 

@@ -33,9 +33,12 @@ namespace Ares {
 	{
 	public:
 
+		OpenGLIndexBuffer(uint32_t count);
 		OpenGLIndexBuffer(uint32_t* indicies, uint32_t count);
 
 		virtual ~OpenGLIndexBuffer();
+
+		virtual void SetData(void* data, uint32_t count, uint32_t offset = 0);
 
 		virtual void Bind() const override;
 		virtual void Unbind() const override;

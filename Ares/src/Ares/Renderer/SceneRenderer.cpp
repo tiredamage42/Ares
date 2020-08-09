@@ -102,13 +102,13 @@ namespace Ares {
 		s_Data.CompositePass->GetSpecs().TargetFrameBuffer->Resize(width, height);
 	}
 
-	void SceneRenderer::BeginScene(const Scene* scene)
+	void SceneRenderer::BeginScene(const Scene* scene, const Camera& camera)
 	{
 		ARES_CORE_ASSERT(!s_Data.ActiveScene, "");
 
 		s_Data.ActiveScene = scene;
 
-		s_Data.SceneData.SceneCamera = scene->m_Camera;
+		s_Data.SceneData.SceneCamera = camera;
 		s_Data.SceneData.SkyboxMaterial = scene->m_SkyboxMaterial;
 		s_Data.SceneData.SceneEnvironment = scene->m_Environment;
 		s_Data.SceneData.ActiveLight = scene->m_Light;
@@ -136,19 +136,20 @@ namespace Ares {
 		s_Data.SceneData = {};
 	}
 
+	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, std::vector<Ref<MaterialInstance>> materialOverrides)
 
-	void SceneRenderer::SubmitEntity(Entity& entity)
+	//void SceneRenderer::SubmitEntity(Entity& entity)
 	{
 		// TODO: Culling, sorting, etc.
 
-		auto& mrComponent = entity.GetComponent<MeshRendererComponent>();
+		/*auto& mrComponent = entity.GetComponent<MeshRendererComponent>();
 		if (!mrComponent.Mesh)
-			return;
+			return;*/
 		
 		s_Data.DrawList.push_back({ 
-			mrComponent.Mesh, 
-			mrComponent.MaterialOverrides,
-			entity.Transform()
+			mesh, 
+			materialOverrides,
+			transform
 		});
 	}
 

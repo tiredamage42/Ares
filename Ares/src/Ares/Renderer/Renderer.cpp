@@ -75,7 +75,7 @@ namespace Ares {
 		});
 	}
 
-	void Renderer::BeginRenderPass(const Ref<RenderPass>& renderPass, bool clear)
+	void Renderer::BeginRenderPass(Ref<RenderPass> renderPass, bool clear)
 	{
 		ARES_CORE_ASSERT(renderPass, "Render pass cannot be null!");
 
@@ -99,7 +99,7 @@ namespace Ares {
 		s_Data.m_ActiveRenderPass = nullptr;
 	}
 
-	void Renderer::SubmitQuad(const Ref<MaterialInstance>& material, const glm::mat4& transform)
+	void Renderer::SubmitQuad(Ref<MaterialInstance> material, const glm::mat4& transform)
 	{
 		bool depthTest = true;
 		if (material)
@@ -114,7 +114,7 @@ namespace Ares {
 		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
 	}
 
-	void Renderer::SubmitFullscreenQuad(const Ref<MaterialInstance>& material)
+	void Renderer::SubmitFullscreenQuad(Ref<MaterialInstance> material)
 	{
 		bool depthTest = true;
 		if (material)
@@ -126,7 +126,7 @@ namespace Ares {
 		s_Data.m_FullscreenQuadVertexArray->Bind();
 		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
 	}
-	void Renderer::SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform)
+	void Renderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform)
 	{
 		// TODO: Sort this out
 		mesh->m_VertexArray->Bind();
@@ -195,7 +195,7 @@ namespace Ares {
 		s_Data.m_CommandQueue.Execute();
 	}
 
-	void Renderer::DrawAABB(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color)
+	void Renderer::DrawAABB(Ref<Mesh> mesh, const glm::mat4& transform, const glm::vec4& color)
 	{
 		for (Submesh& submesh : mesh->m_Submeshes)
 		{

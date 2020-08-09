@@ -481,6 +481,8 @@ namespace Ares {
 				float shininess, metalness;
 				aiMaterial->Get(AI_MATKEY_SHININESS, shininess);
 				aiMaterial->Get(AI_MATKEY_REFLECTIVITY, metalness);
+				metalness = 0;
+
 
 				// float roughness = 1.0f - shininess * 0.01f;
 				// roughness *= roughness;

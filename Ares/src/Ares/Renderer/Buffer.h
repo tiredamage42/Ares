@@ -138,6 +138,7 @@ namespace Ares {
 
 		virtual uint32_t GetCount() const = 0;
 
+		static Ref<IndexBuffer> Create(uint32_t count);
 		static Ref<IndexBuffer> Create(uint32_t* indicies, uint32_t count);
 	};
 

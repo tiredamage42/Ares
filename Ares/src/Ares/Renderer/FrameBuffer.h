@@ -52,13 +52,14 @@ namespace Ares
 		~FramebufferPool();
 
 		std::weak_ptr<FrameBuffer> AllocateBuffer();
-		void Add(std::weak_ptr<FrameBuffer> framebuffer);
+		void Add(const Ref<FrameBuffer>& framebuffer);
 
-		const std::vector<std::weak_ptr<FrameBuffer>>& GetAll() const { return m_Pool; }
+		std::vector<Ref<FrameBuffer>>& GetAll() { return m_Pool; }
+		const std::vector<Ref<FrameBuffer>>& GetAll() const { return m_Pool; }
 
 		inline static FramebufferPool* GetGlobal() { return s_Instance; }
 	private:
-		std::vector<std::weak_ptr<FrameBuffer>> m_Pool;
+		std::vector<Ref<FrameBuffer>> m_Pool;
 
 		static FramebufferPool* s_Instance;
 	};

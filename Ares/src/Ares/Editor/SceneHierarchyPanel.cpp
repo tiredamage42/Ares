@@ -41,7 +41,7 @@ namespace Ares {
 		{
 			//Entity entityS = m_Context->EntityConstructor(entity);
 			//DrawEntityNode(entityS, entityCount, meshCount);
-			DrawEntityNode(Entity(entity, m_Context.Raw()));
+			DrawEntityNode(Entity(entity, m_Context.get()));
 		});
 
 		/*auto& sceneEntities = m_Context->m_Entities;

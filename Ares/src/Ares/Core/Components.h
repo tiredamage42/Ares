@@ -11,9 +11,10 @@ namespace Ares
         std::string Tag;
         TagComponent() = default;
         TagComponent(const TagComponent&) = default;
-        TagComponent(const std::string& tag)
-            : Tag(tag) {}
+        TagComponent(const std::string& tag) : Tag(tag) {}
 
+        operator std::string& () { return Tag; }
+        operator const std::string& () const { return Tag; }
     };
 
     struct TransformComponent
@@ -61,15 +62,17 @@ namespace Ares
 
     struct CameraComponent
     {
-        SceneCamera Camera;
-        //Camera Camera;
+        // 2d uses scene camera (fix this)
+        //SceneCamera Camera;
+        Camera Camera;
         bool Primary = true;
         bool FixedAspectRatio = false;
 
         CameraComponent() = default;
         CameraComponent(const CameraComponent&) = default;
-        /*CameraComponent(const glm::mat4& proj)
-            : Camera(proj) {}*/
+
+        operator Ares::Camera& () { return Camera; }
+        operator const Ares::Camera& () const { return Camera; }
     };
         
 }

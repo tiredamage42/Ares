@@ -1,9 +1,8 @@
 #pragma once
 
 #include "Ares/Core/Scene.h"
-
-#include "entt.hpp"
 #include "Ares/Core/Components.h"
+#include "entt.hpp"
 namespace Ares
 {
 	/*
@@ -57,12 +56,26 @@ namespace Ares
 			return m_Scene->m_Registry.remove_if_exists<T>(m_EntityHandle);
 		}
 
-		operator bool() const { return m_EntityHandle != entt::null; }
 
-		glm::mat4& Transform() { return GetComponent<TransformComponent>(); }
+		glm::mat4& Transform() { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
+		const glm::mat4& Transform() const { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
 
 		const std::string& GetName() const { return GetComponent<TagComponent>().Tag; }
 
+		operator uint32_t () const { return (uint32_t)m_EntityHandle; }
+		
+		operator bool() const { return m_EntityHandle != entt::null && m_Scene; }
+		//operator bool() const { return (uint32_t)m_EntityHandle && m_Scene; }
+
+		bool operator==(const Entity& other) const
+		{
+			return m_EntityHandle == other.m_EntityHandle && m_Scene == other.m_Scene;
+		}
+
+		bool operator!=(const Entity& other) const
+		{
+			return !(*this == other);
+		}
 		
 	private:
 
@@ -71,6 +84,8 @@ namespace Ares
 		Scene* m_Scene = nullptr;
 
 		entt::entity m_EntityHandle{ entt::null };
+
+		friend class Scene;
 	};
 
 	

@@ -27,10 +27,13 @@ namespace Ares
 		Scene(const std::string& debugName = "Scene");
 		~Scene();
 
+		void Init();
+
+
 		void OnUpdate();
 
-		void SetCamera(const Camera& camera) { m_Camera = camera; }
-		Camera& GetCamera() { return m_Camera; }
+		/*void SetCamera(const Camera& camera) { m_Camera = camera; }
+		Camera& GetCamera() { return m_Camera; }*/
 
 		float GetExposure() const { return m_Exposure; }
 		float& GetExposure() { return m_Exposure; }
@@ -50,20 +53,33 @@ namespace Ares
 		void OnEvent(Event& e);
 
 		Entity CreateEntity(const std::string& name = std::string());
-		Entity EntityConstructor(const entt::entity& enttEntity);
+		void DestroyEntity(Entity entity);
+
+		template<typename T>
+		auto GetAllEntitiesWith()
+		{
+			return m_Registry.view<T>();
+		}
+
+		//Entity EntityConstructor(const entt::entity& enttEntity);
 
 		void OnViewportResize(uint32_t width, uint32_t height);
 
 
 
 	private:
+
+		uint32_t m_SceneID;
+		//entt::entity m_SceneEntity;
+
 		// cotnainer for the actual component data (IDs)
 		entt::registry m_Registry;
+
 
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
 		std::string m_DebugName;
-		Camera m_Camera;
+		//Camera m_Camera;
 
 		Light m_Light;
 		float m_LightMultiplier = 0.3f;

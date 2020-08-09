@@ -90,7 +90,7 @@ project "Ares"
         "ImGui",
         "opengl32.lib"
     }
-    filter "files:%{prj.name}/vendor/FastNoise/**.cpp"
+    filter "files:Ares/vendor/FastNoise/**.cpp"
        	flags { "NoPCH" }
 
     

@@ -34,9 +34,9 @@ namespace Ares {
 		
 			// if image is larger or smaller than actual size, what kind of filtering to use?
 			// if shrinking image
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			// if enlarging image
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 			GLenum wrap = this->m_Wrap == TextureWrap::Clamp ? GL_CLAMP_TO_EDGE : GL_REPEAT;
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
@@ -227,6 +227,8 @@ namespace Ares {
 		});
 	}
 
+	// TODO: Revisit this, as currently env maps are being loaded as equirectangular 2D images
+	//       so this is an old path
 
 	OpenGLTextureCube::OpenGLTextureCube(const std::string& path)
 		: m_FilePath(path)
@@ -249,9 +251,9 @@ namespace Ares {
 		ARES_CORE_ASSERT(faceWidth == faceHeight, "Non-square faces!");
 
 		const uint32_t bytesPerPixel = 3;
-		std::array<unsigned char*, 6> faces;
+		std::array<uint8_t*, 6> faces;
 		for (size_t i = 0; i < faces.size(); i++)
-			faces[i] = new unsigned char[faceWidth * faceHeight * bytesPerPixel]; // 3 BPP
+			faces[i] = new uint8_t[faceWidth * faceHeight * bytesPerPixel]; // 3 BPP
 
 		int faceIndex = 0;
 

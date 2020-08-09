@@ -23,7 +23,7 @@ namespace Ares {
 
 		inline const Ref<Shader> GetShader() const { return m_Shader; }
 
-		void Bind() const;
+		void Bind();
 
 		uint32_t GetFlags() const { return m_MaterialFlags; }
 		void SetFlag(MaterialFlag flag) { m_MaterialFlags |= (uint32_t)flag; }
@@ -67,7 +67,7 @@ namespace Ares {
 	private:
 		void AllocateStorage();
 		void OnShaderReloaded();
-		void BindTextures() const;
+		void BindTextures();
 
 		ShaderUniformDeclaration* FindUniformDeclaration(const std::string& name);
 		ShaderResourceDeclaration* FindResourceDeclaration(const std::string& name);
@@ -130,7 +130,7 @@ namespace Ares {
 			Set(name, (const Ref<Texture>&)texture);
 		}
 
-		void Bind() const;
+		void Bind();
 	private:
 		void AllocateStorage();
 		void OnShaderReloaded();

@@ -77,11 +77,29 @@ namespace Ares {
 			glNamedBufferData(this->m_RendererID, count * sizeof(uint32_t), this->m_LocalData.Data, GL_STATIC_DRAW);
 		});
 	}
+	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t count)
+		: m_Count(count)
+	{
+		// m_LocalData = Buffer(size);
+		Renderer::Submit([this, count]() mutable {
+			glCreateBuffers(1, &this->m_RendererID);
+			glNamedBufferData(this->m_RendererID, count * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
+		});
+	}
 	OpenGLIndexBuffer::~OpenGLIndexBuffer()
 	{
 		GLuint rendererID = m_RendererID;
 		Renderer::Submit([rendererID]() {
 			glDeleteBuffers(1, &rendererID);
+		});
+	}
+
+	void OpenGLIndexBuffer::SetData(void* data, uint32_t count, uint32_t offset)
+	{
+		m_Count = count;
+		m_LocalData = Buffer::Copy(data, count * sizeof(uint32_t));
+		Renderer::Submit([this, offset]() {
+			glNamedBufferSubData(this->m_RendererID, offset, this->m_Count * sizeof(uint32_t), this->m_LocalData.Data);
 		});
 	}
 	void OpenGLIndexBuffer::Bind() const

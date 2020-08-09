@@ -35,7 +35,7 @@ namespace Ares
 		OrthographicCameraController m_CameraController;
 		Ref<Texture2D> m_Texture, m_SpriteSheet;
 		Entity m_SquareEntity;
-		Entity m_CameraEntity;
+		//Entity m_CameraEntity;
 		int32_t m_MaxQuadsPerDraw = 10000;
 		int32_t m_NumberOfSprites = 10;
 		glm::vec4 m_SquareColor = { 1.0f, .5f, 0, 1 };
@@ -57,8 +57,11 @@ namespace Ares
 		Ref<Scene> m_Scene;
 		Ref<Scene> m_SpheresScene;
 		Ref<Scene> m_ActiveScene;
+		
 		Entity m_MeshEntity;
-		Ref<Mesh> m_PlaneMesh;
+		Entity m_CameraEntity;
+
+		//Ref<Mesh> m_PlaneMesh;
 
 		//Ref<Mesh> m_Mesh;
 		//Ref<Mesh> m_CubeMesh, m_PlaneMesh;
@@ -155,11 +158,23 @@ namespace Ares
 
 		struct SelectedSubmesh
 		{
-			Entity entity;
+			Entity Entity;
 			Submesh* Mesh;
 			float Distance;
 		};
-		std::vector<SelectedSubmesh> m_SelectedSubmeshes;
+		void OnSelected(const SelectedSubmesh& selectionContext);
+		Ray CastMouseRay();
+
+		enum class SelectionMode
+		{
+			None = 0, Entity = 1, SubMesh = 2
+		};
+
+		SelectionMode m_SelectionMode = SelectionMode::Entity;
+		std::vector<SelectedSubmesh> m_SelectionContext;
+		glm::mat4* m_RelativeTransform = nullptr;
+
+		//std::vector<SelectedSubmesh> m_SelectedSubmeshes;
 		glm::mat4* m_CurrentlySelectedTransform = nullptr;
 
 	

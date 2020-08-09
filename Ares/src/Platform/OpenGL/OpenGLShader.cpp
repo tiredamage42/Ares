@@ -750,7 +750,7 @@ namespace Ares {
 	{
 	}
 
-	void OpenGLShader::ResolveAndSetUniforms(const Scope<OpenGLShaderUniformBufferDeclaration>& decl, Buffer buffer)
+	void OpenGLShader::ResolveAndSetUniforms(const Ref<OpenGLShaderUniformBufferDeclaration>& decl, Buffer buffer)
 	{
 		const ShaderUniformList& uniforms = decl->GetUniformDeclarations();
 		for (size_t i = 0; i < uniforms.size(); i++)

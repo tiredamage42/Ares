@@ -18,6 +18,8 @@ namespace Ares
 
 		}
 		~RenderPass() = default;
+
+		inline RenderPassSpecs& GetSpecs() { return m_Specs; }
 		inline const RenderPassSpecs& GetSpecs() const { return m_Specs; }
 
 	private:
