@@ -22,3 +22,4 @@ Double click on the `GenerateVSProject.bat` file to generate the Visual Studio p
 | [stb_image](github.com/nothings/stb) | Image Loading |
 | [entt](github.com/skypjack/entt) | Entity Component System |
 | [assimp](github.com/assimp/assimp) | Model Loading |
+| [FastNoise](github.com/Auburns/FastNoise) | Noise Library |
