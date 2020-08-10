@@ -23,3 +23,4 @@ Double click on the `GenerateVSProject.bat` file to generate the Visual Studio p
 | [entt](github.com/skypjack/entt) | Entity Component System |
 | [assimp](github.com/assimp/assimp) | Model Loading |
 | [FastNoise](github.com/Auburns/FastNoise) | Noise Library |
+| [yaml-cpp](github.com/jbeder/yaml-cpp) | Scene Serialization |
