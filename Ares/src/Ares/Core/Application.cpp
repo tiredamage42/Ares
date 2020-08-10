@@ -183,4 +183,28 @@ namespace Ares {
         return std::string();
     }
 
+
+
+    const char* Application::GetConfigurationName()
+    {
+#if defined(ARES_DEBUG)
+        return "Debug";
+#elif defined(ARES_RELEASE)
+        return "Release";
+#elif defined(ARES_DIST)
+        return "Dist";
+#else
+#error Undefined configuration?
+#endif
+    }
+
+    const char* Application::GetPlatformName()
+    {
+#if defined(ARES_PLATFORM_WINDOWS)
+        return "Windows x64";
+#else
+#error Undefined platform?
+#endif
+    }
+
 }
