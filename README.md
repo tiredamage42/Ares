@@ -24,3 +24,4 @@ Double click on the `GenerateVSProject.bat` file to generate the Visual Studio p
 | [assimp](github.com/assimp/assimp) | Model Loading |
 | [FastNoise](github.com/Auburns/FastNoise) | Noise Library |
 | [yaml-cpp](github.com/jbeder/yaml-cpp) | Scene Serialization |
+| [JSON for Modern C++](github.com/nlohmann/json) | JSON Utilities |

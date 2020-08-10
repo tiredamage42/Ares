@@ -23,8 +23,9 @@ IncludeDir["Glad"] = "Ares/vendor/Glad/include"
 IncludeDir["ImGui"] = "Ares/vendor/imgui"
 IncludeDir["glm"] = "Ares/vendor/glm"
 IncludeDir["stb_image"] = "Ares/vendor/stb_image"
-IncludeDir["entt"] = "Ares/vendor/entt/include"
-IncludeDir['FastNoise'] = "Ares/vendor/FastNoise"
+IncludeDir["entt"] = "Ares/vendor/entt"
+IncludeDir["FastNoise"] = "Ares/vendor/FastNoise"
+IncludeDir["json"] = "Ares/vendor/nlohmann-json"
 -- IncludeDir["assimp"] = "Ares/vendor/assimp/include"
 
 
@@ -56,6 +57,8 @@ project "Ares"
         "%{prj.name}/vendor/stb_image/**.h",
         "%{prj.name}/vendor/stb_image/**.cpp",
         
+        -- "%{prj.name}/vendor/nlohmann-json/**.hpp",
+
         "%{prj.name}/vendor/glm/glm/**.hpp",
         "%{prj.name}/vendor/glm/glm/**.inl",
 
@@ -82,6 +85,7 @@ project "Ares"
         "%{IncludeDir.glm}",
         "%{IncludeDir.stb_image}",
         "%{IncludeDir.entt}",
+        "%{IncludeDir.json}",
         "%{IncludeDir.FastNoise}",
         "%{prj.name}/vendor/assimp/include",
         "%{prj.name}/vendor/yaml-cpp/include"
@@ -222,7 +226,8 @@ project "Phobos"
         "Ares/src",
         "Ares/vendor",
         "%{IncludeDir.glm}",
-        "%{IncludeDir.entt}"
+        "%{IncludeDir.entt}",
+        "%{IncludeDir.json}"
     }
 
     links
