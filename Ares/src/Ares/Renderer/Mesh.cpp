@@ -466,7 +466,7 @@ namespace Ares {
 				auto aiMaterial = scene->mMaterials[i];
 				auto aiMaterialName = aiMaterial->GetName();
 
-				auto mi = CreateRef<MaterialInstance>(m_BaseMaterial);
+				auto mi = CreateRef<MaterialInstance>(m_BaseMaterial, aiMaterialName.data);
 				m_MaterialOverrides[i] = mi;
 
 				ARES_CORE_INFO(" {0}; Index = {1}", aiMaterialName.data, i);
@@ -806,9 +806,11 @@ namespace Ares {
 		ARES_CORE_ASSERT(NextPositionIndex < nodeAnim->mNumPositionKeys, "");
 		float DeltaTime = (float)(nodeAnim->mPositionKeys[NextPositionIndex].mTime - nodeAnim->mPositionKeys[PositionIndex].mTime);
 		float Factor = (animationTime - (float)nodeAnim->mPositionKeys[PositionIndex].mTime) / DeltaTime;
-		if (Factor < 0.0f)
-			Factor = 0.0f;
+		/*if (Factor < 0.0f)
+			Factor = 0.0f;*/
 		ARES_CORE_ASSERT(Factor <= 1.0f, "Factor must be below 1.0f");
+		Factor = glm::clamp(Factor, 0.0f, 1.0f);
+
 		const aiVector3D& Start = nodeAnim->mPositionKeys[PositionIndex].mValue;
 		const aiVector3D& End = nodeAnim->mPositionKeys[NextPositionIndex].mValue;
 		aiVector3D Delta = End - Start;
@@ -831,9 +833,11 @@ namespace Ares {
 		ARES_CORE_ASSERT(NextRotationIndex < nodeAnim->mNumRotationKeys, "");
 		float DeltaTime = (float)(nodeAnim->mRotationKeys[NextRotationIndex].mTime - nodeAnim->mRotationKeys[RotationIndex].mTime);
 		float Factor = (animationTime - (float)nodeAnim->mRotationKeys[RotationIndex].mTime) / DeltaTime;
-		if (Factor < 0.0f)
-			Factor = 0.0f;
+		/*if (Factor < 0.0f)
+			Factor = 0.0f;*/
 		ARES_CORE_ASSERT(Factor <= 1.0f, "Factor must be below 1.0f");
+		Factor = glm::clamp(Factor, 0.0f, 1.0f);
+
 		const aiQuaternion& StartRotationQ = nodeAnim->mRotationKeys[RotationIndex].mValue;
 		const aiQuaternion& EndRotationQ = nodeAnim->mRotationKeys[NextRotationIndex].mValue;
 		auto q = aiQuaternion();
@@ -856,14 +860,16 @@ namespace Ares {
 		uint32_t nextIndex = (index + 1);
 		ARES_CORE_ASSERT(nextIndex < nodeAnim->mNumScalingKeys, "");
 		float deltaTime = (float)(nodeAnim->mScalingKeys[nextIndex].mTime - nodeAnim->mScalingKeys[index].mTime);
-		float factor = (animationTime - (float)nodeAnim->mScalingKeys[index].mTime) / deltaTime;
-		if (factor < 0.0f)
-			factor = 0.0f;
-		ARES_CORE_ASSERT(factor <= 1.0f, "Factor must be below 1.0f");
+		float Factor = (animationTime - (float)nodeAnim->mScalingKeys[index].mTime) / deltaTime;
+		/*if (factor < 0.0f)
+			factor = 0.0f;*/
+		ARES_CORE_ASSERT(Factor <= 1.0f, "Factor must be below 1.0f");
+		Factor = glm::clamp(Factor, 0.0f, 1.0f);
+
 		const auto& start = nodeAnim->mScalingKeys[index].mValue;
 		const auto& end = nodeAnim->mScalingKeys[nextIndex].mValue;
 		auto delta = end - start;
-		auto aiVec = start + factor * delta;
+		auto aiVec = start + Factor * delta;
 		return { aiVec.x, aiVec.y, aiVec.z };
 	}
 

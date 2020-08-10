@@ -6,6 +6,11 @@
 #include "Ares/Renderer/SceneRenderer.h"
 #include "Ares/Core/Entity.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 namespace Ares
 {
 
@@ -49,6 +54,17 @@ namespace Ares
         m_SkyboxMaterial = MaterialInstance::Create(Material::Create(skyboxShader));
         m_SkyboxMaterial->SetFlag(MaterialFlag::DepthTest, false);*/
     }
+
+    static std::tuple<glm::vec3, glm::quat, glm::vec3> GetTransformDecomposition(const glm::mat4& transform)
+    {
+        glm::vec3 scale, translation, skew;
+        glm::vec4 perspective;
+        glm::quat orientation;
+        glm::decompose(transform, scale, orientation, translation, skew, perspective);
+
+        return { translation, orientation, scale };
+    }
+
 
     Entity Scene::CreateEntity(const std::string& name)
     {

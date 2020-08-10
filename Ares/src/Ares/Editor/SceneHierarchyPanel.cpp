@@ -183,6 +183,7 @@ namespace Ares {
 		bool opened = ImGui::TreeNodeEx((void*)(uint32_t)entity, node_flags, name);
 		if (ImGui::IsItemClicked())
 		{
+
 			m_SelectionContext = entity;
 			if (m_SelectionChangedCallback)
 				m_SelectionChangedCallback(m_SelectionContext);
@@ -387,6 +388,58 @@ namespace Ares {
 			PopID();
 		}
 
+
+		template<typename T, typename UIFunction>
+		static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
+		{
+			if (entity.HasComponent<T>())
+			{
+				bool removeComponent = false;
+
+				auto& component = entity.GetComponent<T>();
+				bool open = ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(T).hash_code()), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap, name.c_str());
+				ImGui::SameLine();
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+				if (ImGui::Button("+"))
+				{
+					ImGui::OpenPopup("ComponentSettings");
+				}
+
+				ImGui::PopStyleColor();
+				ImGui::PopStyleColor();
+
+				if (ImGui::BeginPopup("ComponentSettings"))
+				{
+					if (ImGui::MenuItem("Remove component"))
+						removeComponent = true;
+
+					ImGui::EndPopup();
+				}
+
+				if (open)
+				{
+					uiFunction(component);
+					ImGui::NextColumn();
+					ImGui::Columns(1);
+					ImGui::TreePop();
+				}
+				ImGui::Separator();
+
+				if (removeComponent)
+					entity.RemoveComponent<T>();
+			}
+		}
+
+
+
+
+
+
+
+
+
+
 		void SceneHierarchyPanel::DrawComponents(Entity entity)
 		{
 			ImGui::AlignTextToFramePadding();
@@ -475,11 +528,12 @@ namespace Ares {
 				ImGui::Separator();
 			}
 
+			DrawComponent<MeshRendererComponent>("Mesh", entity, [](MeshRendererComponent& mc)
 
-			if (entity.HasComponent<MeshRendererComponent>())
-			{
-				auto& mc = entity.GetComponent<MeshRendererComponent>();
-				if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(MeshRendererComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Mesh"))
+				//if (entity.HasComponent<MeshRendererComponent>())
+				//{
+					/*auto& mc = entity.GetComponent<MeshRendererComponent>();
+					if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(MeshRendererComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Mesh"))*/
 				{
 					ImGui::Columns(3);
 					ImGui::SetColumnWidth(0, 100);
@@ -500,22 +554,25 @@ namespace Ares {
 						if (!file.empty())
 							mc.Mesh = CreateRef<Mesh>(file);
 					}
-					ImGui::NextColumn();
-					ImGui::Columns(1);
+					/*ImGui::NextColumn();
+					ImGui::Columns(1);*/
 
 					/*if (mc.Mesh)
 						ImGui::InputText("File Path", (char*)mc.Mesh->GetFilePath().c_str(), 256, ImGuiInputTextFlags_ReadOnly);
 					else
 						ImGui::InputText("File Path", (char*)"Null", 256, ImGuiInputTextFlags_ReadOnly);*/
-					ImGui::TreePop();
-				}
-				ImGui::Separator();
-			}
+					//ImGui::TreePop();
+				//}
+				//ImGui::Separator();
+			});
 
-			if (entity.HasComponent<CameraComponent>())
+
+			DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent& cc)
+
+			/*if (entity.HasComponent<CameraComponent>())
 			{
 				auto& cc = entity.GetComponent<CameraComponent>();
-				if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(CameraComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Camera"))
+				if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(CameraComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Camera"))*/
 				{
 					// Projection Type
 					const char* projTypeStrings[] = { "Perspective", "Orthographic" };
@@ -571,12 +628,18 @@ namespace Ares {
 
 					EndPropertyGrid();
 
-					ImGui::TreePop();
+					/*ImGui::TreePop();
 				}
-				ImGui::Separator();
-			}
+				ImGui::Separator();*/
+				});
 
-			if (entity.HasComponent<SpriteRendererComponent>())
+
+
+			DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](SpriteRendererComponent& sr)
+			{
+			});
+
+			/*if (entity.HasComponent<SpriteRendererComponent>())
 			{
 				auto& src = entity.GetComponent<SpriteRendererComponent>();
 				if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(SpriteRendererComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Sprite Renderer"))
@@ -584,7 +647,7 @@ namespace Ares {
 					ImGui::TreePop();
 				}
 				ImGui::Separator();
-			}
+			}*/
 
 		
 

@@ -5,11 +5,28 @@
 #include "EditorGUI.h"
 #include "Ares/ImGui/ImGuizmo.h"
 
+#include <filesystem>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #define _2D 0
 
 namespace Ares
 {
+
+    static std::tuple<glm::vec3, glm::quat, glm::vec3> GetTransformDecomposition(const glm::mat4& transform)
+    {
+        glm::vec3 scale, translation, skew;
+        glm::vec4 perspective;
+        glm::quat orientation;
+        glm::decompose(transform, scale, orientation, translation, skew, perspective);
+
+        return { translation, orientation, scale };
+    }
+
 
     EditorLayer::EditorLayer()
         : Layer("Sandbox2D"), 
@@ -104,15 +121,22 @@ namespace Ares
         m_CheckerboardTex = Texture2D::Create("Assets/Textures/Checkerboard.png");
         m_PlayButtonTex = Texture2D::Create("Assets/Textures/PlayButton.png");
 
+
+
+
+
+        auto environment = Environment::Load("Assets/Textures/birchwood_4k.hdr");
+
         m_EditorScene = CreateRef<Scene>("Editor Scene");
-        
+        UpdateWindowTitle("Editor Scene");
+
         auto skyboxShader = Shader::Find("Assets/Shaders/CubemapSkybox.glsl");
         auto skyboxMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(skyboxShader));
         skyboxMaterial->SetFlag(MaterialFlag::DepthTest, false);
 
         m_EditorScene->SetSkyboxMaterial(skyboxMaterial);
+        m_EditorScene->SetEnvironment(environment);
 
-        
         m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>(m_EditorScene);
         m_SceneHierarchyPanel->SetSelectionChangedCallback(std::bind(&EditorLayer::SelectEntity, this, std::placeholders::_1));
         m_SceneHierarchyPanel->SetEntityDeletedCallback(std::bind(&EditorLayer::OnEntityDeleted, this, std::placeholders::_1));
@@ -355,6 +379,13 @@ namespace Ares
         m_SceneHierarchyPanel->SetContext(m_EditorScene);
     }
 
+    void EditorLayer::UpdateWindowTitle(const std::string& sceneName)
+    {
+        std::string title = sceneName + " - Phobos - " + Application::GetPlatformName() + " (" + Application::GetConfigurationName() + ")";
+        Application::Get().GetWindow().SetTitle(title);
+    }
+
+
 
     void EditorLayer::SetPBRMaterialValues(Ref<Material> material) const//, const glm::mat4& viewProjection) const
     {
@@ -536,7 +567,7 @@ namespace Ares
         {
         case SceneState::Edit:
         {
-            if (m_ViewportPanelFocused)
+            //if (m_ViewportPanelFocused)
                 m_EditorCamera.Update();
 
             m_EditorScene->OnRenderEditor(m_EditorCamera);
@@ -566,6 +597,7 @@ namespace Ares
                     Renderer::EndRenderPass();
                 }
             }
+            
             break;
         }
         case SceneState::Play:
@@ -679,6 +711,10 @@ namespace Ares
                         SceneSerializer serializer(newScene);
                         serializer.Deserialize(filepath);
                         m_EditorScene = newScene;
+
+                        std::filesystem::path path = filepath;
+                        UpdateWindowTitle(path.filename().string());
+
                         m_SceneHierarchyPanel->SetContext(m_EditorScene);
                         
                         m_EditorScene->SetSelectedEntity({});
@@ -691,6 +727,9 @@ namespace Ares
                     std::string filepath = app.SaveFile("Hazel Scene (*.hsc)\0*.hsc\0");
                     SceneSerializer serializer(m_EditorScene);
                     serializer.Serialize(filepath);
+
+                    std::filesystem::path path = filepath;
+                    UpdateWindowTitle(path.filename().string());
                 }
                 ImGui::Separator();
 
@@ -703,25 +742,27 @@ namespace Ares
 
                 ImGui::EndMenu();
             }
-            if (ImGui::BeginMenu("Docking"))
-            {
-                // Disabling fullscreen would allow the window to be moved to the front of other windows, 
-                // which we can't undo at the moment without finer window depth/z control.
-                //ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
+            //if (ImGui::BeginMenu("Docking"))
+            //{
+            //    // Disabling fullscreen would allow the window to be moved to the front of other windows, 
+            //    // which we can't undo at the moment without finer window depth/z control.
+            //    //ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
 
-                if (ImGui::MenuItem("Flag: NoSplit", "", (dockspace_flags & ImGuiDockNodeFlags_NoSplit) != 0))                 
-                    dockspace_flags ^= ImGuiDockNodeFlags_NoSplit;
-                if (ImGui::MenuItem("Flag: NoDockingInCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0))  
-                    dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
-                if (ImGui::MenuItem("Flag: NoResize", "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))                
-                    dockspace_flags ^= ImGuiDockNodeFlags_NoResize;
-                if (ImGui::MenuItem("Flag: AutoHideTabBar", "", (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))          
-                    dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar;
-                ImGui::Separator();
-                if (ImGui::MenuItem("Close DockSpace", NULL, false, dockspaceOpen != NULL))
-                    dockspaceOpen = false;
+            //    if (ImGui::MenuItem("Flag: NoSplit", "", (dockspace_flags & ImGuiDockNodeFlags_NoSplit) != 0))                 
+            //        dockspace_flags ^= ImGuiDockNodeFlags_NoSplit;
+            //    if (ImGui::MenuItem("Flag: NoDockingInCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0))  
+            //        dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
+            //    if (ImGui::MenuItem("Flag: NoResize", "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))                
+            //        dockspace_flags ^= ImGuiDockNodeFlags_NoResize;
+            //    if (ImGui::MenuItem("Flag: AutoHideTabBar", "", (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))          
+            //        dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar;
+            //    ImGui::Separator();
+            //    if (ImGui::MenuItem("Close DockSpace", NULL, false, dockspaceOpen != NULL))
+            //        dockspaceOpen = false;
 
-            }
+            //    ImGui::EndMenu();
+
+            //}
             EditorGUI::ShowTooltip(
                 "When docking is enabled, you can ALWAYS dock MOST window into another! Try it now!" "\n\n"
                 " > if io.ConfigDockingWithShift==false (default):" "\n"
@@ -1081,11 +1122,11 @@ namespace Ares
                 OnSceneStop();
             }
         }
-        ImGui::SameLine();
+        /*ImGui::SameLine();
         if (ImGui::ImageButton((ImTextureID)(m_PlayButtonTex->GetRendererID()), ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), -1, ImVec4(0, 0, 0, 0), ImVec4(1.0f, 1.0f, 1.0f, 0.6f)))
         {
             ARES_CORE_INFO("PLAY!");
-        }
+        }*/
 
         ImGui::End();
 
@@ -1239,6 +1280,47 @@ namespace Ares
 
         m_SceneHierarchyPanel->OnImGuiRender();
 
+
+
+        ImGui::Begin("Materials");
+
+        if (m_SelectionContext.size())
+        {
+            Entity selectedEntity = m_SelectionContext.front().Entity;
+            if (selectedEntity.HasComponent<MeshRendererComponent>())
+            {
+                Ref<Mesh> mesh = selectedEntity.GetComponent<MeshRendererComponent>().Mesh;
+                if (mesh)
+                {
+                    auto& materials = mesh->GetMaterialOverrides();
+                    static uint32_t selectedMaterialIndex = 0;
+                    for (uint32_t i = 0; i < materials.size(); i++)
+                    {
+                        auto& materialInstance = materials[i];
+
+                        ImGuiTreeNodeFlags node_flags = (selectedMaterialIndex == i ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_Leaf;
+                        bool opened = ImGui::TreeNodeEx((void*)(&materialInstance), node_flags, materialInstance->GetName().c_str());
+                        if (ImGui::IsItemClicked())
+                        {
+                            selectedMaterialIndex = i;
+                        }
+                        if (opened)
+                            ImGui::TreePop();
+
+                    }
+
+                    ImGui::Separator();
+
+                    if (selectedMaterialIndex < materials.size())
+                    {
+                        ImGui::Text("Shader: %s", materials[selectedMaterialIndex]->GetShader()->GetName().c_str());
+                    }
+                }
+            }
+        }
+
+        ImGui::End();
+
         ImGui::End();
 
         /*if (m_Mesh)
@@ -1336,7 +1418,7 @@ namespace Ares
     bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
     {
         auto [mx, my] = Input::GetMousePosition();
-        if (e.GetMouseButton() == ARES_MOUSE_BUTTON_LEFT && !Input::IsKeyPressed(ARES_KEY_LEFT_ALT) && !ImGuizmo::IsOver())
+        if (e.GetMouseButton() == ARES_MOUSE_BUTTON_LEFT && !Input::IsKeyPressed(ARES_KEY_LEFT_ALT) && !ImGuizmo::IsOver() && m_SceneState != SceneState::Play)
         {
             //ARES_CORE_LOG("MouseButton Clicked");
             auto [mouseX, mouseY] = GetMouseViewportSpace();

@@ -60,7 +60,7 @@ namespace Ares
 		Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
 		//Ref<Scene> m_Scene;
 		//Ref<Scene> m_SpheresScene;
-		Ref<Scene> m_ActiveScene;
+		//Ref<Scene> m_ActiveScene;
 		Ref<Scene> m_RuntimeScene, m_EditorScene;
 
 		EditorCamera m_EditorCamera;
@@ -188,6 +188,8 @@ namespace Ares
 
 		void OnScenePlay();
 		void OnSceneStop();
+
+		void UpdateWindowTitle(const std::string& sceneName);
 
 		enum class SelectionMode
 		{

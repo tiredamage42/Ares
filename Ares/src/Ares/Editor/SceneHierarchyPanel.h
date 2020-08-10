@@ -26,7 +26,7 @@ namespace Ares {
 		Ref<Scene> m_Context;
 		Entity m_SelectionContext;
 
-		std::function<void(Entity)> m_SelectionChangedCallback, m_EntityDeletedCallback;
+		std::function<void(Entity)> m_SelectionChangedCallback = nullptr, m_EntityDeletedCallback = nullptr;
 	};
 
 }

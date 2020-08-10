@@ -55,7 +55,7 @@ namespace Ares
 		{
 			return m_Scene->m_Registry.remove_if_exists<T>(m_EntityHandle);
 		}
-
+		
 
 		glm::mat4& Transform() { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
 		const glm::mat4& Transform() const { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
