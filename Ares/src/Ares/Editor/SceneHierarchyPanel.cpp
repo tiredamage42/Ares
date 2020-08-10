@@ -309,7 +309,7 @@ namespace Ares {
 		s_IDBuffer[0] = '#'; \
 		s_IDBuffer[1] = '#'; \
 		memset(s_IDBuffer + 2, 0, 14); \
-		itoa(s_Counter++, s_IDBuffer + 2, 16);
+		_itoa(s_Counter++, s_IDBuffer + 2, 16);
 
 
 #define END_PROP \

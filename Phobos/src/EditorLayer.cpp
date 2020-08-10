@@ -1227,7 +1227,7 @@ namespace Ares
 
             //auto& camera = m_CameraEntity.GetComponent<CameraComponent>().Camera;
 
-            bool snap = Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL);
+            bool snap = Input::IsKeyPressed(KeyCode::LeftControl);
             //ImGuizmo::Manipulate(
             //    glm::value_ptr(m_ActiveScene->GetCamera().GetViewMatrix()),// * *m_CurrentlySelectedTransform),
             //    glm::value_ptr(m_ActiveScene->GetCamera().GetProjectionMatrix()),
@@ -1358,20 +1358,20 @@ namespace Ares
 
             switch (e.GetKeyCode())
             {
-            case ARES_KEY_Q:
+            case KeyCode::Q:
                 m_GizmoType = -1;
                 break;
-            case ARES_KEY_W:
+            case KeyCode::W:
                 m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
                 break;
-            case ARES_KEY_E:
+            case KeyCode::E:
                 m_GizmoType = ImGuizmo::OPERATION::ROTATE;
                 break;
-            case ARES_KEY_R:
+            case KeyCode::R:
                 m_GizmoType = ImGuizmo::OPERATION::SCALE;
                 break;
 
-            case ARES_KEY_DELETE:
+            case KeyCode::Delete:
                 if (m_SelectionContext.size())
                 {
                     Entity selectedEntity = m_SelectionContext[0].Entity;
@@ -1383,19 +1383,19 @@ namespace Ares
                 break;
             }
         }
-        if (Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL))
+        if (Input::IsKeyPressed(KeyCode::LeftControl))
         {
             switch (e.GetKeyCode())
             {
 
 
 
-            case ARES_KEY_G:
+            case KeyCode::G:
                 // Toggle grid
                 //if (Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL))
                 SceneRenderer::GetOptions().ShowGrid = !SceneRenderer::GetOptions().ShowGrid;
                 break;
-            case ARES_KEY_B:
+            case KeyCode::B:
                 // Toggle bounding boxes 
                 //if (Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL))
             {
@@ -1403,7 +1403,7 @@ namespace Ares
                 ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
             }
             break;
-            case ARES_KEY_D:
+            case KeyCode::D:
                 if (m_SelectionContext.size())
                 {
                     Entity selectedEntity = m_SelectionContext[0].Entity;
@@ -1418,7 +1418,7 @@ namespace Ares
     bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
     {
         auto [mx, my] = Input::GetMousePosition();
-        if (e.GetMouseButton() == ARES_MOUSE_BUTTON_LEFT && !Input::IsKeyPressed(ARES_KEY_LEFT_ALT) && !ImGuizmo::IsOver() && m_SceneState != SceneState::Play)
+        if (e.GetMouseButton() == MouseButtonCode::ButtonLeft && !Input::IsKeyPressed(KeyCode::LeftAlt) && !ImGuizmo::IsOver() && m_SceneState != SceneState::Play)
         {
             //ARES_CORE_LOG("MouseButton Clicked");
             auto [mouseX, mouseY] = GetMouseViewportSpace();

@@ -75,7 +75,9 @@ namespace Ares
 
 	void EditorCamera::Update()
 	{
-		if (Input::IsKeyPressed(ARES_KEY_LEFT_ALT))
+
+		if (Input::IsKeyPressed(KeyCode::LeftAlt))
+		//if (Input::IsKeyPressed(ARES_KEY_LEFT_ALT))
 		{
 			const glm::vec2& mouse{ Input::GetMouseX(), Input::GetMouseY() };
 			glm::vec2 delta = mouse - m_InitialMousePosition;
@@ -85,13 +87,19 @@ namespace Ares
 
 			delta *= Time::GetDeltaTime();
 
-			if (Input::IsMouseButtonPressed(ARES_MOUSE_BUTTON_MIDDLE))
+			if (Input::IsMouseButtonPressed(MouseButtonCode::ButtonMiddle))
+
+			//if (Input::IsMouseButtonPressed(ARES_MOUSE_BUTTON_MIDDLE))
 				MousePan(delta);
 
-			else if (Input::IsMouseButtonPressed(ARES_MOUSE_BUTTON_LEFT))
+			else if (Input::IsMouseButtonPressed(MouseButtonCode::ButtonLeft))
+
+			//else if (Input::IsMouseButtonPressed(ARES_MOUSE_BUTTON_LEFT))
 				MouseRotate(delta);
 
-			else if (Input::IsMouseButtonPressed(ARES_MOUSE_BUTTON_RIGHT))
+			else if (Input::IsMouseButtonPressed(MouseButtonCode::ButtonRight))
+
+			//else if (Input::IsMouseButtonPressed(ARES_MOUSE_BUTTON_RIGHT))
 				MouseZoom(delta.y);
 		}
 
