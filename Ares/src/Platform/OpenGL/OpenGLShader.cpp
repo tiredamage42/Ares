@@ -542,7 +542,7 @@ namespace Ares {
 				declaration = new OpenGLShaderUniformDeclaration(domain, t, name, count);
 			}
 
-			if (StartsWith(name, "r_"))
+			/*if (StartsWith(name, "r_"))
 			{
 				if (domain == ShaderDomain::Vertex)
 					((OpenGLShaderUniformBufferDeclaration*)m_VSRendererUniformBuffers.front())->PushUniform(declaration);
@@ -550,7 +550,7 @@ namespace Ares {
 					((OpenGLShaderUniformBufferDeclaration*)m_PSRendererUniformBuffers.front())->PushUniform(declaration);
 			}
 			else
-			{
+			{*/
 				if (domain == ShaderDomain::Vertex)
 				{
 					if (!m_VSMaterialUniformBuffer)
@@ -565,7 +565,7 @@ namespace Ares {
 
 					m_PSMaterialUniformBuffer->PushUniform(declaration);
 				}
-			}
+			//}
 		}
 	}
 

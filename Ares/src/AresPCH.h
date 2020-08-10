@@ -13,8 +13,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "Ares/Core/Core.h"
 #include "Ares/Core/Log.h"
-
 #include "Ares/Debug/Profiling.h"
 
 #ifdef ARES_PLATFORM_WINDOWS

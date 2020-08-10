@@ -21,8 +21,8 @@ namespace Ares {
 	class Input
 	{
 	public:
-		static bool IsKeyPressed(KeyCode key);
-		static bool IsMouseButtonPressed(MouseButtonCode button);
+		static bool IsKeyPressed(const KeyCode key);
+		static bool IsMouseButtonPressed(const MouseButtonCode button);
 		static std::pair<float, float> GetMousePosition();
 		static float GetMouseX();
 		static float GetMouseY();

@@ -4,6 +4,10 @@
 #include "Ares/Renderer/Shader.h"
 #include "Ares/Renderer/Texture.h"
 
+/*
+	TODO: show material props in imgui
+
+*/
 //#include <unordered_set>
 
 namespace Ares {
