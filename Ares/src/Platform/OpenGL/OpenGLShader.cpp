@@ -60,7 +60,10 @@ namespace Ares {
 		
 		Renderer::Submit([this]() {
 			if (this->m_RendererID)
-				glDeleteShader(this->m_RendererID);
+			{
+
+				glDeleteProgram(this->m_RendererID);
+			}
 
 			
 			this->CompileAndUploadShader();
