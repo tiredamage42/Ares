@@ -1,17 +1,16 @@
 #include "AresPCH.h"
 #include "Ares/Core/Application.h"
 #include "Ares/Core/Log.h"
-#include "Ares/Renderer/Renderer.h"
 #include "Ares/Core/Input.h"
-
 #include "Ares/Core/Time.h"
-#include <GLFW/glfw3.h>
+#include "Ares/Core/Platform.h"
 
-
+#include "Ares/Renderer/Renderer.h"
 #include "Ares/Renderer/Framebuffer.h"
 
 //#include <imgui/imgui.h>
 
+#include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 //#include <Windows.h>
@@ -116,7 +115,7 @@ namespace Ares {
     {
         while (m_Running)
         {        
-            Time::Tick(glfwGetTime()); // Platform::GetTime
+            Time::Tick(Platform::GetTime()); // Platform::GetTime
 
             if (!m_Minimized)
             {
@@ -198,13 +197,16 @@ namespace Ares {
 #endif
     }
 
+
     const char* Application::GetPlatformName()
     {
-#if defined(ARES_PLATFORM_WINDOWS)
-        return "Windows x64";
-#else
-#error Undefined platform?
-#endif
+
+        return Platform::GetName();
+//#if defined(ARES_PLATFORM_WINDOWS)
+//        return "Windows x64";
+//#else
+//#error Undefined platform?
+//#endif
     }
 
 }
