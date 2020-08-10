@@ -65,6 +65,7 @@ namespace Ares {
 	void Renderer::DrawIndexed(uint32_t count, PrimitiveType type, bool depthTest)
 	{
 		Submit([=]() {
+
 			RenderCommand::DrawIndexed(count, type, depthTest);
 		});
 	}

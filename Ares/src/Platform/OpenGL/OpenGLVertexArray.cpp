@@ -58,12 +58,19 @@ namespace Ares {
 		
 		Bind();
 		buffer->Bind();
+		/*
+		*/
 
 		Renderer::Submit([this, buffer]() mutable {
+
 			const auto& layout = buffer->GetLayout();
+
+			//glVertexArrayVertexBuffer(m_RendererID, (uint32_t)(m_VertexBuffers.size() - 1), buffer->GetRendererID(), 0, layout.GetStride());
 
 			for (const auto& element : layout)
 			{
+				//glEnableVertexArrayAttrib(m_RendererID, m_VertexBufferIndex);
+
 				auto glBaseType = ShaderDataType2OpenGLBaseType(element.Type);
 				glEnableVertexAttribArray(this->m_VertexBufferIndex);
 				if (glBaseType == GL_INT)
@@ -73,6 +80,10 @@ namespace Ares {
 						glBaseType,
 						layout.GetStride(),
 						(const void*)(intptr_t)element.Offset);
+
+					/*glVertexArrayAttribIFormat(m_RendererID, m_VertexBufferIndex, element.GetComponentCount(), glBaseType, element.Offset);
+					glVertexArrayAttribBinding(m_RendererID, m_VertexBufferIndex, (uint32_t)(m_VertexBuffers.size() - 1));*/
+
 				}
 				else
 				{
@@ -82,6 +93,11 @@ namespace Ares {
 						element.Normalized ? GL_TRUE : GL_FALSE,
 						layout.GetStride(),
 						(const void*)(intptr_t)element.Offset);
+
+
+					/*glVertexArrayAttribFormat(m_RendererID, m_VertexBufferIndex, element.GetComponentCount(), glBaseType, element.Normalized ? GL_TRUE : GL_FALSE, element.Offset);
+					glVertexArrayAttribBinding(m_RendererID, m_VertexBufferIndex, (uint32_t)(m_VertexBuffers.size() - 1));*/
+
 				}
 				this->m_VertexBufferIndex++;
 
@@ -136,6 +152,10 @@ namespace Ares {
 	{
 		Bind();
 		buffer->Bind();
+		/*Renderer::Submit([this, buffer]() {
+			glVertexArrayElementBuffer(m_RendererID, buffer->GetRendererID());
+		});*/
+
 		m_IndexBuffer = buffer;
 	}
 }

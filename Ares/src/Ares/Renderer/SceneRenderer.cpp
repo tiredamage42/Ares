@@ -57,6 +57,7 @@ namespace Ares {
 
 	void SceneRenderer::Init()
 	{
+
 		FrameBufferSpecs geoFramebufferSpec;
 		geoFramebufferSpec.Width = 1280;
 		geoFramebufferSpec.Height = 720;
@@ -111,6 +112,7 @@ namespace Ares {
 
 	void SceneRenderer::BeginScene(const Scene* scene, const SceneRendererCamera& camera)
 	{
+
 		ARES_CORE_ASSERT(!s_Data.ActiveScene, "");
 
 		s_Data.ActiveScene = scene;
@@ -126,6 +128,7 @@ namespace Ares {
 
 	void SceneRenderer::EndScene()
 	{
+
 		ARES_CORE_ASSERT(s_Data.ActiveScene, "");
 
 		s_Data.ActiveScene = nullptr;
@@ -385,6 +388,10 @@ namespace Ares {
 			// TODO: get scale from scene params
 			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(16.0f)));
 			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
+			
+			
+			
+			
 			Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(GRID_RESOLUTION * .5f + GRID_WIDTH * .5f)));
 		}
 
@@ -401,6 +408,7 @@ namespace Ares {
 
 	void SceneRenderer::CompositePass()
 	{
+
 		Renderer::BeginRenderPass(s_Data.CompositePass);
 		s_Data.CompositeShader->Bind();
 		s_Data.CompositeShader->SetFloat("u_Exposure", s_Data.SceneData.Exposure);

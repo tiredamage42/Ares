@@ -21,6 +21,7 @@ namespace Ares {
 		virtual void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
 
 		virtual void SetData(void* data, uint32_t size, uint32_t offset = 0) override;
+		virtual uint32_t GetRendererID() const override { return m_RendererID; }
 
 	private:
 		uint32_t m_RendererID;
@@ -39,6 +40,7 @@ namespace Ares {
 		virtual ~OpenGLIndexBuffer();
 
 		virtual void SetData(void* data, uint32_t count, uint32_t offset = 0);
+		virtual uint32_t GetRendererID() const override { return m_RendererID; }
 
 		virtual void Bind() const override;
 		virtual void Unbind() const override;

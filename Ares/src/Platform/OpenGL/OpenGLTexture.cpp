@@ -6,13 +6,26 @@
 
 namespace Ares {
 
+	static GLenum Ares2OpenGLInternalTextureFormat(TextureFormat format)
+	{
+		switch (format)
+		{
+		case TextureFormat::RGB:     return GL_RGB8;
+		case TextureFormat::RGBA:    return GL_RGBA8;
+		case TextureFormat::Float16: return GL_RGBA16F;
+		}
+		ARES_CORE_ASSERT(false, "Unknown texture format!");
+		return 0;
+	}
+
 	static GLenum Ares2OpenGLTextureFormat(TextureFormat format)
 	{
 		switch (format)
 		{
 		case TextureFormat::RGB: return GL_RGB;
 		case TextureFormat::RGBA: return GL_RGBA;
-		case TextureFormat::Float16: return GL_RGBA16F;
+		//case TextureFormat::Float16: return GL_RGBA16F;
+		case TextureFormat::Float16: return GL_RGBA;
 		}
 		ARES_CORE_ASSERT(false, "Unknown Texture Format!");
 		return 0;
@@ -29,26 +42,37 @@ namespace Ares {
 		
 		Renderer::Submit([this]() mutable {
 			//upload to opengl (gpu)
-			glGenTextures(1, &this->m_RendererID);
-			glBindTexture(GL_TEXTURE_2D, this->m_RendererID);
-		
+			/*glGenTextures(1, &this->m_RendererID);
+			glBindTexture(GL_TEXTURE_2D, this->m_RendererID);*/
+			glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+
 			// if image is larger or smaller than actual size, what kind of filtering to use?
 			// if shrinking image
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			// if enlarging image
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 			GLenum wrap = this->m_Wrap == TextureWrap::Clamp ? GL_CLAMP_TO_EDGE : GL_REPEAT;
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
+
+			glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+
+			/*glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);*/
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, wrap);
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, wrap);
+
+
 			glTextureParameterf(this->m_RendererID, GL_TEXTURE_MAX_ANISOTROPY, RendererAPI::GetCapabilities().MaxAnisotropy);
 
-			glTexImage2D(GL_TEXTURE_2D, 0, Ares2OpenGLTextureFormat(this->m_Format), this->m_Width, this->m_Height, 0, Ares2OpenGLTextureFormat(this->m_Format), GL_UNSIGNED_BYTE, nullptr);
+			//glTexImage2D(GL_TEXTURE_2D, 0, Ares2OpenGLTextureFormat(this->m_Format), this->m_Width, this->m_Height, 0, Ares2OpenGLTextureFormat(this->m_Format), GL_UNSIGNED_BYTE, nullptr);
 			
 			//glGenerateMipmap(GL_TEXTURE_2D);
 
 			// unbind
-			glBindTexture(GL_TEXTURE_2D, 0);
+			//glBindTexture(GL_TEXTURE_2D, 0);
+			glTextureStorage2D(m_RendererID, 1, Ares2OpenGLInternalTextureFormat(m_Format), m_Width, m_Height);
 		});
 
 		m_ImageData.Allocate(width * height * Texture::GetBPP(m_Format));
@@ -116,33 +140,54 @@ namespace Ares {
 				glCreateTextures(GL_TEXTURE_2D, 1, &this->m_RendererID);
 				int levels = CalculateMipMapCount(this->m_Width, this->m_Height);
 				ARES_CORE_INFO("Creating srgb texture with {0} mips", levels);
-				glTextureStorage2D(this->m_RendererID, levels, GL_SRGB8, this->m_Width, this->m_Height);
+				//glTextureStorage2D(this->m_RendererID, levels, GL_SRGB8, this->m_Width, this->m_Height);
 				glTextureParameteri(this->m_RendererID, GL_TEXTURE_MIN_FILTER, levels > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
 				glTextureParameteri(this->m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+				glTextureStorage2D(this->m_RendererID, levels, GL_SRGB8, this->m_Width, this->m_Height);
 				glTextureSubImage2D(this->m_RendererID, 0, 0, 0, this->m_Width, this->m_Height, GL_RGB, GL_UNSIGNED_BYTE, this->m_ImageData.Data);
+
 				glGenerateTextureMipmap(this->m_RendererID);
 			}
 			else
 			{
-				glGenTextures(1, &this->m_RendererID);
-				glBindTexture(GL_TEXTURE_2D, this->m_RendererID);
+				/*glGenTextures(1, &this->m_RendererID);
+				glBindTexture(GL_TEXTURE_2D, this->m_RendererID);*/
+				glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
 
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+				/*glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);*/
+				glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+				glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-				GLenum internalFormat = Ares2OpenGLTextureFormat(m_Format);
-				GLenum format = srgb ? GL_SRGB8 : (m_IsHDR ? GL_RGB : Ares2OpenGLTextureFormat(m_Format)); // HDR = GL_RGB for now
+
+				//GLenum internalFormat = Ares2OpenGLTextureFormat(m_Format);
+				GLenum internalFormat = srgb ? GL_SRGB8 : Ares2OpenGLInternalTextureFormat(m_Format);
+
+				//GLenum format = srgb ? GL_SRGB8 : (m_IsHDR ? GL_RGB : Ares2OpenGLTextureFormat(m_Format)); // HDR = GL_RGB for now
+				GLenum format = srgb ? GL_RGB : (m_IsHDR ? GL_RGB : Ares2OpenGLTextureFormat(m_Format)); // HDR = GL_RGB for now
+
+
 				GLenum type = internalFormat == GL_RGBA16F ? GL_FLOAT : GL_UNSIGNED_BYTE;
-				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_Width, m_Height, 0, format, type, m_ImageData.Data);
-				//glTexImage2D(GL_TEXTURE_2D, 0, Ares2OpenGLTextureFormat(this->m_Format), this->m_Width, this->m_Height, 0, srgb ? GL_SRGB8 : Ares2OpenGLTextureFormat(this->m_Format), GL_UNSIGNED_BYTE, this->m_ImageData.Data);
 
-				glGenerateMipmap(GL_TEXTURE_2D);
+				//glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_Width, m_Height, 0, format, type, m_ImageData.Data);
+				////glTexImage2D(GL_TEXTURE_2D, 0, Ares2OpenGLTextureFormat(this->m_Format), this->m_Width, this->m_Height, 0, srgb ? GL_SRGB8 : Ares2OpenGLTextureFormat(this->m_Format), GL_UNSIGNED_BYTE, this->m_ImageData.Data);
 
-				glBindTexture(GL_TEXTURE_2D, 0);
+				//glGenerateMipmap(GL_TEXTURE_2D);
+
+				//glBindTexture(GL_TEXTURE_2D, 0);
+
+				glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
+				glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, format, type, m_ImageData.Data);
+
+				glGenerateTextureMipmap(m_RendererID);
+
 			}
 
 			// uploaded to gpu, now delete from cpu memory
@@ -216,14 +261,21 @@ namespace Ares {
 
 		Renderer::Submit([=]() {
 			glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_RendererID);
-			glTextureStorage2D(m_RendererID, levels, Ares2OpenGLTextureFormat(m_Format), width, height);
+			//glTextureStorage2D(m_RendererID, levels, Ares2OpenGLTextureFormat(m_Format), width, height);
 			glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, levels > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
 			glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+			/*glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);*/
 
 			// glTextureParameterf(m_RendererID, GL_TEXTURE_MAX_ANISOTROPY, 16);
+
+			glTextureStorage2D(m_RendererID, levels, Ares2OpenGLInternalTextureFormat(m_Format), width, height);
 		});
 	}
 
@@ -294,30 +346,45 @@ namespace Ares {
 		}
 
 		Renderer::Submit([this, faceWidth, faceHeight, faces]() {
-			glGenTextures(1, &this->m_RendererID);
+			/*glGenTextures(1, &this->m_RendererID);
 			glBindTexture(GL_TEXTURE_CUBE_MAP, this->m_RendererID);
 
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);*/
+
+			glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_RendererID);
+
+			glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+
 
 			glTextureParameterf(this->m_RendererID, GL_TEXTURE_MAX_ANISOTROPY, RendererAPI::GetCapabilities().MaxAnisotropy);
 
 			auto format = Ares2OpenGLTextureFormat(this->m_Format);
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[2]);
+			/*glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[2]);
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[0]);
 
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[4]);
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[5]);
 
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[1]);
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[3]);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[3]);*/
 
-			glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+			//glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+			glTextureStorage2D(m_RendererID, 1, format, faceWidth, faceHeight);
+			for (uint32_t i = 0; i < 6; i++)
+				glTextureSubImage3D(m_RendererID, 0, 0, 0, i, faceWidth, faceHeight, 1, format, GL_UNSIGNED_BYTE, faces[i]);
 
-			glBindTexture(GL_TEXTURE_2D, 0);
+
+			//glBindTexture(GL_TEXTURE_2D, 0);
+			glGenerateTextureMipmap(m_RendererID);
 
 			for (size_t i = 0; i < faces.size(); i++)
 				delete[] faces[i];
