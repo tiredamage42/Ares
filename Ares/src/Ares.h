@@ -13,7 +13,7 @@
 
 #include "Ares/Math/AABB.h"
 #include "Ares/Math/Ray.h"
-
+#include "Ares/Math/Random.h"
 
 
 #include "Ares/Core/Core.h"
