@@ -1,11 +1,18 @@
 #pragma once
 
+#include "Ares/Core/UUID.h"
 #include "Ares/Renderer/Texture.h"
 #include "Ares/Renderer/SceneCamera.h"
 #include "Ares/Renderer/Mesh.h"
 #include <glm/glm.hpp>
 namespace Ares
 {
+
+    struct IDComponent
+    {
+        UUID ID = 0;
+    };
+
     struct TagComponent
     {
         std::string Tag;
@@ -62,17 +69,15 @@ namespace Ares
 
     struct CameraComponent
     {
-        // 2d uses scene camera (fix this)
-        //SceneCamera Camera;
-        Camera Camera;
+        SceneCamera Camera;
         bool Primary = true;
         bool FixedAspectRatio = false;
 
         CameraComponent() = default;
         CameraComponent(const CameraComponent&) = default;
 
-        operator Ares::Camera& () { return Camera; }
-        operator const Ares::Camera& () const { return Camera; }
+        operator SceneCamera& () { return Camera; }
+        operator const SceneCamera& () const { return Camera; }
     };
         
 }

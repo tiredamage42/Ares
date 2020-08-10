@@ -1,6 +1,8 @@
 #pragma once
 #include <Ares.h>
 #include "imgui/imgui_internal.h"
+#include "Ares/Editor/EditorCamera.h"
+#include "Ares/Editor/SceneHierarchyPanel.h"
 
 namespace Ares
 {
@@ -21,11 +23,13 @@ namespace Ares
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
 		void ShowBoundingBoxes(bool show, bool onTop = false);
+		void SelectEntity(Entity entity);
+
 	private:
 		void SetPBRMaterialValues(Ref<Material> material) const;//, const glm::mat4& viewProjection) const;
 		std::pair<float, float> GetMouseViewportSpace();
 		std::pair<glm::vec3, glm::vec3> CastRay(float mx, float my);
-	private:
+	
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		float m_FrameTimeGraph[100];
 		int values_offset = 0;
@@ -54,12 +58,15 @@ namespace Ares
 
 
 		Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
-		Ref<Scene> m_Scene;
-		Ref<Scene> m_SpheresScene;
+		//Ref<Scene> m_Scene;
+		//Ref<Scene> m_SpheresScene;
 		Ref<Scene> m_ActiveScene;
-		
-		Entity m_MeshEntity;
-		Entity m_CameraEntity;
+		Ref<Scene> m_RuntimeScene, m_EditorScene;
+
+		EditorCamera m_EditorCamera;
+
+		//Entity m_MeshEntity;
+		//Entity m_CameraEntity;
 
 		//Ref<Mesh> m_PlaneMesh;
 
@@ -143,6 +150,7 @@ namespace Ares
 
 		// Editor resources
 		Ref<Texture2D> m_CheckerboardTex;
+		Ref<Texture2D> m_PlayButtonTex;
 
 		glm::vec2 m_ViewportBounds[2];
 
@@ -156,14 +164,30 @@ namespace Ares
 		bool m_UIShowBoundingBoxes = false;
 		bool m_UIShowBoundingBoxesOnTop = false;
 
+
+		bool m_ViewportPanelMouseOver = false;
+		bool m_ViewportPanelFocused = false;
+
+		enum class SceneState
+		{
+			Edit = 0, Play = 1, Pause = 2
+		};
+		SceneState m_SceneState = SceneState::Edit;
+
+
 		struct SelectedSubmesh
 		{
 			Entity Entity;
-			Submesh* Mesh;
-			float Distance;
+			Submesh* Mesh = nullptr;
+			float Distance = 0.0f;
 		};
 		void OnSelected(const SelectedSubmesh& selectionContext);
+		void OnEntityDeleted(Entity e);
+
 		Ray CastMouseRay();
+
+		void OnScenePlay();
+		void OnSceneStop();
 
 		enum class SelectionMode
 		{

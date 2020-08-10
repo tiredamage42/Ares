@@ -63,7 +63,7 @@ namespace Ares
 		const std::string& GetName() const { return GetComponent<TagComponent>().Tag; }
 
 		operator uint32_t () const { return (uint32_t)m_EntityHandle; }
-		
+		operator entt::entity() const { return m_EntityHandle; }
 		operator bool() const { return m_EntityHandle != entt::null && m_Scene; }
 		//operator bool() const { return (uint32_t)m_EntityHandle && m_Scene; }
 
@@ -76,7 +76,8 @@ namespace Ares
 		{
 			return !(*this == other);
 		}
-		
+		UUID GetUUID() { return GetComponent<IDComponent>().ID; }
+		UUID GetSceneUUID() { return m_Scene->GetUUID(); }
 	private:
 
 		// not ref counted since entity shouldnt
@@ -84,7 +85,7 @@ namespace Ares
 		Scene* m_Scene = nullptr;
 
 		entt::entity m_EntityHandle{ entt::null };
-
+		friend class SceneSerializer;
 		friend class Scene;
 	};
 

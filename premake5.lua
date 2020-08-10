@@ -59,7 +59,11 @@ project "Ares"
         "%{prj.name}/vendor/glm/glm/**.hpp",
         "%{prj.name}/vendor/glm/glm/**.inl",
 
-        "%{prj.name}/vendor/FastNoise/**.cpp"
+        "%{prj.name}/vendor/FastNoise/**.cpp",
+
+        "%{prj.name}/vendor/yaml-cpp/src/**.cpp",
+		"%{prj.name}/vendor/yaml-cpp/src/**.h",
+		"%{prj.name}/vendor/yaml-cpp/include/**.h"
 
     }
     defines
@@ -79,7 +83,8 @@ project "Ares"
         "%{IncludeDir.stb_image}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.FastNoise}",
-        "%{prj.name}/vendor/assimp/include"
+        "%{prj.name}/vendor/assimp/include",
+        "%{prj.name}/vendor/yaml-cpp/include"
         -- "%{IncludeDir.assimp}"
         
     }
@@ -90,7 +95,7 @@ project "Ares"
         "ImGui",
         "opengl32.lib"
     }
-    filter "files:Ares/vendor/FastNoise/**.cpp"
+    filter "files:Ares/vendor/FastNoise/**.cpp or files:Ares/vendor/yaml-cpp/src/**.cpp"
        	flags { "NoPCH" }
 
     

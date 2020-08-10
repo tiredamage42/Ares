@@ -3,6 +3,8 @@
 #include "SceneHierarchyPanel.h"
 
 #include <imgui.h>
+
+#include "Ares/Core/Application.h"
 #include "Ares/Core/Entity.h"
 #include <assimp/scene.h>
 
@@ -54,7 +56,7 @@ namespace Ares {
 				//Entity entityS = m_Context->EntityConstructor(entity);
 				//DrawEntityNode(entityS, entityCount, meshCount);
 
-				Entity e(entity, m_Context.Raw());
+				Entity e(entity, m_Context.get());
 				if (e.HasComponent<IDComponent>())
 					DrawEntityNode(e);
 				//DrawEntityNode(Entity(entity, m_Context.get()));

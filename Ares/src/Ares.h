@@ -42,6 +42,8 @@
 #include "Ares/Core/Entity.h"
 #include "Ares/Core/Scene.h"
 #include "Ares/Core/Components.h"
+#include "Ares/Renderer/SceneCamera.h"
+#include "Ares/Core/SceneSerializer.h"
 
 #include "Ares/Renderer/CameraController.h"
 #include "Ares/Renderer/Renderer2D.h"

@@ -110,7 +110,7 @@ namespace Ares
 	void EditorCamera::OnEvent(Event& e)
 	{
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<MouseScrolledEvent>(ARES_BIND_EVENT_FN(Camera::OnMouseScroll));
+		dispatcher.Dispatch<MouseScrolledEvent>(ARES_BIND_EVENT_FN(EditorCamera::OnMouseScroll));
 	}
 
 	bool EditorCamera::OnMouseScroll(MouseScrolledEvent& e)

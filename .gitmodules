@@ -17,3 +17,6 @@
 [submodule "Ares/vendor/FastNoise"]
 	path = Ares/vendor/FastNoise
 	url = https://github.com/Auburns/FastNoise
+[submodule "Ares/vendor/yaml-cpp"]
+	path = Ares/vendor/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp

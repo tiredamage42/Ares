@@ -14,7 +14,8 @@ namespace Ares
     EditorLayer::EditorLayer()
         : Layer("Sandbox2D"), 
         m_CameraController(1280.0f / 720.0f),
-        m_SceneType(SceneType::Model)//,
+        m_SceneType(SceneType::Model),
+        m_EditorCamera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f))
         //m_Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f))
     {
     }
@@ -99,184 +100,201 @@ namespace Ares
 
 #else
 
-        auto _ = Shader::Find("Assets/Shaders/pbr_anim.glsl");
+        // Editor
+        m_CheckerboardTex = Texture2D::Create("Assets/Textures/Checkerboard.png");
+        m_PlayButtonTex = Texture2D::Create("Assets/Textures/PlayButton.png");
 
-
-        auto environment = Environment::Load("Assets/Textures/birchwood_4k.hdr");
-
+        m_EditorScene = CreateRef<Scene>("Editor Scene");
+        
         auto skyboxShader = Shader::Find("Assets/Shaders/CubemapSkybox.glsl");
         auto skyboxMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(skyboxShader));
         skyboxMaterial->SetFlag(MaterialFlag::DepthTest, false);
 
-        // Model Scene
-        {
-            m_Scene = CreateRef<Scene>("Model Scene");
-            m_CameraEntity = m_Scene->CreateEntity("Camera Entity");
-            m_CameraEntity.AddComponent<CameraComponent>(Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
+        m_EditorScene->SetSkyboxMaterial(skyboxMaterial);
 
-            //m_Scene->SetCamera(Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
-
-            m_Scene->SetSkyboxMaterial(skyboxMaterial);
-            m_Scene->SetEnvironment(environment);
-
-            m_MeshEntity = m_Scene->CreateEntity("Mesh entity");
-            MeshRendererComponent& mrComponent = m_MeshEntity.AddComponent<MeshRendererComponent>();
-            //mrComponent.Mesh = nullptr;
-            //mrComponent.MaterialInstances = nullptr;
-            m_MeshMaterial = nullptr;
-        }
-
-            
-
-
-        /*Ref<Shader> m_PBRShaderAnim = Shader::Find("Assets/Shaders/pbr_anim.glsl");
-        Ref<Shader> m_PBRShaderStatic = Shader::Find("Assets/Shaders/pbr_static.glsl");*/
         
-        /*m_GridMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/grid.glsl"));
-        m_SkyboxShader = Shader::Find("Assets/Shaders/CubemapSkybox.glsl");
+        m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>(m_EditorScene);
+        m_SceneHierarchyPanel->SetSelectionChangedCallback(std::bind(&EditorLayer::SelectEntity, this, std::placeholders::_1));
+        m_SceneHierarchyPanel->SetEntityDeletedCallback(std::bind(&EditorLayer::OnEntityDeleted, this, std::placeholders::_1));
+        // SceneSerializer serializer(m_ActiveScene);
+        // serializer.Deserialize("Scene.yaml");
 
-        m_HDRShader = Shader::Find("Assets/Shaders/hdr.glsl");
-
-        m_PlaneMesh = CreateRef<Mesh>(PrimitiveType::Plane);
-        m_CubeMesh = CreateRef<Mesh>(PrimitiveType::Cube);*/
-
-        // Editor
-        m_CheckerboardTex = Texture2D::Create("Assets/Textures/Checkerboard.png");
-
-        // Environment
-        /*m_EnvironmentCubeMap = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Radiance.tga", false);
-        m_EnvironmentIrradiance = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Irradiance.tga", false);
-        m_BRDFLUT = Texture2D::Create("Assets/Textures/BRDF_LUT.tga");*/
-        
-
-        /*{
-            FrameBufferSpecs fbSpec;
-            fbSpec.Width = 1280;
-            fbSpec.Height = 720;
-            fbSpec.Format = FramebufferFormat::RGBA16F;
-            fbSpec.ClearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
-
-            RenderPassSpecs rpSpecs;
-            rpSpecs.TargetFrameBuffer = FrameBuffer::Create(fbSpec);
-            m_GeoPass = CreateRef<RenderPass>(rpSpecs);
-        }
-        {
-            FrameBufferSpecs fbSpec;
-            fbSpec.Width = 1280;
-            fbSpec.Height = 720;
-            fbSpec.Format = FramebufferFormat::RGBA8;
-            fbSpec.ClearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
-
-            RenderPassSpecs rpSpecs;
-            rpSpecs.TargetFrameBuffer = FrameBuffer::Create(fbSpec);
-            m_CompositePass = CreateRef<RenderPass>(rpSpecs);
-        }*/
-
-        // set up pbr materials for demo
-        /*m_PBRMaterialStatic = CreateRef<Material>(m_PBRShaderStatic);
-        m_PBRMaterialAnim = CreateRef<Material>(m_PBRShaderAnim);*/
-
-        {
-
-            m_SpheresScene = CreateRef<Scene>("PBR Sphere Scene");
-            
-            auto cameraEntity = m_SpheresScene->CreateEntity("Camera");
-            cameraEntity.AddComponent<CameraComponent>(Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
-            //m_SpheresScene->SetCamera(Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
-
-            
-            m_SpheresScene->SetSkyboxMaterial(skyboxMaterial);
-            
-            m_SpheresScene->SetEnvironment(environment);
-
-            auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Cube);
-            m_SphereBaseMaterial = sphereMesh->GetMaterial();
-
-            float x = 0;// -8.0f;
-            float roughness = 0.0f;
-            /*for (int i = 0; i < 8; i++)
-            {*/
-
-                auto sphereEntity = m_SpheresScene->CreateEntity();
-                MeshRendererComponent& mrComponent = sphereEntity.AddComponent<MeshRendererComponent>();
-
-                Ref<MaterialInstance> mi = CreateRef<MaterialInstance>(m_SphereBaseMaterial);
-                mi->Set("u_Metalness", 1.0f);
-                mi->Set("u_Roughness", roughness);
-                //mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
-                roughness += 0.15f;
-                //m_MetalSphereMaterialInstances.push_back(mi);
+        //auto _ = Shader::Find("Assets/Shaders/pbr_anim.glsl");
 
 
-                mrComponent.Mesh = sphereMesh;
-                mrComponent.MaterialOverrides = { mi };
-                sphereEntity.Transform() = glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f));
-                x += 2;
-            //}
+        //auto environment = Environment::Load("Assets/Textures/birchwood_4k.hdr");
 
-            //x = -8.0f;
-            //roughness = 0.0f;
-            //for (int i = 0; i < 8; i++)
-            //{
-            //    auto sphereEntity = m_SpheresScene->CreateEntity();
-            //    MeshRendererComponent& mrComponent = sphereEntity.AddComponent<MeshRendererComponent>();
+        //auto skyboxShader = Shader::Find("Assets/Shaders/CubemapSkybox.glsl");
+        //auto skyboxMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(skyboxShader));
+        //skyboxMaterial->SetFlag(MaterialFlag::DepthTest, false);
 
-            //    Ref<MaterialInstance> mi = CreateRef<MaterialInstance>(m_SphereBaseMaterial);
-            //    mi->Set("u_Metalness", 0.0f);
-            //    mi->Set("u_Roughness", roughness);
-            //    //mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 2, 0)));
-            //    x += 2;
-            //    roughness += 0.15f;
-            //    //m_DielectricSphereMaterialInstances.push_back(mi);
+        //// Model Scene
+        //{
+        //    m_Scene = CreateRef<Scene>("Model Scene");
+        //    m_CameraEntity = m_Scene->CreateEntity("Camera Entity");
+        //    m_CameraEntity.AddComponent<CameraComponent>(Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
 
+        //    //m_Scene->SetCamera(Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
 
-            //    mrComponent.Mesh = sphereMesh;
-            //    mrComponent.MaterialOverrides = { mi };
-            //    sphereEntity.Transform() = glm::translate(glm::mat4(1.0f), glm::vec3(x, 2.0f, 0.0f));
-            //}
-        }
+        //    m_Scene->SetSkyboxMaterial(skyboxMaterial);
+        //    m_Scene->SetEnvironment(environment);
 
-        // Create Quad
-        /*float* data = new float[4 * 2] {
-            -1, -1,
-             1, -1,
-             1,  1,
-            -1,  1
-        };
+        //    m_MeshEntity = m_Scene->CreateEntity("Mesh entity");
+        //    MeshRendererComponent& mrComponent = m_MeshEntity.AddComponent<MeshRendererComponent>();
+        //    //mrComponent.Mesh = nullptr;
+        //    //mrComponent.MaterialInstances = nullptr;
+        //    m_MeshMaterial = nullptr;
+        //}
 
-        m_FullScreenQuadVAO = VertexArray::Create();
-
-        Ref<VertexBuffer> quadVertexBuffer = VertexBuffer::Create(data, 4 * 2 * sizeof(float));
-        quadVertexBuffer->SetLayout({
-            { ShaderDataType::Float2, "a_Position" },
-        });
-        m_FullScreenQuadVAO->AddVertexBuffer(quadVertexBuffer);
-
-        uint32_t* quadIndicies = new uint32_t[6]{ 0, 1, 2, 2, 3, 0, };
-        m_FullScreenQuadVAO->SetIndexBuffer(IndexBuffer::Create(quadIndicies, 6));
-        delete[] quadIndicies;
-        delete[] data;*/
+        //    
 
 
+        ///*Ref<Shader> m_PBRShaderAnim = Shader::Find("Assets/Shaders/pbr_anim.glsl");
+        //Ref<Shader> m_PBRShaderStatic = Shader::Find("Assets/Shaders/pbr_static.glsl");*/
+        //
+        ///*m_GridMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/grid.glsl"));
+        //m_SkyboxShader = Shader::Find("Assets/Shaders/CubemapSkybox.glsl");
+
+        //m_HDRShader = Shader::Find("Assets/Shaders/hdr.glsl");
+
+        //m_PlaneMesh = CreateRef<Mesh>(PrimitiveType::Plane);
+        //m_CubeMesh = CreateRef<Mesh>(PrimitiveType::Cube);*/
+
+        //
+        //// Environment
+        ///*m_EnvironmentCubeMap = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Radiance.tga", false);
+        //m_EnvironmentIrradiance = TextureCube::Create("Assets/Textures/Arches_E_PineTree_Irradiance.tga", false);
+        //m_BRDFLUT = Texture2D::Create("Assets/Textures/BRDF_LUT.tga");*/
+        //
+
+        ///*{
+        //    FrameBufferSpecs fbSpec;
+        //    fbSpec.Width = 1280;
+        //    fbSpec.Height = 720;
+        //    fbSpec.Format = FramebufferFormat::RGBA16F;
+        //    fbSpec.ClearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
+
+        //    RenderPassSpecs rpSpecs;
+        //    rpSpecs.TargetFrameBuffer = FrameBuffer::Create(fbSpec);
+        //    m_GeoPass = CreateRef<RenderPass>(rpSpecs);
+        //}
+        //{
+        //    FrameBufferSpecs fbSpec;
+        //    fbSpec.Width = 1280;
+        //    fbSpec.Height = 720;
+        //    fbSpec.Format = FramebufferFormat::RGBA8;
+        //    fbSpec.ClearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
+
+        //    RenderPassSpecs rpSpecs;
+        //    rpSpecs.TargetFrameBuffer = FrameBuffer::Create(fbSpec);
+        //    m_CompositePass = CreateRef<RenderPass>(rpSpecs);
+        //}*/
+
+        //// set up pbr materials for demo
+        ///*m_PBRMaterialStatic = CreateRef<Material>(m_PBRShaderStatic);
+        //m_PBRMaterialAnim = CreateRef<Material>(m_PBRShaderAnim);*/
+
+        //{
+
+        //    m_SpheresScene = CreateRef<Scene>("PBR Sphere Scene");
+        //    
+        //    auto cameraEntity = m_SpheresScene->CreateEntity("Camera");
+        //    cameraEntity.AddComponent<CameraComponent>(Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
+        //    //m_SpheresScene->SetCamera(Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
+
+        //    
+        //    m_SpheresScene->SetSkyboxMaterial(skyboxMaterial);
+        //    
+        //    m_SpheresScene->SetEnvironment(environment);
+
+        //    auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Cube);
+        //    m_SphereBaseMaterial = sphereMesh->GetMaterial();
+
+        //    float x = 0;// -8.0f;
+        //    float roughness = 0.0f;
+        //    /*for (int i = 0; i < 8; i++)
+        //    {*/
+
+        //        auto sphereEntity = m_SpheresScene->CreateEntity();
+        //        MeshRendererComponent& mrComponent = sphereEntity.AddComponent<MeshRendererComponent>();
+
+        //        Ref<MaterialInstance> mi = CreateRef<MaterialInstance>(m_SphereBaseMaterial);
+        //        mi->Set("u_Metalness", 1.0f);
+        //        mi->Set("u_Roughness", roughness);
+        //        //mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f)));
+        //        roughness += 0.15f;
+        //        //m_MetalSphereMaterialInstances.push_back(mi);
 
 
-        m_ActiveScene = m_Scene;
-        m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>(m_ActiveScene);
+        //        mrComponent.Mesh = sphereMesh;
+        //        mrComponent.MaterialOverrides = { mi };
+        //        sphereEntity.Transform() = glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, 0.0f));
+        //        x += 2;
+        //    //}
 
-        auto& light = m_Scene->GetLight();
-        light.Direction = { -0.5f, -0.5f, 1.0f };
-        light.Radiance = { 1.0f, 1.0f, 1.0f };
+        //    //x = -8.0f;
+        //    //roughness = 0.0f;
+        //    //for (int i = 0; i < 8; i++)
+        //    //{
+        //    //    auto sphereEntity = m_SpheresScene->CreateEntity();
+        //    //    MeshRendererComponent& mrComponent = sphereEntity.AddComponent<MeshRendererComponent>();
 
-        auto& light2 = m_SpheresScene->GetLight();
-        light2.Direction = { -0.5f, -0.5f, 1.0f };
-        light2.Radiance = { 1.0f, 1.0f, 1.0f };
+        //    //    Ref<MaterialInstance> mi = CreateRef<MaterialInstance>(m_SphereBaseMaterial);
+        //    //    mi->Set("u_Metalness", 0.0f);
+        //    //    mi->Set("u_Roughness", roughness);
+        //    //    //mi->Set("u_ModelMatrix", glm::translate(glm::mat4(1.0f), glm::vec3(x, 2, 0)));
+        //    //    x += 2;
+        //    //    roughness += 0.15f;
+        //    //    //m_DielectricSphereMaterialInstances.push_back(mi);
 
 
-        m_CurrentlySelectedTransform = nullptr;// &m_MeshEntity.GetComponent<TransformComponent>().Transform;
-        /*m_Light.Direction = { -0.5f, -0.5f, 1.0f };
-        m_Light.Radiance = { 1.0f, 1.0f, 1.0f };*/
+        //    //    mrComponent.Mesh = sphereMesh;
+        //    //    mrComponent.MaterialOverrides = { mi };
+        //    //    sphereEntity.Transform() = glm::translate(glm::mat4(1.0f), glm::vec3(x, 2.0f, 0.0f));
+        //    //}
+        //}
 
-        //m_Transform = glm::scale(glm::mat4(1.0f), glm::vec3(m_MeshScale));
+        //// Create Quad
+        ///*float* data = new float[4 * 2] {
+        //    -1, -1,
+        //     1, -1,
+        //     1,  1,
+        //    -1,  1
+        //};
+
+        //m_FullScreenQuadVAO = VertexArray::Create();
+
+        //Ref<VertexBuffer> quadVertexBuffer = VertexBuffer::Create(data, 4 * 2 * sizeof(float));
+        //quadVertexBuffer->SetLayout({
+        //    { ShaderDataType::Float2, "a_Position" },
+        //});
+        //m_FullScreenQuadVAO->AddVertexBuffer(quadVertexBuffer);
+
+        //uint32_t* quadIndicies = new uint32_t[6]{ 0, 1, 2, 2, 3, 0, };
+        //m_FullScreenQuadVAO->SetIndexBuffer(IndexBuffer::Create(quadIndicies, 6));
+        //delete[] quadIndicies;
+        //delete[] data;*/
+
+
+
+
+        //m_ActiveScene = m_Scene;
+        //m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>(m_ActiveScene);
+
+        //auto& light = m_Scene->GetLight();
+        //light.Direction = { -0.5f, -0.5f, 1.0f };
+        //light.Radiance = { 1.0f, 1.0f, 1.0f };
+
+        //auto& light2 = m_SpheresScene->GetLight();
+        //light2.Direction = { -0.5f, -0.5f, 1.0f };
+        //light2.Radiance = { 1.0f, 1.0f, 1.0f };
+
+
+        //m_CurrentlySelectedTransform = nullptr;// &m_MeshEntity.GetComponent<TransformComponent>().Transform;
+        ///*m_Light.Direction = { -0.5f, -0.5f, 1.0f };
+        //m_Light.Radiance = { 1.0f, 1.0f, 1.0f };*/
+
+        ////m_Transform = glm::scale(glm::mat4(1.0f), glm::vec3(m_MeshScale));
 #endif
     }
 
@@ -311,6 +329,31 @@ namespace Ares
         m_FrameBuffer->Unbind();
     }
 #else
+
+
+    void EditorLayer::OnScenePlay()
+    {
+        m_SelectionContext.clear();
+
+        m_SceneState = SceneState::Play;
+
+        m_RuntimeScene = CreateRef<Scene>("Runtime Scene");
+        m_EditorScene->CopyTo(m_RuntimeScene);
+
+        m_RuntimeScene->OnRuntimeStart();
+        m_SceneHierarchyPanel->SetContext(m_RuntimeScene);
+    }
+    void EditorLayer::OnSceneStop()
+    {
+        m_RuntimeScene->OnRuntimeStop();
+        m_SceneState = SceneState::Edit;
+
+        // Unload runtime scene
+        m_RuntimeScene = nullptr;
+
+        m_SelectionContext.clear();
+        m_SceneHierarchyPanel->SetContext(m_EditorScene);
+    }
 
 
     void EditorLayer::SetPBRMaterialValues(Ref<Material> material) const//, const glm::mat4& viewProjection) const
@@ -375,11 +418,11 @@ namespace Ares
         //SetPBRMaterialValues(m_PBRMaterialStatic);// , viewProjection);
         //SetPBRMaterialValues(m_PBRMaterialAnim);// , viewProjection);
 
-        if (m_MeshMaterial)
-        {
-            SetPBRMaterialValues(m_MeshMaterial);// , viewProjection);
-        }
-        SetPBRMaterialValues(m_SphereBaseMaterial);// , viewProjection);
+        //if (m_MeshMaterial)
+        //{
+        //    SetPBRMaterialValues(m_MeshMaterial);// , viewProjection);
+        //}
+        //SetPBRMaterialValues(m_SphereBaseMaterial);// , viewProjection);
 
 
         //if (m_SceneType == SceneType::Spheres)
@@ -446,7 +489,7 @@ namespace Ares
         /*if (m_AllowViewportCameraEvents)
             m_ActiveScene->GetCamera().Update();*/
 
-        m_ActiveScene->OnUpdate();
+        //m_ActiveScene->OnUpdate();
 
         //if (m_DrawOnTopBoundingBoxes)
         //{
@@ -467,25 +510,81 @@ namespace Ares
         //}
 
         //if (m_SelectedSubmeshes.size())
-        if (m_SelectionContext.size())
+        //if (m_SelectionContext.size())
+        //{
+        //    auto& selection = m_SelectionContext[0];
+
+        //    Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
+        //    //auto viewProj = m_ActiveScene->GetCamera().GetViewProjection();
+        //    auto viewProj = m_CameraEntity.GetComponent<CameraComponent>().Camera.GetViewProjection();
+
+        //    Renderer2D::BeginScene(viewProj, false);
+
+        //    glm::vec4 color = (m_SelectionMode == SelectionMode::Entity) ? glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f } : glm::vec4{ 0.2f, 0.9f, 0.2f, 1.0f };
+        //    Renderer::DrawAABB(selection.Mesh->BoundingBox, selection.Entity.GetComponent<TransformComponent>().Transform * selection.Mesh->Transform, color);
+
+        //    //auto& submesh = m_SelectedSubmeshes[0];
+        //    ////Renderer::DrawAABB(submesh.Mesh->BoundingBox, m_MeshEntity.GetComponent<TransformComponent>().Transform * submesh.Mesh->Transform);
+        //    //Renderer::DrawAABB(submesh.Mesh->BoundingBox, submesh.entity.GetComponent<TransformComponent>().Transform * submesh.Mesh->Transform);
+
+        //    Renderer2D::EndScene();
+        //    Renderer::EndRenderPass();
+        //}
+
+
+        switch (m_SceneState)
         {
-            auto& selection = m_SelectionContext[0];
+        case SceneState::Edit:
+        {
+            if (m_ViewportPanelFocused)
+                m_EditorCamera.Update();
 
-            Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
-            //auto viewProj = m_ActiveScene->GetCamera().GetViewProjection();
-            auto viewProj = m_CameraEntity.GetComponent<CameraComponent>().Camera.GetViewProjection();
+            m_EditorScene->OnRenderEditor(m_EditorCamera);
 
-            Renderer2D::BeginScene(viewProj, false);
+            if (m_DrawOnTopBoundingBoxes)
+            {
+                Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
+                auto viewProj = m_EditorCamera.GetViewProjection();
+                Renderer2D::BeginScene(viewProj, false);
+                // TODO: Renderer::DrawAABB(m_MeshEntity.GetComponent<MeshComponent>(), m_MeshEntity.GetComponent<TransformComponent>());
+                Renderer2D::EndScene();
+                Renderer::EndRenderPass();
+            }
 
-            glm::vec4 color = (m_SelectionMode == SelectionMode::Entity) ? glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f } : glm::vec4{ 0.2f, 0.9f, 0.2f, 1.0f };
-            Renderer::DrawAABB(selection.Mesh->BoundingBox, selection.Entity.GetComponent<TransformComponent>().Transform * selection.Mesh->Transform, color);
+            if (m_SelectionContext.size() && false)
+            {
+                auto& selection = m_SelectionContext[0];
 
-            //auto& submesh = m_SelectedSubmeshes[0];
-            ////Renderer::DrawAABB(submesh.Mesh->BoundingBox, m_MeshEntity.GetComponent<TransformComponent>().Transform * submesh.Mesh->Transform);
-            //Renderer::DrawAABB(submesh.Mesh->BoundingBox, submesh.entity.GetComponent<TransformComponent>().Transform * submesh.Mesh->Transform);
+                if (selection.Mesh && selection.Entity.HasComponent<MeshRendererComponent>())
+                {
+                    Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
+                    auto viewProj = m_EditorCamera.GetViewProjection();
+                    Renderer2D::BeginScene(viewProj, false);
+                    glm::vec4 color = (m_SelectionMode == SelectionMode::Entity) ? glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f } : glm::vec4{ 0.2f, 0.9f, 0.2f, 1.0f };
+                    Renderer::DrawAABB(selection.Mesh->BoundingBox, selection.Entity.GetComponent<TransformComponent>().Transform * selection.Mesh->Transform, color);
+                    Renderer2D::EndScene();
+                    Renderer::EndRenderPass();
+                }
+            }
+            break;
+        }
+        case SceneState::Play:
+        {
+            if (m_ViewportPanelFocused)
+                m_EditorCamera.Update();
 
-            Renderer2D::EndScene();
-            Renderer::EndRenderPass();
+            m_RuntimeScene->OnUpdate();
+            m_RuntimeScene->OnRenderRuntime();
+            break;
+        }
+        case SceneState::Pause:
+        {
+            if (m_ViewportPanelFocused)
+                m_EditorCamera.Update();
+
+            m_RuntimeScene->OnRenderRuntime();
+            break;
+        }
         }
     }
 
@@ -494,6 +593,21 @@ namespace Ares
         SceneRenderer::GetOptions().ShowBoundingBoxes = show && !onTop;
         m_DrawOnTopBoundingBoxes = show && onTop;
     }
+
+    void EditorLayer::SelectEntity(Entity entity)
+    {
+        SelectedSubmesh selection;
+        if (entity.HasComponent<MeshRendererComponent>())
+        {
+            selection.Mesh = &entity.GetComponent<MeshRendererComponent>().Mesh->GetSubmeshes()[0];
+        }
+        selection.Entity = entity;
+        m_SelectionContext.clear();
+        m_SelectionContext.push_back(selection);
+
+        m_EditorScene->SetSelectedEntity(entity);
+    }
+
 
 #endif
 
@@ -550,8 +664,42 @@ namespace Ares
         {
             if (ImGui::BeginMenu("File"))
             {
+
+                if (ImGui::MenuItem("New Scene"))
+                {
+
+                }
+                if (ImGui::MenuItem("Open Scene..."))
+                {
+                    auto& app = Application::Get();
+                    std::string filepath = app.OpenFile("Hazel Scene (*.hsc)\0*.hsc\0");
+                    if (!filepath.empty())
+                    {
+                        Ref<Scene> newScene = CreateRef<Scene>();
+                        SceneSerializer serializer(newScene);
+                        serializer.Deserialize(filepath);
+                        m_EditorScene = newScene;
+                        m_SceneHierarchyPanel->SetContext(m_EditorScene);
+                        
+                        m_EditorScene->SetSelectedEntity({});
+                        m_SelectionContext.clear();
+                    }
+                }
+                if (ImGui::MenuItem("Save Scene..."))
+                {
+                    auto& app = Application::Get();
+                    std::string filepath = app.SaveFile("Hazel Scene (*.hsc)\0*.hsc\0");
+                    SceneSerializer serializer(m_EditorScene);
+                    serializer.Serialize(filepath);
+                }
+                ImGui::Separator();
+
                 if (ImGui::MenuItem("Exit"))
+                {
+                    dockspaceOpen = false;
+
                     Ares::Application::Get().Close();
+                }
 
                 ImGui::EndMenu();
             }
@@ -665,11 +813,11 @@ namespace Ares
         // Editor Panel ------------------------------------------------------------------------------
         ImGui::Begin("Settings");
         
-        if (ImGui::RadioButton("Spheres", (int*)&m_SceneType, (int)SceneType::Spheres))
+        /*if (ImGui::RadioButton("Spheres", (int*)&m_SceneType, (int)SceneType::Spheres))
             m_ActiveScene = m_SpheresScene;
         ImGui::SameLine();
         if (ImGui::RadioButton("Model", (int*)&m_SceneType, (int)SceneType::Model))
-            m_ActiveScene = m_Scene;
+            m_ActiveScene = m_Scene;*/
 
         ImGui::Begin("Environment");
 
@@ -677,17 +825,21 @@ namespace Ares
         {
             std::string filename = Application::Get().OpenFile("*.hdr");
             if (filename != "")
-                m_ActiveScene->SetEnvironment(Environment::Load(filename));
+                m_EditorScene->SetEnvironment(Environment::Load(filename));
+                //m_ActiveScene->SetEnvironment(Environment::Load(filename));
         }
 
-        ImGui::SliderFloat("Skybox LOD", &m_ActiveScene->GetSkyboxLod(), 0.0f, 11.0f);
+        //ImGui::SliderFloat("Skybox LOD", &m_ActiveScene->GetSkyboxLod(), 0.0f, 11.0f);
+        ImGui::SliderFloat("Skybox LOD", &m_EditorScene->GetSkyboxLod(), 0.0f, 11.0f);
 
 
         ImGui::Columns(2);
         ImGui::AlignTextToFramePadding();
 
 
-        auto& light = m_ActiveScene->GetLight();
+        //auto& light = m_ActiveScene->GetLight();
+        auto& light = m_EditorScene->GetLight();
+
         EditorGUI::Vec3("Light Direction", light.Direction);
         EditorGUI::Color3("Light Radiance", light.Radiance);
         EditorGUI::FloatSlider("Light Multiplier", light.Multiplier, 0.0f, 5.0f);
@@ -697,7 +849,9 @@ namespace Ares
         EditorGUI::FloatSlider("Light Multiplier", m_LightMultiplier, 0.0f, 5.0f);*/
 
 
-        EditorGUI::FloatSlider("Exposure", m_ActiveScene->GetExposure(), 0.0f, 5.0f);
+        //EditorGUI::FloatSlider("Exposure", m_ActiveScene->GetExposure(), 0.0f, 5.0f);
+        EditorGUI::FloatSlider("Exposure", m_EditorScene->GetExposure(), 0.0f, 5.0f);
+
         //EditorGUI::FloatSlider("Exposure", m_Exposure, 0.0f, 5.0f);
 
         //EditorGUI::FloatSlider("Mesh Scale", m_MeshScale, 0.0f, 2.0f);
@@ -731,25 +885,25 @@ namespace Ares
         {
             ImGui::Text("Mesh");
 
-            auto mesh = m_MeshEntity.GetComponent<MeshRendererComponent>().Mesh;
-            //std::string fullpath = m_Mesh ? m_Mesh->GetFilePath() : "None";
-            std::string fullpath = mesh ? mesh->GetFilePath() : "None";
+            //auto mesh = m_MeshEntity.GetComponent<MeshRendererComponent>().Mesh;
+            ////std::string fullpath = m_Mesh ? m_Mesh->GetFilePath() : "None";
+            //std::string fullpath = mesh ? mesh->GetFilePath() : "None";
 
-            size_t found = fullpath.find_last_of("/\\");
-            std::string path = found != std::string::npos ? fullpath.substr(found + 1) : fullpath;
-            ImGui::Text(path.c_str()); ImGui::SameLine();
-            if (ImGui::Button("...##Mesh"))
-            {
-                std::string filename = Application::Get().OpenFile("");
-                if (filename != "")
-                {
-                    MeshRendererComponent& mrComponent = m_MeshEntity.GetComponent<MeshRendererComponent>();
-                    mrComponent.Mesh = CreateRef<Mesh>(filename);
-                    // set material from load..
-                    m_MeshMaterial = mrComponent.Mesh->GetMaterial();
-                    //m_Mesh = CreateRef<Mesh>(filename);
-                }
-            }
+            //size_t found = fullpath.find_last_of("/\\");
+            //std::string path = found != std::string::npos ? fullpath.substr(found + 1) : fullpath;
+            //ImGui::Text(path.c_str()); ImGui::SameLine();
+            //if (ImGui::Button("...##Mesh"))
+            //{
+            //    std::string filename = Application::Get().OpenFile("");
+            //    if (filename != "")
+            //    {
+            //        MeshRendererComponent& mrComponent = m_MeshEntity.GetComponent<MeshRendererComponent>();
+            //        mrComponent.Mesh = CreateRef<Mesh>(filename);
+            //        // set material from load..
+            //        m_MeshMaterial = mrComponent.Mesh->GetMaterial();
+            //        //m_Mesh = CreateRef<Mesh>(filename);
+            //    }
+            //}
         }
         ImGui::Separator();
 
@@ -902,16 +1056,57 @@ namespace Ares
             }
             ImGui::TreePop();
         }
+        ImGui::End();
 
+        // ImGui::ShowDemoWindow();
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(12, 0));
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(12, 4));
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0, 0));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8f, 0.8f, 0.8f, 0.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+        ImGui::Begin("Toolbar");
+        if (m_SceneState == SceneState::Edit)
+        {
+            if (ImGui::ImageButton((ImTextureID)(m_PlayButtonTex->GetRendererID()), ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), -1, ImVec4(0, 0, 0, 0), ImVec4(0.9f, 0.9f, 0.9f, 1.0f)))
+            {
+                OnScenePlay();
+            }
+        }
+        else if (m_SceneState == SceneState::Play)
+        {
+            if (ImGui::ImageButton((ImTextureID)(m_PlayButtonTex->GetRendererID()), ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), -1, ImVec4(1.0f, 1.0f, 1.0f, 0.2f)))
+            {
+                OnSceneStop();
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::ImageButton((ImTextureID)(m_PlayButtonTex->GetRendererID()), ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), -1, ImVec4(0, 0, 0, 0), ImVec4(1.0f, 1.0f, 1.0f, 0.6f)))
+        {
+            ARES_CORE_INFO("PLAY!");
+        }
 
         ImGui::End();
+
+        ImGui::PopStyleColor();
+        ImGui::PopStyleColor();
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar();
+        ImGui::PopStyleVar();
+        ImGui::PopStyleVar();
+
 #endif
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::Begin("Viewport");
 
+        m_ViewportPanelMouseOver = ImGui::IsWindowHovered();
+        m_ViewportPanelFocused = ImGui::IsWindowFocused();
+
         m_ViewportFocused = ImGui::IsWindowFocused();
         m_ViewportHovered = ImGui::IsWindowHovered();
+
         Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
 
         auto viewportOffset = ImGui::GetCursorPos(); // includes tab bar
@@ -925,11 +1120,17 @@ namespace Ares
 
         SceneRenderer::SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
         
+        m_EditorScene->OnViewportResize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        if (m_RuntimeScene)
+            m_RuntimeScene->OnViewportResize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        m_EditorCamera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
+        m_EditorCamera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+
         
         /*m_ActiveScene->GetCamera().SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
         m_ActiveScene->GetCamera().SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));*/
-        m_CameraEntity.GetComponent<CameraComponent>().Camera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
-        m_CameraEntity.GetComponent<CameraComponent>().Camera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+        /*m_CameraEntity.GetComponent<CameraComponent>().Camera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
+        m_CameraEntity.GetComponent<CameraComponent>().Camera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);*/
 
         
         
@@ -983,7 +1184,7 @@ namespace Ares
             //);
 
 
-            auto& camera = m_CameraEntity.GetComponent<CameraComponent>().Camera;
+            //auto& camera = m_CameraEntity.GetComponent<CameraComponent>().Camera;
 
             bool snap = Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL);
             //ImGuizmo::Manipulate(
@@ -1000,8 +1201,11 @@ namespace Ares
             float snapValue[3] = { m_SnapValue, m_SnapValue, m_SnapValue };
             if (m_SelectionMode == SelectionMode::Entity)
             {
-                ImGuizmo::Manipulate(glm::value_ptr(camera.GetViewMatrix()),
-                    glm::value_ptr(camera.GetProjectionMatrix()),
+                ImGuizmo::Manipulate(glm::value_ptr(m_EditorCamera.GetViewMatrix()),
+                    glm::value_ptr(m_EditorCamera.GetProjectionMatrix()),
+
+                //ImGuizmo::Manipulate(glm::value_ptr(camera.GetViewMatrix()),
+                //    glm::value_ptr(camera.GetProjectionMatrix()),
                     (ImGuizmo::OPERATION)m_GizmoType,
                     ImGuizmo::LOCAL,
                     glm::value_ptr(entityTransform),
@@ -1011,8 +1215,13 @@ namespace Ares
             else
             {
                 glm::mat4 transformBase = entityTransform * selection.Mesh->Transform;
-                ImGuizmo::Manipulate(glm::value_ptr(camera.GetViewMatrix()),
-                    glm::value_ptr(camera.GetProjectionMatrix()),
+
+
+                ImGuizmo::Manipulate(glm::value_ptr(m_EditorCamera.GetViewMatrix()),
+                    glm::value_ptr(m_EditorCamera.GetProjectionMatrix()),
+
+                /*ImGuizmo::Manipulate(glm::value_ptr(camera.GetViewMatrix()),
+                    glm::value_ptr(camera.GetProjectionMatrix()),*/
                     (ImGuizmo::OPERATION)m_GizmoType,
                     ImGuizmo::LOCAL,
                     glm::value_ptr(transformBase),
@@ -1038,9 +1247,20 @@ namespace Ares
 
     void EditorLayer::OnEvent(Ares::Event& e)
     {
-        m_CameraController.OnEvent(e);
+        if (m_SceneState == SceneState::Edit)
+        {
+            if (m_ViewportPanelMouseOver)
+                m_EditorCamera.OnEvent(e);
 
-        m_ActiveScene->OnEvent(e);
+            m_EditorScene->OnEvent(e);
+        }
+        else if (m_SceneState == SceneState::Play)
+        {
+            m_RuntimeScene->OnEvent(e);
+        }
+
+       /* m_CameraController.OnEvent(e);
+        m_ActiveScene->OnEvent(e);*/
         /*if (m_AllowViewportCameraEvents)
             m_ActiveScene->GetCamera().OnEvent(e);*/
 
@@ -1050,34 +1270,65 @@ namespace Ares
     }
     bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)
     {
-        switch (e.GetKeyCode())
-        {
-        case ARES_KEY_Q:
-            m_GizmoType = -1;
-            break;
-        case ARES_KEY_W:
-            m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
-            break;
-        case ARES_KEY_E:
-            m_GizmoType = ImGuizmo::OPERATION::ROTATE;
-            break;
-        case ARES_KEY_R:
-            m_GizmoType = ImGuizmo::OPERATION::SCALE;
-            break;
 
-        case ARES_KEY_G:
-            // Toggle grid
-            if (Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL))
+        if (m_ViewportPanelFocused)
+        {
+
+            switch (e.GetKeyCode())
+            {
+            case ARES_KEY_Q:
+                m_GizmoType = -1;
+                break;
+            case ARES_KEY_W:
+                m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+                break;
+            case ARES_KEY_E:
+                m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+                break;
+            case ARES_KEY_R:
+                m_GizmoType = ImGuizmo::OPERATION::SCALE;
+                break;
+
+            case ARES_KEY_DELETE:
+                if (m_SelectionContext.size())
+                {
+                    Entity selectedEntity = m_SelectionContext[0].Entity;
+                    m_EditorScene->DestroyEntity(selectedEntity);
+                    m_SelectionContext.clear();
+                    m_EditorScene->SetSelectedEntity({});
+                    m_SceneHierarchyPanel->SetSelected({});
+                }
+                break;
+            }
+        }
+        if (Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL))
+        {
+            switch (e.GetKeyCode())
+            {
+
+
+
+            case ARES_KEY_G:
+                // Toggle grid
+                //if (Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL))
                 SceneRenderer::GetOptions().ShowGrid = !SceneRenderer::GetOptions().ShowGrid;
-            break;
-        case ARES_KEY_B:
-            // Toggle bounding boxes 
-            if (Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL))
+                break;
+            case ARES_KEY_B:
+                // Toggle bounding boxes 
+                //if (Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL))
             {
                 m_UIShowBoundingBoxes = !m_UIShowBoundingBoxes;
                 ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
             }
             break;
+            case ARES_KEY_D:
+                if (m_SelectionContext.size())
+                {
+                    Entity selectedEntity = m_SelectionContext[0].Entity;
+                    m_EditorScene->DuplicateEntity(selectedEntity);
+                }
+                break;
+            }
         }
         return false;
     }
@@ -1099,11 +1350,15 @@ namespace Ares
                 //m_ActiveScene->m_Registry.each([&](auto entity)
 
                 m_SelectionContext.clear();
-                auto meshEntities = m_ActiveScene->GetAllEntitiesWith<MeshRendererComponent>();
+                //auto meshEntities = m_ActiveScene->GetAllEntitiesWith<MeshRendererComponent>();
+                m_EditorScene->SetSelectedEntity({});
+                auto meshEntities = m_EditorScene->GetAllEntitiesWith<MeshRendererComponent>();
+
+
                 for (auto e : meshEntities)
 
                 {
-                    Entity entity = { e, m_Scene.get() };
+                    Entity entity = { e, m_EditorScene.get() };
                     auto mesh = entity.GetComponent<MeshRendererComponent>().Mesh;
                     if (!mesh)
                         continue;
@@ -1184,8 +1439,11 @@ namespace Ares
         glm::vec4 mouseClipPos = { mx, my, -1.0f, 1.0f };
 
 
-        auto inverseProj = glm::inverse(m_CameraEntity.GetComponent<CameraComponent>().Camera.GetProjectionMatrix());
-        auto inverseView = glm::inverse(glm::mat3(m_CameraEntity.GetComponent<CameraComponent>().Camera.GetViewMatrix()));
+        auto inverseProj = glm::inverse(m_EditorCamera.GetProjectionMatrix());
+        auto inverseView = glm::inverse(glm::mat3(m_EditorCamera.GetViewMatrix()));
+
+        /*auto inverseProj = glm::inverse(m_CameraEntity.GetComponent<CameraComponent>().Camera.GetProjectionMatrix());
+        auto inverseView = glm::inverse(glm::mat3(m_CameraEntity.GetComponent<CameraComponent>().Camera.GetViewMatrix()));*/
 
         /*auto inverseProj = glm::inverse(m_Scene->GetCamera().GetProjectionMatrix());
         auto inverseView = glm::inverse(glm::mat3(m_Scene->GetCamera().GetViewMatrix()));*/
@@ -1193,7 +1451,8 @@ namespace Ares
         glm::vec4 ray = inverseProj * mouseClipPos;
 
         //glm::vec3 rayPos = m_Scene->GetCamera().GetPosition();
-        glm::vec3 rayPos = m_CameraEntity.GetComponent<CameraComponent>().Camera.GetPosition();
+        //glm::vec3 rayPos = m_CameraEntity.GetComponent<CameraComponent>().Camera.GetPosition();
+        glm::vec3 rayPos = m_EditorCamera.GetPosition();
 
         glm::vec3 rayDir = inverseView * glm::vec3(ray);
 
@@ -1203,7 +1462,18 @@ namespace Ares
     void EditorLayer::OnSelected(const SelectedSubmesh& selectionContext)
     {
         m_SceneHierarchyPanel->SetSelected(selectionContext.Entity);
+        m_EditorScene->SetSelectedEntity(selectionContext.Entity);
     }
+
+    void EditorLayer::OnEntityDeleted(Entity e)
+    {
+        if (m_SelectionContext[0].Entity == e)
+        {
+            m_SelectionContext.clear();
+            m_EditorScene->SetSelectedEntity({});
+        }
+    }
+
 
     Ray EditorLayer::CastMouseRay()
     {
