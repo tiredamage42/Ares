@@ -52,7 +52,8 @@ namespace Ares {
 		static void CalculateTilingAndOffsetForSubTexture(glm::vec2* tiling, glm::vec2* offset, const Ref<Texture2D>& texture, const glm::vec2& coords, const glm::vec2& cellSize, const glm::vec2& spriteSize = { 1, 1 });
 		static void CalculateTilingAndOffsetForSubTexture(glm::vec2* tiling, glm::vec2* offset, uint32_t width, uint32_t height, const glm::vec2& coords, const glm::vec2& cellSize, const glm::vec2& spriteSize = { 1, 1 });
 
-		
+		//virtual void SetData(void* data) = 0;
+
 		virtual void Lock() = 0;
 		virtual void Unlock() = 0;
 

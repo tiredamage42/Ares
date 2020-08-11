@@ -10,7 +10,7 @@ const float PI = 3.141592;
 const float TwoPI = 2 * PI;
 const float Epsilon = 0.00001;
 
-const uint NumSamples = 64 * 1024;
+const uint NumSamples = 1024;// 64 * 1024;
 const float InvNumSamples = 1.0 / float(NumSamples);
 
 layout(binding = 0) uniform samplerCube inputTexture;
@@ -48,9 +48,10 @@ vec3 GetCubeMapTexCoord()
 {
 	vec2 st = gl_GlobalInvocationID.xy / vec2(imageSize(outputTexture));
 	vec2 uv = 2.0 * vec2(st.x, 1.0 - st.y) - vec2(1.0);
+	//vec2 uv = 2.0 * vec2(st.x, st.y) - vec2(1.0);
 
 	vec3 ret;
-	if (gl_GlobalInvocationID.z == 0)      ret = vec3(1.0, uv.y, -uv.x);
+	if		(gl_GlobalInvocationID.z == 0) ret = vec3(1.0, uv.y, -uv.x);
 	else if (gl_GlobalInvocationID.z == 1) ret = vec3(-1.0, uv.y, uv.x);
 	else if (gl_GlobalInvocationID.z == 2) ret = vec3(uv.x, 1.0, -uv.y);
 	else if (gl_GlobalInvocationID.z == 3) ret = vec3(uv.x, -1.0, uv.y);
@@ -96,8 +97,10 @@ void main(void)
 
 		// PIs here cancel out because of division by pdf.
 		irradiance += 2.0 * textureLod(inputTexture, Li, 0).rgb * cosTheta;
+		//irradiance += textureLod(inputTexture, N, 0).rgb;
 	}
 	irradiance /= vec3(NumSamples);
 
 	imageStore(outputTexture, ivec3(gl_GlobalInvocationID), vec4(irradiance, 1.0));
+	//imageStore(outputTexture, ivec3(gl_GlobalInvocationID), vec4(1.0, 0, 1.0, 1.0));
 }

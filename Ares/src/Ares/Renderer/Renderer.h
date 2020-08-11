@@ -22,8 +22,15 @@ namespace Ares {
 		static void OnWindowResize(uint32_t width, uint32_t height);
 
 		template<typename FuncT>
-		static void Submit(FuncT&& func)
+		static void Submit(FuncT&& func, const std::string& commandName)
 		{
+
+			if (GetRenderCommandQueue().m_Deleted)
+			{
+				func();
+				return;
+			}
+
 			auto renderCmd = [](void* ptr) {
 				auto pFunc = (FuncT*)ptr;
 				(*pFunc)();
@@ -32,7 +39,7 @@ namespace Ares {
 				// static_assert(std::is_trivially_destructible_v<FuncT>, "FuncT must be trivially destructible");
 				pFunc->~FuncT();
 			};
-			auto storageBuffer = GetRenderCommandQueue().Allocate(renderCmd, sizeof(func));
+			auto storageBuffer = GetRenderCommandQueue().Allocate(renderCmd, sizeof(func), commandName);
 			new (storageBuffer) FuncT(std::forward<FuncT>(func));
 		}
 

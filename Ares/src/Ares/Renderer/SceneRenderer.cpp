@@ -106,7 +106,10 @@ namespace Ares {
 
 	void SceneRenderer::SetViewportSize(uint32_t width, uint32_t height)
 	{
-		s_Data.GeoPass->GetSpecs().TargetFrameBuffer->Resize(width, height);
+		Ref<FrameBuffer> fBufferGeo = s_Data.GeoPass->GetSpecs().TargetFrameBuffer;
+
+		fBufferGeo->Resize(width, height);
+
 		s_Data.CompositePass->GetSpecs().TargetFrameBuffer->Resize(width, height);
 	}
 
@@ -174,6 +177,7 @@ namespace Ares {
 	std::pair<Ref<TextureCube>, Ref<TextureCube>> SceneRenderer::CreateEnvironmentMap(const std::string& filepath)
 	{
 		const uint32_t cubemapSize = 2048;
+		//const uint32_t irradianceMapSize = 2048;
 		const uint32_t irradianceMapSize = 32;
 
 		Ref<TextureCube> envUnfiltered = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize, FilterType::Trilinear, true);
@@ -181,20 +185,19 @@ namespace Ares {
 		if (!equirectangularConversionShader)
 			equirectangularConversionShader = Shader::Find("Assets/Shaders/EquirectangularToCubeMap.glsl");
 		
-		Ref<Texture2D> envEquirect = Texture2D::Create(filepath, FilterType::Bilinear, false);
+		Ref<Texture2D> envEquirect = Texture2D::Create(filepath, FilterType::Trilinear, true);
 
 		ARES_CORE_ASSERT(envEquirect->GetFormat() == TextureFormat::Float16, "Texture is not HDR!");
 		 
 		equirectangularConversionShader->Bind();
 		envEquirect->Bind();
-		Renderer::Submit([envUnfiltered, cubemapSize, envEquirect]()
-			{
+		Renderer::Submit([envUnfiltered, cubemapSize, envEquirect](){
 				glBindImageTexture(0, envUnfiltered->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
 				glDispatchCompute(cubemapSize / 32, cubemapSize / 32, 6);
-				//glGenerateTextureMipmap(envUnfiltered->GetRendererID());
-			});
+				glGenerateTextureMipmap(envUnfiltered->GetRendererID());
+			}, "EnvMap 0");
 		
-		envUnfiltered->GenerateMipMaps();
+		//envUnfiltered->GenerateMipMaps();
 
 
 		if (!envFilteringShader)
@@ -202,13 +205,12 @@ namespace Ares {
 
 		Ref<TextureCube> envFiltered = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize, FilterType::Trilinear, true);
 
-		Renderer::Submit([envUnfiltered, envFiltered]()
-			{
+		Renderer::Submit([envUnfiltered, envFiltered](){
 				glCopyImageSubData(
 					envUnfiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
 					envFiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
 					envFiltered->GetWidth(), envFiltered->GetHeight(), 6);
-			});
+			}, "EnvMap 1");
 
 
 		envFilteringShader->Bind();
@@ -223,7 +225,7 @@ namespace Ares {
 				glProgramUniform1f(envFilteringShader->GetRendererID(), 0, level * deltaRoughness);
 				glDispatchCompute(numGroups, numGroups, 6);
 			}
-			});
+			}, "EnvMap 2");
 
 		if (!envIrradianceShader)
 			envIrradianceShader = Shader::Find("Assets/Shaders/EnvironmentIrradiance.glsl");
@@ -231,14 +233,14 @@ namespace Ares {
 		Ref<TextureCube> irradianceMap = TextureCube::Create(TextureFormat::Float16, irradianceMapSize, irradianceMapSize, FilterType::Trilinear, true);
 		envIrradianceShader->Bind();
 		envFiltered->Bind();
-		Renderer::Submit([irradianceMap]()
-			{
+		Renderer::Submit([irradianceMap, irradianceMapSize](){
 				glBindImageTexture(0, irradianceMap->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-				glDispatchCompute(irradianceMap->GetWidth() / 32, irradianceMap->GetHeight() / 32, 6);
-				//glGenerateTextureMipmap(irradianceMap->GetRendererID());
-			});
+				glDispatchCompute(irradianceMapSize / 32, irradianceMapSize / 32, 6);
+				//glDispatchCompute(irradianceMapSize, irradianceMapSize, 6);
+				glGenerateTextureMipmap(irradianceMap->GetRendererID());
+			}, "EnvMap 3");
 
-		irradianceMap->GenerateMipMaps();
+		//irradianceMap->GenerateMipMaps();
 
 		return { envFiltered, irradianceMap };
 	}
@@ -250,10 +252,9 @@ namespace Ares {
 
 		if (outline)
 		{
-			Renderer::Submit([]()
-			{
+			Renderer::Submit([](){
 				glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-			});
+			}, "Outline STart");
 		}
 
 		Renderer::BeginRenderPass(s_Data.GeoPass);
@@ -263,10 +264,9 @@ namespace Ares {
 
 		if (outline)
 		{
-			Renderer::Submit([]()
-			{
+			Renderer::Submit([](){
 				glStencilMask(0);
-			});
+			}, "Outline Stencil mask");
 		}
 
 		auto viewProjection = s_Data.SceneData.SceneCamera.Camera.GetProjectionMatrix() * s_Data.SceneData.SceneCamera.ViewMatrix;
@@ -312,11 +312,10 @@ namespace Ares {
 
 		if (outline)
 		{
-			Renderer::Submit([]()
-				{
+			Renderer::Submit([](){
 					glStencilFunc(GL_ALWAYS, 1, 0xff);
 					glStencilMask(0xff);
-				});
+				}, "outline other stuff");
 		}
 
 		for (auto& dc : s_Data.SelectedMeshDrawList)
@@ -339,8 +338,7 @@ namespace Ares {
 
 		if (outline)
 		{
-			Renderer::Submit([]()
-				{
+			Renderer::Submit([](){
 					glStencilFunc(GL_NOTEQUAL, 1, 0xff);
 					glStencilMask(0);
 
@@ -348,7 +346,7 @@ namespace Ares {
 					glEnable(GL_LINE_SMOOTH);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 					glDisable(GL_DEPTH_TEST);
-				});
+				}, "Draw Outline Prepare");
 
 			// Draw outline here
 			s_Data.OutlineMaterial->Set("u_ViewProjection", viewProjection);
@@ -357,23 +355,21 @@ namespace Ares {
 				Renderer::SubmitMesh(dc.Mesh, dc.Transform, s_Data.OutlineMaterial);
 			}
 
-			Renderer::Submit([]()
-				{
+			Renderer::Submit([](){
 					glPointSize(10);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-				});
+				}, "Draw Outline polymode");
 			for (auto& dc : s_Data.SelectedMeshDrawList)
 			{
 				Renderer::SubmitMesh(dc.Mesh, dc.Transform, s_Data.OutlineMaterial);
 			}
 
-			Renderer::Submit([]()
-				{
+			Renderer::Submit([](){
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 					glStencilMask(0xff);
 					glStencilFunc(GL_ALWAYS, 1, 0xff);
 					glEnable(GL_DEPTH_TEST);
-				});
+				}, "Outline End");
 		}
 
 
@@ -394,9 +390,6 @@ namespace Ares {
 			// TODO: get scale from scene params
 			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(16.0f)));
 			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
-			
-			
-			
 			
 			Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(GRID_RESOLUTION * .5f + GRID_WIDTH * .5f)));
 		}

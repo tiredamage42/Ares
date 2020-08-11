@@ -17,9 +17,9 @@ namespace Ares
 
 	struct Environment
 	{
-		std::string FilePath;
-		Ref<TextureCube> RadianceMap;
-		Ref<TextureCube> IrradianceMap;
+		std::string FilePath = "";
+		Ref<TextureCube> RadianceMap = nullptr;
+		Ref<TextureCube> IrradianceMap = nullptr;
 
 		static Environment Load(const std::string& filepath);
 	};
@@ -61,8 +61,9 @@ namespace Ares
 		
 		void SetSkyboxMaterial(const Ref<MaterialInstance>& skybox) { m_SkyboxMaterial = skybox; }
 		void SetEnvironment(const Environment& environment) { 
+
 			m_Environment = environment; 
-			m_SkyboxMaterial->Set("u_Texture", environment.RadianceMap);
+			m_SkyboxMaterial->Set("u_Texture", environment.IrradianceMap);// environment.RadianceMap);
 		}
 		const Environment& GetEnvironment() const { return m_Environment; }
 
@@ -115,11 +116,11 @@ namespace Ares
 		std::string m_DebugName;
 		//Camera m_Camera;
 
-		Light m_Light;
+		Light m_Light{};
 		float m_LightMultiplier = 0.3f;
 
-		Environment m_Environment;
-		Ref<MaterialInstance> m_SkyboxMaterial;
+		Environment m_Environment{};
+		Ref<MaterialInstance> m_SkyboxMaterial = nullptr;
 		float m_SkyboxLod = 1.0f;
 
 		float m_Exposure = 0.8f;

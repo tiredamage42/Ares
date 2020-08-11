@@ -29,7 +29,9 @@ namespace Ares {
 	}
 	void Renderer::Init()
 	{
-		Submit([]() { RenderCommand::Init(); });
+		Submit([]() { 
+			RenderCommand::Init(); 
+			}, "Rendering Init");
 		Renderer2D::Init();
 
 		SceneRenderer::Init();
@@ -67,13 +69,13 @@ namespace Ares {
 		Submit([=]() {
 
 			RenderCommand::DrawIndexed(count, type, depthTest);
-		});
+		}, "Draw Indexed");
 	}
 	void Renderer::SetLineThickness(float thickness)
 	{
-		Renderer::Submit([=]() {
+		Submit([=]() {
 			RenderCommand::SetLineThickness(thickness);
-		});
+		}, "Set Line Thickness");
 	}
 
 	void Renderer::BeginRenderPass(Ref<RenderPass> renderPass, bool clear)
@@ -89,7 +91,7 @@ namespace Ares {
 			const glm::vec4& clearColor = renderPass->GetSpecs().TargetFrameBuffer->GetSpecs().ClearColor;
 			Renderer::Submit([=]() {
 				RenderCommand::Clear(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-			});
+			}, "Clear Begin Render Pass");
 		}
 	}
 
@@ -155,14 +157,14 @@ namespace Ares {
 			}
 			shader->SetMat4("u_Transform", transform * submesh.Transform);
 
-			Renderer::Submit([submesh, material]() {
+			Submit([submesh, material]() {
 				if (material->GetFlag(MaterialFlag::DepthTest))
 					glEnable(GL_DEPTH_TEST);
 				else
 					glDisable(GL_DEPTH_TEST);
 
 				glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
-			});
+			}, "Draw SubMesh");
 		}
 
 		// TODO: replace with render API calls
@@ -186,12 +188,16 @@ namespace Ares {
 
 	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
 	{
-		Submit([=]() { RenderCommand::SetViewport(0, 0, width, height); });
+		Submit([=]() { 
+			RenderCommand::SetViewport(0, 0, width, height); 
+			}, "Set Viewport");
 	}
 
 	void Renderer::Clear(float r, float g, float b, float a)
 	{
-		Submit([=]() { RenderCommand::Clear(r, g, b, a); });
+		Submit([=]() { 
+			RenderCommand::Clear(r, g, b, a); 
+			}, "Clear" );
 	}	
 	void Renderer::WaitAndRender()
 	{

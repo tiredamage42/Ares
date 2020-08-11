@@ -47,6 +47,8 @@ namespace Ares {
         bool OnWindowResize(WindowResizeEvent& e);
 
         std::unique_ptr<Window> m_Window;
+        //Ref<Window> m_Window;
+
 
         ImGuiLayer* m_ImGuiLayer;
 

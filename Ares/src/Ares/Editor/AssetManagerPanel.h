@@ -51,6 +51,16 @@ namespace Ares
 		Ref<Texture2D> m_gridView;
 		Ref<Texture2D> m_listView;
 
+
+		Ref<Texture2D> _tex0;
+		Ref<Texture2D> _tex1;
+		Ref<Texture2D> _tex2;
+		Ref<Texture2D> _tex3;
+		Ref<Texture2D> _tex4;
+		Ref<Texture2D> _tex5;
+		Ref<Texture2D> _tex6;
+		Ref<Texture2D> _tex7;
+
 		std::string m_CurrentDirPath;
 		std::string m_BaseDirPath;
 		std::string m_prevDirPath;
@@ -67,8 +77,8 @@ namespace Ares
 		char* inputHint;
 		char  inputBuffer[1024];
 
-		std::vector<DirectoryInformation> m_CurrentDir;
-		std::vector<DirectoryInformation> m_BaseProjectDir;
+		std::vector<DirectoryInformation> m_CurrentDirContents;
+		std::vector<DirectoryInformation> m_BaseProjectDirContents;
 
 		//std::map<int, Ref<Texture2D>> assetIconMaps;
 		NotificationManager nManager;

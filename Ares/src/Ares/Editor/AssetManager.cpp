@@ -3,7 +3,7 @@
 
 namespace Ares
 {
-	void AssetManager::ProcessAseets(std::string assetType)
+	/*void AssetManager::ProcessAseets(std::string assetType)
 	{
 		std::vector<std::string> tokenizedAssetData;
 		auto filename = ParseFilename(assetType, '\\', tokenizedAssetData);
@@ -13,69 +13,70 @@ namespace Ares
 			ARES_CORE_WARN("Initiating Asset Conversion");
 			InitiateAssetConversion(assetType, "FBX");
 		}
-	}
+	}*/
 
-	void AssetManager::InitiateAssetConversion(std::string assetPath, std::string conversionType)
-	{
-		/* Create a filestream to write a blender python script for conversion of the asset */
-		/* The 'bpy.ops.export_scene.(asset-type-to-convert) function runs blender in background and exports the file' */
-		std::string path = std::filesystem::temp_directory_path().string();
-		std::ofstream fileStream(path + "export.py");
+	//void AssetManager::InitiateAssetConversion(std::string assetPath, std::string conversionType)
+	//{
+	//	/* Create a filestream to write a blender python script for conversion of the asset */
+	//	/* The 'bpy.ops.export_scene.(asset-type-to-convert) function runs blender in background and exports the file' */
+	//	std::string path = std::filesystem::temp_directory_path().string();
+	//	std::ofstream fileStream(path + "export.py");
 
-		/* Importing the python modules required for the export to work out */
-		fileStream << "import bpy\n";
-		fileStream << "import sys\n";
+	//	/* Importing the python modules required for the export to work out */
+	//	fileStream << "import bpy\n";
+	//	fileStream << "import sys\n";
 
-		/* Branch for detecting the conversion type (this one for FBX) */
-		if (conversionType == "FBX") {
-			fileStream << "bpy.ops.export_scene.fbx(filepath=r'" + path + "asset.fbx" + "', axis_forward='-Z', axis_up='Y')\n";
-		}
+	//	/* Branch for detecting the conversion type (this one for FBX) */
+	//	if (conversionType == "FBX") {
+	//		fileStream << "bpy.ops.export_scene.fbx(filepath=r'" + path + "asset.fbx" + "', axis_forward='-Z', axis_up='Y')\n";
+	//	}
 
-		/* Branch for detecting the conversion type (this one for OBJ) */
-		if (conversionType == "OBJ") {
-			fileStream << "bpy.ops.export_scene.obj(filepath=r'" + path + "asset.obj" + "', axis_forward='-Z', axis_up='Y')\n";
-		}
+	//	/* Branch for detecting the conversion type (this one for OBJ) */
+	//	if (conversionType == "OBJ") {
+	//		fileStream << "bpy.ops.export_scene.obj(filepath=r'" + path + "asset.obj" + "', axis_forward='-Z', axis_up='Y')\n";
+	//	}
 
-		/* Closing the filesteam */
-		fileStream.close();
+	//	/* Closing the filesteam */
+	//	fileStream.close();
 
-		/* This section involves creating the command to export the .blend file to the required asset type */
-		/* The command goes something like this.. */
-		/* blender.exe D:\Program Files\cube.blend --background --python D:\Program Files\export.py */
+	//	/* This section involves creating the command to export the .blend file to the required asset type */
+	//	/* The command goes something like this.. */
+	//	/* blender.exe D:\Program Files\cube.blend --background --python D:\Program Files\export.py */
 
-		std::string blender_base_path = "C:\\Program Files\\Blender Foundation\\Blender 2.82\\blender.exe";
-		std::string p_asset_path = '"' + assetPath + '"';
-		std::string p_blender_path = '"' + blender_base_path + '"';
-		std::string p_script_path = '"' + path + "export.py" + '"';
+	//	std::string blender_base_path = "C:\\Program Files\\Blender Foundation\\Blender 2.82\\blender.exe";
+	//	std::string p_asset_path = '"' + assetPath + '"';
+	//	std::string p_blender_path = '"' + blender_base_path + '"';
+	//	std::string p_script_path = '"' + path + "export.py" + '"';
 
-		/* Creating the actual command that will execute */
-		std::string convCommand = '"' + p_blender_path + " " + p_asset_path + " --background --python " + p_script_path + "" + '"';
+	//	/* Creating the actual command that will execute */
+	//	std::string convCommand = '"' + p_blender_path + " " + p_asset_path + " --background --python " + p_script_path + "" + '"';
 
-		/* Just for debugging(it took me 1hr for this string literals n stuff! It better work!) */
-		ARES_CORE_INFO(convCommand.c_str());
+	//	/* Just for debugging(it took me 1hr for this string literals n stuff! It better work!) */
+	//	ARES_CORE_INFO(convCommand.c_str());
 
-		/* Fire the above created command */
-		system(convCommand.c_str());
-	}
+	//	/* Fire the above created command */
+	//	system(convCommand.c_str());
+	//}
 
 	std::vector<DirectoryInformation> AssetManager::GetFsContents()
 	{
-		std::string path = "assets";
+		std::string path = "Assets";
 		std::vector<DirectoryInformation> dInfo;
 
 		for (const auto& entry : std::filesystem::directory_iterator(path))
 		{
 			bool isDir = std::filesystem::is_directory(entry);
 
-			auto dir_data = ParseFilename(entry.path().string(), '\\', std::vector<std::string>());
-			auto fileExt = AssetManager::ParseFiletype(dir_data);
+			std::string fullPath = entry.path().string();
+			auto name = ParseFilename(fullPath, '\\');// , std::vector<std::string>());
 
 			if (isDir) {
-				DirectoryInformation d(dir_data, fileExt, entry.path().string(), false);
+				DirectoryInformation d(name, name, fullPath, false);
 				dInfo.push_back(d);
 			}
 			else {
-				DirectoryInformation d(dir_data, fileExt, entry.path().string(), true);
+				auto fileExt = AssetManager::ParseFiletype(name);
+				DirectoryInformation d(name, fileExt, fullPath, true);
 				dInfo.push_back(d);
 			}
 		}
@@ -91,7 +92,7 @@ namespace Ares
 		{
 			bool isDir = std::filesystem::is_directory(entry);
 
-			auto dir_data = ParseFilename(entry.path().string(), '\\', std::vector<std::string>());
+			auto dir_data = ParseFilename(entry.path().string(), '\\');// , std::vector<std::string>());
 			auto fileExt = AssetManager::ParseFiletype(dir_data);
 
 			if (isDir) {
@@ -106,7 +107,7 @@ namespace Ares
 		return dInfo;
 	}
 
-	std::vector<DirectoryInformation> AssetManager::ReadDirectoryRecursive(std::string path)
+	/*std::vector<DirectoryInformation> AssetManager::ReadDirectoryRecursive(std::string path)
 	{
 		std::vector<DirectoryInformation> dInfo;
 
@@ -127,7 +128,7 @@ namespace Ares
 		}
 
 		return dInfo;
-	}
+	}*/
 
 	std::string AssetManager::GetParentPath(std::string path)
 	{
@@ -157,22 +158,26 @@ namespace Ares
 
 	bool AssetManager::MoveFileTo(std::string filePath, std::string movePath)
 	{
-		std::string s = "move " + filePath + " " + movePath.c_str();
+
+		std::string s = "move " + filePath + " " + movePath;// .c_str();
 		system(s.c_str());
 
-		std::vector<std::string> data;
 
-		if (std::filesystem::exists(std::filesystem::path(movePath + "\\" + ParseFilename(filePath, '\\', data)))) {
+		//std::vector<std::string> data;
+		std::string parsedFileName = ParseFilename(filePath, '\\');// , data);
+
+		return std::filesystem::exists(std::filesystem::path(movePath + "\\" + parsedFileName));
+		/*if (std::filesystem::exists(std::filesystem::path(movePath + "\\" + ParseFilename(filePath, '\\', data)))) {
 			return true;
 		}
 		else {
 			return false;
-		}
+		}*/
 	}
 
-	void AssetManager::ImportAsset(std::string assetPath, std::string assetName)
+	/*void AssetManager::ImportAsset(std::string assetPath, std::string assetName)
 	{
-	}
+	}*/
 
 	std::string AssetManager::StripExtras(std::string filename)
 	{
@@ -207,32 +212,56 @@ namespace Ares
 		return newFileName;
 	}
 
-	std::string AssetManager::ParseFilename(std::string const& str, const char delim, std::vector<std::string>& out)
+	bool AssetManager::ImportAsset(const std::string& filePath, const std::string& targetDir)
 	{
+
+		std::string s = "copy " + filePath + " " + targetDir;// .c_str();
+		system(s.c_str());
+
+
+		//std::vector<std::string> data;
+		std::string parsedFileName = ParseFilename(filePath, '\\');// , data);
+
+		return std::filesystem::exists(std::filesystem::path(targetDir + "\\" + parsedFileName));
+
+	}
+
+	//std::string AssetManager::ParseFilename(std::string const& str, const char delim, std::vector<std::string>& out)
+	std::string AssetManager::ParseFilename(std::string const& str, const char delim)
+
+	{
+
 		size_t start;
 		size_t end = 0;
-
+		std::string ret;
 		while ((start = str.find_first_not_of(delim, end)) != std::string::npos)
 		{
 			end = str.find(delim, start);
-			out.push_back(str.substr(start, end - start));
+			//out.push_back(str.substr(start, end - start));
+			ret = str.substr(start, end - start);
 		}
 
-		return out[out.size() - 1];
+		return ret;
+		//return out[out.size() - 1];
 	}
 
 	std::string AssetManager::ParseFiletype(std::string filename)
 	{
 		size_t start;
 		size_t end = 0;
-		std::vector<std::string> out;
+		//std::vector<std::string> out;
 
+
+		std::string ret;
 		while ((start = filename.find_first_not_of(".", end)) != std::string::npos)
 		{
 			end = filename.find(".", start);
-			out.push_back(filename.substr(start, end - start));
+			//out.push_back(filename.substr(start, end - start));
+
+			ret = filename.substr(start, end - start);
 		}
 
-		return out[out.size() - 1];
+		return ret;
+		//return out[out.size() - 1];
 	}
 }

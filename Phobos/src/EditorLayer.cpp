@@ -204,7 +204,8 @@ namespace Ares
         FrameBufferSpecs fbSpec;
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
-        m_FrameBuffer = Ares::FrameBuffer::Create(fbSpec, FramebufferFormat::RGBA8);
+        fbSpec.Format = FramebufferFormat::RGBA8;
+        m_FrameBuffer = Ares::FrameBuffer::Create(fbSpec);
 
         // create scene
         m_ActiveScene = CreateRef<Scene>();
@@ -214,7 +215,7 @@ namespace Ares
             m_SquareEntity = m_ActiveScene->CreateEntity("Custom Entity");
             // add a sprite renderer component
             SpriteRendererComponent& spriteRenderer = m_SquareEntity.AddComponent<SpriteRendererComponent>();
-            Ref<Texture2D> spriteSheet = Texture2D::Create("Assets/Textures/RPGpack_sheet_2X.png");
+            Ref<Texture2D> spriteSheet = Texture2D::Create("Assets/Textures/RPGpack_sheet_2X.png", FilterType::Trilinear, true);
             spriteRenderer.Texture = spriteSheet;
         }
 
@@ -236,6 +237,7 @@ namespace Ares
         m_CheckerboardTex = EditorResources::GetTexture("checkerboard.png");
         m_PlayButtonTex = EditorResources::GetTexture("play.png");
 
+        m_AssetManagerPanel = CreateScope<AssetManagerPanel>();
 
 
 
@@ -256,8 +258,6 @@ namespace Ares
         m_SceneHierarchyPanel->SetEntityDeletedCallback(std::bind(&EditorLayer::OnEntityDeleted, this, std::placeholders::_1));
         
         
-        m_AssetManagerPanel = CreateScope<AssetManagerPanel>();
-
         
         
         // SceneSerializer serializer(m_ActiveScene);
@@ -595,6 +595,7 @@ namespace Ares
 
     void EditorLayer::OnUpdate()
     {
+        //return;
 
         // THINGS TO LOOK AT:
         // - BRDF LUT
@@ -825,6 +826,7 @@ namespace Ares
 
     void EditorLayer::OnImGuiDraw()
     {
+
         static bool dockspaceOpen = true;
 
         static bool opt_fullscreen_persistant = true;
@@ -890,10 +892,8 @@ namespace Ares
                         SceneSerializer serializer(newScene);
                         serializer.Deserialize(filepath);
                         m_EditorScene = newScene;
-
                         std::filesystem::path path = filepath;
                         UpdateWindowTitle(path.filename().string());
-
                         m_SceneHierarchyPanel->SetContext(m_EditorScene);
                         
                         m_EditorScene->SetSelectedEntity({});
@@ -942,7 +942,7 @@ namespace Ares
             //    ImGui::EndMenu();
 
             //}
-            EditorGUI::ShowTooltip(
+            /*EditorGUI::ShowTooltip(
                 "When docking is enabled, you can ALWAYS dock MOST window into another! Try it now!" "\n\n"
                 " > if io.ConfigDockingWithShift==false (default):" "\n"
                 "   drag windows from title bar to dock" "\n"
@@ -952,7 +952,7 @@ namespace Ares
                 "This demo app only demonstrate the use of ImGui::DockSpace() which allows you to manually create a docking node _within_ another window. This is useful so you can decorate your main application window (e.g. with a menu bar)." "\n\n"
                 "ImGui::DockSpace() comes with one hard constraint: it needs to be submitted _before_ any window which may be docked into it. Therefore, if you use a dock spot as the central point of your application, you'll probably want it to be part of the very first window you are submitting to imgui every frame." "\n\n"
                 "(NB: because of this constraint, the implicit \"Debug\" window can not be docked into an explicit DockSpace() node, because that window is submitted as part of the NewFrame() call. An easy workaround is that you can create your own implicit \"Debug##2\" window after calling DockSpace() and leave it in the window stack for anyone to use.)"
-            );
+            );*/
             
 
             ImGui::EndMenuBar();
@@ -1015,11 +1015,11 @@ namespace Ares
                 
 
                 CameraComponent& cameraComponent = m_CameraEntity.GetComponent<CameraComponent>();
-                float orthoSize = cameraComponent.Camera.GetOrthoSize();
+                float orthoSize = cameraComponent.Camera.GetOrthographicSize();
 
                 if (ImGui::SliderFloat("Camera Ortho Size", &orthoSize, .001f, 10))
                 {
-                    cameraComponent.Camera.SetOrthoSize(orthoSize);
+                    cameraComponent.Camera.SetOrthographicSize(orthoSize);
                 }
 
                 ImGui::Separator();
@@ -1438,7 +1438,7 @@ namespace Ares
         m_CameraEntity.GetComponent<CameraComponent>().Camera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);*/
 
         
-        
+        //USED
         ImGui::Image((void*)(intptr_t)SceneRenderer::GetFinalColorBufferRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
 
 
@@ -1642,7 +1642,7 @@ namespace Ares
                     m_EditorScene->DestroyEntity(selectedEntity);
                     m_SelectionContext.clear();
                     m_EditorScene->SetSelectedEntity({});
-                    m_SceneHierarchyPanel->SetSelected({});
+                    //m_SceneHierarchyPanel->SetSelected({});
                 }
                 break;
             }

@@ -4,6 +4,8 @@
 #include <glad/glad.h>
 namespace Ares {
 
+#ifdef ARES_DEBUG
+
 	void OpenGLMessageCallback(
 		unsigned source, unsigned type, unsigned id, unsigned severity,
 		int length, const char* message, const void* userParam
@@ -30,6 +32,7 @@ namespace Ares {
 
 		ARES_CORE_ASSERT(false, "Unknown severity level!");
 	}
+#endif
 
 	void OpenGLRendererAPI::Init()
 	{
@@ -99,6 +102,7 @@ namespace Ares {
 	
 	void OpenGLRendererAPI::DrawIndexed(uint32_t indexCount, PrimitiveType type, bool depthTest)
 	{
+
 		if (!depthTest)
 			glDisable(GL_DEPTH_TEST);
 

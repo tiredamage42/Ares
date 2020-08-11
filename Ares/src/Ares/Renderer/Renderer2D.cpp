@@ -121,9 +121,12 @@ namespace Ares
 		Ref<Texture2D> whiteTexture = Texture2D::Create(TextureFormat::RGBA, 1, 1, TextureWrap::Repeat, FilterType::Point, false);
 
 		uint32_t whiteTextureData = 0xffffffff;
+
+		//whiteTexture->SetData(&whiteTextureData);
 		whiteTexture->Lock();
 		whiteTexture->GetWriteableBuffer().Write(&whiteTextureData, sizeof(uint32_t));
 		whiteTexture->Unlock();
+
 		s_Data.TextureSlots[0] = whiteTexture;
 
 		s_Data.QuadVertices = { 

@@ -41,18 +41,23 @@ namespace Ares
 	}
 	AssetManagerPanel::AssetManagerPanel()
 	{
-
+			_tex0 = EditorResources::GetTexture("file.png")	;
+			_tex1 = EditorResources::GetTexture("blend.png");
+			_tex2 = EditorResources::GetTexture("fbx.png")	;
+			_tex3 = EditorResources::GetTexture("obj.png")	;
+			_tex4 = EditorResources::GetTexture("wav.png")	;
+			_tex5 = EditorResources::GetTexture("csc.png")	;
+			_tex6 = EditorResources::GetTexture("png.png")	;
+			_tex7 = EditorResources::GetTexture("scene.png");
 		s_Extension2Icon = {
-
-		{ NO_EXTENSION,		EditorResources::GetTexture("file.png") },
-
-		{ "blend" ,		EditorResources::GetTexture("blend.png") },
-		{ "fbx"	,		EditorResources::GetTexture("fbx.png")	 },
-		{ "obj"	,		EditorResources::GetTexture("obj.png")	 },
-		{ "wav"	,		EditorResources::GetTexture("wav.png")	 },
-		{ "cs"	,		EditorResources::GetTexture("csc.png")	 },
-		{ "png"	,		EditorResources::GetTexture("png.png")	 },
-		{ "scene" ,		EditorResources::GetTexture("scene.png") },
+			{ NO_EXTENSION,		_tex0	},
+			{ "blend" ,			_tex1	},
+			{ "fbx"	,			_tex2	},
+			{ "obj"	,			_tex3	},
+			{ "wav"	,			_tex4	},
+			{ "cs"	,			_tex5	},
+			{ "png"	,			_tex6	},
+			{ "scene" ,			_tex7	},
 		};
 
 		m_folderTex =		EditorResources::GetTexture("folder.png");
@@ -79,12 +84,12 @@ namespace Ares
 		m_gridView =		EditorResources::GetTexture("grid.png");
 		m_listView =		EditorResources::GetTexture("list.png");
 
-		m_BaseDirPath = "assets";
+		m_BaseDirPath = "Assets";
 		m_CurrentDirPath = m_BaseDirPath;
 		m_prevDirPath = m_CurrentDirPath;
 		m_lastNavPath = m_BaseDirPath;
-		m_BaseProjectDir = AssetManager::GetFsContents();
-		m_CurrentDir = m_BaseProjectDir;
+		m_BaseProjectDirContents = AssetManager::GetFsContents();
+		m_CurrentDirContents = m_BaseProjectDirContents;
 		m_basePathLen = strlen(m_BaseDirPath.c_str());
 
 		m_IsDragging = false;
@@ -109,6 +114,8 @@ namespace Ares
 	{
 		nManager.Render();
 
+		static bool open = true;
+		ImGui::Begin("Project", &open, ImGuiWindowFlags_MenuBar);
 		if (
 			ImGui::BeginMenuBar()
 			)
@@ -120,7 +127,9 @@ namespace Ares
 					std::string filename = Application::Get().OpenFile("");
 					std::vector<std::string> outData;
 
-					AssetManager::ProcessAseets(filename);
+
+					AssetManager::ImportAsset(filename, m_CurrentDirPath);
+					//AssetManager::ProcessAseets(filename);
 				}
 
 				if (ImGui::MenuItem("Refresh", "Ctrl + R"))
@@ -136,7 +145,6 @@ namespace Ares
 			}
 			ImGui::EndMenuBar();
 		}
-		ImGui::Begin("Project");
 
 
 
@@ -150,11 +158,11 @@ namespace Ares
 				{*/
 					if (ImGui::TreeNode("Contents"))
 					{
-						for (int i = 0; i < m_BaseProjectDir.size(); i++)
+						for (int i = 0; i < m_BaseProjectDirContents.size(); i++)
 						{
-							if (ImGui::TreeNode(m_BaseProjectDir[i].filename.c_str()))
+							if (ImGui::TreeNode(m_BaseProjectDirContents[i].filename.c_str()))
 							{
-								auto dirData = AssetManager::ReadDirectory(m_BaseProjectDir[i].absolutePath.c_str());
+								auto dirData = AssetManager::ReadDirectory(m_BaseProjectDirContents[i].absolutePath.c_str());
 								for (int d = 0; d < dirData.size(); d++)
 								{
 									if (!dirData[d].isFile)
@@ -177,7 +185,7 @@ namespace Ares
 
 							if (m_IsDragging && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
 							{
-								m_MovePath = m_BaseProjectDir[i].absolutePath.c_str();
+								m_MovePath = m_BaseProjectDirContents[i].absolutePath.c_str();
 							}
 						}
 						ImGui::TreePop();
@@ -195,13 +203,16 @@ namespace Ares
 			if (ImGui::BeginDragDropTarget())
 			{
 				auto data = ImGui::AcceptDragDropPayload("selectable", ImGuiDragDropFlags_AcceptNoDrawDefaultRect);
+				
 				if (data)
 				{
+
 					std::string file = (char*)data->Data;
 					if (AssetManager::MoveFileTo(file, m_MovePath))
 					{
+
 						ARES_CORE_INFO("Moved File: " + file + " to " + m_MovePath);
-						m_CurrentDir = AssetManager::ReadDirectory(m_CurrentDirPath);
+						m_CurrentDirContents = AssetManager::ReadDirectory(m_CurrentDirPath);
 					}
 					m_IsDragging = false;
 				}
@@ -224,11 +235,11 @@ namespace Ares
 				if (!m_isInListView)
 					ImGui::Columns(17, nullptr, false);
 
-				for (int i = 0; i < m_CurrentDir.size(); i++)
+				for (int i = 0; i < m_CurrentDirContents.size(); i++)
 				{
 					/*if (m_CurrentDir.size() > 0)
 					{*/
-						if (!m_CurrentDir[i].isFile)
+						if (!m_CurrentDirContents[i].isFile)
 						{
 							if (!m_isInListView)
 								RenderDircGridView(i);
@@ -332,7 +343,7 @@ namespace Ares
 				{
 					m_prevDirPath = AssetManager::GetParentPath(m_CurrentDirPath);
 					m_CurrentDirPath = m_prevDirPath;
-					m_CurrentDir = AssetManager::ReadDirectory(m_CurrentDirPath);
+					m_CurrentDirContents = AssetManager::ReadDirectory(m_CurrentDirPath);
 				}
 			}
 			ImGui::SameLine();
@@ -340,7 +351,7 @@ namespace Ares
 			{
 				m_prevDirPath = AssetManager::GetParentPath(m_CurrentDirPath);
 				m_CurrentDirPath = m_lastNavPath;
-				m_CurrentDir = AssetManager::ReadDirectory(m_lastNavPath);
+				m_CurrentDirContents = AssetManager::ReadDirectory(m_lastNavPath);
 			}
 			ImGui::SameLine();
 
@@ -371,15 +382,15 @@ namespace Ares
 		/*auto fileID = AssetTypes::GetParsedAssetID(m_CurrentDir[dirIndex].fileType);
 		auto iconRef = assetIconMaps[fileID]->GetRendererID();*/
 
-		auto iconRef = GetIcon(m_CurrentDir[dirIndex].fileType)->GetRendererID();
+		auto iconRef = GetIcon(m_CurrentDirContents[dirIndex].fileType)->GetRendererID();
 
 		ImGui::Image((void*)iconRef, ImVec2(20, 20));
 		ImGui::SameLine();
-		if (ImGui::Selectable(m_CurrentDir[dirIndex].filename.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick))
+		if (ImGui::Selectable(m_CurrentDirContents[dirIndex].filename.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick))
 		{
 			if (ImGui::IsMouseDoubleClicked(0))
 			{
-				std::string cmd = '"' + m_CurrentDir[dirIndex].absolutePath + '"';
+				std::string cmd = '"' + m_CurrentDirContents[dirIndex].absolutePath + '"';
 				system(cmd.c_str());
 			}
 		}
@@ -389,9 +400,9 @@ namespace Ares
 		{
 			ImGui::Image((void*)iconRef, ImVec2(20, 20));
 			ImGui::SameLine();
-			ImGui::Text(m_CurrentDir[dirIndex].filename.c_str());
-			int size = sizeof(const char*) + strlen(m_CurrentDir[dirIndex].absolutePath.c_str());
-			ImGui::SetDragDropPayload("selectable", m_CurrentDir[dirIndex].absolutePath.c_str(), size);
+			ImGui::Text(m_CurrentDirContents[dirIndex].filename.c_str());
+			int size = sizeof(const char*) + strlen(m_CurrentDirContents[dirIndex].absolutePath.c_str());
+			ImGui::SetDragDropPayload("selectable", m_CurrentDirContents[dirIndex].absolutePath.c_str(), size);
 			m_IsDragging = true;
 			ImGui::EndDragDropSource();
 		}
@@ -403,12 +414,12 @@ namespace Ares
 
 		/*auto fileID = AssetTypes::GetParsedAssetID(m_CurrentDir[dirIndex].fileType);
 		auto iconRef = assetIconMaps[fileID]->GetRendererID();*/
-		auto iconRef = GetIcon(m_CurrentDir[dirIndex].fileType)->GetRendererID();
+		auto iconRef = GetIcon(m_CurrentDirContents[dirIndex].fileType)->GetRendererID();
 
 
 
 		ImGui::ImageButton((void*)iconRef, ImVec2(70, 70));
-		auto fname = m_CurrentDir[dirIndex].filename;
+		auto fname = m_CurrentDirContents[dirIndex].filename;
 		auto newFname = AssetManager::StripExtras(fname);
 
 		ImGui::TextWrapped(newFname.c_str());
@@ -419,9 +430,9 @@ namespace Ares
 			ImGui::Image((void*)iconRef, ImVec2(20, 20));
 			ImGui::SameLine();
 
-			ImGui::Text(m_CurrentDir[dirIndex].filename.c_str());
-			int size = sizeof(const char*) + strlen(m_CurrentDir[dirIndex].absolutePath.c_str());
-			ImGui::SetDragDropPayload("selectable", m_CurrentDir[dirIndex].absolutePath.c_str(), size);
+			ImGui::Text(m_CurrentDirContents[dirIndex].filename.c_str());
+			int size = sizeof(const char*) + strlen(m_CurrentDirContents[dirIndex].absolutePath.c_str());
+			ImGui::SetDragDropPayload("selectable", m_CurrentDirContents[dirIndex].absolutePath.c_str(), size);
 			m_IsDragging = true;
 			ImGui::EndDragDropSource();
 		}
@@ -432,13 +443,13 @@ namespace Ares
 		ImGui::Image((void*)m_folderTex->GetRendererID(), ImVec2(20, 20));
 		ImGui::SameLine();
 
-		if (ImGui::Selectable(m_CurrentDir[dirIndex].filename.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick))
+		if (ImGui::Selectable(m_CurrentDirContents[dirIndex].filename.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick))
 		{
 			if (ImGui::IsMouseDoubleClicked(0))
 			{
-				m_prevDirPath = m_CurrentDir[dirIndex].absolutePath;
-				m_CurrentDirPath = m_CurrentDir[dirIndex].absolutePath;
-				m_CurrentDir = AssetManager::ReadDirectory(m_CurrentDir[dirIndex].absolutePath);
+				m_prevDirPath = m_CurrentDirContents[dirIndex].absolutePath;
+				m_CurrentDirPath = m_CurrentDirContents[dirIndex].absolutePath;
+				m_CurrentDirContents = AssetManager::ReadDirectory(m_CurrentDirContents[dirIndex].absolutePath);
 			}
 		}
 
@@ -446,9 +457,9 @@ namespace Ares
 		{
 			ImGui::Image((void*)m_folderTex->GetRendererID(), ImVec2(20, 20));
 			ImGui::SameLine();
-			ImGui::Text(m_CurrentDir[dirIndex].filename.c_str());
-			int size = sizeof(const char*) + strlen(m_CurrentDir[dirIndex].absolutePath.c_str());
-			ImGui::SetDragDropPayload("selectable", m_CurrentDir[dirIndex].absolutePath.c_str(), size);
+			ImGui::Text(m_CurrentDirContents[dirIndex].filename.c_str());
+			int size = sizeof(const char*) + strlen(m_CurrentDirContents[dirIndex].absolutePath.c_str());
+			ImGui::SetDragDropPayload("selectable", m_CurrentDirContents[dirIndex].absolutePath.c_str(), size);
 			m_IsDragging = true;
 			ImGui::EndDragDropSource();
 		}
@@ -461,12 +472,12 @@ namespace Ares
 
 		if (ImGui::IsMouseDoubleClicked(0))
 		{
-			m_prevDirPath = m_CurrentDir[dirIndex].absolutePath;
-			m_CurrentDirPath = m_CurrentDir[dirIndex].absolutePath;
-			m_CurrentDir = AssetManager::ReadDirectory(m_CurrentDir[dirIndex].absolutePath);
+			m_prevDirPath = m_CurrentDirContents[dirIndex].absolutePath;
+			m_CurrentDirPath = m_CurrentDirContents[dirIndex].absolutePath;
+			m_CurrentDirContents = AssetManager::ReadDirectory(m_CurrentDirContents[dirIndex].absolutePath);
 		}
 
-		auto fname = m_CurrentDir[dirIndex].filename;
+		auto fname = m_CurrentDirContents[dirIndex].filename;
 		auto newFname = AssetManager::StripExtras(fname);
 		ImGui::TextWrapped(newFname.c_str());
 		ImGui::EndGroup();

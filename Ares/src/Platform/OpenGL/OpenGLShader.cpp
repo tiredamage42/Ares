@@ -82,7 +82,7 @@ namespace Ares {
 
 			this->m_Loaded = true;
 
-		});
+		}, "Reload Shader");
 	}
 
 	void OpenGLShader::AddShaderReloadedCallback(const ShaderReloadedCallback& callback)
@@ -109,21 +109,21 @@ namespace Ares {
 		Renderer::Submit([rendererID]() {
 
 			glDeleteProgram(rendererID);
-		});
+		}, "Delete Shader");
 	}
 
 	void OpenGLShader::Bind()
 	{
 		Renderer::Submit([this]() {
 			glUseProgram(this->m_RendererID);
-		});
+		}, "Bind Shader");
 	}
 
 	void OpenGLShader::Unbind() const
 	{
 		Renderer::Submit([]() {
 			glUseProgram(0);
-		});
+		}, "Unbidn Shader");
 	}
 
 
@@ -1029,7 +1029,7 @@ namespace Ares {
 	{
 		Renderer::Submit([=]() {
 			UploadUniformInt(name, value);
-		});
+		}, "set uniform");
 	}
 
 	void OpenGLShader::SetIntArray(const std::string& name, int* values, const uint32_t count, bool deleteFromMem)
@@ -1038,43 +1038,43 @@ namespace Ares {
 			UploadUniformIntArray(name, values, count);
 			if (deleteFromMem)
 				delete[] values;
-		});
+		}, "set uniform");
 	}
 	void OpenGLShader::SetFloat(const std::string& name, float value)
 	{
 		Renderer::Submit([=]() {
 			UploadUniformFloat(name, value);
-		});
+		}, "set uniform");
 	}
 	void OpenGLShader::SetFloat2(const std::string& name, glm::vec2 value)
 	{
 		Renderer::Submit([=]() {
 			UploadUniformFloat2(name, value);
-		});
+		}, "set uniform");
 	}
 	void OpenGLShader::SetFloat3(const std::string& name, glm::vec3 value)
 	{
 		Renderer::Submit([=]() {
 			UploadUniformFloat3(name, value);
-		});
+		}, "set uniform");
 	}
 	void OpenGLShader::SetFloat4(const std::string& name, glm::vec4 value)
 	{
 		Renderer::Submit([=]() {
 			UploadUniformFloat4(name, value);
-		});
+		}, "set uniform");
 	}
 	void OpenGLShader::SetMat3(const std::string& name, glm::mat3 value)
 	{
 		Renderer::Submit([=]() {
 			UploadUniformMat3(name, value);
-		});
+		}, "set uniform");
 	}
 	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
 	{
 		Renderer::Submit([=]() {
 			UploadUniformMat4(name, value);
-		});
+		}, "set uniform");
 	}
 
 	void OpenGLShader::SetIntFromRenderThread(const std::string& name, int value)
@@ -1121,7 +1121,7 @@ namespace Ares {
 		Renderer::Submit([this, buffer]() {
 			glUseProgram(this->m_RendererID);
 			this->ResolveAndSetUniforms(this->m_VSMaterialUniformBuffer, buffer);
-		});
+		}, "SetVSMaterialUniformBuffer");
 	}
 
 	void OpenGLShader::SetPSMaterialUniformBuffer(Buffer buffer)
@@ -1129,7 +1129,7 @@ namespace Ares {
 		Renderer::Submit([this, buffer]() {
 			glUseProgram(this->m_RendererID);
 			this->ResolveAndSetUniforms(this->m_PSMaterialUniformBuffer, buffer);
-		});
+		}, "SetPSMaterialUniformBuffer");
 	}
 
 	

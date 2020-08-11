@@ -40,6 +40,9 @@ namespace Ares
 		Ref<Texture2D> m_Texture, m_SpriteSheet;
 		Entity m_SquareEntity;
 		//Entity m_CameraEntity;
+		//Ref<Scene> m_ActiveScene;
+		//Ref<FrameBuffer> m_FrameBuffer;
+
 		int32_t m_MaxQuadsPerDraw = 10000;
 		int32_t m_NumberOfSprites = 10;
 		glm::vec4 m_SquareColor = { 1.0f, .5f, 0, 1 };
@@ -56,12 +59,14 @@ namespace Ares
 		/*Ref<Shader> m_SkyboxShader;
 		Ref<Shader> m_HDRShader;*/
 
+		
 		FileSystemWatcher m_FileSystemWatcher;
 		Scope<AssetManagerPanel> m_AssetManagerPanel;
 		Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
+		
+
 		//Ref<Scene> m_Scene;
 		//Ref<Scene> m_SpheresScene;
-		//Ref<Scene> m_ActiveScene;
 		Ref<Scene> m_RuntimeScene, m_EditorScene;
 
 		EditorCamera m_EditorCamera;

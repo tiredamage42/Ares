@@ -6,34 +6,17 @@ namespace Ares
 {
 
 	// 2D
-	//SceneCamera::SceneCamera()
-	//{
-	//	RecalculateProjection();
-	//}
-	//void SceneCamera::SetOrthographic(float size, float nearClip, float farClip)
-	//{
-	//	m_OrthoSize = size;
-	//	m_OrthoNear = nearClip;
-	//	m_OrthoFar = farClip;
-	//	RecalculateProjection();
-	//}
-	//void SceneCamera::SetViewportSize(uint32_t width, uint32_t height)
-	//{
+	void SceneCamera::RecalculateProjection()
+	{
+		// left, right, bottom, top, near, far
+		/*float l = -m_OrthographicSize * m_AspectRatio * .5f;
+		float r = m_OrthographicSize * m_AspectRatio * .5f;
+		float b = -m_OrthographicSize * .5f;
+		float t = m_OrthographicSize * .5f;
 
-	//	m_AspectRatio = (float)width / (float)height;
-	//	RecalculateProjection();
-	//}
-	//void SceneCamera::RecalculateProjection()
-	//{
-	//	// left, right, bottom, top, near, far
-	//	float l = -m_OrthoSize * m_AspectRatio * .5f;
-	//	float r =  m_OrthoSize * m_AspectRatio * .5f;
-	//	float b = -m_OrthoSize * .5f;
-	//	float t =  m_OrthoSize * .5f;
-
-	//	m_ProjectionMatrix = glm::ortho(l, r, b, t, m_OrthoNear, m_OrthoFar);
-	//
-	//}
+		m_ProjectionMatrix = glm::ortho(l, r, b, t, m_OrthographicNear, m_OrthographicFar);*/
+	
+	}
 
 
 
@@ -44,6 +27,9 @@ namespace Ares
 
 	SceneCamera::SceneCamera()
 	{
+		//2D
+		RecalculateProjection();
+		//2D
 	}
 
 	SceneCamera::~SceneCamera()
@@ -64,10 +50,21 @@ namespace Ares
 		m_OrthographicSize = size;
 		m_OrthographicNear = nearClip;
 		m_OrthographicFar = farClip;
+
+		//2D
+		RecalculateProjection();
+		//2D
 	}
 
 	void SceneCamera::SetViewportSize(uint32_t width, uint32_t height)
 	{
+
+		//2D
+		m_AspectRatio = (float)width / (float)height;
+		RecalculateProjection();
+		//return;
+		//2D
+
 		switch (m_ProjectionType)
 		{
 		case ProjectionType::Perspective:

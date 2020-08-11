@@ -17,15 +17,16 @@ namespace Ares
 
 		void SetOrthographic(float size, float nearClip, float farClip);
 		void SetViewportSize(uint32_t width, uint32_t height);
-	private:
 
-		void RecalculateProjection();
 
 		float m_OrthoSize = 10.0f;
 		float m_OrthoNear = -1.0f;
 		float m_OrthoFar = 1.0f;
 
-		float m_AspectRatio = 0.0f;*/
+		*/
+	private:
+		void RecalculateProjection();
+		float m_AspectRatio = 0.0f;
 
 
 
@@ -46,7 +47,11 @@ namespace Ares
 		void SetPerspectiveFarClip(float farClip) { m_PerspectiveFar = farClip; }
 		float GetPerspectiveFarClip() const { return m_PerspectiveFar; }
 
-		void SetOrthographicSize(float size) { m_OrthographicSize = size; }
+		void SetOrthographicSize(float size) { 
+			m_OrthographicSize = size; 
+			//2D
+			RecalculateProjection();
+		}
 		float GetOrthographicSize() const { return m_OrthographicSize; }
 		void SetOrthographicNearClip(float nearClip) { m_OrthographicNear = nearClip; }
 		float GetOrthographicNearClip() const { return m_OrthographicNear; }

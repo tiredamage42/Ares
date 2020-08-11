@@ -55,8 +55,8 @@ namespace Ares
     #error "Unknown platform!"
 #endif // End of platform detection
 
-#ifdef ARES_DEBUG
 
+#ifdef ARES_DEBUG
     #if defined(ARES_PLATFORM_WINDOWS)
         #define ARES_DEBUGBREAK() __debugbreak()
     #elif defined(ARES_PLATFORM_LINUX)
@@ -67,9 +67,9 @@ namespace Ares
     #endif
 
     #define ARES_ENABLE_ASSERTS
-#else
-
+//#else
 #endif
+
 
 #ifdef ARES_ENABLE_ASSERTS
     #define ARES_ASSERT(x, ...) { if (!(x)) { ARES_ERROR("Assertion Failed: {0}", __VA_ARGS__); ARES_DEBUGBREAK(); } }

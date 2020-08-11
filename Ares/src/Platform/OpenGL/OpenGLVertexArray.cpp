@@ -10,27 +10,27 @@ namespace Ares {
 	{
 		Renderer::Submit([this]() mutable {
 			glCreateVertexArrays(1, &this->m_RendererID);
-		});
+		}, "Create Vertex ara");
 	}
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
 		GLuint rendererID = m_RendererID;
 		Renderer::Submit([rendererID]() {
 			glDeleteVertexArrays(1, &rendererID);
-		});
+		}, "Delte vertex array");
 	}
 
 	void OpenGLVertexArray::Bind() const
 	{
 		Renderer::Submit([this]() {
 			glBindVertexArray(this->m_RendererID);
-		});
+		}, "Bind Vertex Array");
 	}
 	void OpenGLVertexArray::Unbind() const
 	{
 		Renderer::Submit([]() {
 			glBindVertexArray(0);
-		});
+		}, "Unbind Vertex Array");
 	}
 
 	static GLenum ShaderDataType2OpenGLBaseType(ShaderDataType type) {
@@ -145,7 +145,7 @@ namespace Ares {
 					ARES_CORE_ASSERT(false, "Unknown ShaderDataType!");
 				}*/
 			}
-		});
+		}, "Add Vertex Buffer To Vetex Array");
 		m_VertexBuffers.push_back(buffer);
 	}
 	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& buffer)

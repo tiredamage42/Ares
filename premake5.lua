@@ -183,11 +183,11 @@ project "Sandbox"
         optimize "on"
         links
 		{
-			"Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+			"Ares/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
 		}
 		postbuildcommands 
 		{
-			'{COPY} "../Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+			'{COPY} "../Ares/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
 		}
 
     filter "configurations:Dist"
@@ -196,11 +196,11 @@ project "Sandbox"
         optimize "on"
         links
 		{
-			"Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+			"Ares/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
 		}
 		postbuildcommands 
 		{
-			'{COPY} "../Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+			'{COPY} "../Ares/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
 		}
 
 
@@ -211,8 +211,11 @@ project "Phobos"
     cppdialect "C++17"
     staticruntime "on"
     
+    debugdir ("bin/" .. outputdir .. "/%{prj.name}")
+
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+    
 
     files
     {
@@ -243,7 +246,8 @@ project "Phobos"
     postbuildcommands 
 	{
         '{COPY} "../Phobos/Assets" "%{cfg.targetdir}/Assets"',
-        '{COPY} "../Phobos/EditorResources" "%{cfg.targetdir}/EditorResources"'
+        '{COPY} "../Phobos/EditorResources" "%{cfg.targetdir}/EditorResources"',
+        '{COPY} "../Phobos/imgui.ini" "%{cfg.targetdir}"'
 	}
 	
 
@@ -272,11 +276,11 @@ project "Phobos"
         optimize "on"
         links
 		{
-			"Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+			"Ares/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
 		}
 		postbuildcommands 
 		{
-			'{COPY} "../Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+			'{COPY} "../Ares/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
 		}
 
     filter "configurations:Dist"
@@ -285,9 +289,9 @@ project "Phobos"
         optimize "on"
         links
 		{
-			"Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+			"Ares/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
 		}
 		postbuildcommands 
 		{
-			'{COPY} "../Hazel/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+			'{COPY} "../Ares/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
 		}

@@ -12,10 +12,12 @@ namespace Ares
 
 	RenderCommandQueue::~RenderCommandQueue()
 	{
+		m_Deleted = true;
+		Execute();
 		delete[] m_CommandBuffer;
 	}
 
-	void* RenderCommandQueue::Allocate(RenderCommandFn func, uint32_t size)
+	void* RenderCommandQueue::Allocate(RenderCommandFn func, uint32_t size, const std::string& commandName)
 	{
 		// TODO: alignment
 		*(RenderCommandFn*)m_CommandBufferPtr = func;
@@ -28,6 +30,8 @@ namespace Ares
 		m_CommandBufferPtr += size;
 
 		m_CommandCount++;
+
+		m_CommandNames.push_back(commandName);
 		return memory;
 	}
 
@@ -44,11 +48,18 @@ namespace Ares
 
 			uint32_t size = *(uint32_t*)buffer;
 			buffer += sizeof(uint32_t);
+
+			std::string commandName = m_CommandNames[i];
+
+
 			fn(buffer);
+			
 			buffer += size;
 		}
 
 		m_CommandBufferPtr = m_CommandBuffer;
 		m_CommandCount = 0;
+
+		m_CommandNames.clear();
 	}
 }

@@ -24,11 +24,12 @@ namespace Ares {
 		// not present mips in data
 		virtual uint32_t GetMipLevelCount() const override;
 
+		//virtual void SetData(void* data) override;
 
 		virtual void Lock() override;
 		virtual void Unlock() override;
-		
 		virtual void Resize(uint32_t width, uint32_t height) override;
+		
 
 		virtual Buffer GetWriteableBuffer() override;
 		virtual bool Loaded() const override { return m_Loaded; }
