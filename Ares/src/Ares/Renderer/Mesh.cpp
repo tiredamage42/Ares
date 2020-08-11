@@ -500,7 +500,7 @@ namespace Ares {
 					std::string texturePath = parentPath.string();
 
 					ARES_CORE_LOG("  Albedo Texture Path = {0}", texturePath);
-					auto texture = Texture2D::Create(texturePath, true);
+					auto texture = Texture2D::Create(texturePath, FilterType::Trilinear, true, true);
 					if (texture->Loaded())
 					{
 						m_Textures[i] = texture;
@@ -531,7 +531,7 @@ namespace Ares {
 					std::string texturePath = parentPath.string();
 					ARES_CORE_LOG("  Normal map path = {0}", texturePath);
 
-					auto texture = Texture2D::Create(texturePath);
+					auto texture = Texture2D::Create(texturePath, FilterType::Trilinear, true);
 					if (texture->Loaded())
 					{
 						mi->Set("u_NormalTexture", texture);
@@ -562,7 +562,7 @@ namespace Ares {
 					std::string texturePath = parentPath.string();
 					ARES_CORE_LOG("  Roughness map path = {0}", texturePath);
 
-					auto texture = Texture2D::Create(texturePath);
+					auto texture = Texture2D::Create(texturePath, FilterType::Trilinear, true);
 					if (texture->Loaded())
 					{
 						mi->Set("u_RoughnessTexture", texture);
@@ -664,7 +664,7 @@ namespace Ares {
 							std::string texturePath = parentPath.string();
 							ARES_CORE_LOG("    Metalness map path = {0}", texturePath);
 
-							auto texture = Texture2D::Create(texturePath);
+							auto texture = Texture2D::Create(texturePath, FilterType::Trilinear, true);
 							if (texture->Loaded())
 							{
 								//ARES_CORE_LOG("  Metalness map path = {0}", texturePath);

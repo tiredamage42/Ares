@@ -118,7 +118,7 @@ namespace Ares
 		s_Data.TextureShader->SetIntArray("u_Textures", samplers, Renderer2DData::MAX_TEXTURE_SLOTS);
 		
 		// WHITE TEXTURE =============================================================================
-		Ref<Texture2D> whiteTexture = Texture2D::Create(TextureFormat::RGBA, 1, 1, TextureWrap::Repeat);
+		Ref<Texture2D> whiteTexture = Texture2D::Create(TextureFormat::RGBA, 1, 1, TextureWrap::Repeat, FilterType::Point, false);
 
 		uint32_t whiteTextureData = 0xffffffff;
 		whiteTexture->Lock();

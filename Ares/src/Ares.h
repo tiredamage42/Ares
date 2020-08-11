@@ -28,6 +28,10 @@
 
 #include "imgui/imgui.h"
 #include "Ares/Editor/SceneHierarchyPanel.h"
+#include "Ares/Editor/AssetManagerPanel.h"
+#include "Ares/Editor/FileSystemWatcher.h"
+#include "Ares/Editor/AssetManager.h"
+#include "Ares/Editor/EditorResources.h"
 
 // renderer ===============
 #include "Ares/Renderer/Renderer.h"

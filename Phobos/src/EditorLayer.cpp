@@ -38,6 +38,9 @@ namespace Ares
     }
     void EditorLayer::OnAttach()
     {
+
+        m_FileSystemWatcher.Watch();
+
         // ImGui Colors
         ImVec4* colors = ImGui::GetStyle().Colors;
         colors[ImGuiCol_Text] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -225,9 +228,13 @@ namespace Ares
 #else
 
         // Editor
-        m_CheckerboardTex = Texture2D::Create("Assets/Textures/Checkerboard.png");
-        m_PlayButtonTex = Texture2D::Create("Assets/Textures/PlayButton.png");
 
+        
+        /*m_CheckerboardTex = Texture2D::Create("Assets/Textures/Checkerboard.png");
+        m_PlayButtonTex = Texture2D::Create("Assets/Textures/PlayButton.png");*/
+
+        m_CheckerboardTex = EditorResources::GetTexture("checkerboard.png");
+        m_PlayButtonTex = EditorResources::GetTexture("play.png");
 
 
 
@@ -247,6 +254,12 @@ namespace Ares
         m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>(m_EditorScene);
         m_SceneHierarchyPanel->SetSelectionChangedCallback(std::bind(&EditorLayer::SelectEntity, this, std::placeholders::_1));
         m_SceneHierarchyPanel->SetEntityDeletedCallback(std::bind(&EditorLayer::OnEntityDeleted, this, std::placeholders::_1));
+        
+        
+        m_AssetManagerPanel = CreateScope<AssetManagerPanel>();
+
+        
+        
         // SceneSerializer serializer(m_ActiveScene);
         // serializer.Deserialize("Scene.yaml");
 
@@ -1087,6 +1100,12 @@ namespace Ares
 
         ImGui::End();
 
+        /* Asset Browser ImGUI Contents Starts Here --------------------------------------------------------------------- */
+
+        m_AssetManagerPanel->RenderAssetWindow();
+
+        /* Asset Browser ImGUI Contents Ends Here ----------------------------------------------------------------------- */
+
 
         ImGui::Separator();
         {
@@ -1121,6 +1140,28 @@ namespace Ares
             {
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
                 ImGui::Image(m_AlbedoInput.TextureMap ? (void*)(intptr_t)m_AlbedoInput.TextureMap->GetRendererID() : (void*)(intptr_t)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
+                
+                // Drag 'n' Drop Support
+                if (ImGui::BeginDragDropTarget())
+                {
+                    auto data = ImGui::AcceptDragDropPayload("selectable");
+                    if (data)
+                    {
+                        std::string file = (char*)data->Data;
+                        auto extension = AssetManager::ParseFiletype(file);
+                        if (extension == "tga" || extension == "png")
+                        {
+                            m_AlbedoInput.TextureMap = Texture2D::Create(file, FilterType::Trilinear, true, m_AlbedoInput.SRGB);
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                
+                
+                
+                
+                
                 ImGui::PopStyleVar();
                 if (ImGui::IsItemHovered())
                 {
@@ -1137,7 +1178,7 @@ namespace Ares
                     {
                         std::string filename = Application::Get().OpenFile("");
                         if (filename != "")
-                            m_AlbedoInput.TextureMap = Texture2D::Create(filename, m_AlbedoInput.SRGB);
+                            m_AlbedoInput.TextureMap = Texture2D::Create(filename, FilterType::Trilinear, true, m_AlbedoInput.SRGB);
                     }
                 }
                 ImGui::SameLine();
@@ -1146,7 +1187,7 @@ namespace Ares
                 if (ImGui::Checkbox("sRGB##AlbedoMap", &m_AlbedoInput.SRGB))
                 {
                     if (m_AlbedoInput.TextureMap)
-                        m_AlbedoInput.TextureMap = Texture2D::Create(m_AlbedoInput.TextureMap->GetPath(), m_AlbedoInput.SRGB);
+                        m_AlbedoInput.TextureMap = Texture2D::Create(m_AlbedoInput.TextureMap->GetPath(), FilterType::Trilinear, true, m_AlbedoInput.SRGB);
                 }
                 ImGui::EndGroup();
                 ImGui::SameLine();
@@ -1159,6 +1200,25 @@ namespace Ares
             {
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
                 ImGui::Image(m_NormalInput.TextureMap ? (void*)(intptr_t)m_NormalInput.TextureMap->GetRendererID() : (void*)(intptr_t)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
+                
+                // Drag 'n' Drop Support
+                if (ImGui::BeginDragDropTarget())
+                {
+                    auto data = ImGui::AcceptDragDropPayload("selectable");
+                    if (data)
+                    {
+                        std::string file = (char*)data->Data;
+                        auto extension = AssetManager::ParseFiletype(file);
+                        if (extension == "tga" || extension == "png")
+                        {
+                            m_NormalInput.TextureMap = Texture2D::Create(file, FilterType::Trilinear, true);
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                
+                
                 ImGui::PopStyleVar();
                 if (ImGui::IsItemHovered())
                 {
@@ -1175,7 +1235,7 @@ namespace Ares
                     {
                         std::string filename = Application::Get().OpenFile("");
                         if (filename != "")
-                            m_NormalInput.TextureMap = Texture2D::Create(filename);
+                            m_NormalInput.TextureMap = Texture2D::Create(filename, FilterType::Trilinear, true);
                     }
                 }
                 ImGui::SameLine();
@@ -1188,6 +1248,25 @@ namespace Ares
             {
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
                 ImGui::Image(m_MetalnessInput.TextureMap ? (void*)(intptr_t)m_MetalnessInput.TextureMap->GetRendererID() : (void*)(intptr_t)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
+                
+                // Drag 'n' Drop Support
+                if (ImGui::BeginDragDropTarget())
+                {
+                    auto data = ImGui::AcceptDragDropPayload("selectable");
+                    if (data)
+                    {
+                        std::string file = (char*)data->Data;
+                        auto extension = AssetManager::ParseFiletype(file);
+                        if (extension == "tga" || extension == "png")
+                        {
+                            m_MetalnessInput.TextureMap = Texture2D::Create(file, FilterType::Trilinear, true);
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                
+                
                 ImGui::PopStyleVar();
                 if (ImGui::IsItemHovered())
                 {
@@ -1204,7 +1283,7 @@ namespace Ares
                     {
                         std::string filename = Application::Get().OpenFile("");
                         if (filename != "")
-                            m_MetalnessInput.TextureMap = Texture2D::Create(filename);
+                            m_MetalnessInput.TextureMap = Texture2D::Create(filename, FilterType::Trilinear, true);
                     }
                 }
                 ImGui::SameLine();
@@ -1219,6 +1298,25 @@ namespace Ares
             {
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
                 ImGui::Image(m_RoughnessInput.TextureMap ? (void*)(intptr_t)m_RoughnessInput.TextureMap->GetRendererID() : (void*)(intptr_t)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
+                
+                // Drag 'n' Drop Support
+                if (ImGui::BeginDragDropTarget())
+                {
+                    auto data = ImGui::AcceptDragDropPayload("selectable");
+                    if (data)
+                    {
+                        std::string file = (char*)data->Data;
+                        auto extension = AssetManager::ParseFiletype(file);
+                        if (extension == "tga" || extension == "png")
+                        {
+                            m_RoughnessInput.TextureMap = Texture2D::Create(file, FilterType::Trilinear, true);
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                
+                
                 ImGui::PopStyleVar();
                 if (ImGui::IsItemHovered())
                 {
@@ -1235,7 +1333,7 @@ namespace Ares
                     {
                         std::string filename = Application::Get().OpenFile("");
                         if (filename != "")
-                            m_RoughnessInput.TextureMap = Texture2D::Create(filename);
+                            m_RoughnessInput.TextureMap = Texture2D::Create(filename, FilterType::Trilinear, true);
                     }
                 }
                 ImGui::SameLine();

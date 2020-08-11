@@ -5,6 +5,11 @@
 #include <glm/glm.hpp>
 
 namespace Ares {
+	enum class FilterType
+	{
+		Point, Bilinear, Trilinear
+	};
+	
 	enum class TextureFormat
 	{
 		None = 0,
@@ -34,13 +39,15 @@ namespace Ares {
 
 		static uint32_t GetBPP(TextureFormat format);
 		static int CalculateMipMapCount(int width, int height);
+		virtual void GenerateMipMaps() const = 0;
+
 	};
 
 	class Texture2D : public Texture
 	{
 	public:
-		static Ref<Texture2D> Create(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap);
-		static Ref<Texture2D> Create(const std::string& path, bool srgb = false);
+		static Ref<Texture2D> Create(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, FilterType filterType, bool useMips);
+		static Ref<Texture2D> Create(const std::string& path, FilterType filterType, bool useMips, bool srgb = false);
 
 		static void CalculateTilingAndOffsetForSubTexture(glm::vec2* tiling, glm::vec2* offset, const Ref<Texture2D>& texture, const glm::vec2& coords, const glm::vec2& cellSize, const glm::vec2& spriteSize = { 1, 1 });
 		static void CalculateTilingAndOffsetForSubTexture(glm::vec2* tiling, glm::vec2* offset, uint32_t width, uint32_t height, const glm::vec2& coords, const glm::vec2& cellSize, const glm::vec2& spriteSize = { 1, 1 });
@@ -61,8 +68,8 @@ namespace Ares {
 	class TextureCube : public Texture
 	{
 	public:
-		static Ref<TextureCube> Create(TextureFormat format, uint32_t width, uint32_t height);
-		static Ref<TextureCube> Create(const std::string& path);
+		static Ref<TextureCube> Create(TextureFormat format, uint32_t width, uint32_t height, FilterType filterType, bool useMips);
+		static Ref<TextureCube> Create(const std::string& path, FilterType filterType, bool useMips);
 
 		virtual const std::string& GetPath() const = 0;
 	};

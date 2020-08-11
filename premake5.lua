@@ -242,7 +242,8 @@ project "Phobos"
     -- }
     postbuildcommands 
 	{
-		'{COPY} "../Phobos/Assets" "%{cfg.targetdir}/Assets"'
+        '{COPY} "../Phobos/Assets" "%{cfg.targetdir}/Assets"',
+        '{COPY} "../Phobos/EditorResources" "%{cfg.targetdir}/EditorResources"'
 	}
 	
 

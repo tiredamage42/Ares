@@ -5,11 +5,13 @@
 #include <glad/glad.h>
 
 namespace Ares {
+
+	
 	class OpenGLTexture2D : public Texture2D
 	{
 	public:
-		OpenGLTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap);
-		OpenGLTexture2D(const std::string& path, bool srgb);
+		OpenGLTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, FilterType type, bool useMips);
+		OpenGLTexture2D(const std::string& path, FilterType type, bool useMips, bool srgb);
 		virtual ~OpenGLTexture2D();
 
 		virtual void Bind(uint32_t slot = 0) const override;
@@ -35,7 +37,7 @@ namespace Ares {
 		virtual const std::string& GetPath() const override { return m_Path; }
 
 		inline virtual uint32_t GetRendererID() const override { return m_RendererID; }
-
+		virtual void GenerateMipMaps() const override;
 
 		virtual bool operator==(const Texture& other) const override
 		{
@@ -45,6 +47,7 @@ namespace Ares {
 	private:
 		uint32_t m_RendererID;
 		TextureFormat m_Format;
+		FilterType m_FilterType;
 		TextureWrap m_Wrap = TextureWrap::Clamp;
 		uint32_t m_Width, m_Height;
 
@@ -61,8 +64,8 @@ namespace Ares {
 	class OpenGLTextureCube : public TextureCube
 	{
 	public:
-		OpenGLTextureCube(TextureFormat format, uint32_t width, uint32_t height);
-		OpenGLTextureCube(const std::string& path);
+		OpenGLTextureCube(TextureFormat format, uint32_t width, uint32_t height, FilterType type, bool useMips);
+		OpenGLTextureCube(const std::string& path, FilterType type, bool useMips);
 		virtual ~OpenGLTextureCube();
 
 		virtual void Bind(uint32_t slot = 0) const;
@@ -83,9 +86,12 @@ namespace Ares {
 		{
 			return m_RendererID == ((OpenGLTextureCube&)other).m_RendererID;
 		}
+
+		virtual void GenerateMipMaps() const override;
 	private:
 		uint32_t m_RendererID;
 		TextureFormat m_Format;
+		FilterType m_FilterType;
 		uint32_t m_Width, m_Height;
 
 		unsigned char* m_ImageData;

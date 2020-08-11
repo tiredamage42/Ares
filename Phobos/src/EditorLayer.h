@@ -56,7 +56,8 @@ namespace Ares
 		/*Ref<Shader> m_SkyboxShader;
 		Ref<Shader> m_HDRShader;*/
 
-
+		FileSystemWatcher m_FileSystemWatcher;
+		Scope<AssetManagerPanel> m_AssetManagerPanel;
 		Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
 		//Ref<Scene> m_Scene;
 		//Ref<Scene> m_SpheresScene;

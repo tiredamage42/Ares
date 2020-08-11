@@ -6,7 +6,7 @@
 
 namespace Ares 
 {
-	Ref<Texture2D> Texture2D::Create(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap)
+	Ref<Texture2D> Texture2D::Create(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, FilterType filterType, bool useMips)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -14,12 +14,12 @@ namespace Ares
 			ARES_CORE_ASSERT(false, "RendererAPI::None is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLTexture2D>(format, width, height, wrap);
+			return CreateRef<OpenGLTexture2D>(format, width, height, wrap, filterType, useMips);
 		}
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");
 		return nullptr;
 	}
-	Ref<Texture2D> Texture2D::Create(const std::string& path, bool srgb)
+	Ref<Texture2D> Texture2D::Create(const std::string& path, FilterType filterType, bool useMips, bool srgb)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -27,13 +27,13 @@ namespace Ares
 			ARES_CORE_ASSERT(false, "RendererAPI::None is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLTexture2D>(path, srgb);
+			return CreateRef<OpenGLTexture2D>(path, filterType, useMips, srgb);
 		}
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");
 		return nullptr;
 	}
 
-	Ref<TextureCube> TextureCube::Create(TextureFormat format, uint32_t width, uint32_t height)
+	Ref<TextureCube> TextureCube::Create(TextureFormat format, uint32_t width, uint32_t height, FilterType filterType, bool useMips)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -43,13 +43,13 @@ namespace Ares
 			return nullptr;
 
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLTextureCube>(format, width, height);
+			return CreateRef<OpenGLTextureCube>(format, width, height, filterType, useMips);
 		}
 
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");
 		return nullptr;
 	}
-	Ref<TextureCube> TextureCube::Create(const std::string& path)
+	Ref<TextureCube> TextureCube::Create(const std::string& path, FilterType filterType, bool useMips)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -59,7 +59,7 @@ namespace Ares
 			return nullptr;
 
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLTextureCube>(path);
+			return CreateRef<OpenGLTextureCube>(path, filterType, useMips);
 		}
 
 		ARES_CORE_ASSERT(false, "Unknow RendererAPI");

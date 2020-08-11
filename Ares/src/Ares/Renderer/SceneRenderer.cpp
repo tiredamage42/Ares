@@ -80,7 +80,7 @@ namespace Ares {
 		s_Data.CompositePass = CreateRef<RenderPass>(compRenderPassSpec);
 
 		s_Data.CompositeShader = Shader::Find("Assets/Shaders/hdr.glsl");
-		s_Data.BRDFLUT = Texture2D::Create("Assets/Textures/BRDF_LUT.tga");
+		s_Data.BRDFLUT = Texture2D::Create("Assets/Textures/BRDF_LUT.tga", FilterType::Point, false);
 
 		// Grid
 		auto gridShader = Shader::Find("Assets/Shaders/grid.glsl");
@@ -176,12 +176,13 @@ namespace Ares {
 		const uint32_t cubemapSize = 2048;
 		const uint32_t irradianceMapSize = 32;
 
-		Ref<TextureCube> envUnfiltered = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize);
+		Ref<TextureCube> envUnfiltered = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize, FilterType::Trilinear, true);
 		
 		if (!equirectangularConversionShader)
 			equirectangularConversionShader = Shader::Find("Assets/Shaders/EquirectangularToCubeMap.glsl");
 		
-		Ref<Texture2D> envEquirect = Texture2D::Create(filepath);
+		Ref<Texture2D> envEquirect = Texture2D::Create(filepath, FilterType::Bilinear, false);
+
 		ARES_CORE_ASSERT(envEquirect->GetFormat() == TextureFormat::Float16, "Texture is not HDR!");
 		 
 		equirectangularConversionShader->Bind();
@@ -190,14 +191,16 @@ namespace Ares {
 			{
 				glBindImageTexture(0, envUnfiltered->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
 				glDispatchCompute(cubemapSize / 32, cubemapSize / 32, 6);
-				glGenerateTextureMipmap(envUnfiltered->GetRendererID());
+				//glGenerateTextureMipmap(envUnfiltered->GetRendererID());
 			});
+		
+		envUnfiltered->GenerateMipMaps();
 
 
 		if (!envFilteringShader)
 			envFilteringShader = Shader::Find("Assets/Shaders/EnvironmentMipFilter.glsl");
 
-		Ref<TextureCube> envFiltered = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize);
+		Ref<TextureCube> envFiltered = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize, FilterType::Trilinear, true);
 
 		Renderer::Submit([envUnfiltered, envFiltered]()
 			{
@@ -206,6 +209,7 @@ namespace Ares {
 					envFiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
 					envFiltered->GetWidth(), envFiltered->GetHeight(), 6);
 			});
+
 
 		envFilteringShader->Bind();
 		envUnfiltered->Bind();
@@ -224,15 +228,17 @@ namespace Ares {
 		if (!envIrradianceShader)
 			envIrradianceShader = Shader::Find("Assets/Shaders/EnvironmentIrradiance.glsl");
 
-		Ref<TextureCube> irradianceMap = TextureCube::Create(TextureFormat::Float16, irradianceMapSize, irradianceMapSize);
+		Ref<TextureCube> irradianceMap = TextureCube::Create(TextureFormat::Float16, irradianceMapSize, irradianceMapSize, FilterType::Trilinear, true);
 		envIrradianceShader->Bind();
 		envFiltered->Bind();
 		Renderer::Submit([irradianceMap]()
 			{
 				glBindImageTexture(0, irradianceMap->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
 				glDispatchCompute(irradianceMap->GetWidth() / 32, irradianceMap->GetHeight() / 32, 6);
-				glGenerateTextureMipmap(irradianceMap->GetRendererID());
+				//glGenerateTextureMipmap(irradianceMap->GetRendererID());
 			});
+
+		irradianceMap->GenerateMipMaps();
 
 		return { envFiltered, irradianceMap };
 	}
