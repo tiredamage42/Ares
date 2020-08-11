@@ -547,6 +547,7 @@ namespace Ares {
 					else
 						ImGui::InputText("##meshfilepath", (char*)"Null", 256, ImGuiInputTextFlags_ReadOnly);
 					ImGui::PopItemWidth();
+
 					ImGui::NextColumn();
 					if (ImGui::Button("...##openmesh"))
 					{

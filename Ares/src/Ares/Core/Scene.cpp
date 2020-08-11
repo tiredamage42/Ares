@@ -290,9 +290,9 @@ namespace Ares
                 // TODO: Should we render (logically)
 
                 if (m_SelectedEntity == entity)
-                    SceneRenderer::SubmitSelectedMesh(meshComponent.Mesh, transformComponent);
+                    SceneRenderer::SubmitSelectedMesh(meshComponent.Mesh, transformComponent, meshComponent.MaterialOverride);
                 else
-                    SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent, nullptr);
+                    SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent, meshComponent.MaterialOverride);
             }
         }
         SceneRenderer::EndScene();

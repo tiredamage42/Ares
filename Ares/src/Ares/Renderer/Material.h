@@ -22,7 +22,7 @@ namespace Ares {
 	{
 		friend class MaterialInstance;
 	public:
-		Material(const Ref<Shader>& shader);
+		Material(Ref<Shader> shader);
 		virtual ~Material();
 
 		inline const Ref<Shader> GetShader() const { return m_Shader; }
@@ -50,21 +50,23 @@ namespace Ares {
 				mi->OnMaterialValueUpdated(decl);
 		}
 
-		void Set(const std::string& name, const Ref<Texture>& texture)
+		void Set(const std::string& name, Ref<Texture> texture)
 		{
-			auto decl = FindResourceDeclaration(name);
-			uint32_t slot = decl->GetRegister();
+
+			uint8_t slot;
+			auto decl = FindResourceDeclaration(name, slot);
+			//uint32_t slot = decl->GetRegister();
 			if (m_Textures.size() <= slot)
 				m_Textures.resize((size_t)slot + 1);
 			m_Textures[slot] = texture;
 		}
 
-		void Set(const std::string& name, const Ref<Texture2D>& texture)
+		void Set(const std::string& name, Ref<Texture2D> texture)
 		{
 			Set(name, (const Ref<Texture>&)texture);
 		}
 
-		void Set(const std::string& name, const Ref<TextureCube>& texture)
+		void Set(const std::string& name, Ref<TextureCube> texture)
 		{
 			Set(name, (const Ref<Texture>&)texture);
 		}
@@ -74,7 +76,7 @@ namespace Ares {
 		void BindTextures();
 
 		ShaderUniformDeclaration* FindUniformDeclaration(const std::string& name);
-		ShaderResourceDeclaration* FindResourceDeclaration(const std::string& name);
+		ShaderResourceDeclaration* FindResourceDeclaration(const std::string& name, uint8_t& samplerSlot);
 		Buffer& GetUniformBufferTarget(ShaderUniformDeclaration* uniformDeclaration);
 	private:
 		Ref<Shader> m_Shader;
@@ -91,7 +93,7 @@ namespace Ares {
 	{
 		friend class Material;
 	public:
-		MaterialInstance(const Ref<Material>& material, const std::string& name = "");
+		MaterialInstance(Ref<Material> material, const std::string& name = "");
 		virtual ~MaterialInstance();
 
 		uint32_t GetFlags() const { return m_Material->m_MaterialFlags; }
@@ -99,6 +101,7 @@ namespace Ares {
 		void SetFlag(MaterialFlag flag, bool value = true);
 
 		inline const Ref<Shader> GetShader() const { return m_Material->GetShader(); }
+		inline const Ref<Material> BaseMaterial() const { return m_Material; }
 
 		template <typename T>
 		void Set(const std::string& name, const T& value)
@@ -115,23 +118,28 @@ namespace Ares {
 			m_OverriddenValues.insert(name);
 		}
 
-		void Set(const std::string& name, const Ref<Texture>& texture)
+		void SetTex(const std::string& name, Ref<Texture> texture)
 		{
-			auto decl = m_Material->FindResourceDeclaration(name);
-			uint32_t slot = decl->GetRegister();
+
+			uint8_t slot = -1;
+			auto decl = m_Material->FindResourceDeclaration(name, slot);
+			//uint32_t slot = decl->GetRegister();
+
 			if (m_Textures.size() <= slot)
 				m_Textures.resize((size_t)slot + 1);
 			m_Textures[slot] = texture;
 		}
 
-		void Set(const std::string& name, const Ref<Texture2D>& texture)
+		void Set(const std::string& name, Ref<Texture2D> texture)
 		{
-			Set(name, (const Ref<Texture>&)texture);
+			SetTex(name, texture);
+			//Set(name, (Ref<Texture>)texture);
 		}
 
-		void Set(const std::string& name, const Ref<TextureCube>& texture)
+		void Set(const std::string& name, Ref<TextureCube> texture)
 		{
-			Set(name, (const Ref<Texture>&)texture);
+			SetTex(name, texture);
+			//Set(name, (Ref<Texture>)texture);
 		}
 
 		void Bind();

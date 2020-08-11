@@ -2,6 +2,8 @@
 #include "AresPCH.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
 #include "Ares/Renderer/Renderer.h"
+
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 namespace Ares {
@@ -44,6 +46,7 @@ namespace Ares {
 
 	static GLenum Ares2OpenGLInternalTextureFormat(TextureFormat format)
 	{
+
 		switch (format)
 		{
 			case TextureFormat::RGB:     return GL_RGB8;
@@ -153,7 +156,7 @@ namespace Ares {
 		m_Height = height;
 
 		
-		Renderer::Submit([=]() {
+		Renderer::Submit([=]() mutable {
 
 			//upload to opengl (gpu)
 			//glGenTextures(1, &this->m_RendererID);
@@ -176,8 +179,8 @@ namespace Ares {
 			//GLenum type = internalFormat == GL_RGBA16F ? GL_FLOAT : GL_UNSIGNED_BYTE;
 			//glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, this->m_Width, this->m_Height, 0, format, type, this->m_ImageData.Data);
 
-
-			int levels = !useMips ? 1 : CalculateMipMapCount(this->m_Width, this->m_Height);
+			std::string p = path;
+ 			int levels = !useMips ? 1 : CalculateMipMapCount(m_Width, m_Height);
 			GLint minFilter = Ares2OpenGLMinFiltering(filterType, levels);
 			GLint maxFilter = Ares2OpenGLMagFiltering(filterType);
 
@@ -185,23 +188,38 @@ namespace Ares {
 			// TODO: Consolidate properly
 			if (srgb)
 			{
-				glCreateTextures(GL_TEXTURE_2D, 1, &this->m_RendererID);
+				glGenTextures(1, &this->m_RendererID);
+				glBindTexture(GL_TEXTURE_2D, this->m_RendererID);
+
+				//glCreateTextures(GL_TEXTURE_2D, 1, &this->m_RendererID);
 				//int levels = CalculateMipMapCount(this->m_Width, this->m_Height);
 				
-				ARES_CORE_INFO("Creating srgb texture with {0} mips", levels);
-				glTextureStorage2D(this->m_RendererID, levels, GL_SRGB8, this->m_Width, this->m_Height);
+				//ARES_CORE_INFO("Creating srgb texture with {0} mips", levels);
+				//glTextureStorage2D(this->m_RendererID, levels, GL_SRGB8, this->m_Width, this->m_Height);
 				
-				glTextureParameteri(this->m_RendererID, GL_TEXTURE_MIN_FILTER, minFilter);
-				glTextureParameteri(this->m_RendererID, GL_TEXTURE_MAG_FILTER, maxFilter);
+				//glTextureParameteri(this->m_RendererID, GL_TEXTURE_MIN_FILTER, minFilter);
+				//glTextureParameteri(this->m_RendererID, GL_TEXTURE_MAG_FILTER, maxFilter);
+
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, maxFilter);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 
 
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8, m_Width, m_Height, 0, GL_RGB, GL_UNSIGNED_BYTE, m_ImageData.Data);
 
 				//glTextureStorage2D(this->m_RendererID, levels, GL_SRGB8, this->m_Width, this->m_Height);
-				glTextureSubImage2D(this->m_RendererID, 0, 0, 0, this->m_Width, this->m_Height, GL_RGB, GL_UNSIGNED_BYTE, this->m_ImageData.Data);
+				//glTextureSubImage2D(this->m_RendererID, 0, 0, 0, this->m_Width, this->m_Height, GL_RGB, GL_UNSIGNED_BYTE, this->m_ImageData.Data);
 
 				if (useMips)
-					glGenerateTextureMipmap(this->m_RendererID);
+				{
+
+					//glGenerateTextureMipmap(this->m_RendererID);
+					glGenerateMipmap(GL_TEXTURE_2D);
+				}
+
+				glBindTexture(GL_TEXTURE_2D, 0);
 			}
 			else
 			{
@@ -213,7 +231,7 @@ namespace Ares {
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, maxFilter);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+				//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 				/*glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, minFilter);
 				glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, maxFilter);
 				glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

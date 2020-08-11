@@ -59,7 +59,7 @@ namespace Ares
     struct MeshRendererComponent
     {
         Ref<Mesh> Mesh = nullptr;
-        //Ref<MaterialInstance> Material = nullptr;
+        Ref<MaterialInstance> MaterialOverride = nullptr;
         //std::vector<Ref<MaterialInstance>> MaterialOverrides;
 
         

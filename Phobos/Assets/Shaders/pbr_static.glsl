@@ -320,6 +320,8 @@ void main()
 	vec3 lightContribution = Lighting(F0);
 	vec3 iblContribution = IBL(F0, Lr);
 
-	color = vec4(lightContribution + iblContribution, 1.0);
+	//color = vec4(lightContribution + iblContribution, 1.0);
 	//color = vec4(iblContribution, 1.0);
+	color = vec4(lightContribution, 1.0);
+
 }

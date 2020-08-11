@@ -85,7 +85,7 @@ namespace Ares
 	{
 	public:
 		virtual const std::string& GetName() const = 0;
-		virtual uint32_t GetRegister() const = 0;
+		//virtual uint32_t GetRegister() const = 0;
 		virtual uint32_t GetCount() const = 0;
 	};
 

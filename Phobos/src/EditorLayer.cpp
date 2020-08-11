@@ -257,8 +257,56 @@ namespace Ares
         m_SceneHierarchyPanel->SetSelectionChangedCallback(std::bind(&EditorLayer::SelectEntity, this, std::placeholders::_1));
         m_SceneHierarchyPanel->SetEntityDeletedCallback(std::bind(&EditorLayer::OnEntityDeleted, this, std::placeholders::_1));
         
+
+        m_MeshBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/pbr_anim.glsl"));
         
-        
+        Entity gunEntity = m_EditorScene->CreateEntity("Gun");
+        MeshRendererComponent& mr = gunEntity.AddComponent<MeshRendererComponent>();
+        mr.Mesh = CreateRef<Mesh>("C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\models\\m1911\\M1911Materials.fbx");
+        mr.MaterialOverride = CreateRef<MaterialInstance>(m_MeshBaseMaterial);
+
+        gunEntity.Transform() = glm::scale(
+            glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2)),
+            glm::vec3(15.0f)
+        );
+
+        m_SphereBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/pbr_static.glsl"));
+        auto sphereMesh = CreateRef<Mesh>("C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\meshes\\Sphere1m.fbx");
+
+        /*
+        */
+
+        float spread = 1.25f;
+        uint8_t i = 0;
+        for (int y = -2; y <= 2; y++)
+        {
+            float metalness = (float)(y + 2) / 4.0f;
+            for (int x = -2; x <= 2; x++)
+            {
+                float roughness = 1.0f - ((float)(x + 2) / 4.0f);
+
+                Entity sphereEntity = m_EditorScene->CreateEntity("Sphere M:" + std::to_string(metalness) + " / R:" + std::to_string(roughness));
+
+                MeshRendererComponent& mr = sphereEntity.AddComponent<MeshRendererComponent>();
+                mr.Mesh = sphereMesh;
+                mr.MaterialOverride = CreateRef<MaterialInstance>(m_SphereBaseMaterial);
+
+                mr.MaterialOverride->Set("u_Metalness", metalness);
+                mr.MaterialOverride->Set("u_Roughness", roughness);
+
+                sphereEntity.Transform() = glm::translate(
+                    glm::mat4(1.0f), 
+                    glm::vec3(x * spread, y * spread, 0)
+                );
+            }
+        }
+
+        auto& light = m_EditorScene->GetLight();
+        light.Direction = { -0.5f, -0.5f, 0.5f };
+        light.Radiance = { 1.0f, 1.0f, 1.0f };
+
+
+    
         
         // SceneSerializer serializer(m_ActiveScene);
         // serializer.Deserialize("Scene.yaml");
@@ -568,6 +616,7 @@ namespace Ares
 
     void EditorLayer::SetPBRMaterialValues(Ref<Material> material) const//, const glm::mat4& viewProjection) const
     {
+
         material->Set("u_AlbedoColor", m_AlbedoInput.Color);
         material->Set("u_Metalness", m_MetalnessInput.Value);
         material->Set("u_Roughness", m_RoughnessInput.Value);
@@ -631,9 +680,9 @@ namespace Ares
 
         //if (m_MeshMaterial)
         //{
-        //    SetPBRMaterialValues(m_MeshMaterial);// , viewProjection);
+            SetPBRMaterialValues(m_MeshBaseMaterial);// , viewProjection);
         //}
-        //SetPBRMaterialValues(m_SphereBaseMaterial);// , viewProjection);
+        SetPBRMaterialValues(m_SphereBaseMaterial);// , viewProjection);
 
 
         //if (m_SceneType == SceneType::Spheres)

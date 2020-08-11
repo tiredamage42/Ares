@@ -138,7 +138,7 @@ namespace Ares {
 
 		Ref<Material> GetMaterial() { return m_BaseMaterial; }
 		std::vector<Ref<MaterialInstance>> GetMaterialOverrides() { return m_MaterialOverrides; }
-		const std::vector<Ref<Texture2D>>& GetTextures() const { return m_Textures; }
+		//const std::vector<Ref<Texture2D>>& GetTextures() const { return m_Textures; }
 		inline const std::string& GetFilePath() const { return m_FilePath; }
 
 		const std::vector<Triangle> GetTriangleCache(uint32_t index) const { return m_TriangleCache.at(index); }
@@ -186,8 +186,8 @@ namespace Ares {
 		std::string m_FilePath;
 
 		Ref<Material> m_BaseMaterial;
-		std::vector<Ref<Texture2D>> m_Textures;
-		std::vector<Ref<Texture2D>> m_NormalMaps;
+		//std::vector<Ref<Texture2D>> m_Textures;
+		//std::vector<Ref<Texture2D>> m_NormalMaps;
 		std::vector<Ref<MaterialInstance>> m_MaterialOverrides;
 
 		std::unordered_map<uint32_t, std::vector<Triangle>> m_TriangleCache;

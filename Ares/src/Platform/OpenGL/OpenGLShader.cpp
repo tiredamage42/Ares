@@ -727,11 +727,13 @@ namespace Ares {
 		for (size_t i = 0; i < m_Resources.size(); i++)
 		{
 			OpenGLShaderResourceDeclaration* resource = (OpenGLShaderResourceDeclaration*)m_Resources[i];
+			
+			auto resourceName = resource->m_Name;
 			int32_t location = GetUniformLocation(resource->m_Name);
 
 			if (resource->GetCount() == 1)
 			{
-				resource->m_Register = sampler;
+				//resource->m_TexSlot = sampler;
 				if (location != -1)
 					UploadUniformInt(location, sampler);
 
@@ -739,12 +741,17 @@ namespace Ares {
 			}
 			else if (resource->GetCount() > 1)
 			{
-				resource->m_Register = 0;
+				//resource->m_TexSlot = 0;
+				
 				uint32_t count = resource->GetCount();
+				
 				int* samplers = new int[count];
 				for (uint32_t s = 0; s < count; s++)
 					samplers[s] = s;
-				UploadUniformIntArray(resource->GetName(), samplers, count);
+				
+				//UploadUniformIntArray(resource->GetName(), samplers, count);
+				UploadUniformIntArray(location, samplers, count);
+
 				delete[] samplers;
 			}
 		}

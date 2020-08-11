@@ -28,8 +28,8 @@ namespace Ares {
 		static void BeginScene(const Scene* scene, const SceneRendererCamera& camera);
 		static void EndScene();
 
-		static void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> materialOverrides);
-		static void SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform = glm::mat4(1.0f));
+		static void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> materialOverride);
+		static void SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> materialOverride);
 
 		static std::pair<Ref<TextureCube>, Ref<TextureCube>> CreateEnvironmentMap(const std::string& filepath);
 

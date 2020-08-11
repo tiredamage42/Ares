@@ -151,7 +151,7 @@ namespace Ares {
 		s_Data.SceneData = {};
 	}
 
-	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> materialOverrides)
+	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> materialOverride)
 
 	//void SceneRenderer::SubmitEntity(Entity& entity)
 	{
@@ -161,15 +161,11 @@ namespace Ares {
 		if (!mrComponent.Mesh)
 			return;*/
 		
-		s_Data.DrawList.push_back({ 
-			mesh, 
-			materialOverrides,
-			transform
-		});
+		s_Data.DrawList.push_back({ mesh, materialOverride, transform });
 	}
-	void SceneRenderer::SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform)
+	void SceneRenderer::SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> materialOverride)
 	{
-		s_Data.SelectedMeshDrawList.push_back({ mesh, nullptr, transform });
+		s_Data.SelectedMeshDrawList.push_back({ mesh, materialOverride, transform });
 	}
 
 	static Ref<Shader> equirectangularConversionShader, envFilteringShader, envIrradianceShader;
@@ -287,7 +283,20 @@ namespace Ares {
 		// Render entities
 		for (auto& dc : s_Data.DrawList)
 		{
-			auto baseMaterial = dc.Mesh->GetMaterial();
+			//auto baseMaterial = dc.Mesh->GetMaterial();
+
+
+			Ref<Material> baseMaterial = nullptr;
+			if (dc.MaterialOverride)
+			{
+
+				baseMaterial = dc.MaterialOverride->BaseMaterial();
+			}
+			else
+			{
+				baseMaterial = dc.Mesh->GetMaterial();
+			}
+
 		//	auto baseMaterial = dc.Material;// Mesh->GetMaterial();
 			baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
 			baseMaterial->Set("u_CameraPosition", cameraPosition);
@@ -301,8 +310,8 @@ namespace Ares {
 			// Set lights (TODO: move to light environment and don't do per mesh)
 			baseMaterial->Set("lights", s_Data.SceneData.ActiveLight);
 
-			auto overrideMaterial = nullptr; // dc.Material;
-			Renderer::SubmitMesh(dc.Mesh, dc.Transform, overrideMaterial);
+			//auto overrideMaterial = nullptr; // dc.Material;
+			Renderer::SubmitMesh(dc.Mesh, dc.Transform, dc.MaterialOverride);
 		//	//auto overrideMaterial = nullptr; // dc.Material;
 
 		//	//baseMaterial->Bind();
@@ -310,8 +319,12 @@ namespace Ares {
 		//	//Renderer::SubmitMesh(dc.Mesh, dc.Transform, overrideMaterial);
 		}
 
+
+
 		if (outline)
 		{
+
+			
 			Renderer::Submit([](){
 					glStencilFunc(GL_ALWAYS, 1, 0xff);
 					glStencilMask(0xff);
@@ -320,7 +333,17 @@ namespace Ares {
 
 		for (auto& dc : s_Data.SelectedMeshDrawList)
 		{
-			auto baseMaterial = dc.Mesh->GetMaterial();
+			Ref<Material> baseMaterial = nullptr;
+			if (dc.MaterialOverride)
+			{
+
+				baseMaterial = dc.MaterialOverride->BaseMaterial();
+			}
+			else
+			{
+				baseMaterial = dc.Mesh->GetMaterial();
+			}
+
 			baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
 			baseMaterial->Set("u_CameraPosition", cameraPosition);
 
@@ -332,8 +355,8 @@ namespace Ares {
 			// Set lights (TODO: move to light environment and don't do per mesh)
 			baseMaterial->Set("lights", s_Data.SceneData.ActiveLight);
 
-			auto overrideMaterial = nullptr; // dc.Material;
-			Renderer::SubmitMesh(dc.Mesh, dc.Transform, overrideMaterial);
+			//auto overrideMaterial = nullptr; // dc.Material;
+			Renderer::SubmitMesh(dc.Mesh, dc.Transform, dc.MaterialOverride);
 		}
 
 		if (outline)

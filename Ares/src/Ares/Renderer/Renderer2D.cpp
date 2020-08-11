@@ -109,13 +109,13 @@ namespace Ares
 		delete[] quadIndicies;
 
 		// 2D SPRITE SHADER =============================================================================
-		int32_t* samplers = new int32_t[Renderer2DData::MAX_TEXTURE_SLOTS];
+		/*int32_t* samplers = new int32_t[Renderer2DData::MAX_TEXTURE_SLOTS];
 		for (uint32_t i = 0; i < Renderer2DData::MAX_TEXTURE_SLOTS; i++)
-			samplers[i] = i;
+			samplers[i] = i;*/
 
 		s_Data.TextureShader = Shader::Find("Assets/Shaders/Texture.glsl");
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetIntArray("u_Textures", samplers, Renderer2DData::MAX_TEXTURE_SLOTS);
+		//s_Data.TextureShader->Bind();
+		//s_Data.TextureShader->SetIntArray("u_Textures", samplers, Renderer2DData::MAX_TEXTURE_SLOTS);
 		
 		// WHITE TEXTURE =============================================================================
 		Ref<Texture2D> whiteTexture = Texture2D::Create(TextureFormat::RGBA, 1, 1, TextureWrap::Repeat, FilterType::Point, false);

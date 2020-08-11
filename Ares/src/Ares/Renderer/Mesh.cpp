@@ -31,9 +31,10 @@
 namespace Ares {
 	static const uint32_t s_MeshImportFlags =
 		aiProcess_CalcTangentSpace |        // Create binormals/tangents just in case
+		//aiProcess_GenNormals |              // Make sure we have legit normals
+		aiProcess_GenSmoothNormals |
 		aiProcess_Triangulate |             // Make sure we're triangles
 		aiProcess_SortByPType |             // Split meshes by primitive type
-		aiProcess_GenNormals |              // Make sure we have legit normals
 		aiProcess_GenUVCoords |             // Convert UVs if required 
 		aiProcess_OptimizeMeshes |          // Batch draws where possible
 		aiProcess_ValidateDataStructure		// Validation
@@ -459,7 +460,7 @@ namespace Ares {
 		{
 			ARES_CORE_LOG("---- Materials - {0} ----", filename);
 
-			m_Textures.resize(scene->mNumMaterials);
+			//m_Textures.resize(scene->mNumMaterials);
 			m_MaterialOverrides.resize(scene->mNumMaterials);
 			for (uint32_t i = 0; i < scene->mNumMaterials; i++)
 			{
@@ -503,8 +504,9 @@ namespace Ares {
 					auto texture = Texture2D::Create(texturePath, FilterType::Trilinear, true, true);
 					if (texture->Loaded())
 					{
-						m_Textures[i] = texture;
-						mi->Set("u_AlbedoTexture", m_Textures[i]);
+						//m_Textures[i] = texture;
+						//mi->Set("u_AlbedoTexture", m_Textures[i]);
+						mi->Set("u_AlbedoTexture", texture);
 						mi->Set("u_AlbedoTexToggle", 1.0f);
 					}
 					else

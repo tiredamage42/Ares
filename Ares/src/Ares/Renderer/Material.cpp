@@ -3,7 +3,7 @@
 
 namespace Ares {
 
-	Material::Material(const Ref<Shader>& shader)
+	Material::Material(Ref<Shader> shader)
 		: m_Shader(shader)
 	{
 		m_Shader->AddShaderReloadedCallback(std::bind(&Material::OnShaderReloaded, this));
@@ -68,13 +68,22 @@ namespace Ares {
 		return nullptr;
 	}
 
-	ShaderResourceDeclaration* Material::FindResourceDeclaration(const std::string& name)
+	ShaderResourceDeclaration* Material::FindResourceDeclaration(const std::string& name, uint8_t& samplerSlot)
 	{
+
+
+
+		samplerSlot = 0;
+		
 		auto& resources = m_Shader->GetResources();
 		for (ShaderResourceDeclaration* resource : resources)
 		{
 			if (resource->GetName() == name)
 				return resource;
+
+			if (resource->GetCount() == 1)
+				samplerSlot++;
+			
 		}
 		return nullptr;
 	}
@@ -119,7 +128,7 @@ namespace Ares {
 	// ============================================================
 
 
-	MaterialInstance::MaterialInstance(const Ref<Material>& material, const std::string& name)
+	MaterialInstance::MaterialInstance(Ref<Material> material, const std::string& name)
 		: m_Material(material), m_Name(name)
 	{
 		m_Material->m_MaterialInstances.insert(this);
@@ -192,6 +201,7 @@ namespace Ares {
 
 	void MaterialInstance::Bind()
 	{
+
 		m_Material->m_Shader->Bind();
 
 		if (m_VSUniformStorageBuffer)
