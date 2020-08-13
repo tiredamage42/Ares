@@ -80,7 +80,8 @@ namespace Ares
 		//Ref<Mesh> m_CubeMesh, m_PlaneMesh;
 		//Ref<Texture2D> m_BRDFLUT;
 
-		Ref<Material> m_SphereBaseMaterial, m_MeshBaseMaterial;
+		//Ref<Material> m_SphereBaseMaterial, m_MeshBaseMaterial;
+		Ref<Material> m_MeshBaseMaterial;
 
 		//Ref<Material> m_PBRMaterialStatic, m_PBRMaterialAnim;
 		/*std::vector<Ref<MaterialInstance>> m_MetalSphereMaterialInstances;

@@ -99,7 +99,11 @@ namespace Ares {
 
 	//};
 
-	
+	enum class ShaderVariant : size_t
+	{
+		Static = 0, Skinned = 1
+	};
+
 	class Shader
 	{
 	public:
@@ -109,54 +113,52 @@ namespace Ares {
 
 		virtual void Reload() = 0;
 
-		virtual void Bind() = 0;
+		virtual void Bind(ShaderVariant variant) = 0;
 		virtual void Unbind() const = 0;
 
-		virtual uint32_t GetRendererID() const = 0;
+		virtual uint32_t GetRendererID(ShaderVariant variant) const = 0;
 
 		//virtual void UploadUniformBuffer(const UniformBufferBase& uniformBuffer) = 0;
 
 		virtual const std::string& GetName() const = 0;
 
-		virtual void SetInt(const std::string& name, int value) = 0;
-		virtual void SetIntArray(const std::string& name, int* values, uint32_t count, bool deleteFromMem=true) = 0;
-		virtual void SetFloat(const std::string& name, float value) = 0;
-		virtual void SetFloat2(const std::string& name, glm::vec2 value) = 0;
-		virtual void SetFloat3(const std::string& name, glm::vec3 value) = 0;
-		virtual void SetFloat4(const std::string& name, glm::vec4 value) = 0;
-		virtual void SetMat3(const std::string& name, glm::mat3 value) = 0;
-		virtual void SetMat4(const std::string& name, const glm::mat4& value) = 0;
+		virtual void SetInt(const std::string& name, int value, ShaderVariant variant) = 0;
+		virtual void SetIntArray(const std::string& name, int* values, uint32_t count, ShaderVariant variant, bool deleteFromMem=true) = 0;
+		virtual void SetFloat(const std::string& name, float value, ShaderVariant variant) = 0;
+		virtual void SetFloat2(const std::string& name, glm::vec2 value, ShaderVariant variant) = 0;
+		virtual void SetFloat3(const std::string& name, glm::vec3 value, ShaderVariant variant) = 0;
+		virtual void SetFloat4(const std::string& name, glm::vec4 value, ShaderVariant variant) = 0;
+		virtual void SetMat3(const std::string& name, glm::mat3 value, ShaderVariant variant) = 0;
+		virtual void SetMat4(const std::string& name, const glm::mat4& value, ShaderVariant variant) = 0;
 		
-		virtual void SetIntFromRenderThread(const std::string& name, int value) = 0;
-		virtual void SetIntArrayFromRenderThread(const std::string& name, int* values, uint32_t count, bool deleteFromMem = true) = 0;
-		virtual void SetFloatFromRenderThread(const std::string& name, float value) = 0;
-		virtual void SetFloat2FromRenderThread(const std::string& name, glm::vec2 value) = 0;
-		virtual void SetFloat3FromRenderThread(const std::string& name, glm::vec3 value) = 0;
-		virtual void SetFloat4FromRenderThread(const std::string& name, glm::vec4 value) = 0;
-		virtual void SetMat3FromRenderThread(const std::string& name, glm::mat3 value) = 0;
-		virtual void SetMat4FromRenderThread(const std::string& name, const glm::mat4& value) = 0;
+		virtual void SetIntFromRenderThread(const std::string& name, int value, ShaderVariant variant) = 0;
+		virtual void SetIntArrayFromRenderThread(const std::string& name, int* values, uint32_t count, ShaderVariant variant) = 0;
+		virtual void SetFloatFromRenderThread(const std::string& name, float value, ShaderVariant variant) = 0;
+		virtual void SetFloat2FromRenderThread(const std::string& name, glm::vec2 value, ShaderVariant variant) = 0;
+		virtual void SetFloat3FromRenderThread(const std::string& name, glm::vec3 value, ShaderVariant variant) = 0;
+		virtual void SetFloat4FromRenderThread(const std::string& name, glm::vec4 value, ShaderVariant variant) = 0;
+		virtual void SetMat3FromRenderThread(const std::string& name, glm::mat3 value, ShaderVariant variant) = 0;
+		virtual void SetMat4FromRenderThread(const std::string& name, const glm::mat4& value, ShaderVariant variant) = 0;
 
-		virtual void SetVSMaterialUniformBuffer(Buffer buffer) = 0;
-		virtual void SetPSMaterialUniformBuffer(Buffer buffer) = 0;
+		virtual void SetVSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant) = 0;
+		virtual void SetPSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant) = 0;
 
-		virtual const ShaderUniformBufferList& GetVSRendererUniforms() const = 0;
-		virtual const ShaderUniformBufferList& GetPSRendererUniforms() const = 0;
-		virtual bool HasVSMaterialUniformBuffer() const = 0;
-		virtual bool HasPSMaterialUniformBuffer() const = 0;
+		/*virtual const ShaderUniformBufferList& GetVSRendererUniforms() const = 0;
+		virtual const ShaderUniformBufferList& GetPSRendererUniforms() const = 0;*/
 
-		virtual const ShaderUniformBufferDeclaration& GetVSMaterialUniformBuffer() const = 0;
-		virtual const ShaderUniformBufferDeclaration& GetPSMaterialUniformBuffer() const = 0;
+		virtual bool HasVSMaterialUniformBuffer(ShaderVariant variant) const = 0;
+		virtual bool HasPSMaterialUniformBuffer(ShaderVariant variant) const = 0;
 
-		virtual const ShaderResourceList& GetResources() const = 0;
+		virtual const ShaderUniformBufferDeclaration& GetVSMaterialUniformBuffer(ShaderVariant variant) const = 0;
+		virtual const ShaderUniformBufferDeclaration& GetPSMaterialUniformBuffer(ShaderVariant variant) const = 0;
+
+		virtual const ShaderResourceList& GetResources(ShaderVariant variant) const = 0;
 
 		virtual void AddShaderReloadedCallback(const ShaderReloadedCallback& callback) = 0;
 
 
-
-
 		static std::vector<Ref<Shader>> s_AllShaders;
 		static std::unordered_map<std::string, Ref<Shader>> s_ShaderMap;
-
 		static Ref<Shader> Find(const std::string& filepath);
 
 	private:

@@ -453,8 +453,10 @@ namespace Ares {
 
 		m_IsAnimated = scene->mAnimations != nullptr;
 
+		Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/PBRStatic.glsl");
 
-		Ref<Shader> m_MeshShader = nullptr;
+		/*Ref<Shader> m_MeshShader = nullptr;
+		
 		if (m_IsAnimated)
 		{
 			m_MeshShader = Shader::Find("Assets/Shaders/pbr_anim.glsl");
@@ -462,7 +464,7 @@ namespace Ares {
 		else
 		{
 			m_MeshShader = Shader::Find("Assets/Shaders/pbr_static.glsl");
-		}
+		}*/
 
 		m_BaseMaterial = CreateRef<Material>(m_MeshShader);
 

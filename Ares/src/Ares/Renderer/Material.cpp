@@ -1,6 +1,11 @@
 #include "AresPCH.h"
 #include "Material.h"
 
+/*
+	materials only have one buffer for multiple variations
+	as the uniforms should be the same, 
+	(and we dont use shader program specific things like locaation integers)
+*/
 namespace Ares {
 
 	Material::Material(Ref<Shader> shader)
@@ -19,16 +24,16 @@ namespace Ares {
 
 	void Material::AllocateStorage()
 	{
-		if (m_Shader->HasVSMaterialUniformBuffer())
+		if (m_Shader->HasVSMaterialUniformBuffer(ShaderVariant::Static))
 		{
 
-			const auto& vsBuffer = m_Shader->GetVSMaterialUniformBuffer();
+			const auto& vsBuffer = m_Shader->GetVSMaterialUniformBuffer(ShaderVariant::Static);
 			m_VSUniformStorageBuffer.Allocate(vsBuffer.GetSize());
 			m_VSUniformStorageBuffer.ZeroInitialize();
 		}
-		if (m_Shader->HasPSMaterialUniformBuffer())
+		if (m_Shader->HasPSMaterialUniformBuffer(ShaderVariant::Static))
 		{
-			const auto& psBuffer = m_Shader->GetPSMaterialUniformBuffer();
+			const auto& psBuffer = m_Shader->GetPSMaterialUniformBuffer(ShaderVariant::Static);
 			m_PSUniformStorageBuffer.Allocate(psBuffer.GetSize());
 			m_PSUniformStorageBuffer.ZeroInitialize();
 
@@ -48,7 +53,7 @@ namespace Ares {
 	{
 		if (m_VSUniformStorageBuffer)
 		{
-			auto& declarations = m_Shader->GetVSMaterialUniformBuffer().GetUniformDeclarations();
+			auto& declarations = m_Shader->GetVSMaterialUniformBuffer(ShaderVariant::Static).GetUniformDeclarations();
 			for (ShaderUniformDeclaration* uniform : declarations)
 			{
 				if (uniform->GetName() == name)
@@ -58,7 +63,7 @@ namespace Ares {
 
 		if (m_PSUniformStorageBuffer)
 		{
-			auto& declarations = m_Shader->GetPSMaterialUniformBuffer().GetUniformDeclarations();
+			auto& declarations = m_Shader->GetPSMaterialUniformBuffer(ShaderVariant::Static).GetUniformDeclarations();
 			for (ShaderUniformDeclaration* uniform : declarations)
 			{
 				if (uniform->GetName() == name)
@@ -75,7 +80,7 @@ namespace Ares {
 
 		samplerSlot = 0;
 		
-		auto& resources = m_Shader->GetResources();
+		auto& resources = m_Shader->GetResources(ShaderVariant::Static);
 		for (ShaderResourceDeclaration* resource : resources)
 		{
 			if (resource->GetName() == name)
@@ -100,15 +105,15 @@ namespace Ares {
 		return m_VSUniformStorageBuffer;
 	}
 
-	void Material::Bind()
+	void Material::Bind(ShaderVariant variant)
 	{
-		m_Shader->Bind();
+		m_Shader->Bind(variant);
 
 		if (m_VSUniformStorageBuffer)
-			m_Shader->SetVSMaterialUniformBuffer(m_VSUniformStorageBuffer);
+			m_Shader->SetVSMaterialUniformBuffer(m_VSUniformStorageBuffer, variant);
 
 		if (m_PSUniformStorageBuffer)
-			m_Shader->SetPSMaterialUniformBuffer(m_PSUniformStorageBuffer);
+			m_Shader->SetPSMaterialUniformBuffer(m_PSUniformStorageBuffer, variant);
 
 		BindTextures();
 	}
@@ -148,17 +153,17 @@ namespace Ares {
 
 	void MaterialInstance::AllocateStorage()
 	{
-		if (m_Material->m_Shader->HasVSMaterialUniformBuffer())
+		if (m_Material->m_Shader->HasVSMaterialUniformBuffer(ShaderVariant::Static))
 		{
 
-			const auto& vsBuffer = m_Material->m_Shader->GetVSMaterialUniformBuffer();
+			const auto& vsBuffer = m_Material->m_Shader->GetVSMaterialUniformBuffer(ShaderVariant::Static);
 			m_VSUniformStorageBuffer.Allocate(vsBuffer.GetSize());
 			memcpy(m_VSUniformStorageBuffer.Data, m_Material->m_VSUniformStorageBuffer.Data, vsBuffer.GetSize());
 		}
-		if (m_Material->m_Shader->HasPSMaterialUniformBuffer())
+		if (m_Material->m_Shader->HasPSMaterialUniformBuffer(ShaderVariant::Static))
 		{
 
-			const auto& psBuffer = m_Material->m_Shader->GetPSMaterialUniformBuffer();
+			const auto& psBuffer = m_Material->m_Shader->GetPSMaterialUniformBuffer(ShaderVariant::Static);
 			m_PSUniformStorageBuffer.Allocate(psBuffer.GetSize());
 			memcpy(m_PSUniformStorageBuffer.Data, m_Material->m_PSUniformStorageBuffer.Data, psBuffer.GetSize());
 		}
@@ -199,16 +204,16 @@ namespace Ares {
 		return m_VSUniformStorageBuffer;
 	}
 
-	void MaterialInstance::Bind()
+	void MaterialInstance::Bind(ShaderVariant variant)
 	{
 
-		m_Material->m_Shader->Bind();
+		m_Material->m_Shader->Bind(variant);
 
 		if (m_VSUniformStorageBuffer)
-			m_Material->m_Shader->SetVSMaterialUniformBuffer(m_VSUniformStorageBuffer);
+			m_Material->m_Shader->SetVSMaterialUniformBuffer(m_VSUniformStorageBuffer, variant);
 
 		if (m_PSUniformStorageBuffer)
-			m_Material->m_Shader->SetPSMaterialUniformBuffer(m_PSUniformStorageBuffer);
+			m_Material->m_Shader->SetPSMaterialUniformBuffer(m_PSUniformStorageBuffer, variant);
 
 		m_Material->BindTextures();
 		for (size_t i = 0; i < m_Textures.size(); i++)

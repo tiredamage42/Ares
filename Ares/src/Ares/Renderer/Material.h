@@ -27,7 +27,7 @@ namespace Ares {
 
 		inline const Ref<Shader> GetShader() const { return m_Shader; }
 
-		void Bind();
+		void Bind(ShaderVariant variant);
 
 		uint32_t GetFlags() const { return m_MaterialFlags; }
 		void SetFlag(MaterialFlag flag) { m_MaterialFlags |= (uint32_t)flag; }
@@ -157,7 +157,7 @@ namespace Ares {
 			//Set(name, (Ref<Texture>)texture);
 		}
 
-		void Bind();
+		void Bind(ShaderVariant variant);
 
 		const std::string& GetName() const { return m_Name; }
 	private:

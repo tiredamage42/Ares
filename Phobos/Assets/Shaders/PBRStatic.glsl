@@ -1,3 +1,5 @@
+#flags STANDARD_VARS, SKINNED
+
 #type vertex
 #version 430
 /*
@@ -24,15 +26,22 @@ out vec3 WorldPos;
 out vec3 Normal;
 out mat3 TBN;
 
-uniform mat4 u_ViewProjectionMatrix;
-uniform mat4 u_Transform;
+//uniform mat4 u_ViewProjectionMatrix;
+//uniform mat4 u_Transform;
 
 void main()
 {
-    TexCoords = aTexCoords;
-    WorldPos = vec3(u_Transform * vec4(aPos, 1.0));
 
-    mat3 transform3 = mat3(u_Transform);
+
+    
+
+    TexCoords = aTexCoords;
+    
+    //WorldPos = vec3(u_Transform * vec4(aPos, 1.0));
+    WorldPos = vec3(ares_ModelMatrix * vec4(aPos, 1.0));
+
+    //mat3 transform3 = mat3(u_Transform);
+    mat3 transform3 = mat3(ares_ModelMatrix);
 
     Normal = transform3 * aNormal;
     //Normal = transpose(inverse(u_Transform)) * aNormal;
@@ -48,7 +57,11 @@ void main()
         TBN = mat3(T, B, N);
     */
 
-    gl_Position = u_ViewProjectionMatrix * vec4(WorldPos, 1.0);
+    //gl_Position = u_ViewProjectionMatrix * vec4(WorldPos, 1.0);
+
+    gl_Position = ares_MVPMatrix * vec4(aPos, 1.0);
+
+
 }
 
 #type fragment
@@ -199,8 +212,9 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 
 void main()
 {
-    vec3 albedo = u_AlbedoTexToggle > .5 ? pow(texture(u_AlbedoTexture, TexCoords).rgb, vec3(2.2)) : u_AlbedoColor;
-    
+    //vec3 albedo = u_AlbedoTexToggle > .5 ? pow(texture(u_AlbedoTexture, TexCoords).rgb, vec3(2.2)) : u_AlbedoColor;
+    vec3 albedo = u_AlbedoTexToggle > .5 ? texture(u_AlbedoTexture, TexCoords).rgb : u_AlbedoColor;
+
     float metallic = u_MetalnessTexToggle > .5 ? texture(u_MetalnessTexture, TexCoords).r : u_Metalness;
     float roughness = u_RoughnessTexToggle > .5 ? texture(u_RoughnessTexture, TexCoords).r : u_Roughness;
     //float ao = texture(aoMap, TexCoords).r;

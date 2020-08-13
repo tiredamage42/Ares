@@ -259,7 +259,8 @@ namespace Ares
         
 
         //m_MeshBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/pbr_anim.glsl"));
-        
+        m_MeshBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/PBRStatic.glsl"));
+
 
         Entity gunEntity = m_EditorScene->CreateEntity("Gun");
         MeshRendererComponent& mr = gunEntity.AddComponent<MeshRendererComponent>();
@@ -272,7 +273,7 @@ namespace Ares
         );
 
         //m_SphereBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/pbr_static.glsl"));
-        m_SphereBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/PBRStatic.glsl"));
+        //m_SphereBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/PBRStatic.glsl"));
         
         
         //auto sphereMesh = CreateRef<Mesh>("C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\meshes\\Sphere1m.fbx");
@@ -292,7 +293,7 @@ namespace Ares
 
                 MeshRendererComponent& mr = sphereEntity.AddComponent<MeshRendererComponent>();
                 mr.Mesh = sphereMesh;
-                mr.MaterialOverride = CreateRef<MaterialInstance>(m_SphereBaseMaterial);
+                mr.MaterialOverride = CreateRef<MaterialInstance>(m_MeshBaseMaterial);
 
                 mr.MaterialOverride->Set("u_Metalness", metalness);
                 mr.MaterialOverride->Set("u_Roughness", roughness);
@@ -681,11 +682,11 @@ namespace Ares
         //SetPBRMaterialValues(m_PBRMaterialStatic);// , viewProjection);
         //SetPBRMaterialValues(m_PBRMaterialAnim);// , viewProjection);
 
-        if (m_MeshBaseMaterial)
-        {
+        //if (m_MeshBaseMaterial)
+        //{
             SetPBRMaterialValues(m_MeshBaseMaterial);// , viewProjection);
-        }
-        SetPBRMaterialValues(m_SphereBaseMaterial);// , viewProjection);
+        //}
+        //SetPBRMaterialValues(m_SphereBaseMaterial);// , viewProjection);
 
 
         //if (m_SceneType == SceneType::Spheres)

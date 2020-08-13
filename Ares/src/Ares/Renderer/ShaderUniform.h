@@ -41,7 +41,7 @@ namespace Ares
 		virtual ShaderUniformDeclaration* FindUniform(const std::string& name) = 0;
 	};
 
-	typedef std::vector<ShaderUniformBufferDeclaration*> ShaderUniformBufferList;
+	//typedef std::vector<ShaderUniformBufferDeclaration*> ShaderUniformBufferList;
 
 	class ShaderStruct
 	{

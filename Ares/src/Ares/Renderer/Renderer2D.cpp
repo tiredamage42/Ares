@@ -181,8 +181,8 @@ namespace Ares
 		//glm::mat4 viewProj = projection * glm::inverse(transform);
 
 		// needded?
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
+		//s_Data.TextureShader->Bind(ShaderVariant::Static);
+		//s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj, ShaderVariant::Static);
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
@@ -234,9 +234,9 @@ namespace Ares
 			/*if (s_Data.QuadIndexCount == 0)
 				return; */
 
-			// is this neeeded?
-			s_Data.TextureShader->Bind();
-			s_Data.TextureShader->SetMat4("u_ViewProjection", s_Data.CameraViewProj);
+			 //is this neeeded?
+			s_Data.TextureShader->Bind(ShaderVariant::Static);
+			s_Data.TextureShader->SetMat4("u_ViewProjection", s_Data.CameraViewProj, ShaderVariant::Static);
 
 
 			// bind textures
@@ -256,8 +256,8 @@ namespace Ares
 			s_Data.LineVertexBuffer->SetData(s_Data.LineVertexBufferBase, dataSize);
 
 			// is this neeeded?
-			s_Data.LineShader->Bind();
-			s_Data.LineShader->SetMat4("u_ViewProjection", s_Data.CameraViewProj);
+			s_Data.LineShader->Bind(ShaderVariant::Static);
+			s_Data.LineShader->SetMat4("u_ViewProjection", s_Data.CameraViewProj, ShaderVariant::Static);
 
 			s_Data.LineVertexArray->Bind();
 			Renderer::SetLineThickness(2.0f);

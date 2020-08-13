@@ -1,3 +1,5 @@
+#flags STANDARD_VARS, SKINNED
+
 #type vertex
 #version 430 core
 

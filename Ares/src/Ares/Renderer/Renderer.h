@@ -25,7 +25,7 @@ namespace Ares {
 		static void Submit(FuncT&& func, const std::string& commandName)
 		{
 
-			if (GetRenderCommandQueue().m_Deleted)
+			if (true || GetRenderCommandQueue().m_Deleted)
 			{
 				func();
 				return;

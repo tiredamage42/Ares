@@ -12,6 +12,10 @@
 
 namespace Ares {
 
+
+	const std::string SKINNED_FLAG = "SKINNED";
+	const std::string STANDARD_VARS_FLAG = "STANDARD_VARS";
+
 	static GLenum ShaderTypeFromString(const std::string& type)
 	{
 		if (type == "vertex")	return GL_VERTEX_SHADER;
@@ -53,6 +57,10 @@ namespace Ares {
 
 	void OpenGLShader::Reload()
 	{
+
+		// TODO: CHECK MEMORY IMPLICATIONS OF JUST CLEARING VARIANT BUFFERS ARRAY
+
+
 		bool success;
 		std::string source = FileUtils::GetFileContents(m_AssetPath, success);// ReadShaderFromFile(m_AssetPath);
 		if (!success)
@@ -60,31 +68,70 @@ namespace Ares {
 		
 		m_ShaderSource = PreProcess(source);
 
+		m_RendererIDs.clear();
+		uint32_t variants = m_ShaderFlags.count(SKINNED_FLAG) ? 2 : 1;
+		for (size_t i = 0; i < variants; i++)
+		{
+			m_RendererIDs.push_back(0);
+		}
+		
 		if (!m_IsCompute)
-			Parse();
+		{
+			for (size_t i = 0; i < variants; i++)
+			{
+				ShaderVariantBuffers& buffers = m_VariantBuffers.emplace_back();
+				
+				Parse(buffers, (ShaderVariant)i);
+
+			}
+		}
+		
+
 		
 		Renderer::Submit([this]() {
-			if (this->m_RendererID)
+
+			//if (m_RendererIDs.size())
+			//{
+				for (size_t i = 0; i < m_RendererIDs.size(); i++)
+				{
+					if (m_RendererIDs[i])
+					{
+						glDeleteProgram(m_RendererIDs[i]);
+						m_RendererIDs[i] = 0;
+					}
+					/*glDeleteProgram(m_VariantBuffers[i].m_RendererID);*/
+				}
+				//m_RendererIDs.clear();
+			//}
+			/*if (this->m_RendererID)
 			{
 				glDeleteProgram(this->m_RendererID);
-			}
+			}*/
 
 			
-			this->CompileAndUploadShader();
+			CompileAndUploadShader();
 			if (!m_IsCompute)
 			{
-				this->ResolveUniforms();
-				this->ValidateUniforms();
+
+				uint32_t variants = m_ShaderFlags.count(SKINNED_FLAG) ? 2 : 1;
+				for (uint32_t i = 0; i < variants; i++)
+				{
+					ShaderVariantBuffers& buffers = m_VariantBuffers[i];
+					ResolveUniforms(buffers, (ShaderVariant)i);
+				}
+
+				//ResolveUniforms();
+				//ValidateUniforms();
 			}
 
 
-			if (this->m_Loaded)
+			if (m_Loaded)
 			{
-				for (auto& callback : this->m_ShaderReloadedCallbacks)
+				for (auto& callback : m_ShaderReloadedCallbacks)
 					callback();
 			}
 
-			this->m_Loaded = true;
+			m_Loaded = true;
 
 		}, "Reload Shader");
 	}
@@ -109,17 +156,36 @@ namespace Ares {
 
 	OpenGLShader::~OpenGLShader()
 	{
-		GLuint rendererID = m_RendererID;
+		/*GLuint rendererID = m_RendererID;
 		Renderer::Submit([rendererID]() {
 
 			glDeleteProgram(rendererID);
+
+		}, "Delete Shader");*/
+
+
+		std::vector<uint32_t> rendererIDs = m_RendererIDs;
+		/*for (size_t i = 0; i < m_VariantBuffers.size(); i++)
+		{
+			rendererIDs.push_back(m_VariantBuffers[i].m_RendererID);
+		}*/
+		Renderer::Submit([rendererIDs]() {
+
+			for (size_t i = 0; i < rendererIDs.size(); i++)
+			{
+				glDeleteProgram(rendererIDs[i]);
+			}
+
 		}, "Delete Shader");
 	}
 
-	void OpenGLShader::Bind()
+	void OpenGLShader::Bind(ShaderVariant variant)
 	{
-		Renderer::Submit([this]() {
-			glUseProgram(this->m_RendererID);
+		Renderer::Submit([=]() {
+
+			glUseProgram(GetRendererID(variant));
+			//glUseProgram(this->m_RendererID);
+
 		}, "Bind Shader");
 	}
 
@@ -128,6 +194,15 @@ namespace Ares {
 		Renderer::Submit([]() {
 			glUseProgram(0);
 		}, "Unbidn Shader");
+	}
+	const size_t OpenGLShader::GetVariantIndex(ShaderVariant variant) const
+	{
+		return std::min(m_RendererIDs.size() - 1, (size_t)variant);
+	}
+	uint32_t OpenGLShader::GetRendererID(ShaderVariant variant) const
+	{
+		return m_RendererIDs[GetVariantIndex(variant)];
+		//return m_VariantBuffers[GetVariantIndex(variant)].m_RendererID;
 	}
 
 
@@ -277,97 +352,191 @@ namespace Ares {
 		}*/
 
 
-		std::vector<GLuint> shaderRendererIDs;
-
-		// Get a program object.
-		GLuint program = glCreateProgram();
-
-		// Read our shaders into the appropriate buffers
-		for (auto& kv : m_ShaderSource)
+		
+		uint32_t variants = m_ShaderFlags.count(SKINNED_FLAG) ? 2 : 1;
+		for (uint32_t i = 0; i < variants; i++)
 		{
-			GLenum type = kv.first;
-			const std::string& source = kv.second;
 
-			// Create an empty shader handle
-			GLuint shader = glCreateShader(type);
+			std::vector<GLuint> shaderRendererIDs;
 
-			// Send the shader source code to GL
-			// Note that std::string's .c_str is NULL character terminated.
-			const GLchar* sourceCStr = (const GLchar*)source.c_str();
-			glShaderSource(shader, 1, &sourceCStr, 0);
+			// Get a program object.
+			GLuint program = glCreateProgram();
 
-			// Compile the shader
-			glCompileShader(shader);
+			// Read our shaders into the appropriate buffers
+			for (auto& kv : m_ShaderSource)
+			{
+				GLenum type = kv.first;
+				
+				//const std::string& source = kv.second;
+				std::string source = kv.second;
 
-			GLint isCompiled = 0;
-			glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
-			if (isCompiled == GL_FALSE)
+
+
+				if (type == GL_VERTEX_SHADER)
+				{
+					// TODO: this needs to be more robust
+					size_t startMain = source.find("void main");
+
+					size_t insertVars = startMain - 1;
+
+					size_t startInMain = source.find_first_of("{", startMain) + 1;
+
+
+					// add necessary bits here
+					if (i == 1) // teh skinneed mesh variant
+					{
+
+						source.insert(startInMain, R"(
+							mat4 _ares_internal_bone_transform = 
+								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.x) * _ares_internal_BoneWeights.x +
+								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.y) * _ares_internal_BoneWeights.y +
+								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.z) * _ares_internal_BoneWeights.z +
+								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.w) * _ares_internal_BoneWeights.w;
+
+							mat4 ares_ModelMatrix = _ares_internal_Transform * _ares_internal_bone_transform;
+							mat4 ares_MVPMatrix = ares_VPMatrix * ares_ModelMatrix;
+						)");
+						source.insert(insertVars, R"(
+							layout(location = 4) in vec4 _ares_internal_BoneIndices;
+							layout(location = 5) in vec4 _ares_internal_BoneWeights;
+
+							uniform sampler2D _ares_internal_BoneSampler;
+
+							mat4 _ares_internal_GetBoneMatrix(float bIdx) {
+								return mat4(
+									texture2D(_ares_internal_BoneSampler, vec2(0.125, bIdx)),
+									texture2D(_ares_internal_BoneSampler, vec2(0.375, bIdx)),
+									texture2D(_ares_internal_BoneSampler, vec2(0.625, bIdx)),
+									texture2D(_ares_internal_BoneSampler, vec2(0.875, bIdx))
+								);
+							}
+
+							uniform mat4 _ares_internal_Transform;
+							uniform mat4 ares_VPMatrix;
+
+						)");
+					}
+					else
+					{
+						// add necessary bits here
+
+						if (m_ShaderFlags.count(STANDARD_VARS_FLAG))
+						{
+
+							source.insert(startInMain, R"(
+								mat4 ares_ModelMatrix = _ares_internal_Transform;
+								mat4 ares_MVPMatrix = ares_VPMatrix * ares_ModelMatrix;
+							)");
+							source.insert(insertVars, R"(
+								uniform mat4 _ares_internal_Transform;
+								uniform mat4 ares_VPMatrix;
+							)");
+						}
+					}
+
+
+
+					/*
+					
+					#flags STANDARD_VARS
+					const std::string SKINNED_FLAG = "SKINNED";
+					const std::string STANDARD_VARS_FLAG = "STANDARD_VARS";
+
+					ares_VPMatrix
+					ares_MVPMatrix
+					ares_ModelMatrix
+
+					
+					
+					*/
+				}
+
+				// Create an empty shader handle
+				GLuint shader = glCreateShader(type);
+
+				// Send the shader source code to GL
+				// Note that std::string's .c_str is NULL character terminated.
+				const GLchar* sourceCStr = (const GLchar*)source.c_str();
+				glShaderSource(shader, 1, &sourceCStr, 0);
+
+				// Compile the shader
+				glCompileShader(shader);
+
+				GLint isCompiled = 0;
+				glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
+				if (isCompiled == GL_FALSE)
+				{
+					// get error logs
+					GLint maxLength = 0;
+					glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+
+					// The maxLength includes the NULL character
+					std::vector<GLchar> infoLog(maxLength);
+					glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
+
+					// We don't need the shader anymore.
+					glDeleteShader(shader);
+
+
+					ARES_CORE_ERROR("Shader compilation failed:\n{0}\n{1}", m_Name, infoLog.data());
+					ARES_CORE_ASSERT(false, "Shader Compilation Failure!");
+					break;
+				}
+			 
+				// Attach our shaders to our program
+				glAttachShader(program, shader);
+				shaderRendererIDs.push_back(shader);
+			}
+
+
+			// Vertex and fragment shaders are successfully compiled.
+			// Now time to link them together into a program.
+
+			// Link our program
+			glLinkProgram(program);
+
+			// Note the different functions here: glGetProgram* instead of glGetShader*.
+			GLint isLinked = 0;
+			glGetProgramiv(program, GL_LINK_STATUS, (int*)&isLinked);
+			if (isLinked == GL_FALSE)
 			{
 				// get error logs
 				GLint maxLength = 0;
-				glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+				glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
 
 				// The maxLength includes the NULL character
 				std::vector<GLchar> infoLog(maxLength);
-				glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
+				glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
 
-				// We don't need the shader anymore.
-				glDeleteShader(shader);
+				// We don't need the program anymore.
+				glDeleteProgram(program);
+
+				// Don't leak shaders either.
+				for (auto id : shaderRendererIDs)
+					glDeleteShader(id);
 
 
-				ARES_CORE_ERROR("Shader compilation failed:\n{0}\n{1}", m_Name, infoLog.data());
-				ARES_CORE_ASSERT(false, "Shader Compilation Failure!");
-				break;
+				// Use the infoLog as you see fit.
+
+				ARES_CORE_ERROR("Shader compilation failed:\n{0}", infoLog.data());
+				ARES_CORE_ASSERT(false, "Shader Link Failure!");
+				return;
 			}
-			 
-			// Attach our shaders to our program
-			glAttachShader(program, shader);
-			shaderRendererIDs.push_back(shader);
-		}
 
-
-		// Vertex and fragment shaders are successfully compiled.
-		// Now time to link them together into a program.
-
-		// Link our program
-		glLinkProgram(program);
-
-		// Note the different functions here: glGetProgram* instead of glGetShader*.
-		GLint isLinked = 0;
-		glGetProgramiv(program, GL_LINK_STATUS, (int*)&isLinked);
-		if (isLinked == GL_FALSE)
-		{
-			// get error logs
-			GLint maxLength = 0;
-			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
-
-			// The maxLength includes the NULL character
-			std::vector<GLchar> infoLog(maxLength);
-			glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
-
-			// We don't need the program anymore.
-			glDeleteProgram(program);
-
-			// Don't leak shaders either.
+			// Always detach shaders after a successful link.
 			for (auto id : shaderRendererIDs)
+			{
+				glDetachShader(program, id);
 				glDeleteShader(id);
+			}
 
+			m_RendererIDs[i] = program;
+			//m_VariantBuffers[i].m_RendererID = program;
+			//m_RendererIDs.push_back(program);
 
-			// Use the infoLog as you see fit.
-
-			ARES_CORE_ERROR("Shader compilation failed:\n{0}", infoLog.data());
-			ARES_CORE_ASSERT(false, "Shader Link Failure!");
-			return;
 		}
 
-		// Always detach shaders after a successful link.
-		for (auto id : shaderRendererIDs)
-		{
-			glDetachShader(program, id);
-			glDeleteShader(id);
-		}
-
-		m_RendererID = program;
+		//m_RendererID = program;
 	}
 
 
@@ -462,16 +631,16 @@ namespace Ares {
 		return string.find(start) == 0;
 	}
 
-	void OpenGLShader::Parse()
+	void OpenGLShader::Parse(ShaderVariantBuffers& variantBuffers, ShaderVariant variant)
 	{
 		const char* token;
 		const char* vstr;
 		const char* fstr;
 
-		m_Resources.clear();
-		m_Structs.clear();
-		m_VSMaterialUniformBuffer.reset();
-		m_PSMaterialUniformBuffer.reset();
+		variantBuffers.m_Resources.clear();
+		variantBuffers.m_Structs.clear();
+		variantBuffers.m_VSMaterialUniformBuffer.reset();
+		variantBuffers.m_PSMaterialUniformBuffer.reset();
 
 		auto& vertexSource = m_ShaderSource[GL_VERTEX_SHADER];
 		auto& fragmentSource = m_ShaderSource[GL_FRAGMENT_SHADER];
@@ -479,20 +648,20 @@ namespace Ares {
 		// Vertex Shader
 		vstr = vertexSource.c_str();
 		while (token = FindToken(vstr, "struct"))
-			ParseUniformStruct(GetBlock(token, &vstr), ShaderDomain::Vertex);
+			ParseUniformStruct(GetBlock(token, &vstr), ShaderDomain::Vertex, variantBuffers);
 
 		vstr = vertexSource.c_str();
 		while (token = FindToken(vstr, "uniform"))
-			ParseUniform(GetStatement(token, &vstr), ShaderDomain::Vertex);
+			ParseUniform(GetStatement(token, &vstr), ShaderDomain::Vertex, variantBuffers, variant);
 
 		// Fragment Shader
 		fstr = fragmentSource.c_str();
 		while (token = FindToken(fstr, "struct"))
-			ParseUniformStruct(GetBlock(token, &fstr), ShaderDomain::Pixel);
+			ParseUniformStruct(GetBlock(token, &fstr), ShaderDomain::Pixel, variantBuffers);
 
 		fstr = fragmentSource.c_str();
 		while (token = FindToken(fstr, "uniform"))
-			ParseUniform(GetStatement(token, &fstr), ShaderDomain::Pixel);
+			ParseUniform(GetStatement(token, &fstr), ShaderDomain::Pixel, variantBuffers, variant);
 	}
 
 	static bool IsTypeStringResource(const std::string& type)
@@ -504,14 +673,17 @@ namespace Ares {
 		return false;
 	}
 
-	void OpenGLShader::ParseUniform(const std::string& statement, ShaderDomain domain)
+	void OpenGLShader::ParseUniform(const std::string& statement, ShaderDomain domain, ShaderVariantBuffers& variantBuffers, ShaderVariant variant)
 	{
 		std::vector<std::string> tokens = Tokenize(statement);
+
+		ARES_CORE_ASSERT(tokens.size() == 3, "Token must be size 3");
 		uint32_t index = 0;
 
 		index++; // "uniform"
 		std::string typeString = tokens[index++];
 		std::string name = tokens[index++];
+
 		// Strip ; from name if present
 		if (const char* s = strstr(name.c_str(), ";"))
 			name = std::string(name.c_str(), s - name.c_str());
@@ -531,7 +703,7 @@ namespace Ares {
 		if (IsTypeStringResource(typeString))
 		{
 			ShaderResourceDeclaration* declaration = new OpenGLShaderResourceDeclaration(OpenGLShaderResourceDeclaration::StringToType(typeString), name, count);
-			m_Resources.push_back(declaration);
+			variantBuffers.m_Resources.push_back(declaration);
 		}
 		else
 		{
@@ -541,7 +713,7 @@ namespace Ares {
 			if (t == OpenGLShaderUniformDeclaration::Type::NONE)
 			{
 				// Find struct
-				ShaderStruct* s = FindStruct(typeString);
+				ShaderStruct* s = FindStruct(typeString, variantBuffers);// variant);
 				ARES_CORE_ASSERT(s, "");
 				declaration = new OpenGLShaderUniformDeclaration(domain, s, name, count);
 			}
@@ -561,23 +733,23 @@ namespace Ares {
 			{*/
 				if (domain == ShaderDomain::Vertex)
 				{
-					if (!m_VSMaterialUniformBuffer)
-						m_VSMaterialUniformBuffer.reset(new OpenGLShaderUniformBufferDeclaration("", domain));
+					if (!variantBuffers.m_VSMaterialUniformBuffer)
+						variantBuffers.m_VSMaterialUniformBuffer.reset(new OpenGLShaderUniformBufferDeclaration("", domain));
 
-					m_VSMaterialUniformBuffer->PushUniform(declaration);
+					variantBuffers.m_VSMaterialUniformBuffer->PushUniform(declaration);
 				}
 				else if (domain == ShaderDomain::Pixel)
 				{
-					if (!m_PSMaterialUniformBuffer)
-						m_PSMaterialUniformBuffer.reset(new OpenGLShaderUniformBufferDeclaration("", domain));
+					if (!variantBuffers.m_PSMaterialUniformBuffer)
+						variantBuffers.m_PSMaterialUniformBuffer.reset(new OpenGLShaderUniformBufferDeclaration("", domain));
 
-					m_PSMaterialUniformBuffer->PushUniform(declaration);
+					variantBuffers.m_PSMaterialUniformBuffer->PushUniform(declaration);
 				}
 			//}
 		}
 	}
 
-	void OpenGLShader::ParseUniformStruct(const std::string& block, ShaderDomain domain)
+	void OpenGLShader::ParseUniformStruct(const std::string& block, ShaderDomain domain, ShaderVariantBuffers& variantBuffers)
 	{
 		std::vector<std::string> tokens = Tokenize(block);
 
@@ -611,12 +783,18 @@ namespace Ares {
 			ShaderUniformDeclaration* field = new OpenGLShaderUniformDeclaration(domain, OpenGLShaderUniformDeclaration::StringToType(type), name, count);
 			uniformStruct->AddField(field);
 		}
-		m_Structs.push_back(uniformStruct);
+		variantBuffers.m_Structs.push_back(uniformStruct);
 	}
 
-	ShaderStruct* OpenGLShader::FindStruct(const std::string& name)
+	ShaderStruct* OpenGLShader::FindStruct(const std::string& name, ShaderVariantBuffers& variantBuffers)
 	{
-		for (ShaderStruct* s : m_Structs)
+
+
+		//size_t variantIndex = GetVariantIndex(variant);
+		//ShaderVariantBuffers& variantBuffers = m_VariantBuffers[variantIndex];
+
+		//for (ShaderStruct* s : m_Structs)
+		for (ShaderStruct* s : variantBuffers.m_Structs)
 		{
 			if (s->GetName() == name)
 				return s;
@@ -624,11 +802,11 @@ namespace Ares {
 		return nullptr;
 	}
 
-	void OpenGLShader::ResolveUniforms()
+	void OpenGLShader::ResolveUniforms(const ShaderVariantBuffers& buffers, ShaderVariant variant)
 	{
-		glUseProgram(m_RendererID);
+		glUseProgram(GetRendererID(variant));
 
-		for (size_t i = 0; i < m_VSRendererUniformBuffers.size(); i++)
+		/*for (size_t i = 0; i < m_VSRendererUniformBuffers.size(); i++)
 		{
 			OpenGLShaderUniformBufferDeclaration* decl = (OpenGLShaderUniformBufferDeclaration*)m_VSRendererUniformBuffers[i];
 			const ShaderUniformList& uniforms = decl->GetUniformDeclarations();
@@ -674,10 +852,10 @@ namespace Ares {
 					uniform->m_Location = GetUniformLocation(uniform->m_Name);
 				}
 			}
-		}
+		}*/
 
 		{
-			const auto& decl = m_VSMaterialUniformBuffer;
+			const auto& decl = buffers.m_VSMaterialUniformBuffer;
 			if (decl)
 			{
 				const ShaderUniformList& uniforms = decl->GetUniformDeclarations();
@@ -691,19 +869,19 @@ namespace Ares {
 						for (size_t k = 0; k < fields.size(); k++)
 						{
 							OpenGLShaderUniformDeclaration* field = (OpenGLShaderUniformDeclaration*)fields[k];
-							field->m_Location = GetUniformLocation(uniform->m_Name + "." + field->m_Name);
+							field->m_Location = GetUniformLocation(uniform->m_Name + "." + field->m_Name, variant);
 						}
 					}
 					else
 					{
-						uniform->m_Location = GetUniformLocation(uniform->m_Name);
+						uniform->m_Location = GetUniformLocation(uniform->m_Name, variant);
 					}
 				}
 			}
 		}
 
 		{
-			const auto& decl = m_PSMaterialUniformBuffer;
+			const auto& decl = buffers.m_PSMaterialUniformBuffer;
 			if (decl)
 			{
 				const ShaderUniformList& uniforms = decl->GetUniformDeclarations();
@@ -717,24 +895,24 @@ namespace Ares {
 						for (size_t k = 0; k < fields.size(); k++)
 						{
 							OpenGLShaderUniformDeclaration* field = (OpenGLShaderUniformDeclaration*)fields[k];
-							field->m_Location = GetUniformLocation(uniform->m_Name + "." + field->m_Name);
+							field->m_Location = GetUniformLocation(uniform->m_Name + "." + field->m_Name, variant);
 						}
 					}
 					else
 					{
-						uniform->m_Location = GetUniformLocation(uniform->m_Name);
+						uniform->m_Location = GetUniformLocation(uniform->m_Name, variant);
 					}
 				}
 			}
 		}
 
 		uint32_t sampler = 0;
-		for (size_t i = 0; i < m_Resources.size(); i++)
+		for (size_t i = 0; i < buffers.m_Resources.size(); i++)
 		{
-			OpenGLShaderResourceDeclaration* resource = (OpenGLShaderResourceDeclaration*)m_Resources[i];
+			OpenGLShaderResourceDeclaration* resource = (OpenGLShaderResourceDeclaration*)buffers.m_Resources[i];
 			
 			auto resourceName = resource->m_Name;
-			int32_t location = GetUniformLocation(resource->m_Name);
+			int32_t location = GetUniformLocation(resource->m_Name, variant);
 
 			if (resource->GetCount() == 1)
 			{
@@ -762,9 +940,9 @@ namespace Ares {
 		}
 	}
 
-	void OpenGLShader::ValidateUniforms()
+	/*void OpenGLShader::ValidateUniforms()
 	{
-	}
+	}*/
 
 	void OpenGLShader::ResolveAndSetUniforms(const Ref<OpenGLShaderUniformBufferDeclaration>& decl, Buffer buffer)
 	{
@@ -774,7 +952,6 @@ namespace Ares {
 			OpenGLShaderUniformDeclaration* uniform = (OpenGLShaderUniformDeclaration*)uniforms[i];
 			if (uniform->IsArray())
 			{
-
 				//ARES_CORE_ASSERT(false, "arrays not implemented yet...");
 				ResolveAndSetUniformArray(uniform, buffer);
 			}
@@ -891,6 +1068,30 @@ namespace Ares {
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
 	{
+
+		// find flags
+
+		size_t flagsStartIDX = source.find("#flags");
+
+		if (flagsStartIDX != std::string::npos)
+		{
+			size_t flagsEndIDX = source.find_first_of("\r\n", flagsStartIDX) + 1;
+			size_t flagsListStartIDX = flagsStartIDX + 7;
+			std::string flagsString = source.substr(flagsListStartIDX, flagsEndIDX - flagsListStartIDX);
+
+			size_t pos = 0;
+			while (((pos = flagsString.find_first_of(",\r\n")) != std::string::npos)) {
+				auto flag = flagsString.substr(0, pos);
+
+				// remove whitespace
+				flag.erase(std::remove(flag.begin(), flag.end(), ' '), flag.end());
+
+				m_ShaderFlags.insert(flag);
+				flagsString.erase(0, pos + 1);
+			}
+
+		}
+
 		std::unordered_map<GLenum, std::string> shaderSources;
 
 		// token to split on
@@ -1037,89 +1238,89 @@ namespace Ares {
 
 	//}
 
-	void OpenGLShader::SetInt(const std::string& name, int value)
+	void OpenGLShader::SetInt(const std::string& name, int value, ShaderVariant variant)
 	{
 		Renderer::Submit([=]() {
-			UploadUniformInt(name, value);
+			UploadUniformInt(name, value, variant);
 		}, "set uniform");
 	}
 
-	void OpenGLShader::SetIntArray(const std::string& name, int* values, const uint32_t count, bool deleteFromMem)
+	void OpenGLShader::SetIntArray(const std::string& name, int* values, const uint32_t count, ShaderVariant variant, bool deleteFromMem)
 	{
 		Renderer::Submit([=]() mutable {	
-			UploadUniformIntArray(name, values, count);
+			UploadUniformIntArray(name, values, count, variant);
 			if (deleteFromMem)
 				delete[] values;
 		}, "set uniform");
 	}
-	void OpenGLShader::SetFloat(const std::string& name, float value)
+	void OpenGLShader::SetFloat(const std::string& name, float value, ShaderVariant variant)
 	{
 		Renderer::Submit([=]() {
-			UploadUniformFloat(name, value);
+			UploadUniformFloat(name, value, variant);
 		}, "set uniform");
 	}
-	void OpenGLShader::SetFloat2(const std::string& name, glm::vec2 value)
+	void OpenGLShader::SetFloat2(const std::string& name, glm::vec2 value, ShaderVariant variant)
 	{
 		Renderer::Submit([=]() {
-			UploadUniformFloat2(name, value);
+			UploadUniformFloat2(name, value, variant);
 		}, "set uniform");
 	}
-	void OpenGLShader::SetFloat3(const std::string& name, glm::vec3 value)
+	void OpenGLShader::SetFloat3(const std::string& name, glm::vec3 value, ShaderVariant variant)
 	{
 		Renderer::Submit([=]() {
-			UploadUniformFloat3(name, value);
+			UploadUniformFloat3(name, value, variant);
 		}, "set uniform");
 	}
-	void OpenGLShader::SetFloat4(const std::string& name, glm::vec4 value)
+	void OpenGLShader::SetFloat4(const std::string& name, glm::vec4 value, ShaderVariant variant)
 	{
 		Renderer::Submit([=]() {
-			UploadUniformFloat4(name, value);
+			UploadUniformFloat4(name, value, variant);
 		}, "set uniform");
 	}
-	void OpenGLShader::SetMat3(const std::string& name, glm::mat3 value)
+	void OpenGLShader::SetMat3(const std::string& name, glm::mat3 value, ShaderVariant variant)
 	{
 		Renderer::Submit([=]() {
-			UploadUniformMat3(name, value);
+			UploadUniformMat3(name, value, variant);
 		}, "set uniform");
 	}
-	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
+	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value, ShaderVariant variant)
 	{
 		Renderer::Submit([=]() {
-			UploadUniformMat4(name, value);
+			UploadUniformMat4(name, value, variant);
 		}, "set uniform");
 	}
 
-	void OpenGLShader::SetIntFromRenderThread(const std::string& name, int value)
+	void OpenGLShader::SetIntFromRenderThread(const std::string& name, int value, ShaderVariant variant)
 	{
-		UploadUniformInt(name, value);
+		UploadUniformInt(name, value, variant);
 	}
-	void OpenGLShader::SetIntArrayFromRenderThread(const std::string& name, int* values, uint32_t count, bool deleteFromMem)
+	void OpenGLShader::SetIntArrayFromRenderThread(const std::string& name, int* values, uint32_t count, ShaderVariant variant)
 	{
-		UploadUniformIntArray(name, values, count);
+		UploadUniformIntArray(name, values, count, variant);
 	}
-	void OpenGLShader::SetFloatFromRenderThread(const std::string& name, float value)
+	void OpenGLShader::SetFloatFromRenderThread(const std::string& name, float value, ShaderVariant variant)
 	{
-		UploadUniformFloat(name, value);
+		UploadUniformFloat(name, value, variant);
 	}
-	void OpenGLShader::SetFloat2FromRenderThread(const std::string& name, glm::vec2 value)
+	void OpenGLShader::SetFloat2FromRenderThread(const std::string& name, glm::vec2 value, ShaderVariant variant)
 	{
-		UploadUniformFloat2(name, value);
+		UploadUniformFloat2(name, value, variant);
 	}
-	void OpenGLShader::SetFloat3FromRenderThread(const std::string& name, glm::vec3 value)
+	void OpenGLShader::SetFloat3FromRenderThread(const std::string& name, glm::vec3 value, ShaderVariant variant)
 	{
-		UploadUniformFloat3(name, value);
+		UploadUniformFloat3(name, value, variant);
 	}
-	void OpenGLShader::SetFloat4FromRenderThread(const std::string& name, glm::vec4 value)
+	void OpenGLShader::SetFloat4FromRenderThread(const std::string& name, glm::vec4 value, ShaderVariant variant)
 	{
-		UploadUniformFloat4(name, value);
+		UploadUniformFloat4(name, value, variant);
 	}
-	void OpenGLShader::SetMat3FromRenderThread(const std::string& name, glm::mat3 value)
+	void OpenGLShader::SetMat3FromRenderThread(const std::string& name, glm::mat3 value, ShaderVariant variant)
 	{
-		UploadUniformMat3(name, value);
+		UploadUniformMat3(name, value, variant);
 	}
-	void OpenGLShader::SetMat4FromRenderThread(const std::string& name, const glm::mat4& value)
+	void OpenGLShader::SetMat4FromRenderThread(const std::string& name, const glm::mat4& value, ShaderVariant variant)
 	{
-		UploadUniformMat4(name, value);
+		UploadUniformMat4(name, value, variant);
 	}
 
 
@@ -1128,19 +1329,26 @@ namespace Ares {
 
 
 
-	void OpenGLShader::SetVSMaterialUniformBuffer(Buffer buffer)
+	void OpenGLShader::SetVSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant)
 	{
-		Renderer::Submit([this, buffer]() {
-			glUseProgram(this->m_RendererID);
-			this->ResolveAndSetUniforms(this->m_VSMaterialUniformBuffer, buffer);
+		Renderer::Submit([this, buffer, variant]() {
+			/*glUseProgram(m_RendererID);
+			ResolveAndSetUniforms(m_VSMaterialUniformBuffer, buffer);*/
+
+			glUseProgram(GetRendererID(variant));
+			ResolveAndSetUniforms(m_VariantBuffers[GetVariantIndex(variant)].m_VSMaterialUniformBuffer, buffer);
+
 		}, "SetVSMaterialUniformBuffer");
 	}
 
-	void OpenGLShader::SetPSMaterialUniformBuffer(Buffer buffer)
+	void OpenGLShader::SetPSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant)
 	{
-		Renderer::Submit([this, buffer]() {
-			glUseProgram(this->m_RendererID);
-			this->ResolveAndSetUniforms(this->m_PSMaterialUniformBuffer, buffer);
+		Renderer::Submit([this, buffer, variant]() {
+			/*glUseProgram(m_RendererID);
+			ResolveAndSetUniforms(m_PSMaterialUniformBuffer, buffer);*/
+			
+			glUseProgram(GetRendererID(variant));
+			ResolveAndSetUniforms(m_VariantBuffers[GetVariantIndex(variant)].m_PSMaterialUniformBuffer, buffer);
 		}, "SetPSMaterialUniformBuffer");
 	}
 
@@ -1212,44 +1420,44 @@ namespace Ares {
 	}*/
 
 	
-	void OpenGLShader::UploadUniformInt(const std::string& name, int value)
+	void OpenGLShader::UploadUniformInt(const std::string& name, int value, ShaderVariant variant)
 	{
-		GLint location = GetUniformLocation(name);
+		GLint location = GetUniformLocation(name, variant);
 		glUniform1i(location, value);
 	}
-	void OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count)
+	void OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count, ShaderVariant variant)
 	{
-		GLint location = GetUniformLocation(name);
+		GLint location = GetUniformLocation(name, variant);
 		glUniform1iv(location, count, values);
 	}
-	void OpenGLShader::UploadUniformFloat(const std::string& name, float value)
+	void OpenGLShader::UploadUniformFloat(const std::string& name, float value, ShaderVariant variant)
 	{
-		GLint location = GetUniformLocation(name);
+		GLint location = GetUniformLocation(name, variant);
 		glUniform1f(location, value);
 	}
-	void OpenGLShader::UploadUniformFloat2(const std::string& name, glm::vec2 value)
+	void OpenGLShader::UploadUniformFloat2(const std::string& name, glm::vec2 value, ShaderVariant variant)
 	{
-		GLint location = GetUniformLocation(name);
+		GLint location = GetUniformLocation(name, variant);
 		glUniform2f(location, value.x, value.y);
 	}
-	void OpenGLShader::UploadUniformFloat3(const std::string& name, glm::vec3 value)
+	void OpenGLShader::UploadUniformFloat3(const std::string& name, glm::vec3 value, ShaderVariant variant)
 	{
-		GLint location = GetUniformLocation(name);
+		GLint location = GetUniformLocation(name, variant);
 		glUniform3f(location, value.x, value.y, value.z);
 	}
-	void OpenGLShader::UploadUniformFloat4(const std::string& name, glm::vec4 value)
+	void OpenGLShader::UploadUniformFloat4(const std::string& name, glm::vec4 value, ShaderVariant variant)
 	{
-		GLint location = GetUniformLocation(name);
+		GLint location = GetUniformLocation(name, variant);
 		glUniform4f(location, value.x, value.y, value.z, value.w);
 	}
-	void OpenGLShader::UploadUniformMat3(const std::string& name, glm::mat3 value)
+	void OpenGLShader::UploadUniformMat3(const std::string& name, glm::mat3 value, ShaderVariant variant)
 	{
-		GLint location = GetUniformLocation(name);
+		GLint location = GetUniformLocation(name, variant);
 		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(value));
 	}
-	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& value)
+	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& value, ShaderVariant variant)
 	{
-		GLint location = GetUniformLocation(name);
+		GLint location = GetUniformLocation(name, variant);
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
 	}
 
@@ -1286,7 +1494,6 @@ namespace Ares {
 	{
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
 	}
-
 	void OpenGLShader::UploadUniformMat4Array(uint32_t location, const glm::mat4& values, uint32_t count)
 	{
 		glUniformMatrix4fv(location, count, GL_FALSE, glm::value_ptr(values));
@@ -1304,13 +1511,17 @@ namespace Ares {
 		}
 	}
 
-	GLint OpenGLShader::GetUniformLocation(const std::string& name) const
+	GLint OpenGLShader::GetUniformLocation(const std::string& name, ShaderVariant variant) const
 	{
 
 		/*if (m_UniformLocationMap.find(name) != m_UniformLocationMap.end())
 			return m_UniformLocationMap[name];*/
 		
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+
+		//GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(GetRendererID(variant), name.c_str());
+
+		
 		if (location == -1)
 		{
 			ARES_CORE_WARN("Uniform '{0}' not found in shader '{1}'!", name, m_Name);

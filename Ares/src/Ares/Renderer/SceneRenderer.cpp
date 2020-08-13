@@ -94,7 +94,7 @@ namespace Ares {
 
 		Ref<Shader> createBRDFLUTShader = Shader::Find("Assets/Shaders/CreateBRDF.glsl");
 
-		createBRDFLUTShader->Bind();
+		createBRDFLUTShader->Bind(ShaderVariant::Static);
 
 		Renderer::Submit([BRDF_SIZE]() {
 			glBindImageTexture(0, s_Data.BRDFLUT->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RG16F);
@@ -328,7 +328,7 @@ namespace Ares {
 
 		ARES_CORE_ASSERT(envEquirect->GetFormat() == TextureFormat::Float16, "Texture is not HDR!");
 		 
-		equirectangularConversionShader->Bind();
+		equirectangularConversionShader->Bind(ShaderVariant::Static);
 		envEquirect->Bind();
 		Renderer::Submit([envUnfiltered, cubemapSize, envEquirect](){
 
@@ -357,7 +357,7 @@ namespace Ares {
 		}, "EnvMap 1");
 
 
-		envFilteringShader->Bind();
+		envFilteringShader->Bind(ShaderVariant::Static);
 		envUnfiltered->Bind();
 
 		uint32_t mipCount = envFiltered->GetMipLevelCount();
@@ -372,7 +372,7 @@ namespace Ares {
 				
 				//float roughness = (float)mipLevel / (float)(mipCount - 1);
 				// set the first float uniform to the roughness factor
-				glProgramUniform1f(envFilteringShader->GetRendererID(), 0, mipLevel * deltaRoughness);
+				glProgramUniform1f(envFilteringShader->GetRendererID(ShaderVariant::Static), 0, mipLevel * deltaRoughness);
 				//glProgramUniform1f(envFilteringShader->GetRendererID(), 0, roughness);
 
 				const GLuint numGroups = glm::max(1, size / 32);
@@ -384,7 +384,7 @@ namespace Ares {
 			envIrradianceShader = Shader::Find("Assets/Shaders/EnvironmentIrradiance.glsl");
 
 		Ref<TextureCube> irradianceMap = TextureCube::Create(TextureFormat::Float16, irradianceMapSize, irradianceMapSize, FilterType::Trilinear, false);
-		envIrradianceShader->Bind();
+		envIrradianceShader->Bind(ShaderVariant::Static);
 
 		envFiltered->Bind();
 		//envCube->Bind();
@@ -438,11 +438,24 @@ namespace Ares {
 		// s_Data.SceneInfo.EnvironmentIrradianceMap->Bind(0);
 		Renderer::SubmitFullscreenQuad(s_Data.SceneData.SkyboxMaterial);
 
+
+
+		/*
+			set standard mesh drawing shader variables
+		*/
+
+
+
+
 		// TODO: render order based on material....
 		// Render entities
+		
+		std::unordered_set<std::string> shadersVisited;
+
 		for (auto& dc : s_Data.DrawList)
 		{
 			//auto baseMaterial = dc.Mesh->GetMaterial();
+
 
 
 			Ref<Material> baseMaterial = nullptr;
@@ -455,9 +468,34 @@ namespace Ares {
 			{
 				baseMaterial = dc.Mesh->GetMaterial();
 			}
+			Ref<Shader> shader = baseMaterial->GetShader();
+			ShaderVariant variant = dc.Mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
+
+			std::string key = shader->GetName() + std::to_string((size_t)variant);
+
+			if (!shadersVisited.count(key))
+			{
+
+				shader->Bind(variant);
+				shader->SetMat4("ares_VPMatrix", viewProjection, variant);
+				// maybe set view and projection seperate as well
+
+				shadersVisited.insert(key);
+			}
+
+
 
 		//	auto baseMaterial = dc.Material;// Mesh->GetMaterial();
-			baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
+
+			// make list of shaders from draw list, set this per shader:
+			{
+				//ares_VPMatrix
+
+				//baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
+				// maybe set view and projection seperate as well
+			}
+
+			
 			baseMaterial->Set("u_CameraPosition", cameraPosition);
 
 			// Environment (TODO: don't do this per mesh)
@@ -490,6 +528,8 @@ namespace Ares {
 				}, "outline other stuff");
 		}
 
+		shadersVisited.clear();
+
 		for (auto& dc : s_Data.SelectedMeshDrawList)
 		{
 			Ref<Material> baseMaterial = nullptr;
@@ -503,7 +543,23 @@ namespace Ares {
 				baseMaterial = dc.Mesh->GetMaterial();
 			}
 
-			baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
+
+			Ref<Shader> shader = baseMaterial->GetShader();
+			ShaderVariant variant = dc.Mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
+
+			std::string key = shader->GetName() + std::to_string((size_t)variant);
+
+			if (!shadersVisited.count(key))
+			{
+				shader->Bind(variant);
+				shader->SetMat4("ares_VPMatrix", viewProjection, variant);
+				// maybe set view and projection seperate as well
+
+				shadersVisited.insert(key);
+			}
+
+
+			//baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
 			baseMaterial->Set("u_CameraPosition", cameraPosition);
 
 			// Environment (TODO: don't do this per mesh)
@@ -531,11 +587,30 @@ namespace Ares {
 				}, "Draw Outline Prepare");
 
 			// Draw outline here
-			s_Data.OutlineMaterial->Set("u_ViewProjection", viewProjection);
+
+
+
+			std::unordered_set<ShaderVariant> outlineVariantsVisited;
+
+			//s_Data.OutlineMaterial->Set("u_ViewProjection", viewProjection);
 			for (auto& dc : s_Data.SelectedMeshDrawList)
 			{
+				ShaderVariant variant = dc.Mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
+				if (!outlineVariantsVisited.count(variant))
+				{
+					s_Data.OutlineMaterial->GetShader()->Bind(variant);
+					s_Data.OutlineMaterial->GetShader()->SetMat4("ares_VPMatrix", viewProjection, variant);
+					outlineVariantsVisited.insert(variant);
+				}
+				
+
+
 				Renderer::SubmitMesh(dc.Mesh, dc.Transform, s_Data.OutlineMaterial);
 			}
+
+
+
+
 
 			Renderer::Submit([](){
 					glPointSize(10);
@@ -561,14 +636,14 @@ namespace Ares {
 		// DEBUG THE BRDF TEXTURE
 
 
-		Ref<Shader> texShader = Shader::Find("Assets/Shaders/Textured.glsl");
-		texShader->Bind();
-		texShader->SetInt("u_Texture", 0);
-		texShader->SetMat4("u_ViewProjection", viewProjection);
-		s_Data.BRDFLUT->Bind();
+		//Ref<Shader> texShader = Shader::Find("Assets/Shaders/Textured.glsl");
+		//texShader->Bind();
+		//texShader->SetInt("u_Texture", 0);
+		//texShader->SetMat4("u_ViewProjection", viewProjection);
+		//s_Data.BRDFLUT->Bind();
 
-		//Renderer::SubmitQuad(texShader, glm::translate(glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec3(0, 0, -2)), true);
-		Renderer::SubmitQuad(texShader, glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, -2)), true);
+		////Renderer::SubmitQuad(texShader, glm::translate(glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec3(0, 0, -2)), true);
+		//Renderer::SubmitQuad(texShader, glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, -2)), true);
 
 
 
@@ -589,7 +664,10 @@ namespace Ares {
 			//float m_GridSize = 0.025f;
 			//float m_GridSize = 0.5f;
 
-			s_Data.GridMaterial->Set("u_ViewProjection", viewProjection);
+			s_Data.GridMaterial->GetShader()->Bind(ShaderVariant::Static);
+			s_Data.GridMaterial->GetShader()->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Static);
+
+			//s_Data.GridMaterial->Set("ares_VPMatrix", viewProjection);
 
 
 			//s_Data.GridMaterial->Set("u_MVP", viewProjection * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
@@ -629,9 +707,9 @@ namespace Ares {
 	{
 
 		Renderer::BeginRenderPass(s_Data.CompositePass);
-		s_Data.CompositeShader->Bind();
-		s_Data.CompositeShader->SetFloat("u_Exposure", s_Data.SceneData.Exposure);
-		s_Data.CompositeShader->SetInt("u_TextureSamples", s_Data.GeoPass->GetSpecs().TargetFrameBuffer->GetSpecs().Samples);
+		s_Data.CompositeShader->Bind(ShaderVariant::Static);
+		s_Data.CompositeShader->SetFloat("u_Exposure", s_Data.SceneData.Exposure, ShaderVariant::Static);
+		s_Data.CompositeShader->SetInt("u_TextureSamples", s_Data.GeoPass->GetSpecs().TargetFrameBuffer->GetSpecs().Samples, ShaderVariant::Static);
 
 		s_Data.GeoPass->GetSpecs().TargetFrameBuffer->BindAsTexture();
 		Renderer::SubmitFullscreenQuad(nullptr);
