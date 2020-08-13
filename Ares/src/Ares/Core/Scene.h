@@ -63,7 +63,7 @@ namespace Ares
 		void SetEnvironment(const Environment& environment) { 
 
 			m_Environment = environment; 
-			//m_SkyboxMaterial->Set("u_Texture", environment.IrradianceMap);// environment.RadianceMap);
+			//m_SkyboxMaterial->Set("u_Texture", environment.IrradianceMap);
 			m_SkyboxMaterial->Set("u_Texture", environment.RadianceMap);
 		}
 		const Environment& GetEnvironment() const { return m_Environment; }

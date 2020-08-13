@@ -3,8 +3,8 @@
 
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
-layout(location = 2) in vec3 a_Tangent;
-layout(location = 3) in vec3 a_Binormal;
+//layout(location = 2) in vec3 a_Tangent;
+//layout(location = 3) in vec3 a_Binormal;
 layout(location = 4) in vec2 a_TexCoord;
 
 uniform mat4 u_ViewProjectionMatrix;
@@ -14,11 +14,13 @@ out VertexOutput
 {
 	vec3 WorldPosition;
 	vec3 Normal;
-	vec2 TexCoord;
-	mat3 WorldNormals;
-	mat3 WorldTransform;
-	vec3 Binormal;
+	vec2 TexCoord; 
+	//mat3 WorldNormals;
+	//mat3 WorldTransform;
+	//vec3 Binormal;
 } vs_Output;
+
+
 
 void main()
 {
@@ -27,9 +29,10 @@ void main()
 	vs_Output.Normal = mat3(u_Transform) * a_Normal;
 
 	vs_Output.TexCoord = vec2(a_TexCoord.x, a_TexCoord.y);
-	vs_Output.WorldNormals = mat3(u_Transform) * mat3(a_Tangent, a_Binormal, a_Normal);
-	vs_Output.WorldTransform = mat3(u_Transform);
-	vs_Output.Binormal = a_Binormal;
+
+	//vs_Output.WorldNormals = mat3(u_Transform) * mat3(a_Tangent, a_Binormal, a_Normal);
+	//vs_Output.WorldTransform = mat3(u_Transform);
+	//vs_Output.Binormal = a_Binormal;
 
 	gl_Position = u_ViewProjectionMatrix * u_Transform * vec4(a_Position, 1.0);
 }
@@ -56,9 +59,9 @@ in VertexOutput
 	vec3 WorldPosition;
 	vec3 Normal;
 	vec2 TexCoord;
-	mat3 WorldNormals;
-	mat3 WorldTransform;
-	vec3 Binormal;
+	//mat3 WorldNormals;
+	//mat3 WorldTransform;
+	//vec3 Binormal;
 } vs_Input;
 
 layout(location = 0) out vec4 color;
@@ -162,6 +165,7 @@ vec3 fresnelSchlickRoughness(vec3 F0, float cosTheta, float roughness)
 	return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
+/*
 // ---------------------------------------------------------------------------------------------------
 // The following code (from Unreal Engine 4's paper) shows how to filter the environment map
 // for different roughnesses. This is mean to be computed offline and stored in cube map mips,
@@ -181,63 +185,64 @@ vec2 Hammersley(uint i, uint N)
 	return vec2(float(i) / float(N), RadicalInverse_VdC(i));
 }
 
-vec3 ImportanceSampleGGX(vec2 Xi, float Roughness, vec3 N)
-{
-	float a = Roughness * Roughness;
-	float Phi = 2 * PI * Xi.x;
-	float CosTheta = sqrt((1 - Xi.y) / (1 + (a * a - 1) * Xi.y));
-	float SinTheta = sqrt(1 - CosTheta * CosTheta);
-	vec3 H;
-	H.x = SinTheta * cos(Phi);
-	H.y = SinTheta * sin(Phi);
-	H.z = CosTheta;
-	vec3 UpVector = abs(N.z) < 0.999 ? vec3(0, 0, 1) : vec3(1, 0, 0);
-	vec3 TangentX = normalize(cross(UpVector, N));
-	vec3 TangentY = cross(N, TangentX);
-	// Tangent to world space
-	return TangentX * H.x + TangentY * H.y + N * H.z;
-}
+*/
+//vec3 ImportanceSampleGGX(vec2 Xi, float Roughness, vec3 N)
+//{
+//	float a = Roughness * Roughness;
+//	float Phi = 2 * PI * Xi.x;
+//	float CosTheta = sqrt((1 - Xi.y) / (1 + (a * a - 1) * Xi.y));
+//	float SinTheta = sqrt(1 - CosTheta * CosTheta);
+//	vec3 H;
+//	H.x = SinTheta * cos(Phi);
+//	H.y = SinTheta * sin(Phi);
+//	H.z = CosTheta;
+//	vec3 UpVector = abs(N.z) < 0.999 ? vec3(0, 0, 1) : vec3(1, 0, 0);
+//	vec3 TangentX = normalize(cross(UpVector, N));
+//	vec3 TangentY = cross(N, TangentX);
+//	// Tangent to world space
+//	return TangentX * H.x + TangentY * H.y + N * H.z;
+//}
 
-float TotalWeight = 0.0;
+//float TotalWeight = 0.0;
 
-vec3 PrefilterEnvMap(float Roughness, vec3 R)
-{
-	vec3 N = R;
-	vec3 V = R;
-	vec3 PrefilteredColor = vec3(0.0);
-	int NumSamples = 1024;
-	for (int i = 0; i < NumSamples; i++)
-	{
-		vec2 Xi = Hammersley(i, NumSamples);
-		vec3 H = ImportanceSampleGGX(Xi, Roughness, N);
-		vec3 L = 2 * dot(V, H) * H - V;
-		float NoL = clamp(dot(N, L), 0.0, 1.0);
-		if (NoL > 0)
-		{
-			PrefilteredColor += texture(u_EnvRadianceTex, L).rgb * NoL;
-			TotalWeight += NoL;
-		}
-	}
-	return PrefilteredColor / TotalWeight;
-}
+//vec3 PrefilterEnvMap(float Roughness, vec3 R)
+//{
+//	vec3 N = R;
+//	vec3 V = R;
+//	vec3 PrefilteredColor = vec3(0.0);
+//	int NumSamples = 1024;
+//	for (int i = 0; i < NumSamples; i++)
+//	{
+//		vec2 Xi = Hammersley(i, NumSamples);
+//		vec3 H = ImportanceSampleGGX(Xi, Roughness, N);
+//		vec3 L = 2 * dot(V, H) * H - V;
+//		float NoL = clamp(dot(N, L), 0.0, 1.0);
+//		if (NoL > 0)
+//		{
+//			PrefilteredColor += texture(u_EnvRadianceTex, L).rgb * NoL;
+//			TotalWeight += NoL;
+//		}
+//	}
+//	return PrefilteredColor / TotalWeight;
+//}
 
 // ---------------------------------------------------------------------------------------------------
 
-vec3 RotateVectorAboutY(float angle, vec3 vec)
-{
-	angle = radians(angle);
-	mat3x3 rotationMatrix = { vec3(cos(angle),0.0,sin(angle)),
-							vec3(0.0,1.0,0.0),
-							vec3(-sin(angle),0.0,cos(angle)) };
-	return rotationMatrix * vec;
-}
+//vec3 RotateVectorAboutY(float angle, vec3 vec)
+//{
+//	angle = radians(angle);
+//	mat3x3 rotationMatrix = { vec3(cos(angle),0.0,sin(angle)),
+//							vec3(0.0,1.0,0.0),
+//							vec3(-sin(angle),0.0,cos(angle)) };
+//	return rotationMatrix * vec;
+//}
 
 vec3 Lighting(vec3 F0)
 {
 	vec3 result = vec3(0.0);
 	for (int i = 0; i < LightCount; i++)
 	{
-		vec3 Li = -lights.Direction;
+		vec3 Li = -normalize(lights.Direction);
 		vec3 Lradiance = lights.Radiance * lights.Multiplier;
 
 		vec3 Lh = normalize(Li + m_Params.View);
@@ -271,11 +276,14 @@ vec3 IBL(vec3 F0, vec3 Lr)
 	vec3 diffuseIBL = m_Params.Albedo * irradiance;
 
 	int u_EnvRadianceTexLevels = textureQueryLevels(u_EnvRadianceTex);
-	float NoV = clamp(m_Params.NdotV, 0.0, 1.0);
+	//float NoV = clamp(m_Params.NdotV, 0.0, 1.0);
 	vec3 R = 2.0 * dot(m_Params.View, m_Params.Normal) * m_Params.Normal - m_Params.View;
 
 
-	vec3 specularIrradiance = textureLod(u_EnvRadianceTex, RotateVectorAboutY(u_EnvMapRotation, Lr), (m_Params.Roughness) * u_EnvRadianceTexLevels).rgb;
+	
+	vec3 specularIrradiance = textureLod(u_EnvRadianceTex, Lr, m_Params.Roughness * u_EnvRadianceTexLevels).rgb;
+
+	//vec3 specularIrradiance = textureLod(u_EnvRadianceTex, RotateVectorAboutY(u_EnvMapRotation, Lr), (m_Params.Roughness) * u_EnvRadianceTexLevels).rgb;
 	//vec3 specularIrradiance = textureLod(u_EnvRadianceTex, RotateVectorAboutY(u_EnvMapRotation, Lr), (m_Params.Roughness * m_Params.Roughness) * u_EnvRadianceTexLevels).rgb;
 
 
@@ -292,6 +300,27 @@ vec3 IBL(vec3 F0, vec3 Lr)
 	return kd * diffuseIBL + specularIBL;
 }
 
+
+
+
+
+// ----------------------------------------------------------------------------
+// Easy trick to get tangent-normals to world-space to keep PBR code simplified.
+vec3 getNormalFromMap(vec3 tangentNormal)
+{
+	vec3 Q1 = dFdx(vs_Input.WorldPosition);
+	vec3 Q2 = dFdy(vs_Input.WorldPosition);
+	vec2 st1 = dFdx(vs_Input.TexCoord);
+	vec2 st2 = dFdy(vs_Input.TexCoord);
+
+	vec3 N = normalize(vs_Input.Normal);
+	vec3 T = normalize(Q1 * st2.t - Q2 * st1.t);
+	vec3 B = -normalize(cross(N, T));
+	mat3 TBN = mat3(T, B, N);
+
+	return normalize(TBN * (tangentNormal * 2.0 - 1.0));
+}
+
 void main()
 {
 	// Standard PBR inputs
@@ -304,9 +333,12 @@ void main()
 	m_Params.Normal = normalize(vs_Input.Normal);
 	if (u_NormalTexToggle > 0.5)
 	{
-		m_Params.Normal = normalize(2.0 * texture(u_NormalTexture, vs_Input.TexCoord).rgb - 1.0);
-		m_Params.Normal = normalize(vs_Input.WorldNormals * m_Params.Normal);
+		m_Params.Normal = getNormalFromMap(texture(u_NormalTexture, vs_Input.TexCoord).rgb);
+		//m_Params.Normal = normalize(2.0 * texture(u_NormalTexture, vs_Input.TexCoord).rgb - 1.0);
+		//m_Params.Normal = normalize(vs_Input.WorldNormals * m_Params.Normal);
 	}
+
+
 
 	m_Params.View = normalize(u_CameraPosition - vs_Input.WorldPosition);
 	m_Params.NdotV = max(dot(m_Params.Normal, m_Params.View), 0.0);
@@ -320,8 +352,8 @@ void main()
 	vec3 lightContribution = Lighting(F0);
 	vec3 iblContribution = IBL(F0, Lr);
 
-	//color = vec4(lightContribution + iblContribution, 1.0);
+	color = vec4(lightContribution + iblContribution, 1.0);
 	//color = vec4(iblContribution, 1.0);
-	color = vec4(lightContribution, 1.0);
+	//color = vec4(lightContribution, 1.0);
 
 }

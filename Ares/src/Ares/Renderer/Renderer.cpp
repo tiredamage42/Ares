@@ -19,6 +19,7 @@ namespace Ares {
 		Ref<RenderPass> m_ActiveRenderPass;
 		RenderCommandQueue m_CommandQueue;
 		Ref<VertexArray> m_FullscreenQuadVertexArray;
+		Ref<VertexArray> m_QuadVertexArray;
 	};
 
 	static RendererData s_Data;
@@ -36,7 +37,7 @@ namespace Ares {
 
 		SceneRenderer::Init();
 
-		// Create Quad
+		// Create FS Quad
 		float* data = new float[4 * 2]{
 			-1, -1,
 			 1, -1,
@@ -46,16 +47,44 @@ namespace Ares {
 
 		s_Data.m_FullscreenQuadVertexArray = VertexArray::Create();
 
-		Ref<VertexBuffer> quadVB = VertexBuffer::Create(data, 4 * 2 * sizeof(float));
-		quadVB->SetLayout({
+		Ref<VertexBuffer> fs_quadVB = VertexBuffer::Create(data, 4 * 2 * sizeof(float));
+		fs_quadVB->SetLayout({
 			{ ShaderDataType::Float2, "a_Position" },
 		});
-		s_Data.m_FullscreenQuadVertexArray->AddVertexBuffer(quadVB);
+		s_Data.m_FullscreenQuadVertexArray->AddVertexBuffer(fs_quadVB);
 
 		uint32_t* quadIndicies = new uint32_t[6]{ 0, 1, 2, 2, 3, 0, };
 		s_Data.m_FullscreenQuadVertexArray->SetIndexBuffer(IndexBuffer::Create(quadIndicies, 6));
-		delete[] quadIndicies;
 		delete[] data;
+
+
+
+		// Create Quad (check normal somehow)
+		float* data2 = new float[4 * 8]{
+			-0.5f, -0.5f, 0.0f,		0.0f, 0.0f,		0.0f, 0.0f, 1.0f,
+			 0.5f, -0.5f, 0.0f,		1.0f, 0.0f,		0.0f, 0.0f, 1.0f,
+			 0.5f,  0.5f, 0.0f,		1.0f, 1.0f,		0.0f, 0.0f, 1.0f,
+			-0.5f,  0.5f, 0.0f,		0.0f, 1.0f,		0.0f, 0.0f, 1.0f,
+		};
+
+		s_Data.m_QuadVertexArray = VertexArray::Create();
+
+		Ref<VertexBuffer> quadVB = VertexBuffer::Create(data2, 4 * 8 * sizeof(float));
+		quadVB->SetLayout({
+			{ ShaderDataType::Float3, "a_Position" },
+			{ ShaderDataType::Float2, "a_UV" },
+			{ ShaderDataType::Float3, "a_Normal" },
+		});
+		s_Data.m_QuadVertexArray->AddVertexBuffer(quadVB);
+
+		s_Data.m_QuadVertexArray->SetIndexBuffer(IndexBuffer::Create(quadIndicies, 6));
+		delete[] quadIndicies;
+		delete[] data2;
+
+
+
+
+
 
 	}
 	
@@ -102,6 +131,16 @@ namespace Ares {
 		s_Data.m_ActiveRenderPass = nullptr;
 	}
 
+
+	void Renderer::SubmitQuad(Ref<Shader> shader, const glm::mat4& transform, bool depthTest)
+	{
+		// TODO: assert that shader is bound
+		shader->SetMat4("u_Transform", transform);
+		//shader->Bind();
+		s_Data.m_QuadVertexArray->Bind();
+		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
+	}
+
 	void Renderer::SubmitQuad(Ref<MaterialInstance> material, const glm::mat4& transform)
 	{
 		bool depthTest = true;
@@ -113,7 +152,7 @@ namespace Ares {
 			material->GetShader()->SetMat4("u_Transform", transform);
 		}
 
-		s_Data.m_FullscreenQuadVertexArray->Bind();
+		s_Data.m_QuadVertexArray->Bind();
 		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
 	}
 
@@ -149,11 +188,17 @@ namespace Ares {
 
 			if (mesh->m_IsAnimated)
 			{
-				for (size_t i = 0; i < mesh->m_BoneTransforms.size(); i++)
+
+				mesh->m_BoneMatrixTexture->Bind(30);
+				shader->SetInt("u_BoneSampler", 30);
+				//shader->SetInt("u_BoneCount", mesh->m_BoneCount);
+
+
+				/*for (size_t i = 0; i < mesh->m_BoneTransforms.size(); i++)
 				{
 					std::string uniformName = std::string("u_BoneTransforms[") + std::to_string(i) + std::string("]");
 					shader->SetMat4(uniformName, mesh->m_BoneTransforms[i]);
-				}
+				}*/
 			}
 			shader->SetMat4("u_Transform", transform * submesh.Transform);
 

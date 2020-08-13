@@ -12,7 +12,7 @@ out vec3 v_Position;
 void main()
 {
 	//vec4 position = vec4(a_Position.xy, 1.0, 1.0);
-	vec4 position = vec4(a_Position, 1.0, 1.0);
+	vec4 position = vec4(a_Position, 1.0, 1.0); // depth always at 1
 
 	gl_Position = position;
 
@@ -31,5 +31,13 @@ in vec3 v_Position;
 
 void main()
 {
+
+
 	finalColor = textureLod(u_Texture, v_Position, u_TextureLod);
+	//finalColor = vec4(0.0, 1.0, 0.0, 1.0);
+
+	// color correction
+	/*finalColor = finalColor / (finalColor + vec3(1.0));
+	finalColor = pow(finalColor, vec3(1.0 / 2.2));*/
+
 }

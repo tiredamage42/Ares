@@ -1,12 +1,12 @@
 #include "AresPCH.h" 
 #include "Mesh.h"
 
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
-
 
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -30,6 +30,7 @@
 
 namespace Ares {
 	static const uint32_t s_MeshImportFlags =
+
 		aiProcess_CalcTangentSpace |        // Create binormals/tangents just in case
 		//aiProcess_GenNormals |              // Make sure we have legit normals
 		aiProcess_GenSmoothNormals |
@@ -79,12 +80,114 @@ namespace Ares {
 	};
 
 	
+	static void GetSphereVertInfo(std::vector<Vertex>& m_Vertices, std::vector<uint32_t>& m_Indices)
+	{
+		const float PI = 3.14159265359f;
+		const float radius = .5f;
+		const uint32_t SECTORS = 64;
+		const uint32_t STACKS = 64;
 
+		float lengthInv = 1.0f / radius;    // vertex normal
+		float sectorStep = 2.0f * PI / (float)SECTORS;
+		float stackStep = PI / (float)STACKS;
+		
+		m_Vertices.reserve((STACKS + 1) * (SECTORS + 1));
+		for (int i = 0; i <= STACKS; i++)
+		{
+			float yAngle = PI * 0.5f - i * stackStep;  // starting from pi/2 to -pi/2
+			float y = radius * sinf(yAngle);              // r * sin(u)
+			float xz = radius * cosf(yAngle);             // r * cos(u)
+
+			// add (sectorCount+1) vertices per stack
+			// the first and last vertices have same position and normal, but different tex coords
+			for (int j = 0; j <= SECTORS; j++)
+			{
+				float xAngle = j * sectorStep;           // starting from 0 to 2pi
+				Vertex vertex;
+				vertex.Position = glm::vec3(xz * cosf(xAngle), y, xz * sinf(xAngle));
+				vertex.Normal = vertex.Position * lengthInv;
+				vertex.Texcoord = 1.0f - glm::vec2((float)j / SECTORS, (float)i / STACKS);
+				m_Vertices.push_back(vertex);
+			}
+		}
+		
+		for (int i = 0; i < STACKS; ++i)
+		{
+			int k1 = i * (SECTORS + 1);     // beginning of current stack
+			int k2 = k1 + SECTORS + 1;      // beginning of next stack
+
+			for (int j = 0; j < SECTORS; j++, k1++, k2++)
+			{
+				// 2 triangles per sector excluding first and last stacks
+				// k1 => k2 => k1+1
+				if (i != 0)
+				{
+					m_Indices.push_back(k1);
+					m_Indices.push_back(k2);
+					m_Indices.push_back(k1 + 1);
+				}
+				// k1+1 => k2 => k2+1
+				if (i != (STACKS - 1))
+				{
+					m_Indices.push_back(k1 + 1);
+					m_Indices.push_back(k2);
+					m_Indices.push_back(k2 + 1);
+				}
+			}
+		}
+
+
+
+		//const uint32_t X_SEGMENTS = 64;
+		//const uint32_t Y_SEGMENTS = 64;
+		//
+		//const uint32_t numVertices = (Y_SEGMENTS + 1) * (X_SEGMENTS + 1);
+		//const uint32_t numIndicies = (Y_SEGMENTS) * (X_SEGMENTS + 1) * 2;
+
+		//m_Vertices.reserve(numVertices);
+		//m_Indices.reserve(numIndicies);
+
+		//for (uint32_t y = 0; y <= Y_SEGMENTS; y++)
+		//{
+		//	for (uint32_t x = 0; x <= X_SEGMENTS; ++x)
+		//	{
+		//		float xSegment = (float)x / (float)X_SEGMENTS;
+		//		float ySegment = (float)y / (float)Y_SEGMENTS;
+
+		//		float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
+		//		float yPos = std::cos(ySegment * PI);
+		//		float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
+
+		//		Vertex vertex;
+		//		vertex.Position = glm::vec3(xPos, yPos, zPos);
+		//		vertex.Normal = glm::vec3(xPos, yPos, zPos);
+		//		vertex.Texcoord = glm::vec2(xSegment, ySegment);
+		//		m_Vertices.push_back(vertex);
+		//	}
+		//	if (y < Y_SEGMENTS)
+		//	{
+		//		if (y % 2 == 0) // even rows
+		//		{
+		//			for (uint32_t x = 0; x <= X_SEGMENTS; x++)
+		//			{
+		//				m_Indices.push_back(y * (X_SEGMENTS + 1) + x);
+		//				m_Indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+		//			}
+		//		}
+		//		else
+		//		{
+		//			for (int x = X_SEGMENTS; x >= 0; x--)
+		//			{
+		//				m_Indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+		//				m_Indices.push_back(y * (X_SEGMENTS + 1) + x);
+		//			}
+		//		}
+		//	}
+		//}
+	}
 
 	static void GetCubeVertInfo(std::vector<Vertex>& m_Vertices, std::vector<uint32_t>& m_Indices)
 	{
-
-		
 		glm::vec3 points[] = {
 			glm::vec3(-.5f, -.5f,  .5f),
 			glm::vec3(.5f,  -.5f,  .5f),
@@ -105,20 +208,13 @@ namespace Ares {
 			points[7], points[6], points[5], points[4]  // Top
 		};
 
-		glm::vec3 up = { 0,  1,  0 };
-		glm::vec3 down = { 0, -1,  0 };
-		glm::vec3 forward = { 0,  0, 11 };
-		glm::vec3 back = { 0,  0,  -1 };
-		glm::vec3 left = { -1,  0,  0 };
-		glm::vec3 right = { 1,  0,  0 };
-
 		glm::vec3 normals[] = {
-			down, down, down, down,             // Bottom
-			left, left, left, left,             // Left
-			forward, forward, forward, forward,	// Front
-			back, back, back, back,             // Back
-			right, right, right, right,         // Right
-			up, up, up, up	                    // Top
+			{  0, -1,  0 }, // Bottom
+			{ -1,  0,  0 }, // Left
+			{  0,  0,  1 },	// Front
+			{  0,  0, -1 }, // Back
+			{  1,  0,  0 }, // Right
+			{  0,  1,  0 }  // Top
 		};
 
 		glm::vec2 uv00 = { 0, 0 };
@@ -128,65 +224,122 @@ namespace Ares {
 
 		glm::vec2 uvs[] = {
 			uv01, uv11, uv10, uv00, // Bottom
-			uv01, uv11, uv10, uv00, // Left
-			uv01, uv11, uv10, uv00, // Front
-			uv01, uv11, uv10, uv00, // Back	        
-			uv01, uv11, uv10, uv00, // Right 
-			uv01, uv11, uv10, uv00  // Top
+			//uv01, uv11, uv10, uv00, // Left
+			//uv01, uv11, uv10, uv00, // Front
+			//uv01, uv11, uv10, uv00, // Back	        
+			//uv01, uv11, uv10, uv00, // Right 
+			//uv01, uv11, uv10, uv00  // Top
 		};
 
-
 		const uint32_t numVertices = 24;
-
 		m_Vertices.reserve(numVertices);
-
 		for (size_t i = 0; i < numVertices; i++)
 		{
 			Vertex vertex;
 			vertex.Position = verts[i];
-			vertex.Normal = normals[i];
-			vertex.Texcoord = uvs[i];
+			vertex.Normal = normals[i / 4];
+			vertex.Texcoord = uvs[i % 4];
 			m_Vertices.push_back(vertex);
 		}
 
-		m_Indices = {
-			3,  1,  0,		3,  2,  1,      // Bottom	
-			7,  5,  4,		7,  6,  5,      // Left
-			11, 9,  8,		11, 10, 9,      // Front
-			15, 13, 12,		15, 14, 13,     // Back
-			19, 17, 16,		19, 18, 17,	    // Right
-			23, 21, 20,		23, 22, 21,	    // Top
-		};
+		for (size_t i = 0; i < 6; i++)
+		{
+			size_t offset = 4 * i;
+			m_Indices.push_back(offset + 3);
+			m_Indices.push_back(offset + 1);
+			m_Indices.push_back(offset + 0);
+			m_Indices.push_back(offset + 3);
+			m_Indices.push_back(offset + 2);
+			m_Indices.push_back(offset + 1);
+		}
+		//m_Indices = {
+		//	3,  1,  0,		3,  2,  1,      // Bottom	
+		//	7,  5,  4,		7,  6,  5,      // Left
+		//	11, 9,  8,		11, 10, 9,      // Front
+		//	15, 13, 12,		15, 14, 13,     // Back
+		//	19, 17, 16,		19, 18, 17,	    // Right
+		//	23, 21, 20,		23, 22, 21,	    // Top
+		//};
 	}
 
-	static void GetPlaneVertInfo(std::vector<Vertex>& m_Vertices, std::vector<uint32_t>& m_Indices)
+	static void GetQuadVertInfo(std::vector<Vertex>& m_Vertices, std::vector<uint32_t>& m_Indices)
 	{
 		glm::vec3 verts[] = {
-			{ -.5f, 0, -.5f },
-			{  .5f, 0, -.5f },
-			{  .5f, 0,  .5f },
-			{ -.5f, 0,  .5f }
+			{ -.5f, -.5f, 0 },
+			{  .5f, -.5f, 0 },
+			{  .5f,  .5f, 0 },
+			{ -.5f,  .5f, 0 }
 		};
-
-		glm::vec3 up = { 0,  1,  0 };
-		glm::vec3 normals[] = { up, up, up, up };
-
-		glm::vec2 uvs[] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
-
-		const uint32_t numVertices = 4;
-
-		m_Vertices.reserve(numVertices);
-
-		for (size_t i = 0; i < numVertices; i++)
+		m_Vertices.reserve(4);
+		for (size_t i = 0; i < 4; i++)
 		{
 			Vertex vertex;
 			vertex.Position = verts[i];
-			vertex.Normal = normals[i];
-			vertex.Texcoord = uvs[i];
+			vertex.Normal = glm::vec3(0, 0, 1);
+			vertex.Texcoord = glm::vec2(verts[i]) + 1.0f;
 			m_Vertices.push_back(vertex);
 		}
 
 		m_Indices = { 0, 1, 2, 2, 3, 0 };
+	}
+
+	static void CalcTangents(std::vector<Vertex>& m_Vertices, std::vector<uint32_t>& m_Indices)
+	{
+		for (uint32_t i = 0; i < m_Indices.size(); i += 3) {
+			
+			Vertex& v0 = m_Vertices[m_Indices[i + 0]];
+			Vertex& v1 = m_Vertices[m_Indices[i + 1]];
+			Vertex& v2 = m_Vertices[m_Indices[i + 2]];
+
+			glm::vec3 edge1 = v1.Position - v0.Position;
+			glm::vec3 edge2 = v2.Position - v0.Position;
+			
+			float deltaU1 = v1.Texcoord.x - v0.Texcoord.x;
+			float deltaU2 = v2.Texcoord.x - v0.Texcoord.x;
+
+			float deltaV1 = v1.Texcoord.y - v0.Texcoord.y;
+			float deltaV2 = v2.Texcoord.y - v0.Texcoord.y;
+
+			float dividend = (deltaU1 * deltaV2 - deltaU2 * deltaV1);
+			float f = dividend == 0.0f ? 0.0f : 1.0f / dividend;
+			
+			glm::vec3 tangent = (deltaV2 * edge1 - deltaV1 * edge2) * f;
+			//glm::vec3 bitangent = (-deltaU2 * edge1 - deltaU1 * edge2) * f;
+			
+			v0.Tangent += tangent;
+			v1.Tangent += tangent;
+			v2.Tangent += tangent;
+		}
+
+		for (uint32_t i = 0; i < m_Vertices.size(); i++)
+		{
+			Vertex& v = m_Vertices[i];
+			v.Tangent = glm::normalize(v.Tangent);
+		}
+	}
+
+	void CalcNormals(std::vector<Vertex>& m_Vertices, std::vector<uint32_t>& m_Indices)
+	{
+		for (uint32_t i = 0; i < m_Indices.size(); i += 3)
+		{
+			Vertex& v0 = m_Vertices[m_Indices[i + 0]];
+			Vertex& v1 = m_Vertices[m_Indices[i + 1]];
+			Vertex& v2 = m_Vertices[m_Indices[i + 2]];
+
+			glm::vec3 norm = glm::normalize(glm::cross(
+				v1.Position - v0.Position, 
+				v2.Position - v0.Position
+			));
+
+			v0.Normal += norm;
+			v1.Normal += norm;
+			v2.Normal += norm;
+		}
+		for (uint32_t i = 0; i < m_Vertices.size(); i++)
+		{
+			Vertex& v = m_Vertices[i];
+			v.Normal = glm::normalize(v.Normal);
+		}
 	}
 
 
@@ -197,13 +350,20 @@ namespace Ares {
 		case PrimitiveMeshType::Cube:
 			GetCubeVertInfo(m_StaticVertices, m_Indices);
 			break;
-		case PrimitiveMeshType::Plane:
-			GetPlaneVertInfo(m_StaticVertices, m_Indices);
+		case PrimitiveMeshType::Quad:
+			GetQuadVertInfo(m_StaticVertices, m_Indices);
+			break;
+		case PrimitiveMeshType::Sphere:
+			GetSphereVertInfo(m_StaticVertices, m_Indices);
 			break;
 		default:
 			ARES_CORE_ASSERT(false, "Unknown Primitive Type!");
 			break;
 		}
+
+		CalcTangents(m_StaticVertices, m_Indices);
+		//CalcNormals(m_StaticVertices, m_Indices);
+		
 
 		m_VertexArray = VertexArray::Create();
 
@@ -212,10 +372,11 @@ namespace Ares {
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float3, "a_Normal" },
 			{ ShaderDataType::Float3, "a_Tangent" },
-			{ ShaderDataType::Float3, "a_Binormal" },
+			//{ ShaderDataType::Float3, "a_Binormal" },
 			{ ShaderDataType::Float2, "a_TexCoord" },
 		});
 
+		
 		m_VertexArray->AddVertexBuffer(vertexBuffer);
 
 		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.capacity());
@@ -251,6 +412,7 @@ namespace Ares {
 
 		for (uint32_t i = 0; i < m_Indices.size(); i += 3)
 		{
+
 			m_TriangleCache[0].emplace_back(
 				m_StaticVertices[m_Indices[i + 0]],
 				m_StaticVertices[m_Indices[i + 1]],
@@ -259,12 +421,14 @@ namespace Ares {
 		}
 
 
+		
+		
+
 		Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/pbr_static.glsl");
 		m_BaseMaterial = CreateRef<Material>(m_MeshShader);
 
 		m_MaterialOverrides.resize(1);
-		auto mi = CreateRef<MaterialInstance>(m_BaseMaterial);
-		m_MaterialOverrides[0] = mi;
+		m_MaterialOverrides[0] = CreateRef<MaterialInstance>(m_BaseMaterial);;
 	}
 
 
@@ -342,7 +506,7 @@ namespace Ares {
 					if (mesh->HasTangentsAndBitangents())
 					{
 						vertex.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
-						vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+						//vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
 					}
 
 					if (mesh->HasTextureCoords(0))
@@ -373,7 +537,7 @@ namespace Ares {
 					if (mesh->HasTangentsAndBitangents())
 					{
 						vertex.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
-						vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+						//vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
 					}
 
 					if (mesh->HasTextureCoords(0))
@@ -449,10 +613,24 @@ namespace Ares {
 					{
 						int VertexID = submesh.BaseVertex + bone->mWeights[j].mVertexId;
 						float Weight = bone->mWeights[j].mWeight;
-						m_AnimatedVertices[VertexID].AddBoneData(boneIndex, Weight);
+						//m_AnimatedVertices[VertexID].AddBoneData(boneIndex, Weight);
+						m_AnimatedVertices[VertexID].AddBoneData2((float)boneIndex, Weight);
 					}
 				}
 			}
+
+			for (size_t i = 0; i < m_AnimatedVertices.size(); i++)
+			{
+				AnimatedVertex& v = m_AnimatedVertices[i];
+
+				for (size_t j = 0; j < 4; j++)
+				{
+					v.IDs[j] = (v.IDs[j] + .5f) / m_BoneCount;
+				}
+			}
+
+			m_BoneMatrixTexture = Texture2D::Create(TextureFormat::Float16, 4, m_BoneCount, TextureWrap::Clamp, FilterType::Point, false);
+			m_BoneMatrixData = new float[16 * m_BoneCount];
 		}
 
 		// materials
@@ -706,9 +884,10 @@ namespace Ares {
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float3, "a_Normal" },
 				{ ShaderDataType::Float3, "a_Tangent" },
-				{ ShaderDataType::Float3, "a_Binormal" },
+				//{ ShaderDataType::Float3, "a_Binormal" },
 				{ ShaderDataType::Float2, "a_TexCoord" },
-				{ ShaderDataType::Int4, "a_BoneIDs" },
+				//{ ShaderDataType::Int4, "a_BoneIDs" },
+				{ ShaderDataType::Float4, "a_BoneIDs" },
 				{ ShaderDataType::Float4, "a_BoneWeights" },
 			});
 		}
@@ -719,7 +898,7 @@ namespace Ares {
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float3, "a_Normal" },
 				{ ShaderDataType::Float3, "a_Tangent" },
-				{ ShaderDataType::Float3, "a_Binormal" },
+				//{ ShaderDataType::Float3, "a_Binormal" },
 				{ ShaderDataType::Float2, "a_TexCoord" },
 			});
 		}
@@ -774,7 +953,6 @@ namespace Ares {
 				return i;
 		return 0;
 	}
-
 
 	uint32_t Mesh::FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim)
 	{
@@ -922,9 +1100,15 @@ namespace Ares {
 	void Mesh::BoneTransform(float time)
 	{
 		ReadNodeHierarchy(time, m_Scene->mRootNode, glm::mat4(1.0f));
-		m_BoneTransforms.resize(m_BoneCount);
+		//m_BoneTransforms.resize(m_BoneCount);
 		for (size_t i = 0; i < m_BoneCount; i++)
-			m_BoneTransforms[i] = m_BoneInfo[i].FinalTransformation;
+		{
+			//m_BoneTransforms[i] = m_BoneInfo[i].FinalTransformation;
+			
+			const float* pSource = (const float*)glm::value_ptr(m_BoneInfo[i].FinalTransformation);
+			std::copy(pSource, pSource + 16, m_BoneMatrixData + 16 * i);
+		}
+		m_BoneMatrixTexture->SetData(m_BoneMatrixData);
 	}
 
 	void Mesh::OnUpdate()
@@ -1025,7 +1209,7 @@ namespace Ares {
 				ARES_CORE_LOG("Vertex: {0}", i);
 				ARES_CORE_LOG("Position: {0}, {1}, {2}", vertex.Position.x, vertex.Position.y, vertex.Position.z);
 				ARES_CORE_LOG("Normal: {0}, {1}, {2}", vertex.Normal.x, vertex.Normal.y, vertex.Normal.z);
-				ARES_CORE_LOG("Binormal: {0}, {1}, {2}", vertex.Binormal.x, vertex.Binormal.y, vertex.Binormal.z);
+				//ARES_CORE_LOG("Binormal: {0}, {1}, {2}", vertex.Binormal.x, vertex.Binormal.y, vertex.Binormal.z);
 				ARES_CORE_LOG("Tangent: {0}, {1}, {2}", vertex.Tangent.x, vertex.Tangent.y, vertex.Tangent.z);
 				ARES_CORE_LOG("TexCoord: {0}, {1}", vertex.Texcoord.x, vertex.Texcoord.y);
 				ARES_CORE_LOG("--");
@@ -1039,7 +1223,7 @@ namespace Ares {
 				ARES_CORE_LOG("Vertex: {0}", i);
 				ARES_CORE_LOG("Position: {0}, {1}, {2}", vertex.Position.x, vertex.Position.y, vertex.Position.z);
 				ARES_CORE_LOG("Normal: {0}, {1}, {2}", vertex.Normal.x, vertex.Normal.y, vertex.Normal.z);
-				ARES_CORE_LOG("Binormal: {0}, {1}, {2}", vertex.Binormal.x, vertex.Binormal.y, vertex.Binormal.z);
+				//ARES_CORE_LOG("Binormal: {0}, {1}, {2}", vertex.Binormal.x, vertex.Binormal.y, vertex.Binormal.z);
 				ARES_CORE_LOG("Tangent: {0}, {1}, {2}", vertex.Tangent.x, vertex.Tangent.y, vertex.Tangent.z);
 				ARES_CORE_LOG("TexCoord: {0}, {1}", vertex.Texcoord.x, vertex.Texcoord.y);
 				ARES_CORE_LOG("--");

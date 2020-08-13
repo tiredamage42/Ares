@@ -2,6 +2,9 @@
 
 #include "AresPCH.h"
 #include "Platform/OpenGL/OpenGLShader.h"
+
+#include "Ares/Core/FileUtils/FileUtils.h"
+
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -11,13 +14,9 @@ namespace Ares {
 
 	static GLenum ShaderTypeFromString(const std::string& type)
 	{
-		if (type == "vertex")
-			return GL_VERTEX_SHADER;
-		if (type == "fragment")
-			return GL_FRAGMENT_SHADER;
-		if (type == "compute")
-			return GL_COMPUTE_SHADER;
-
+		if (type == "vertex")	return GL_VERTEX_SHADER;
+		if (type == "fragment")	return GL_FRAGMENT_SHADER;
+		if (type == "compute")	return GL_COMPUTE_SHADER;
 
 		ARES_CORE_ASSERT(false, "Unknown shader type!");
 		return 0;
@@ -26,13 +25,15 @@ namespace Ares {
 	OpenGLShader::OpenGLShader(const std::string& filepath)
 		: m_AssetPath(filepath)
 	{
-		// extract name from filepath `assets/shaders/shader.glsl`
-		// find last of forward slash or back slash
-		size_t lastSlashI = filepath.find_last_of("/\\");
-		lastSlashI = lastSlashI == std::string::npos ? 0 : lastSlashI + 1;
-		size_t lastDotI = filepath.rfind('.');
-		auto count = lastDotI == std::string::npos ? filepath.size() - lastSlashI : lastDotI - lastSlashI;
-		m_Name = filepath.substr(lastSlashI, count);
+
+		m_Name = FileUtils::ExtractFileNameFromPath(filepath);
+		//// extract name from filepath `assets/shaders/shader.glsl`
+		//// find last of forward slash or back slash
+		//size_t lastSlashI = filepath.find_last_of("/\\");
+		//lastSlashI = lastSlashI == std::string::npos ? 0 : lastSlashI + 1;
+		//size_t lastDotI = filepath.rfind('.');
+		//auto count = lastDotI == std::string::npos ? filepath.size() - lastSlashI : lastDotI - lastSlashI;
+		//m_Name = filepath.substr(lastSlashI, count);
 
 		Reload();
 
@@ -52,7 +53,11 @@ namespace Ares {
 
 	void OpenGLShader::Reload()
 	{
-		std::string source = ReadShaderFromFile(m_AssetPath);
+		bool success;
+		std::string source = FileUtils::GetFileContents(m_AssetPath, success);// ReadShaderFromFile(m_AssetPath);
+		if (!success)
+			ARES_CORE_ASSERT(false, "");
+		
 		m_ShaderSource = PreProcess(source);
 
 		if (!m_IsCompute)
@@ -61,7 +66,6 @@ namespace Ares {
 		Renderer::Submit([this]() {
 			if (this->m_RendererID)
 			{
-
 				glDeleteProgram(this->m_RendererID);
 			}
 
@@ -129,39 +133,39 @@ namespace Ares {
 
 
 
-	std::string OpenGLShader::ReadShaderFromFile(const std::string& filePath) const
-	{
-		std::string result;
-		std::ifstream in(filePath, std::ios::in | std::ios::binary);
-		if (in)
-		{
-			// go to the end
-			in.seekg(0, std::ios::end);
-			size_t size = in.tellg();
-			if (size != -1)
-			{
-				// resize reult to size of file
-				result.resize(size);
-				// go to the beginning of the files
-				in.seekg(0, std::ios::beg);
-				in.read(&result[0], size);
-				//in.close();
-			}
-			else
-			{
-				ARES_CORE_ERROR("Could not read from file '{0}'", filePath);
-				ARES_CORE_ASSERT(false, "");
-			}
-		}
-		else
-		{
-			ARES_CORE_ERROR("Could not open file: {0}", filePath);
-			ARES_CORE_ASSERT(false, "");
+	//std::string OpenGLShader::ReadShaderFromFile(const std::string& filePath) const
+	//{
+	//	std::string result;
+	//	std::ifstream in(filePath, std::ios::in | std::ios::binary);
+	//	if (in)
+	//	{
+	//		// go to the end
+	//		in.seekg(0, std::ios::end);
+	//		size_t size = in.tellg();
+	//		if (size != -1)
+	//		{
+	//			// resize reult to size of file
+	//			result.resize(size);
+	//			// go to the beginning of the files
+	//			in.seekg(0, std::ios::beg);
+	//			in.read(&result[0], size);
+	//			//in.close();
+	//		}
+	//		else
+	//		{
+	//			ARES_CORE_ERROR("Could not read from file '{0}'", filePath);
+	//			ARES_CORE_ASSERT(false, "");
+	//		}
+	//	}
+	//	else
+	//	{
+	//		ARES_CORE_ERROR("Could not open file: {0}", filePath);
+	//		ARES_CORE_ASSERT(false, "");
 
-		}
-		in.close();
-		return result;
-	}
+	//	}
+	//	in.close();
+	//	return result;
+	//}
 
 	/*OpenGLShader::ShaderType OpenGLShader::ShaderTypeFromString(const std::string& type)
 	{
@@ -310,11 +314,12 @@ namespace Ares {
 				// We don't need the shader anymore.
 				glDeleteShader(shader);
 
-				ARES_CORE_ERROR("Shader compilation failed:\n{0}", infoLog.data());
+
+				ARES_CORE_ERROR("Shader compilation failed:\n{0}\n{1}", m_Name, infoLog.data());
 				ARES_CORE_ASSERT(false, "Shader Compilation Failure!");
 				break;
 			}
-
+			 
 			// Attach our shaders to our program
 			glAttachShader(program, shader);
 			shaderRendererIDs.push_back(shader);
@@ -893,34 +898,34 @@ namespace Ares {
 		size_t typeTokenLength = strlen(typeToken);
 
 		// find the first one
-		size_t pos = source.find(typeToken, 0);
+		size_t startIndexOfTypeLine = source.find(typeToken, 0);
 
-		while (pos != std::string::npos)
+		while (startIndexOfTypeLine != std::string::npos)
 		{
-			size_t eol = source.find_first_of("\r\n", pos);
 
-			// if there were no lines after the #type
-			ARES_CORE_ASSERT(eol != std::string::npos, "Syntax Error");
+			size_t lastIndexOfTypeLine = source.find_first_of("\r\n", startIndexOfTypeLine);
+			ARES_CORE_ASSERT(lastIndexOfTypeLine != std::string::npos, "Syntax Error:: no characters after the #type line");
 
-			// beginning of the type string (after '#type')
-			size_t begin = pos + typeTokenLength + 1;
+			size_t startIndexOfTypeString = startIndexOfTypeLine + typeTokenLength + 1;
 
-			// the actual type as string
-			std::string type = source.substr(begin, eol - begin);
-			auto shaderType = ShaderTypeFromString(type);
-			
+			std::string typeString = source.substr(startIndexOfTypeString, lastIndexOfTypeLine - startIndexOfTypeString);
+			auto shaderType = ShaderTypeFromString(typeString);
 			ARES_CORE_ASSERT(shaderType, "Invalid Shader Type Specified");
-
+			
 			// get next line
-			size_t nextLinePos = source.find_first_not_of("\r\n", eol);
-			ARES_CORE_ASSERT(nextLinePos != std::string::npos, "Syntax error");
+			size_t shadrSourceStartIndex = source.find_first_not_of("\r\n", lastIndexOfTypeLine);
+			ARES_CORE_ASSERT(shadrSourceStartIndex != std::string::npos, "Syntax error:: no shader source after #type line");
 
 			// find the next #type line
-			pos = source.find(typeToken, nextLinePos);
+			startIndexOfTypeLine = source.find(typeToken, shadrSourceStartIndex);
 			
 			// source shader code is from the next line, until either
 			// the end of the file, or the next line we found #type
-			shaderSources[shaderType] = source.substr(nextLinePos, pos - (nextLinePos == std::string::npos ? source.size() - 1 : nextLinePos));
+			//shaderSources[shaderType] = source.substr(shadrSourceStartIndex, startIndexOfTypeLine - (shadrSourceStartIndex == std::string::npos ? source.size() - 1 : shadrSourceStartIndex));
+
+			shaderSources[shaderType] = source.substr(shadrSourceStartIndex, (startIndexOfTypeLine == std::string::npos ? source.size() : startIndexOfTypeLine) - shadrSourceStartIndex);
+			//shaderSources[shaderType] = source.substr(shadrSourceStartIndex, startIndexOfTypeLine - shadrSourceStartIndex);
+
 
 			// Compute shaders cannot contain other types
 			if (shaderType == GL_COMPUTE_SHADER)

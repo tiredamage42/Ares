@@ -1,7 +1,7 @@
 #type vertex
 #version 430
 
-layout(location = 0) in vec2 a_Position;
+layout(location = 0) in vec3 a_Position;
 //layout(location = 4) in vec2 a_TexCoord;
 
 //uniform mat4 u_MVP;
@@ -13,13 +13,14 @@ out vec2 v_TexCoord;
 void main()
 {
 	//vec4 position = u_MVP * vec4(a_Position, 0, 1.0);
-	vec4 position = u_ViewProjection * u_Transform * vec4(a_Position, 0, 1.0);
+	vec4 position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);
 
 	
 	gl_Position = position;
 
 	//v_TexCoord = a_TexCoord;
-	v_TexCoord = a_Position * .5 + .5;
+	v_TexCoord = a_Position.xy + .5;
+	//v_TexCoord = a_Position * .5 + .5;
 }
 
 #type fragment

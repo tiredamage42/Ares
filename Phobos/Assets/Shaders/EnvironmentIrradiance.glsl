@@ -82,6 +82,7 @@ layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 void main(void)
 {
 	vec3 N = GetCubeMapTexCoord();
+	vec3 irradiance = vec3(0);
 
 	vec3 S, T;
 	computeBasisVectors(N, S, T);
@@ -89,7 +90,6 @@ void main(void)
 	// Monte Carlo integration of hemispherical irradiance.
 	// As a small optimization this also includes Lambertian BRDF assuming perfectly white surface (albedo of 1.0)
 	// so we don't need to normalize in PBR fragment shader (so technically it encodes exitant radiance rather than irradiance).
-	vec3 irradiance = vec3(0);
 	for (uint i = 0; i < NumSamples; i++)
 	{
 		vec2 u = sampleHammersley(i);
@@ -98,10 +98,54 @@ void main(void)
 
 		// PIs here cancel out because of division by pdf.
 		irradiance += 2.0 * textureLod(inputTexture, Li, 0).rgb * cosTheta;
-		//irradiance += textureLod(inputTexture, N, 0).rgb;
 	}
 	irradiance /= vec3(NumSamples);
+	
+	
+	/*
+
+	// tangent space calculation from origin point
+	vec3 up = vec3(0.0, 1.0, 0.0);
+
+	vec3 right = cross(up, N);
+	up = cross(N, right);
+	// normalization maybe not needed...
+	//vec3 right = normalize(cross(up, N));
+	//up = normalize(cross(N, right));
+
+
+	const float sampleDelta = 0.025;
+	float nrSamples = 0.0;
+	for (float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
+	{
+		float cPhi = cos(phi);
+		float sPhi = sin(phi);
+
+		for (float theta = 0.0; theta < 0.5 * PI; theta += sampleDelta)
+		{
+			float sTheta = sin(theta);
+			float cTheta = cos(theta);
+
+			// spherical to cartesian (in tangent space)
+			vec3 tangentSample = vec3(sTheta * cPhi, sTheta * sPhi, cTheta);
+			// tangent space to world
+			vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * N;
+
+			//irradiance += textureLod(inputTexture, sampleVec, 0).rgb * cTheta * sTheta;
+			irradiance += texture(inputTexture, sampleVec).rgb * cTheta * sTheta;
+			nrSamples++;
+		}
+	}
+	irradiance = PI * irradiance * (1.0 / float(nrSamples));
+
+	*/
+
 
 	imageStore(outputTexture, ivec3(gl_GlobalInvocationID), vec4(irradiance, 1.0));
 	//imageStore(outputTexture, ivec3(gl_GlobalInvocationID), vec4(1.0, 0, 1.0, 1.0));
+
+
+
+	//15876 //tutorial method iterations
+	//65536 //hazel method iterations
 }

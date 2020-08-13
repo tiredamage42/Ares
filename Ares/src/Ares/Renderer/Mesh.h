@@ -21,42 +21,44 @@ namespace Ares {
 
 	enum class PrimitiveMeshType
 	{
-		Plane, Cube
+		Quad, Cube, Sphere
 	};
 
 	struct Vertex
 	{
 		glm::vec3 Position;
-		glm::vec3 Normal;
-		glm::vec3 Tangent;
-		glm::vec3 Binormal;
+		glm::vec3 Normal{ 0 };
+		glm::vec3 Tangent{ 0 };
+		//glm::vec3 Binormal;
 		glm::vec2 Texcoord;
 	};
 	struct AnimatedVertex
 	{
 		glm::vec3 Position;
-		glm::vec3 Normal;
-		glm::vec3 Tangent;
-		glm::vec3 Binormal;
+		glm::vec3 Normal{ 0 };
+		glm::vec3 Tangent{ 0 };
+		//glm::vec3 Binormal;
 		glm::vec2 Texcoord;
 
-		uint32_t IDs[4] = { 0, 0, 0, 0 };
+		//uint32_t IDs[4] = { 0, 0, 0, 0 };
+		float IDs[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 		float Weights[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-		void AddBoneData(uint32_t BoneID, float Weight)
+		//void AddBoneData(uint32_t BoneID, float Weight)
+		void AddBoneData2(float BoneInterpolation, float Weight)
 		{
 			for (size_t i = 0; i < 4; i++)
 			{
 				if (Weights[i] == 0.0)
 				{
-					IDs[i] = BoneID;
+					IDs[i] = BoneInterpolation;
 					Weights[i] = Weight;
 					return;
 				}
 			}
 
 			// TODO: Keep top weights
-			ARES_CORE_WARN("Vertex has more than four bones/weights affecting it, extra data will be discarded (BoneID={0}, Weight={1})", BoneID, Weight);
+			ARES_CORE_WARN("Vertex has more than four bones/weights affecting it, extra data will be discarded (BoneID={0}, Weight={1})", BoneInterpolation, Weight);
 		}
 	};
 
@@ -66,33 +68,35 @@ namespace Ares {
 		glm::mat4 FinalTransformation;
 	};
 
-	struct VertexBoneData
-	{
-		uint32_t IDs[4];
-		float Weights[4];
+	//struct VertexBoneData
+	//{
+	//	//uint32_t IDs[4];
+	//	float IDs[4];
+	//	float Weights[4];
 
-		VertexBoneData()
-		{
-			memset(IDs, 0, sizeof(IDs));
-			memset(Weights, 0, sizeof(Weights));
-		};
+	//	VertexBoneData()
+	//	{
+	//		memset(IDs, 0, sizeof(IDs));
+	//		memset(Weights, 0, sizeof(Weights));
+	//	};
 
-		void AddBoneData(uint32_t BoneID, float Weight)
-		{
-			for (size_t i = 0; i < 4; i++)
-			{
-				if (Weights[i] == 0.0)
-				{
-					IDs[i] = BoneID;
-					Weights[i] = Weight;
-					return;
-				}
-			}
+	//	//void AddBoneData(uint32_t BoneID, float Weight)
+	//	void AddBoneData2(float BoneInterpolation, float Weight)
+	//	{
+	//		for (size_t i = 0; i < 4; i++)
+	//		{
+	//			if (Weights[i] == 0.0)
+	//			{
+	//				IDs[i] = BoneInterpolation;
+	//				Weights[i] = Weight;
+	//				return;
+	//			}
+	//		}
 
-			// should never get here - more bones than we have space for
-			ARES_CORE_ASSERT(false, "Too many bones!");
-		}
-	};
+	//		// should never get here - more bones than we have space for
+	//		ARES_CORE_ASSERT(false, "Too many bones!");
+	//	}
+	//};
 
 	struct Triangle
 	{
@@ -165,9 +169,14 @@ namespace Ares {
 
 		uint32_t m_BoneCount = 0;
 		std::vector<BoneInfo> m_BoneInfo;
+		
+		Ref<Texture2D> m_BoneMatrixTexture = nullptr;
+		float* m_BoneMatrixData = nullptr;
 
 		std::unordered_map<std::string, uint32_t> m_BoneMapping;
-		std::vector<glm::mat4> m_BoneTransforms;
+		
+		//std::vector<glm::mat4> m_BoneTransforms;
+
 		const aiScene* m_Scene = nullptr;
 
 		// Animation

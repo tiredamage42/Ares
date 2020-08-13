@@ -16,6 +16,7 @@ namespace Ares {
 
 		virtual void Bind(uint32_t slot = 0) const override;
 
+
 		virtual TextureFormat GetFormat() const override { return m_Format; }
 		inline virtual uint32_t GetWidth() const override { return m_Width; }
 		inline virtual uint32_t GetHeight() const override { return m_Height; }
@@ -24,7 +25,7 @@ namespace Ares {
 		// not present mips in data
 		virtual uint32_t GetMipLevelCount() const override;
 
-		//virtual void SetData(void* data) override;
+		virtual void SetData(void* data) override;
 
 		virtual void Lock() override;
 		virtual void Unlock() override;

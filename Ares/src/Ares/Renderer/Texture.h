@@ -16,6 +16,7 @@ namespace Ares {
 		RGB = 1,
 		RGBA = 2,
 		Float16 = 3,
+		RG16 = 4
 	};
 	enum class TextureWrap
 	{
@@ -59,6 +60,8 @@ namespace Ares {
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		virtual Buffer GetWriteableBuffer() = 0;
+
+		virtual void SetData(void* data) = 0;
 
 		virtual bool Loaded() const = 0;
 

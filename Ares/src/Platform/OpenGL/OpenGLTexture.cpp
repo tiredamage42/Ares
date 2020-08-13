@@ -49,9 +49,10 @@ namespace Ares {
 
 		switch (format)
 		{
-			case TextureFormat::RGB:     return GL_RGB8;
-			case TextureFormat::RGBA:    return GL_RGBA8;
-			case TextureFormat::Float16: return GL_RGBA16F;
+			case TextureFormat::RGB:		return GL_RGB8;
+			case TextureFormat::RGBA:		return GL_RGBA8;
+			case TextureFormat::Float16:	return GL_RGBA16F;
+			case TextureFormat::RG16:		return GL_RG16F;
 		}
 		ARES_CORE_ASSERT(false, "Unknown texture format!");
 		return 0;
@@ -64,6 +65,7 @@ namespace Ares {
 		case TextureFormat::RGB: return GL_RGB;
 		case TextureFormat::RGBA: return GL_RGBA;
 		case TextureFormat::Float16: return GL_RGBA;
+		case TextureFormat::RG16: return GL_RG;
 		}
 		ARES_CORE_ASSERT(false, "Unknown Texture Format!");
 		return 0;
@@ -114,7 +116,7 @@ namespace Ares {
 			//glTextureStorage2D(m_RendererID, levels, Ares2OpenGLInternalTextureFormat(m_Format), m_Width, m_Height);
 		}, "Create Texture Empty");
 
-		m_ImageData.Allocate(width * height * Texture::GetBPP(m_Format));
+		//m_ImageData.Allocate(width * height * Texture::GetBPP(m_Format));
 
 	}
 
@@ -293,6 +295,23 @@ namespace Ares {
 	void OpenGLTexture2D::Lock()
 	{
 		m_Locked = true;
+		m_ImageData.Allocate(m_Width * m_Height * Texture::GetBPP(m_Format));
+	}
+
+	void OpenGLTexture2D::SetData(void* data)
+	{
+
+		Renderer::Submit([=]() {
+
+			GLenum internalFormat = Ares2OpenGLInternalTextureFormat(m_Format);
+			GLenum format = Ares2OpenGLTextureFormat(m_Format);
+			GLenum type = internalFormat == GL_RGBA16F ? GL_FLOAT : GL_UNSIGNED_BYTE;
+
+			/*glBindTexture(GL_TEXTURE_2D, m_RendererID);
+			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_Width, m_Height, 0, format, type, data);*/
+			glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, format, type, data);
+
+		}, "Texture Reset Data");
 	}
 
 	/*void OpenGLTexture2D::SetData(void* data)
@@ -353,6 +372,39 @@ namespace Ares {
 
 
 		Renderer::Submit([=]() {
+
+
+
+			glGenTextures(1, &m_RendererID);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, m_RendererID);
+
+			GLenum internalFormat = Ares2OpenGLInternalTextureFormat(m_Format);
+			GLenum format = Ares2OpenGLTextureFormat(m_Format); // HDR = GL_RGB for now
+			GLenum type = internalFormat == GL_RGBA16F ? GL_FLOAT : GL_UNSIGNED_BYTE;
+
+
+			for (uint32_t i = 0; i < 6; ++i)
+			{
+				// from pbr tutorial:
+				//glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, width, height, 0, format, type, nullptr);
+			}
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, minFilter);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, maxFilter);
+
+			if (useMips)
+			{
+				glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+				//glGenerateTextureMipmap(m_RendererID);
+			}
+
+
+			glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+			/*
 			glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_RendererID);
 			glTextureStorage2D(m_RendererID, levels, Ares2OpenGLInternalTextureFormat(m_Format), width, height);
 			//glTextureStorage2D(m_RendererID, levels, Ares2OpenGLTextureFormat(m_Format), width, height);
@@ -363,6 +415,10 @@ namespace Ares {
 			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			*/
+
+
+
 
 			/*glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -524,9 +580,9 @@ namespace Ares {
 	void OpenGLTextureCube::Bind(uint32_t slot) const
 	{
 		Renderer::Submit([this, slot]() {
-			glBindTextureUnit(slot, m_RendererID);
-			/*glActiveTexture(GL_TEXTURE0 + slot);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, this->m_RendererID);*/
+			//glBindTextureUnit(slot, m_RendererID);
+			glActiveTexture(GL_TEXTURE0 + slot);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, this->m_RendererID);
 		}, "Bind Cube");
 	}
 	uint32_t OpenGLTextureCube::GetMipLevelCount() const

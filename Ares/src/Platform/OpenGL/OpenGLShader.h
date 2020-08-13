@@ -105,7 +105,7 @@ namespace Ares {
 
 		//static ShaderType ShaderTypeFromString(const std::string& type);
 
-		std::string ReadShaderFromFile(const std::string& filePath) const;
+		//std::string ReadShaderFromFile(const std::string& filePath) const;
 		//void ReadShaderFromFile(const std::string& filePath);
 		void CompileAndUploadShader();
 

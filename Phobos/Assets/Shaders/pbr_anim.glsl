@@ -4,47 +4,102 @@
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
 layout(location = 2) in vec3 a_Tangent;
-layout(location = 3) in vec3 a_Binormal;
-layout(location = 4) in vec2 a_TexCoord;
+//layout(location = 3) in vec3 a_Binormal;
+//layout(location = 4) in vec2 a_TexCoord;
+layout(location = 3) in vec2 a_TexCoord;
 
-layout(location = 5) in ivec4 a_BoneIndices;
-layout(location = 6) in vec4 a_BoneWeights;
+//layout(location = 5) in ivec4 a_BoneIndices;
+//layout(location = 6) in vec4 a_BoneWeights;
+
+//layout(location = 4) in ivec4 a_BoneIndices;
+layout(location = 4) in vec4 a_BoneIndices;
+layout(location = 5) in vec4 a_BoneWeights;
 
 uniform mat4 u_ViewProjectionMatrix;
 uniform mat4 u_Transform;
 
-const int MAX_BONES = 100;
-uniform mat4 u_BoneTransforms[100];
+//const int MAX_BONES = 100;
+//uniform mat4 u_BoneTransforms[100];
+
+uniform sampler2D u_BoneSampler;
+//uniform int u_BoneCount;
+
+mat4 getBoneMatrix(float jointNdx) {
+	float v = jointNdx;// (jointNdx + 0.5) / u_BoneCount;
+	// these offsets assume the texture is 4 pixels across
+	return mat4(
+		texture2D(u_BoneSampler, vec2(((0.5 + 0.0) / 4.), v)),
+		texture2D(u_BoneSampler, vec2(((0.5 + 1.0) / 4.), v)),
+		texture2D(u_BoneSampler, vec2(((0.5 + 2.0) / 4.), v)),
+		texture2D(u_BoneSampler, vec2(((0.5 + 3.0) / 4.), v))
+	);
+}
+
+
 
 out VertexOutput
 {
 	vec3 WorldPosition;
 	vec3 Normal;
 	vec2 TexCoord;
-	mat3 WorldNormals;
+	//mat3 WorldNormals;
 	//vec3 Binormal;
+	mat3 TBN;
 } vs_Output;
+
+
+
 
 void main()
 {
-	mat4 boneTransform = u_BoneTransforms[a_BoneIndices[0]] * a_BoneWeights[0];
-	boneTransform += u_BoneTransforms[a_BoneIndices[1]] * a_BoneWeights[1];
-	boneTransform += u_BoneTransforms[a_BoneIndices[2]] * a_BoneWeights[2];
-	boneTransform += u_BoneTransforms[a_BoneIndices[3]] * a_BoneWeights[3];
+	/*mat4 boneTransform = u_BoneTransforms[a_BoneIndices[0]] * a_BoneWeights[0];
+		boneTransform += u_BoneTransforms[a_BoneIndices[1]] * a_BoneWeights[1];
+		boneTransform += u_BoneTransforms[a_BoneIndices[2]] * a_BoneWeights[2];
+		boneTransform += u_BoneTransforms[a_BoneIndices[3]] * a_BoneWeights[3];*/
 
-	vec4 localPosition = boneTransform * vec4(a_Position, 1.0);
+	mat4 boneTransform =	getBoneMatrix(a_BoneIndices[0]) * a_BoneWeights[0] +
+							getBoneMatrix(a_BoneIndices[1]) * a_BoneWeights[1] +
+							getBoneMatrix(a_BoneIndices[2]) * a_BoneWeights[2] +
+							getBoneMatrix(a_BoneIndices[3]) * a_BoneWeights[3];
 
-	//vs_Output.WorldPosition = vec3(u_Transform * boneTransform * vec4(a_Position, 1.0));
-	vs_Output.WorldPosition = vec3(u_Transform * localPosition);
+	//mat4 boneTransform = mat4(0.0);
 
+
+
+	mat4 ares_ModelMatrix = u_Transform * boneTransform;
+
+
+	vs_Output.WorldPosition = vec3(ares_ModelMatrix * vec4(a_Position, 1.0));
+
+	mat3 transform3 = mat3(ares_ModelMatrix);
+
+	vs_Output.Normal = transform3 * a_Normal;
+
+	vec3 B = cross(a_Normal, a_Tangent);
+	vs_Output.TBN = transform3 * mat3(a_Tangent, B, a_Normal);
+
+	vs_Output.TexCoord = vec2(a_TexCoord.x, a_TexCoord.y);
+	gl_Position = u_ViewProjectionMatrix * ares_ModelMatrix * vec4(a_Position, 1.0);
+
+	/*
+	vs_Output.WorldPosition = vec3(u_Transform * boneTransform * vec4(a_Position, 1.0));
+
+	mat3 transform3 = mat3(u_Transform);
+	mat3 boneTransform3 = mat3(boneTransform);
+
+	vs_Output.Normal = transform3 * boneTransform3 * a_Normal;
 	
-	vs_Output.Normal = mat3(u_Transform) * mat3(boneTransform) * a_Normal;
-	vs_Output.WorldNormals = mat3(u_Transform) * mat3(boneTransform) * mat3(a_Tangent, a_Binormal, a_Normal);
+	//vs_Output.WorldNormals = transform3 * boneTransform3 * mat3(a_Tangent, a_Binormal, a_Normal);
 	
+	vec3 B = cross(a_Normal, a_Tangent);
+	vs_Output.TBN = transform3 * boneTransform3 * mat3(a_Tangent, B, a_Normal);
+	
+
 	vs_Output.TexCoord = vec2(a_TexCoord.x, a_TexCoord.y);
 	//vs_Output.Binormal = mat3(boneTransform) * a_Binormal;
 
-	gl_Position = u_ViewProjectionMatrix * u_Transform * localPosition;
+	gl_Position = u_ViewProjectionMatrix * u_Transform * boneTransform * vec4(a_Position, 1.0);
+	*/
 }
 
 #type fragment
@@ -69,8 +124,9 @@ in VertexOutput
 	vec3 WorldPosition;
 	vec3 Normal;
 	vec2 TexCoord;
-	mat3 WorldNormals;
+	//mat3 WorldNormals;
 	//vec3 Binormal;
+	mat3 TBN;
 } vs_Input;
 
 layout(location = 0) out vec4 color;
@@ -95,7 +151,7 @@ uniform vec3 u_AlbedoColor;
 uniform float u_Metalness;
 uniform float u_Roughness;
 
-uniform float u_EnvMapRotation;
+//uniform float u_EnvMapRotation;
 
 // Toggles
 uniform float u_RadiancePrefilter;
@@ -142,26 +198,26 @@ float gaSchlickGGX(float cosLi, float NdotV, float roughness)
 	return gaSchlickG1(cosLi, k) * gaSchlickG1(NdotV, k);
 }
 
-float GeometrySchlickGGX(float NdotV, float roughness)
-{
-	float r = (roughness + 1.0);
-	float k = (r * r) / 8.0;
-
-	float nom = NdotV;
-	float denom = NdotV * (1.0 - k) + k;
-
-	return nom / denom;
-}
-
-float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
-{
-	float NdotV = max(dot(N, V), 0.0);
-	float NdotL = max(dot(N, L), 0.0);
-	float ggx2 = GeometrySchlickGGX(NdotV, roughness);
-	float ggx1 = GeometrySchlickGGX(NdotL, roughness);
-
-	return ggx1 * ggx2;
-}
+//float GeometrySchlickGGX(float NdotV, float roughness)
+//{
+//	float r = (roughness + 1.0);
+//	float k = (r * r) / 8.0;
+//
+//	float nom = NdotV;
+//	float denom = NdotV * (1.0 - k) + k;
+//
+//	return nom / denom;
+//}
+//
+//float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+//{
+//	float NdotV = max(dot(N, V), 0.0);
+//	float NdotL = max(dot(N, L), 0.0);
+//	float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+//	float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+//
+//	return ggx1 * ggx2;
+//}
 
 // Shlick's approximation of the Fresnel factor.
 vec3 fresnelSchlick(vec3 F0, float cosTheta)
@@ -178,71 +234,71 @@ vec3 fresnelSchlickRoughness(vec3 F0, float cosTheta, float roughness)
 // The following code (from Unreal Engine 4's paper) shows how to filter the environment map
 // for different roughnesses. This is mean to be computed offline and stored in cube map mips,
 // so turning this on online will cause poor performance
-float RadicalInverse_VdC(uint bits)
-{
-	bits = (bits << 16u) | (bits >> 16u);
-	bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
-	bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
-	bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
-	bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
-	return float(bits) * 2.3283064365386963e-10; // / 0x100000000
-}
-
-vec2 Hammersley(uint i, uint N)
-{
-	return vec2(float(i) / float(N), RadicalInverse_VdC(i));
-}
-
-vec3 ImportanceSampleGGX(vec2 Xi, float Roughness, vec3 N)
-{
-	float a = Roughness * Roughness;
-	float Phi = 2 * PI * Xi.x;
-	float CosTheta = sqrt((1 - Xi.y) / (1 + (a * a - 1) * Xi.y));
-	float SinTheta = sqrt(1 - CosTheta * CosTheta);
-	vec3 H;
-	H.x = SinTheta * cos(Phi);
-	H.y = SinTheta * sin(Phi);
-	H.z = CosTheta;
-	vec3 UpVector = abs(N.z) < 0.999 ? vec3(0, 0, 1) : vec3(1, 0, 0);
-	vec3 TangentX = normalize(cross(UpVector, N));
-	vec3 TangentY = cross(N, TangentX);
-	// Tangent to world space
-	return TangentX * H.x + TangentY * H.y + N * H.z;
-}
-
-float TotalWeight = 0.0;
-
-vec3 PrefilterEnvMap(float Roughness, vec3 R)
-{
-	vec3 N = R;
-	vec3 V = R;
-	vec3 PrefilteredColor = vec3(0.0);
-	int NumSamples = 1024;
-	for (int i = 0; i < NumSamples; i++)
-	{
-		vec2 Xi = Hammersley(i, NumSamples);
-		vec3 H = ImportanceSampleGGX(Xi, Roughness, N);
-		vec3 L = 2 * dot(V, H) * H - V;
-		float NoL = clamp(dot(N, L), 0.0, 1.0);
-		if (NoL > 0)
-		{
-			PrefilteredColor += texture(u_EnvRadianceTex, L).rgb * NoL;
-			TotalWeight += NoL;
-		}
-	}
-	return PrefilteredColor / TotalWeight;
-}
+//float RadicalInverse_VdC(uint bits)
+//{
+//	bits = (bits << 16u) | (bits >> 16u);
+//	bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+//	bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+//	bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+//	bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+//	return float(bits) * 2.3283064365386963e-10; // / 0x100000000
+//}
+//
+//vec2 Hammersley(uint i, uint N)
+//{
+//	return vec2(float(i) / float(N), RadicalInverse_VdC(i));
+//}
+//
+//vec3 ImportanceSampleGGX(vec2 Xi, float Roughness, vec3 N)
+//{
+//	float a = Roughness * Roughness;
+//	float Phi = 2 * PI * Xi.x;
+//	float CosTheta = sqrt((1 - Xi.y) / (1 + (a * a - 1) * Xi.y));
+//	float SinTheta = sqrt(1 - CosTheta * CosTheta);
+//	vec3 H;
+//	H.x = SinTheta * cos(Phi);
+//	H.y = SinTheta * sin(Phi);
+//	H.z = CosTheta;
+//	vec3 UpVector = abs(N.z) < 0.999 ? vec3(0, 0, 1) : vec3(1, 0, 0);
+//	vec3 TangentX = normalize(cross(UpVector, N));
+//	vec3 TangentY = cross(N, TangentX);
+//	// Tangent to world space
+//	return TangentX * H.x + TangentY * H.y + N * H.z;
+//}
+//
+//float TotalWeight = 0.0;
+//
+//vec3 PrefilterEnvMap(float Roughness, vec3 R)
+//{
+//	vec3 N = R;
+//	vec3 V = R;
+//	vec3 PrefilteredColor = vec3(0.0);
+//	int NumSamples = 1024;
+//	for (int i = 0; i < NumSamples; i++)
+//	{
+//		vec2 Xi = Hammersley(i, NumSamples);
+//		vec3 H = ImportanceSampleGGX(Xi, Roughness, N);
+//		vec3 L = 2 * dot(V, H) * H - V;
+//		float NoL = clamp(dot(N, L), 0.0, 1.0);
+//		if (NoL > 0)
+//		{
+//			PrefilteredColor += texture(u_EnvRadianceTex, L).rgb * NoL;
+//			TotalWeight += NoL;
+//		}
+//	}
+//	return PrefilteredColor / TotalWeight;
+//}
 
 // ---------------------------------------------------------------------------------------------------
 
-vec3 RotateVectorAboutY(float angle, vec3 vec)
-{
-	angle = radians(angle);
-	mat3x3 rotationMatrix = { vec3(cos(angle),0.0,sin(angle)),
-							vec3(0.0,1.0,0.0),
-							vec3(-sin(angle),0.0,cos(angle)) };
-	return rotationMatrix * vec;
-}
+//vec3 RotateVectorAboutY(float angle, vec3 vec)
+//{
+//	angle = radians(angle);
+//	mat3x3 rotationMatrix = { vec3(cos(angle),0.0,sin(angle)),
+//							vec3(0.0,1.0,0.0),
+//							vec3(-sin(angle),0.0,cos(angle)) };
+//	return rotationMatrix * vec;
+//}
 
 vec3 Lighting(vec3 F0)
 {
@@ -283,8 +339,9 @@ vec3 IBL(vec3 F0, vec3 Lr)
 	float NoV = clamp(m_Params.NdotV, 0.0, 1.0);
 	vec3 R = 2.0 * dot(m_Params.View, m_Params.Normal) * m_Params.Normal - m_Params.View;
 
+	vec3 specularIrradiance = textureLod(u_EnvRadianceTex, Lr, m_Params.Roughness * u_EnvRadianceTexLevels).rgb;
+	//vec3 specularIrradiance = textureLod(u_EnvRadianceTex, RotateVectorAboutY(u_EnvMapRotation, Lr), (m_Params.Roughness) * u_EnvRadianceTexLevels).rgb;
 	//vec3 specularIrradiance = textureLod(u_EnvRadianceTex, RotateVectorAboutY(u_EnvMapRotation, Lr), (m_Params.Roughness * m_Params.Roughness) * u_EnvRadianceTexLevels).rgb;
-	vec3 specularIrradiance = textureLod(u_EnvRadianceTex, RotateVectorAboutY(u_EnvMapRotation, Lr), (m_Params.Roughness) * u_EnvRadianceTexLevels).rgb;
 
 	/*vec3 specularIrradiance = vec3(0.0);
 	if (u_RadiancePrefilter > 0.5)
@@ -312,8 +369,12 @@ void main()
 	if (u_NormalTexToggle > 0.5)
 	{
 		m_Params.Normal = normalize(2.0 * texture(u_NormalTexture, vs_Input.TexCoord).rgb - 1.0);
-		m_Params.Normal = normalize(vs_Input.WorldNormals * m_Params.Normal);
+		
+		//m_Params.Normal = normalize(vs_Input.WorldNormals * m_Params.Normal);
+		m_Params.Normal = normalize(vs_Input.TBN * m_Params.Normal);
 	}
+
+		
 
 	m_Params.View = normalize(u_CameraPosition - vs_Input.WorldPosition);
 	m_Params.NdotV = max(dot(m_Params.Normal, m_Params.View), 0.0);

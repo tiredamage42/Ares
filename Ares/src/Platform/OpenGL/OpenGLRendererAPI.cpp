@@ -53,6 +53,7 @@ namespace Ares {
 #endif
 		
 		glEnable(GL_DEPTH_TEST);
+		//glDepthFunc(GL_LEQUAL); // set depth function to less than AND equal for skybox depth trick.
 
 		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 		glFrontFace(GL_CCW);
@@ -62,7 +63,6 @@ namespace Ares {
 
 		glEnable(GL_MULTISAMPLE);
 		glEnable(GL_STENCIL_TEST);
-
 
 		auto& caps = RendererAPI::GetCapabilities();
 

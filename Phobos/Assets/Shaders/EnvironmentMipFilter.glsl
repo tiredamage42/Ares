@@ -157,3 +157,6 @@ void main(void)
 
 	imageStore(outputTexture[PARAM_LEVEL], ivec3(gl_GlobalInvocationID), vec4(color, 1.0));
 }
+
+
+
