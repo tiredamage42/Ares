@@ -15,8 +15,34 @@
 
 namespace Ares {
 
+	struct ShaderVariationPair
+	{
+		Ref<Shader> Shader;
+		ShaderVariant Variant;
+
+		// requred to compare in hashmap
+		bool operator==(const ShaderVariationPair& o) const
+		{
+			return o.Shader == Shader && o.Variant == Variant;
+		}
+	};
+}
+
+namespace std {
+	template <>
+	struct hash<Ares::ShaderVariationPair>
+	{
+		std::size_t operator()(const Ares::ShaderVariationPair& k) const
+		{
+			return hash<uint32_t>()(k.Shader->GetRendererID(k.Variant));
+		}
+	};
+}
 
 
+
+
+namespace Ares {
 //#define GRID_RESOLUTION 2147483646
 #define GRID_RESOLUTION 100
 #define GRID_WIDTH .05f
@@ -30,7 +56,8 @@ namespace Ares {
 
 			// Resources
 			float SkyboxLod, Exposure;
-			Ref<MaterialInstance> SkyboxMaterial;
+			//Ref<MaterialInstance> SkyboxMaterial;
+			Ref<Material> SkyboxMaterial;
 			Environment SceneEnvironment;
 			Light ActiveLight;
 		} SceneData;
@@ -44,21 +71,112 @@ namespace Ares {
 		struct DrawCommand
 		{
 			Ref<Mesh> Mesh;
-			Ref<MaterialInstance> MaterialOverride;
+			//Ref<MaterialInstance> MaterialOverride;
+			std::vector<Ref<Material>> Materials;
 			glm::mat4 Transform;
+			std::string name;
 		};
 		std::vector<DrawCommand> DrawList;
 		std::vector<DrawCommand> SelectedMeshDrawList;
 
 		// Grid
-		Ref<MaterialInstance> GridMaterial;
-		Ref<MaterialInstance> OutlineMaterial;
+		//Ref<MaterialInstance> GridMaterial;
+		//Ref<MaterialInstance> OutlineMaterial;
+		Ref<Material> GridMaterial;
+
+		//Ref<Material> OutlineMaterial;
+		Ref<Shader> OutlineShader;
 
 		SceneRendererOptions Options;
 	};
 
 	static SceneRendererData s_Data;
 
+
+	struct MeshDrawCall
+	{
+		Ref<Mesh> Mesh;
+		size_t SubmeshIndex;
+		glm::mat4 Transform;
+	};
+
+	typedef std::vector<MeshDrawCall> MeshDrawCalls;
+	typedef std::unordered_map<Ref<Material>, MeshDrawCalls> MaterialsMap;
+	typedef std::unordered_map<ShaderVariationPair, MaterialsMap> RenderMap;
+
+	static void SortRenderMap(const std::vector<SceneRendererData::DrawCommand>& drawList, RenderMap& drawMap)
+	{
+		for (auto& dc : drawList)
+		{
+			Ref<Mesh> mesh = dc.Mesh;
+			std::vector<Ref<Material>> materials = dc.Materials;
+
+			ShaderVariant shaderVariant = mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
+
+			auto& submeshes = mesh->GetSubmeshes();
+			for (size_t i = 0; i < submeshes.size(); i++)
+			{
+				Ref<Material> material = materials[submeshes[i].MaterialIndex];
+
+				ShaderVariationPair shaderVarPair = { material->GetShader(), shaderVariant };
+
+				if (drawMap.find(shaderVarPair) == drawMap.end())
+					drawMap[shaderVarPair] = MaterialsMap();
+
+				MaterialsMap& materialsMap = drawMap.at(shaderVarPair);
+
+				if (materialsMap.find(material) == materialsMap.end())
+					materialsMap[material] = MeshDrawCalls();
+
+				MeshDrawCalls& drawCalls = materialsMap.at(material);
+
+				drawCalls.push_back({ mesh, i, dc.Transform });
+			}
+		}
+	}
+
+	static void DrawRenderMap(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::vec3& cameraPosition)
+	{
+		// Read our shaders into the appropriate buffers
+		for (auto& shader_materials : renderMap)
+		{
+			const ShaderVariationPair& shaderVarPair = shader_materials.first;
+			Ref<Shader> shader = shaderVarPair.Shader;
+			ShaderVariant variant = shaderVarPair.Variant;
+
+			shader->Bind(variant);
+			shader->SetMat4("ares_VPMatrix", viewProjection, variant);
+
+			const MaterialsMap& materials = shader_materials.second;
+			for (auto& materials_draws : materials)
+			{
+				Ref<Material> material = materials_draws.first;
+				const MeshDrawCalls& draws = materials_draws.second;
+
+				material->Set("u_CameraPosition", cameraPosition);
+
+				material->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
+				material->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
+				material->Set("u_BRDFLUTTexture", s_Data.BRDFLUT);
+
+				material->Bind(variant);
+
+				bool depthTest = material->GetFlag(MaterialFlag::DepthTest);
+				// foreach light (if shader is lit)
+				{
+					material->Set("lights", s_Data.SceneData.ActiveLight);
+
+					for (auto& dc : draws)
+					{
+						Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, depthTest);
+					}
+				}
+			}
+		}
+	}
+	
+
+	
 	void SceneRenderer::Init()
 	{
 
@@ -109,7 +227,8 @@ namespace Ares {
 		// Grid
 		auto gridShader = Shader::Find("Assets/Shaders/grid.glsl");
 
-		s_Data.GridMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(gridShader));
+		//s_Data.GridMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(gridShader));
+		s_Data.GridMaterial = CreateRef<Material>(gridShader);
 
 		// TODO: SET SCENE VALUES
 		/*float gridScale = 16.025f, gridSize = 0.025f;
@@ -124,8 +243,12 @@ namespace Ares {
 
 		// Outline
 		auto outlineShader = Shader::Find("Assets/Shaders/Outline.glsl");
-		s_Data.OutlineMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(outlineShader));
-		s_Data.OutlineMaterial->SetFlag(MaterialFlag::DepthTest, false);
+		s_Data.OutlineShader = outlineShader;
+
+		//s_Data.OutlineMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(outlineShader));
+		//s_Data.OutlineMaterial = CreateRef<Material>(outlineShader);
+		//s_Data.OutlineMaterial->SetFlag(MaterialFlag::DepthTest, false);
+		
 
 	}
 
@@ -176,7 +299,8 @@ namespace Ares {
 		s_Data.SceneData = {};
 	}
 
-	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> materialOverride)
+	//void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> materialOverride)
+	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, std::vector<Ref<Material>> materials, const std::string& name)
 
 	//void SceneRenderer::SubmitEntity(Entity& entity)
 	{
@@ -186,11 +310,12 @@ namespace Ares {
 		if (!mrComponent.Mesh)
 			return;*/
 		
-		s_Data.DrawList.push_back({ mesh, materialOverride, transform });
+		s_Data.DrawList.push_back({ mesh, materials, transform, name });
 	}
-	void SceneRenderer::SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> materialOverride)
+	//void SceneRenderer::SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> materialOverride)
+	void SceneRenderer::SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform, std::vector<Ref<Material>> materials)
 	{
-		s_Data.SelectedMeshDrawList.push_back({ mesh, materialOverride, transform });
+		s_Data.SelectedMeshDrawList.push_back({ mesh, materials, transform, "selected" });
 	}
 
 	static Ref<Shader> equirectangularConversionShader, envFilteringShader, envIrradianceShader;
@@ -429,9 +554,12 @@ namespace Ares {
 		glm::vec3 cameraPosition = glm::inverse(s_Data.SceneData.SceneCamera.ViewMatrix)[3];
 
 
+
 		// Skybox
 		// TODO: render skybox (render as last to prevent overdraw)
-		//auto skyboxShader = s_Data.SceneData.SkyboxMaterial->GetShader();
+		auto skyboxShader = s_Data.SceneData.SkyboxMaterial->GetShader();
+		skyboxShader->Bind(ShaderVariant::Static);
+
 		s_Data.SceneData.SkyboxMaterial->Set("u_InverseVP", glm::inverse(viewProjection));
 		//float skyboxLod = s_Data.ActiveScene->GetSkyboxLod();
 		s_Data.SceneData.SkyboxMaterial->Set("u_TextureLod", s_Data.SceneData.SkyboxLod);
@@ -445,76 +573,123 @@ namespace Ares {
 		*/
 
 
+		RenderMap drawMap;
+		SortRenderMap(s_Data.DrawList, drawMap);
+		DrawRenderMap(drawMap, viewProjection, cameraPosition);
+		drawMap.clear();
 
 
 		// TODO: render order based on material....
 		// Render entities
 		
-		std::unordered_set<std::string> shadersVisited;
+		//std::unordered_set<std::string> shadersVisited;
 
-		for (auto& dc : s_Data.DrawList)
-		{
-			//auto baseMaterial = dc.Mesh->GetMaterial();
-
-
-
-			Ref<Material> baseMaterial = nullptr;
-			if (dc.MaterialOverride)
-			{
-
-				baseMaterial = dc.MaterialOverride->BaseMaterial();
-			}
-			else
-			{
-				baseMaterial = dc.Mesh->GetMaterial();
-			}
-			Ref<Shader> shader = baseMaterial->GetShader();
-			ShaderVariant variant = dc.Mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
-
-			std::string key = shader->GetName() + std::to_string((size_t)variant);
-
-			if (!shadersVisited.count(key))
-			{
-
-				shader->Bind(variant);
-				shader->SetMat4("ares_VPMatrix", viewProjection, variant);
-				// maybe set view and projection seperate as well
-
-				shadersVisited.insert(key);
-			}
+		//for (auto& dc : s_Data.DrawList)
+		//{
+		//	//auto baseMaterial = dc.Mesh->GetMaterial();
 
 
+		//	ShaderVariant variant = dc.Mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
 
-		//	auto baseMaterial = dc.Material;// Mesh->GetMaterial();
+		//	const std::vector<Ref<Material>>& materials = dc.Materials;
 
-			// make list of shaders from draw list, set this per shader:
-			{
-				//ares_VPMatrix
+		//	for (auto material : materials)
+		//	//for (size_t i = 0; i < materials.size(); i++)
+		//	{
 
-				//baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
-				// maybe set view and projection seperate as well
-			}
+		//		Ref<Shader> shader = material->GetShader();
+		//		std::string key = shader->GetName() + std::to_string((size_t)variant);
 
-			
-			baseMaterial->Set("u_CameraPosition", cameraPosition);
+		//		if (!shadersVisited.count(key))
+		//		{
 
-			// Environment (TODO: don't do this per mesh)
-			baseMaterial->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
-			baseMaterial->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
-			baseMaterial->Set("u_BRDFLUTTexture", s_Data.BRDFLUT);
+		//			shader->Bind(variant);
+		//			shader->SetMat4("ares_VPMatrix", viewProjection, variant);
+		//			// maybe set view and projection seperate as well
 
-			//ARES_CORE_LOG("LGIHT {0}", s_Data.SceneData.ActiveLight.Multiplier);
-			// Set lights (TODO: move to light environment and don't do per mesh)
-			baseMaterial->Set("lights", s_Data.SceneData.ActiveLight);
+		//			shadersVisited.insert(key);
+		//		}
 
-			//auto overrideMaterial = nullptr; // dc.Material;
-			Renderer::SubmitMesh(dc.Mesh, dc.Transform, dc.MaterialOverride);
+		//		//baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
+		//		material->Set("u_CameraPosition", cameraPosition);
+
+		//		// Environment (TODO: don't do this per mesh)
+		//		material->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
+		//		material->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
+		//		material->Set("u_BRDFLUTTexture", s_Data.BRDFLUT);
+
+		//		// Set lights (TODO: move to light environment and don't do per mesh)
+		//		material->Set("lights", s_Data.SceneData.ActiveLight);
+
+		//	}
+
+
+		//	/*
+		//	Ref<Material> baseMaterial = nullptr;
+		//	//if (dc.MaterialOverride)
+		//	if (dc.Material)
+		//	{
+
+		//		//baseMaterial = dc.MaterialOverride->BaseMaterial();
+		//		baseMaterial = dc.Material;
+		//	}
+		//	else
+		//	{
+		//		baseMaterial = dc.Mesh->GetMaterial();
+		//	}
+
+		//	Ref<Shader> shader = baseMaterial->GetShader();
+		//	ShaderVariant variant = dc.Mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
+
+		//	std::string key = shader->GetName() + std::to_string((size_t)variant);
+
+		//	if (!shadersVisited.count(key))
+		//	{
+
+		//		shader->Bind(variant);
+		//		shader->SetMat4("ares_VPMatrix", viewProjection, variant);
+		//		// maybe set view and projection seperate as well
+
+		//		shadersVisited.insert(key);
+		//	}
+		//	*/
+
+
+
+		////	auto baseMaterial = dc.Material;// Mesh->GetMaterial();
+
+		//	// make list of shaders from draw list, set this per shader:
+		//	{
+		//		//ares_VPMatrix
+
+		//		//baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
+		//		// maybe set view and projection seperate as well
+		//	}
+
+		//	
+		//	/*
+		//	baseMaterial->Set("u_CameraPosition", cameraPosition);
+
+		//	// Environment (TODO: don't do this per mesh)
+		//	baseMaterial->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
+		//	baseMaterial->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
+		//	baseMaterial->Set("u_BRDFLUTTexture", s_Data.BRDFLUT);
+
+		//	//ARES_CORE_LOG("LGIHT {0}", s_Data.SceneData.ActiveLight.Multiplier);
+		//	// Set lights (TODO: move to light environment and don't do per mesh)
+		//	baseMaterial->Set("lights", s_Data.SceneData.ActiveLight);
+		//	*/
 		//	//auto overrideMaterial = nullptr; // dc.Material;
+		//	
+		//	Renderer::SubmitMesh(dc.Mesh, dc.Transform, materials);
+		//	//Renderer::SubmitMesh(dc.Mesh, dc.Transform, dc.MaterialOverride);
 
-		//	//baseMaterial->Bind();
-			//Renderer::SubmitMesh(dc.Mesh, dc.Transform);// , baseMaterial->GetShader());
-		//	//Renderer::SubmitMesh(dc.Mesh, dc.Transform, overrideMaterial);
-		}
+		////	//auto overrideMaterial = nullptr; // dc.Material;
+
+		////	//baseMaterial->Bind();
+		//	//Renderer::SubmitMesh(dc.Mesh, dc.Transform);// , baseMaterial->GetShader());
+		////	//Renderer::SubmitMesh(dc.Mesh, dc.Transform, overrideMaterial);
+		//}
 
 
 
@@ -528,51 +703,77 @@ namespace Ares {
 				}, "outline other stuff");
 		}
 
-		shadersVisited.clear();
-
-		for (auto& dc : s_Data.SelectedMeshDrawList)
-		{
-			Ref<Material> baseMaterial = nullptr;
-			if (dc.MaterialOverride)
-			{
-
-				baseMaterial = dc.MaterialOverride->BaseMaterial();
-			}
-			else
-			{
-				baseMaterial = dc.Mesh->GetMaterial();
-			}
 
 
-			Ref<Shader> shader = baseMaterial->GetShader();
-			ShaderVariant variant = dc.Mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
-
-			std::string key = shader->GetName() + std::to_string((size_t)variant);
-
-			if (!shadersVisited.count(key))
-			{
-				shader->Bind(variant);
-				shader->SetMat4("ares_VPMatrix", viewProjection, variant);
-				// maybe set view and projection seperate as well
-
-				shadersVisited.insert(key);
-			}
+		SortRenderMap(s_Data.SelectedMeshDrawList, drawMap);
+		DrawRenderMap(drawMap, viewProjection, cameraPosition);
 
 
-			//baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
-			baseMaterial->Set("u_CameraPosition", cameraPosition);
+		//shadersVisited.clear();
 
-			// Environment (TODO: don't do this per mesh)
-			baseMaterial->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
-			baseMaterial->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
-			baseMaterial->Set("u_BRDFLUTTexture", s_Data.BRDFLUT);
+		//for (auto& dc : s_Data.SelectedMeshDrawList)
+		//{
+		//	//Ref<Material> baseMaterial = nullptr;
+		//	//if (dc.MaterialOverride)
+		//	//if (dc.Material)
+		//	//{
 
-			// Set lights (TODO: move to light environment and don't do per mesh)
-			baseMaterial->Set("lights", s_Data.SceneData.ActiveLight);
+		//	//	//baseMaterial = dc.MaterialOverride->BaseMaterial();
+		//	//	baseMaterial = dc.Material;
+		//	//}
+		//	//else
+		//	//{
+		//	//	baseMaterial = dc.Mesh->GetMaterial();
+		//	//}
 
-			//auto overrideMaterial = nullptr; // dc.Material;
-			Renderer::SubmitMesh(dc.Mesh, dc.Transform, dc.MaterialOverride);
-		}
+		//	ShaderVariant variant = dc.Mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
+		//	
+		//	for (size_t i = 0; i < dc.Materials.size(); i++)
+		//	{
+		//		Ref<Shader> shader = dc.Materials[i]->GetShader();
+		//		std::string key = shader->GetName() + std::to_string((size_t)variant);
+
+		//		if (!shadersVisited.count(key))
+		//		{
+		//			shader->Bind(variant);
+		//			shader->SetMat4("ares_VPMatrix", viewProjection, variant);
+		//			// maybe set view and projection seperate as well
+
+		//			shadersVisited.insert(key);
+		//		}
+
+		//		//baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
+		//		dc.Materials[i]->Set("u_CameraPosition", cameraPosition);
+
+		//		// Environment (TODO: don't do this per mesh)
+		//		dc.Materials[i]->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
+		//		dc.Materials[i]->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
+		//		dc.Materials[i]->Set("u_BRDFLUTTexture", s_Data.BRDFLUT);
+
+		//		// Set lights (TODO: move to light environment and don't do per mesh)
+		//		dc.Materials[i]->Set("lights", s_Data.SceneData.ActiveLight);
+
+		//	}
+
+
+
+
+		//	////baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
+		//	//baseMaterial->Set("u_CameraPosition", cameraPosition);
+
+		//	//// Environment (TODO: don't do this per mesh)
+		//	//baseMaterial->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
+		//	//baseMaterial->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
+		//	//baseMaterial->Set("u_BRDFLUTTexture", s_Data.BRDFLUT);
+
+		//	//// Set lights (TODO: move to light environment and don't do per mesh)
+		//	//baseMaterial->Set("lights", s_Data.SceneData.ActiveLight);
+
+		//	//auto overrideMaterial = nullptr; // dc.Material;
+
+		//	//Renderer::SubmitMesh(dc.Mesh, dc.Transform, dc.MaterialOverride);
+		//	Renderer::SubmitMesh(dc.Mesh, dc.Transform, dc.Materials);
+		//}
 
 		if (outline)
 		{
@@ -588,25 +789,63 @@ namespace Ares {
 
 			// Draw outline here
 
+			
 
+				//Ref<Shader> outlineShader = s_Data.OutlineMaterial->GetShader();
+			
+				//std::unordered_set<ShaderVariant> outlineVariantsVisited;
+				//std::vector<Ref<Material>> outlineMaterials = { s_Data.OutlineMaterial };
 
-			std::unordered_set<ShaderVariant> outlineVariantsVisited;
-
-			//s_Data.OutlineMaterial->Set("u_ViewProjection", viewProjection);
-			for (auto& dc : s_Data.SelectedMeshDrawList)
-			{
-				ShaderVariant variant = dc.Mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
-				if (!outlineVariantsVisited.count(variant))
+				size_t outlineDrawCount = s_Data.SelectedMeshDrawList.size();
+				std::vector<SceneRendererData::DrawCommand> outlineDraws;
+				outlineDraws.resize(s_Data.SelectedMeshDrawList.size());
+				size_t x = 0;
+				size_t y = outlineDrawCount - 1;
+				for (auto& dc : s_Data.SelectedMeshDrawList)
 				{
-					s_Data.OutlineMaterial->GetShader()->Bind(variant);
-					s_Data.OutlineMaterial->GetShader()->SetMat4("ares_VPMatrix", viewProjection, variant);
-					outlineVariantsVisited.insert(variant);
+					if (dc.Mesh->IsAnimated())
+					{
+						outlineDraws[y--] = dc;
+					}
+					else
+					{
+						outlineDraws[x++] = dc;
+					}
 				}
-				
+				size_t skinnedVariationStart = x;
+
+				s_Data.OutlineShader->Bind(ShaderVariant::Static);
+				s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Static);
+
+				for (size_t i = 0; i < outlineDrawCount; i++)
+				{
+					if (i == skinnedVariationStart)
+					{
+						s_Data.OutlineShader->Bind(ShaderVariant::Skinned);
+						s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Skinned);
+					}
+
+					Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, false);
+				}
 
 
-				Renderer::SubmitMesh(dc.Mesh, dc.Transform, s_Data.OutlineMaterial);
-			}
+
+				//s_Data.OutlineMaterial->Set("u_ViewProjection", viewProjection);
+				//for (auto& dc : s_Data.SelectedMeshDrawList)
+				//{
+				//	ShaderVariant variant = dc.Mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
+				//	if (!outlineVariantsVisited.count(variant))
+				//	{
+				//		s_Data.OutlineMaterial->GetShader()->Bind(variant);
+				//		s_Data.OutlineMaterial->GetShader()->SetMat4("ares_VPMatrix", viewProjection, variant);
+				//		outlineVariantsVisited.insert(variant);
+				//	}
+				//
+				//	//Renderer::SubmitMesh(dc.Mesh, dc.Transform, s_Data.OutlineMaterial);
+				//	Renderer::SubmitMesh(dc.Mesh, dc.Transform, outlineMaterials);
+				//}
+
+			
 
 
 
@@ -616,10 +855,26 @@ namespace Ares {
 					glPointSize(10);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 				}, "Draw Outline polymode");
-			for (auto& dc : s_Data.SelectedMeshDrawList)
+
+
+
+			s_Data.OutlineShader->Bind(ShaderVariant::Static);
+			
+			for (size_t i = 0; i < outlineDrawCount; i++)
 			{
-				Renderer::SubmitMesh(dc.Mesh, dc.Transform, s_Data.OutlineMaterial);
+				if (i == skinnedVariationStart)
+				{
+					s_Data.OutlineShader->Bind(ShaderVariant::Skinned);
+				}
+
+				Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, false);
 			}
+
+			//for (auto& dc : s_Data.SelectedMeshDrawList)
+			//{
+			//	//Renderer::SubmitMesh(dc.Mesh, dc.Transform, s_Data.OutlineMaterial);
+			//	Renderer::SubmitMesh(dc.Mesh, dc.Transform, outlineMaterials);
+			//}
 
 			Renderer::Submit([](){
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

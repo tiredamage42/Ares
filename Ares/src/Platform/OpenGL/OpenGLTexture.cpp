@@ -3,7 +3,7 @@
 #include "Platform/OpenGL/OpenGLTexture.h"
 #include "Ares/Renderer/Renderer.h"
 
-#define STB_IMAGE_IMPLEMENTATION
+//#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 namespace Ares {

@@ -25,7 +25,9 @@ namespace Ares {
 		static void Submit(FuncT&& func, const std::string& commandName)
 		{
 
-			if (true || GetRenderCommandQueue().m_Deleted)
+			if (
+				//true || 
+				GetRenderCommandQueue().m_Deleted)
 			{
 				func();
 				return;
@@ -55,14 +57,24 @@ namespace Ares {
 		static void EndRenderPass();
 
 
-		static void SubmitQuad(Ref<Shader> shader, const glm::mat4& transform = glm::mat4(1.0f), bool depthTest = true);
-		static void SubmitQuad(Ref<MaterialInstance> material, const glm::mat4& transform = glm::mat4(1.0f));
+		//static void SubmitQuad(Ref<Shader> shader, const glm::mat4& transform = glm::mat4(1.0f), bool depthTest = true);
 		
-		static void SubmitFullscreenQuad(Ref<MaterialInstance> material);
+		//static void SubmitQuad(Ref<MaterialInstance> material, const glm::mat4& transform = glm::mat4(1.0f));
+		static void SubmitQuad(Ref<Material> material, const glm::mat4& transform = glm::mat4(1.0f));
 		
-		static void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> overrideMaterial);
+		//static void SubmitFullscreenQuad(Ref<MaterialInstance> material);
+		static void SubmitFullscreenQuad(Ref<Material> material);
+
+		//static void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> overrideMaterial);
+		static void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, const std::vector<Ref<Material>>& materials);
+
 		//static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Shader>& overrideMaterial = nullptr);
 		
+
+		static void SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, const size_t& submeshIndex, const bool& depthTest);
+		static void SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, const bool& depthTest);
+
+
 		//static void DrawAABB(const Ref<Mesh>& mesh, const glm::vec4& color = glm::vec4(1.0f));
 		static void DrawAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
 		static void DrawAABB(Ref<Mesh> mesh, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));

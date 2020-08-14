@@ -90,8 +90,12 @@ project "Ares"
         "%{prj.name}/vendor/assimp/include",
         "%{prj.name}/vendor/yaml-cpp/include"
         -- "%{IncludeDir.assimp}"
+    }
+    libdirs
+    {
         
     }
+        
     links
     {
         "GLFW",

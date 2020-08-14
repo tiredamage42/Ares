@@ -8,8 +8,8 @@
 */
 namespace Ares {
 
-	Material::Material(Ref<Shader> shader)
-		: m_Shader(shader)
+	Material::Material(Ref<Shader> shader, const std::string& name)
+		: m_Shader(shader), m_Name(name)
 	{
 		m_Shader->AddShaderReloadedCallback(std::bind(&Material::OnShaderReloaded, this));
 		AllocateStorage();
@@ -17,36 +17,67 @@ namespace Ares {
 		m_MaterialFlags |= (uint32_t)MaterialFlag::DepthTest;
 		m_MaterialFlags |= (uint32_t)MaterialFlag::Blend;
 	}
+	Material::Material(Ref<Material> other, const std::string& name)
+		: m_Name(name)
+	{
+		CopyMaterial(other);
+	}
 
 	Material::~Material()
 	{
+		// remove shader relaod callback
 	}
 
 	void Material::AllocateStorage()
 	{
-		if (m_Shader->HasVSMaterialUniformBuffer(ShaderVariant::Static))
+		if (m_Shader->HasVSMaterialUniformBuffer())
 		{
 
 			const auto& vsBuffer = m_Shader->GetVSMaterialUniformBuffer(ShaderVariant::Static);
 			m_VSUniformStorageBuffer.Allocate(vsBuffer.GetSize());
 			m_VSUniformStorageBuffer.ZeroInitialize();
 		}
-		if (m_Shader->HasPSMaterialUniformBuffer(ShaderVariant::Static))
+		if (m_Shader->HasPSMaterialUniformBuffer())
 		{
 			const auto& psBuffer = m_Shader->GetPSMaterialUniformBuffer(ShaderVariant::Static);
 			m_PSUniformStorageBuffer.Allocate(psBuffer.GetSize());
 			m_PSUniformStorageBuffer.ZeroInitialize();
 
 		}
-
 	}
+	void Material::CopyMaterial(Ref<Material> other)
+	{
+		m_Shader = other->m_Shader;
+		m_MaterialFlags = other->m_MaterialFlags;
+
+		m_Shader->AddShaderReloadedCallback(std::bind(&Material::OnShaderReloaded, this));
+		
+		if (m_Shader->HasVSMaterialUniformBuffer())
+		{
+
+			const auto& vsBuffer = m_Shader->GetVSMaterialUniformBuffer(ShaderVariant::Static);
+			m_VSUniformStorageBuffer.Allocate(vsBuffer.GetSize());
+			memcpy(m_VSUniformStorageBuffer.Data, other->m_VSUniformStorageBuffer.Data, vsBuffer.GetSize());
+		}
+		if (m_Shader->HasPSMaterialUniformBuffer())
+		{
+
+			const auto& psBuffer = m_Shader->GetPSMaterialUniformBuffer(ShaderVariant::Static);
+			m_PSUniformStorageBuffer.Allocate(psBuffer.GetSize());
+			memcpy(m_PSUniformStorageBuffer.Data, other->m_PSUniformStorageBuffer.Data, psBuffer.GetSize());
+		}
+	}
+
+		
+
+
 
 	void Material::OnShaderReloaded()
 	{
 		AllocateStorage();
 
-		for (auto mi : m_MaterialInstances)
-			mi->OnShaderReloaded();
+		/*for (auto mi : m_MaterialInstances)
+			mi->OnShaderReloaded();*/
 	}
 
 	ShaderUniformDeclaration* Material::FindUniformDeclaration(const std::string& name)
@@ -107,7 +138,9 @@ namespace Ares {
 
 	void Material::Bind(ShaderVariant variant)
 	{
-		m_Shader->Bind(variant);
+
+		// already bound
+		//m_Shader->Bind(variant);
 
 		if (m_VSUniformStorageBuffer)
 			m_Shader->SetVSMaterialUniformBuffer(m_VSUniformStorageBuffer, variant);
@@ -132,7 +165,7 @@ namespace Ares {
 	// MATERIAL INSTANCE
 	// ============================================================
 
-
+	/*
 	MaterialInstance::MaterialInstance(Ref<Material> material, const std::string& name)
 		: m_Material(material), m_Name(name)
 	{
@@ -153,14 +186,14 @@ namespace Ares {
 
 	void MaterialInstance::AllocateStorage()
 	{
-		if (m_Material->m_Shader->HasVSMaterialUniformBuffer(ShaderVariant::Static))
+		if (m_Material->m_Shader->HasVSMaterialUniformBuffer())
 		{
 
 			const auto& vsBuffer = m_Material->m_Shader->GetVSMaterialUniformBuffer(ShaderVariant::Static);
 			m_VSUniformStorageBuffer.Allocate(vsBuffer.GetSize());
 			memcpy(m_VSUniformStorageBuffer.Data, m_Material->m_VSUniformStorageBuffer.Data, vsBuffer.GetSize());
 		}
-		if (m_Material->m_Shader->HasPSMaterialUniformBuffer(ShaderVariant::Static))
+		if (m_Material->m_Shader->HasPSMaterialUniformBuffer())
 		{
 
 			const auto& psBuffer = m_Material->m_Shader->GetPSMaterialUniformBuffer(ShaderVariant::Static);
@@ -223,4 +256,6 @@ namespace Ares {
 				texture->Bind(i);
 		}
 	}
+	*/
+
 }

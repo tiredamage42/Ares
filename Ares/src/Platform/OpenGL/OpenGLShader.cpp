@@ -1335,7 +1335,7 @@ namespace Ares {
 			/*glUseProgram(m_RendererID);
 			ResolveAndSetUniforms(m_VSMaterialUniformBuffer, buffer);*/
 
-			glUseProgram(GetRendererID(variant));
+			//glUseProgram(GetRendererID(variant));
 			ResolveAndSetUniforms(m_VariantBuffers[GetVariantIndex(variant)].m_VSMaterialUniformBuffer, buffer);
 
 		}, "SetVSMaterialUniformBuffer");
@@ -1347,7 +1347,7 @@ namespace Ares {
 			/*glUseProgram(m_RendererID);
 			ResolveAndSetUniforms(m_PSMaterialUniformBuffer, buffer);*/
 			
-			glUseProgram(GetRendererID(variant));
+			//glUseProgram(GetRendererID(variant));
 			ResolveAndSetUniforms(m_VariantBuffers[GetVariantIndex(variant)].m_PSMaterialUniformBuffer, buffer);
 		}, "SetPSMaterialUniformBuffer");
 	}

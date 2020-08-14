@@ -247,7 +247,10 @@ namespace Ares
         UpdateWindowTitle("Editor Scene");
 
         auto skyboxShader = Shader::Find("Assets/Shaders/CubemapSkybox.glsl");
-        auto skyboxMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(skyboxShader));
+
+        //auto skyboxMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(skyboxShader));
+        auto skyboxMaterial = CreateRef<Material>(skyboxShader);
+
         skyboxMaterial->SetFlag(MaterialFlag::DepthTest, false);
 
         m_EditorScene->SetSkyboxMaterial(skyboxMaterial);
@@ -264,12 +267,29 @@ namespace Ares
 
         Entity gunEntity = m_EditorScene->CreateEntity("Gun");
         MeshRendererComponent& mr = gunEntity.AddComponent<MeshRendererComponent>();
-        mr.Mesh = CreateRef<Mesh>("C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\models\\m1911\\M1911Materials.fbx");
+
+        std::vector<Ref<Material>> loadedMaterials;
+        mr.Mesh = CreateRef<Mesh>(
+            //"C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\models\\m1911\\M1911Materials.fbx",
+            //"C:\\Users\\Andres\\Desktop\\Racoon\\source\\Racoon_Anim.fbx",
+            //"C:\\Users\\Andres\\Downloads\\Action Adventure Pack\\ely_k_atienza@Taunt.fbx",
+            "C:\\Users\\Andres\\Downloads\\ely_k_atienza.fbx",
+            loadedMaterials
+        );
+        
         //mr.MaterialOverride = CreateRef<MaterialInstance>(m_MeshBaseMaterial);
+        mr.Materials = loadedMaterials;// { m_MeshBaseMaterial };
+
+        if (!loadedMaterials.size())
+        {
+            ARES_WARN("Couldnt Find Materials... setting custom");
+            mr.Materials = { m_MeshBaseMaterial };
+        }
 
         gunEntity.Transform() = glm::scale(
             glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2)),
-            glm::vec3(15.0f)
+            //glm::vec3(15.0f)
+            glm::vec3(.1f)
         );
 
         //m_SphereBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/pbr_static.glsl"));
@@ -277,6 +297,7 @@ namespace Ares
         
         
         //auto sphereMesh = CreateRef<Mesh>("C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\meshes\\Sphere1m.fbx");
+        
         
         auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Sphere);
 
@@ -289,14 +310,30 @@ namespace Ares
             {
                 float roughness = glm::max(1.0f - ((float)(x + 2) / 4.0f), .05f);
 
+
+        /*float roughness = .05f;
+        float metalness = 1;
+        int y = 0;
+        int x = 0;*/
+
+
                 Entity sphereEntity = m_EditorScene->CreateEntity("Sphere M:" + std::to_string(metalness) + " / R:" + std::to_string(roughness));
 
-                MeshRendererComponent& mr = sphereEntity.AddComponent<MeshRendererComponent>();
-                mr.Mesh = sphereMesh;
-                mr.MaterialOverride = CreateRef<MaterialInstance>(m_MeshBaseMaterial);
+                MeshRendererComponent& mrC = sphereEntity.AddComponent<MeshRendererComponent>();
+                mrC.Mesh = sphereMesh;
 
+                Ref<Material> m = CreateRef<Material>(Shader::Find("Assets/Shaders/PBRStatic.glsl"));
+                //Ref<Material> m = CreateRef<Material>(m_MeshBaseMaterial);
+                mrC.Materials = { m };
+                m->Set("u_Metalness", metalness);
+                m->Set("u_Roughness", roughness);
+
+                m_SphereMaterials.push_back(m);
+
+
+                /*mr.MaterialOverride = CreateRef<MaterialInstance>(m_MeshBaseMaterial);
                 mr.MaterialOverride->Set("u_Metalness", metalness);
-                mr.MaterialOverride->Set("u_Roughness", roughness);
+                mr.MaterialOverride->Set("u_Roughness", roughness);*/
 
                 sphereEntity.Transform() = glm::translate(
                     glm::mat4(1.0f), 
@@ -621,9 +658,11 @@ namespace Ares
     void EditorLayer::SetPBRMaterialValues(Ref<Material> material) const//, const glm::mat4& viewProjection) const
     {
 
+        /*material->Set("u_Metalness", m_MetalnessInput.Value);
+        material->Set("u_Roughness", m_RoughnessInput.Value);*/
+
+
         material->Set("u_AlbedoColor", m_AlbedoInput.Color);
-        material->Set("u_Metalness", m_MetalnessInput.Value);
-        material->Set("u_Roughness", m_RoughnessInput.Value);
         //material->Set("u_ViewProjectionMatrix", viewProjection);
         //material->Set("u_ModelMatrix", glm::scale(glm::mat4(1.0f), glm::vec3(m_MeshScale)));
         //material->Set("lights", m_Light);
@@ -685,9 +724,16 @@ namespace Ares
         //if (m_MeshBaseMaterial)
         //{
             SetPBRMaterialValues(m_MeshBaseMaterial);// , viewProjection);
+            m_MeshBaseMaterial->Set("u_Metalness", m_MetalnessInput.Value);
+            m_MeshBaseMaterial->Set("u_Roughness", m_RoughnessInput.Value);
+
         //}
         //SetPBRMaterialValues(m_SphereBaseMaterial);// , viewProjection);
 
+            for (auto mat : m_SphereMaterials)
+            {
+                SetPBRMaterialValues(mat);
+            }
 
         //if (m_SceneType == SceneType::Spheres)
         //{
@@ -1606,10 +1652,15 @@ namespace Ares
             Entity selectedEntity = m_SelectionContext.front().Entity;
             if (selectedEntity.HasComponent<MeshRendererComponent>())
             {
-                Ref<Mesh> mesh = selectedEntity.GetComponent<MeshRendererComponent>().Mesh;
+                MeshRendererComponent& mrComponent = selectedEntity.GetComponent<MeshRendererComponent>();
+                Ref<Mesh> mesh = mrComponent.Mesh;
                 if (mesh)
                 {
-                    auto& materials = mesh->GetMaterialOverrides();
+                    //auto& materials = mesh->GetMaterialOverrides();
+                    //auto& materials = mesh->GetMaterials();
+
+                    auto& materials = mrComponent.Materials;
+
                     static uint32_t selectedMaterialIndex = 0;
                     for (uint32_t i = 0; i < materials.size(); i++)
                     {

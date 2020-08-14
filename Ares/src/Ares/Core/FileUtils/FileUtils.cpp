@@ -43,4 +43,10 @@ namespace Ares
 		size_t nameEnd = extensionStart == std::string::npos ? filePath.size() : extensionStart;
 		return filePath.substr(nameStart, nameEnd - nameStart);
 	}
+	std::string FileUtils::RemoveDirectoryFromPath(const std::string& filePath)
+	{
+		size_t lastSlash = filePath.find_last_of("/\\");
+		size_t nameStart = lastSlash == std::string::npos ? 0 : lastSlash + 1;
+		return filePath.substr(nameStart, filePath.size() - nameStart);
+	}
 }

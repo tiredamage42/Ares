@@ -146,8 +146,8 @@ namespace Ares {
 		/*virtual const ShaderUniformBufferList& GetVSRendererUniforms() const = 0;
 		virtual const ShaderUniformBufferList& GetPSRendererUniforms() const = 0;*/
 
-		virtual bool HasVSMaterialUniformBuffer(ShaderVariant variant) const = 0;
-		virtual bool HasPSMaterialUniformBuffer(ShaderVariant variant) const = 0;
+		virtual bool HasVSMaterialUniformBuffer() const = 0;
+		virtual bool HasPSMaterialUniformBuffer() const = 0;
 
 		virtual const ShaderUniformBufferDeclaration& GetVSMaterialUniformBuffer(ShaderVariant variant) const = 0;
 		virtual const ShaderUniformBufferDeclaration& GetPSMaterialUniformBuffer(ShaderVariant variant) const = 0;

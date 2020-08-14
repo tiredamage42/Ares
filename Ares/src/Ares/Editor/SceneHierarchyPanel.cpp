@@ -553,7 +553,11 @@ namespace Ares {
 					{
 						std::string file = Application::Get().OpenFile();
 						if (!file.empty())
-							mc.Mesh = CreateRef<Mesh>(file);
+						{
+							std::vector<Ref<Material>> materials;
+							mc.Mesh = CreateRef<Mesh>(file, materials);
+							mc.Materials = materials;
+						}
 					}
 					/*ImGui::NextColumn();
 					ImGui::Columns(1);*/

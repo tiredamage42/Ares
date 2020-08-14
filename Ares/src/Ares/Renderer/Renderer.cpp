@@ -141,7 +141,8 @@ namespace Ares {
 	//	DrawIndexed(6, PrimitiveType::Triangles, depthTest);
 	//}
 
-	void Renderer::SubmitQuad(Ref<MaterialInstance> material, const glm::mat4& transform)
+	//void Renderer::SubmitQuad(Ref<MaterialInstance> material, const glm::mat4& transform)
+	void Renderer::SubmitQuad(Ref<Material> material, const glm::mat4& transform)
 	{
 		bool depthTest = true;
 		if (material)
@@ -159,7 +160,8 @@ namespace Ares {
 		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
 	}
 
-	void Renderer::SubmitFullscreenQuad(Ref<MaterialInstance> material)
+	//void Renderer::SubmitFullscreenQuad(Ref<MaterialInstance> material)
+	void Renderer::SubmitFullscreenQuad(Ref<Material> material)
 	{
 		bool depthTest = true;
 		if (material)
@@ -171,19 +173,89 @@ namespace Ares {
 		s_Data.m_FullscreenQuadVertexArray->Bind();
 		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
 	}
-	void Renderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> overrideMaterial)
+
+
+
+	void Renderer::SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, const size_t& submeshIndex, const bool& depthTest)
+	{
+		// TODO: check shader bound
+		mesh->m_VertexArray->Bind();
+		
+		ShaderVariant variant = mesh->m_IsAnimated ? ShaderVariant::Skinned : ShaderVariant::Static;
+		if (mesh->m_IsAnimated)
+		{
+			mesh->m_BoneMatrixTexture->Bind(30);
+			boundShader->SetInt("_ares_internal_BoneSampler", 30, variant);
+		}
+		auto& submesh = mesh->GetSubmeshes()[submeshIndex];
+		boundShader->SetMat4("_ares_internal_Transform", transform * submesh.Transform, variant);
+
+		Submit([submesh, depthTest]() {
+			if (depthTest)
+				glEnable(GL_DEPTH_TEST);
+			else
+				glDisable(GL_DEPTH_TEST);
+
+			glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
+		}, "Draw SubMesh");
+	}
+	void Renderer::SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, const bool& depthTest)
+	{
+		// TODO: Sort this out
+		mesh->m_VertexArray->Bind();
+		ShaderVariant variant = mesh->m_IsAnimated ? ShaderVariant::Skinned : ShaderVariant::Static;
+
+		if (mesh->m_IsAnimated)
+		{
+			mesh->m_BoneMatrixTexture->Bind(30);
+			boundShader->SetInt("_ares_internal_BoneSampler", 30, variant);
+		}
+		
+		for (Submesh& submesh : mesh->m_Submeshes)
+		{
+			boundShader->SetMat4("_ares_internal_Transform", transform * submesh.Transform, variant);
+
+			Submit([submesh, depthTest]() {
+				if (depthTest)
+					glEnable(GL_DEPTH_TEST);
+				else
+					glDisable(GL_DEPTH_TEST);
+
+				glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
+			}, "Draw SubMesh");
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	//void Renderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> overrideMaterial)
+	void Renderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, const std::vector<Ref<Material>>& materials)
 	{
 		// TODO: Sort this out
 		mesh->m_VertexArray->Bind();
 
-		auto& materialOverrides = mesh->GetMaterialOverrides();
+		//auto& materialOverrides = mesh->GetMaterialOverrides();
 
 
 		for (Submesh& submesh : mesh->m_Submeshes)
 		{
 			// Material
 
-			auto material = overrideMaterial ? overrideMaterial : materialOverrides[submesh.MaterialIndex];
+			auto material = materials[submesh.MaterialIndex];
+
+			//auto material = overrideMaterial ? overrideMaterial : materialOverrides[submesh.MaterialIndex];
 			//auto material = materialOverrides[submesh.MaterialIndex];
 
 			auto shader = material->GetShader();

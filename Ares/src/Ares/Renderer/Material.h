@@ -20,9 +20,10 @@ namespace Ares {
 
 	class Material
 	{
-		friend class MaterialInstance;
+		//friend class MaterialInstance;
 	public:
-		Material(Ref<Shader> shader);
+		Material(Ref<Shader> shader, const std::string& name = "");
+		Material(Ref<Material> other, const std::string& name = "");
 		virtual ~Material();
 
 		inline const Ref<Shader> GetShader() const { return m_Shader; }
@@ -30,8 +31,22 @@ namespace Ares {
 		void Bind(ShaderVariant variant);
 
 		uint32_t GetFlags() const { return m_MaterialFlags; }
-		void SetFlag(MaterialFlag flag) { m_MaterialFlags |= (uint32_t)flag; }
 
+		bool GetFlag(MaterialFlag flag) const { return (uint32_t)flag & m_MaterialFlags; }
+		void SetFlag(MaterialFlag flag, bool value) { 
+
+			if (value)
+			{
+				m_MaterialFlags |= (uint32_t)flag;
+			}
+			else
+			{
+				m_MaterialFlags &= ~(uint32_t)flag;
+			}
+
+			//m_MaterialFlags |= (uint32_t)flag; 
+		}
+		
 
 		template <typename T>
 		void Set(const std::string& name, const T& value)
@@ -47,8 +62,8 @@ namespace Ares {
 			auto& buffer = GetUniformBufferTarget(decl);
 			buffer.Write((byte*)&value, decl->GetSize(), decl->GetOffset());
 
-			for (auto mi : m_MaterialInstances)
-				mi->OnMaterialValueUpdated(decl);
+			/*for (auto mi : m_MaterialInstances)
+				mi->OnMaterialValueUpdated(decl);*/
 		}
 
 		void Set(const std::string& name, Ref<Texture> texture)
@@ -78,7 +93,10 @@ namespace Ares {
 		{
 			Set(name, (const Ref<Texture>&)texture);
 		}
+		const std::string& GetName() const { return m_Name; }
+
 	private:
+		void CopyMaterial(Ref<Material> other);
 		void AllocateStorage();
 		void OnShaderReloaded();
 		void BindTextures();
@@ -87,8 +105,10 @@ namespace Ares {
 		ShaderResourceDeclaration* FindResourceDeclaration(const std::string& name, uint8_t& samplerSlot);
 		Buffer& GetUniformBufferTarget(ShaderUniformDeclaration* uniformDeclaration);
 	private:
+		std::string m_Name;
 		Ref<Shader> m_Shader;
-		std::unordered_set<MaterialInstance*> m_MaterialInstances;
+
+		//std::unordered_set<MaterialInstance*> m_MaterialInstances;
 
 		Buffer m_VSUniformStorageBuffer;
 		Buffer m_PSUniformStorageBuffer;
@@ -97,6 +117,8 @@ namespace Ares {
 		uint32_t m_MaterialFlags;
 	};
 
+
+	/*
 	class MaterialInstance
 	{
 		friend class Material;
@@ -176,5 +198,7 @@ namespace Ares {
 		// TODO: This is temporary; come up with a proper system to track overrides
 		std::unordered_set<std::string> m_OverriddenValues;
 	};
+	*/
+
 
 }

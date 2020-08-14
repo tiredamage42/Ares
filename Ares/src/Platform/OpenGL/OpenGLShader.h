@@ -111,8 +111,8 @@ namespace Ares {
 
 		//virtual bool HasVSMaterialUniformBuffer() const override { return (bool)m_VSMaterialUniformBuffer; }
 		//virtual bool HasPSMaterialUniformBuffer() const override { return (bool)m_PSMaterialUniformBuffer; }
-		virtual bool HasVSMaterialUniformBuffer(ShaderVariant variant) const override { return (bool)m_VariantBuffers[GetVariantIndex(variant)].m_VSMaterialUniformBuffer; }
-		virtual bool HasPSMaterialUniformBuffer(ShaderVariant variant) const override { return (bool)m_VariantBuffers[GetVariantIndex(variant)].m_PSMaterialUniformBuffer; }
+		virtual bool HasVSMaterialUniformBuffer() const override { return (bool)m_VariantBuffers[0].m_VSMaterialUniformBuffer; }
+		virtual bool HasPSMaterialUniformBuffer() const override { return (bool)m_VariantBuffers[0].m_PSMaterialUniformBuffer; }
 
 		//inline const virtual ShaderUniformBufferDeclaration& GetVSMaterialUniformBuffer() const override { return *m_VSMaterialUniformBuffer; }
 		//inline const virtual ShaderUniformBufferDeclaration& GetPSMaterialUniformBuffer() const override { return *m_PSMaterialUniformBuffer; }

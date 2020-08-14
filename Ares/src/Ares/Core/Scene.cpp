@@ -267,7 +267,7 @@ namespace Ares
                 meshComponent.Mesh->OnUpdate();
 
                 // TODO: Should we render (logically)
-                SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent, nullptr);
+                SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent, meshComponent.Materials, m_Registry.get<TagComponent>(entity).Tag);
             }
         }
         SceneRenderer::EndScene();
@@ -290,9 +290,16 @@ namespace Ares
                 // TODO: Should we render (logically)
 
                 if (m_SelectedEntity == entity)
-                    SceneRenderer::SubmitSelectedMesh(meshComponent.Mesh, transformComponent, meshComponent.MaterialOverride);
+                {
+                    SceneRenderer::SubmitSelectedMesh(meshComponent.Mesh, transformComponent, meshComponent.Materials);
+                    //SceneRenderer::SubmitSelectedMesh(meshComponent.Mesh, transformComponent, meshComponent.MaterialOverride);
+                }
                 else
-                    SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent, meshComponent.MaterialOverride);
+                {
+
+                    SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent, meshComponent.Materials, m_Registry.get<TagComponent>(entity).Tag);
+                    //SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent, meshComponent.MaterialOverride);
+                }
             }
         }
         SceneRenderer::EndScene();

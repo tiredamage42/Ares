@@ -14,8 +14,11 @@
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/LogStream.hpp>
 
+#include <stb_image.h>
+
 //#include <glad/glad.h>
 
+#include "Ares/Core/FileUtils/FileUtils.h"
 #include "Ares/Renderer/Renderer.h"
 #include "Ares/Core/Time.h"
 
@@ -69,7 +72,7 @@ namespace Ares {
 			if (Assimp::DefaultLogger::isNullLogger())
 			{
 				Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE);
-				Assimp::DefaultLogger::get()->attachStream(new LogStream, Assimp::Logger::Err | Assimp::Logger::Warn);
+				Assimp::DefaultLogger::get()->attachStream(new LogStream, Assimp::Logger::Err | Assimp::Logger::Warn | Assimp::Logger::Info);
 			}
 		}
 
@@ -421,18 +424,50 @@ namespace Ares {
 		}
 
 
-		
+		//Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/PBRStatic.glsl");
+		//m_Materials.resize(1);
+		//m_Materials[0] = CreateRef<Material>(m_MeshShader);;
 		
 
-		Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/pbr_static.glsl");
-		m_BaseMaterial = CreateRef<Material>(m_MeshShader);
+		//Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/pbr_static.glsl");
 
-		m_MaterialOverrides.resize(1);
-		m_MaterialOverrides[0] = CreateRef<MaterialInstance>(m_BaseMaterial);;
+
+		//m_BaseMaterial = CreateRef<Material>(m_MeshShader);
+		/*m_MaterialOverrides.resize(1);
+		m_MaterialOverrides[0] = CreateRef<MaterialInstance>(m_BaseMaterial);;*/
 	}
 
 
-	Mesh::Mesh(const std::string& filename)
+	static Ref<Texture2D> LoadTexture(const aiTexture* texture, bool srgb)
+	{
+
+		int width, height, components_per_pixel;
+
+		unsigned char* image_data = nullptr;
+
+		if (texture->mHeight == 0)
+		{
+			image_data = stbi_load_from_memory(reinterpret_cast<unsigned char*>(texture->pcData), texture->mWidth, &width, &height, &components_per_pixel, 0);
+		}
+		else
+		{
+			image_data = stbi_load_from_memory(reinterpret_cast<unsigned char*>(texture->pcData), texture->mWidth * texture->mHeight, &width, &height, &components_per_pixel, 0);
+		}
+
+		// components_per_pixel?
+		Ref<Texture2D> t = Texture2D::Create(
+			srgb ? TextureFormat::RGB : TextureFormat::RGBA, 
+			width, height, 
+			TextureWrap::Clamp,
+			FilterType::Trilinear, 
+			true
+		);
+		t->SetData(image_data);
+		return t;
+	}
+
+
+	Mesh::Mesh(const std::string& filename, std::vector<Ref<Material>>& m_Materials)
 		: m_FilePath(filename)
 	{
 		LogStream::Initialize();
@@ -466,7 +501,7 @@ namespace Ares {
 			m_MeshShader = Shader::Find("Assets/Shaders/pbr_static.glsl");
 		}*/
 
-		m_BaseMaterial = CreateRef<Material>(m_MeshShader);
+		//m_BaseMaterial = CreateRef<Material>(m_MeshShader);
 
 		// m_MaterialInstance = std::make_shared<MaterialInstance>(m_BaseMaterial);
 
@@ -641,14 +676,24 @@ namespace Ares {
 			ARES_CORE_LOG("---- Materials - {0} ----", filename);
 
 			//m_Textures.resize(scene->mNumMaterials);
-			m_MaterialOverrides.resize(scene->mNumMaterials);
+			
+			//m_MaterialOverrides.resize(scene->mNumMaterials);
+			m_Materials.resize(scene->mNumMaterials);
+
+
+
 			for (uint32_t i = 0; i < scene->mNumMaterials; i++)
 			{
 				auto aiMaterial = scene->mMaterials[i];
 				auto aiMaterialName = aiMaterial->GetName();
 
-				auto mi = CreateRef<MaterialInstance>(m_BaseMaterial, aiMaterialName.data);
-				m_MaterialOverrides[i] = mi;
+				/*auto mi = CreateRef<MaterialInstance>(m_BaseMaterial, aiMaterialName.data);
+				m_MaterialOverrides[i] = mi;*/
+
+				auto mi = CreateRef<Material>(m_MeshShader, aiMaterialName.data);
+				m_Materials[i] = mi;
+
+
 
 				ARES_CORE_INFO(" {0}; Index = {1}", aiMaterialName.data, i);
 				aiString aiTexPath;
@@ -674,11 +719,27 @@ namespace Ares {
 				bool hasAlbedoMap = aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &aiTexPath) == AI_SUCCESS;
 				if (hasAlbedoMap)
 				{
+
+					/*for (int i = 0; i < scene->mNumTextures; i++)
+					{
+						auto t = scene->mTextures[i];
+					}*/
+
+
+					//aiString texture_file;
+					//aiMaterial->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), texture_file);
+					//auto aiTexture = scene->GetEmbeddedTexture(texture_file.C_Str());
+					//auto texture = LoadTexture(aiTexture, true);
+
+					std::string imgPath = FileUtils::RemoveDirectoryFromPath(aiTexPath.data);
+					
 					// TODO: Temp - this should be handled by our filesystem
 					std::filesystem::path path = filename;
 					auto parentPath = path.parent_path();
-					parentPath /= std::string(aiTexPath.data);
+					parentPath /= imgPath;
 					std::string texturePath = parentPath.string();
+
+					texturePath = filename.substr(0, filename.size() - 1)  + "m/" + FileUtils::RemoveDirectoryFromPath(scene->mTextures[2]->mFilename.data);
 
 					ARES_CORE_LOG("  Albedo Texture Path = {0}", texturePath);
 					auto texture = Texture2D::Create(texturePath, FilterType::Trilinear, true, true);
@@ -702,6 +763,7 @@ namespace Ares {
 					mi->Set("u_AlbedoColor", glm::vec3{ aiColor.r, aiColor.g, aiColor.b });
 					ARES_CORE_LOG("		Mesh has no albedo map");
 				}
+				continue;
 
 				// Normal maps
 				if (aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &aiTexPath) == AI_SUCCESS)

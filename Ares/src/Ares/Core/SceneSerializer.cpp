@@ -351,7 +351,13 @@ namespace Ares {
 					std::string meshPath = meshComponent["AssetPath"].as<std::string>();
 					// TEMP (because script creates mesh component...)
 					if (!deserializedEntity.HasComponent<MeshRendererComponent>())
-						deserializedEntity.AddComponent<MeshRendererComponent>(CreateRef<Mesh>(meshPath));
+					{
+						MeshRendererComponent& mrComponent = deserializedEntity.AddComponent<MeshRendererComponent>();
+						std::vector<Ref<Material>> materials;
+						mrComponent.Mesh = CreateRef<Mesh>(meshPath, materials);
+						mrComponent.Materials = materials;
+
+					}
 
 					ARES_CORE_INFO("  Mesh Asset Path: {0}", meshPath);
 				}

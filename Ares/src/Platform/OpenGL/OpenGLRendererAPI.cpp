@@ -14,16 +14,16 @@ namespace Ares {
 		switch (severity)
 		{
 		case GL_DEBUG_SEVERITY_HIGH:         
-			ARES_CORE_CRITICAL("[OpenGL Debug HIGH] {0}", message);
+			ARES_CORE_ERROR("[OpenGL Debug HIGH] {0}", message);
 			ARES_CORE_ASSERT(false, "");
 			return;
 		case GL_DEBUG_SEVERITY_MEDIUM:       
-			ARES_CORE_ERROR("[OpenGL Debug MEDIUM] {0}", message);
-			ARES_CORE_ASSERT(false, "");
+			ARES_CORE_WARN("[OpenGL Debug MEDIUM] {0}", message);
+			//ARES_CORE_ASSERT(false, "");
 			return;
 		case GL_DEBUG_SEVERITY_LOW:          
-			ARES_CORE_WARN("[OpenGL Debug LOW] {0}", message);
-			ARES_CORE_ASSERT(false, "");
+			ARES_CORE_INFO("[OpenGL Debug LOW] {0}", message);
+			//ARES_CORE_ASSERT(false, "");
 			return;
 		case GL_DEBUG_SEVERITY_NOTIFICATION: 
 			ARES_CORE_LOG("[OpenGL Debug NOTIFICATION] {0}", message);
@@ -53,7 +53,7 @@ namespace Ares {
 #endif
 		
 		glEnable(GL_DEPTH_TEST);
-		//glDepthFunc(GL_LEQUAL); // set depth function to less than AND equal for skybox depth trick.
+		glDepthFunc(GL_LEQUAL); // set depth function to less than AND equal for skybox depth trick.
 
 		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 		glFrontFace(GL_CCW);
