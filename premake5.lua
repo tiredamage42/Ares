@@ -27,13 +27,14 @@ IncludeDir["entt"] = "Ares/vendor/entt"
 IncludeDir["FastNoise"] = "Ares/vendor/FastNoise"
 IncludeDir["json"] = "Ares/vendor/nlohmann-json"
 IncludeDir["FBXSDK"] = "Ares/vendor/FBXSDK/include"
--- IncludeDir["assimp"] = "Ares/vendor/assimp/include"
+IncludeDir["assimp"] = "Ares/vendor/assimp/include"
 
 
 group "Dependencies"
     include "Ares/vendor/GLFW"
     include "Ares/vendor/Glad"
     include "Ares/vendor/imgui"
+    -- include "Ares/vendor/Assimp2"
 group ""
 
 project "Ares"
@@ -88,9 +89,9 @@ project "Ares"
         "%{IncludeDir.json}",
         "%{IncludeDir.FastNoise}",
         "%{IncludeDir.FBXSDK}",
-        "%{prj.name}/vendor/assimp/include",
+        "%{IncludeDir.assimp}",
+        -- "%{prj.name}/vendor/assimp/include",
         "%{prj.name}/vendor/yaml-cpp/include"
-        -- "%{IncludeDir.assimp}"
     }
         
     links
