@@ -42,6 +42,7 @@ namespace Ares {
 	{
 		m_SelectionContext = entity;
 	}
+
 	void SceneHierarchyPanel::OnImGuiRender()
 	{
 		ImGui::Begin("Scene Hierarchy");

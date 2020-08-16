@@ -104,12 +104,12 @@ namespace Ares {
 		return nullptr;
 	}
 
-	ShaderResourceDeclaration* Material::FindResourceDeclaration(const std::string& name, uint8_t& samplerSlot)
+	ShaderResourceDeclaration* Material::FindResourceDeclaration(const std::string& name)//, uint8_t& samplerSlot)
 	{
 
 
 
-		samplerSlot = 0;
+		//samplerSlot = 0;
 		
 		auto& resources = m_Shader->GetResources(ShaderVariant::Static);
 		for (ShaderResourceDeclaration* resource : resources)
@@ -117,8 +117,8 @@ namespace Ares {
 			if (resource->GetName() == name)
 				return resource;
 
-			if (resource->GetCount() == 1)
-				samplerSlot++;
+			/*if (resource->GetCount() == 1)
+				samplerSlot++;*/
 			
 		}
 		return nullptr;

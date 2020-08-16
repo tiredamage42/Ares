@@ -36,11 +36,15 @@ namespace Ares {
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
 
+		virtual bool GetSRGB() const = 0;
+
 		virtual uint32_t GetMipLevelCount() const = 0;
 
 		static uint32_t GetBPP(TextureFormat format);
 		static int CalculateMipMapCount(int width, int height);
 		virtual void GenerateMipMaps() const = 0;
+
+		virtual const std::string& GetPath() const = 0;
 
 	};
 
@@ -66,7 +70,7 @@ namespace Ares {
 		virtual bool Loaded() const = 0;
 
 
-		virtual const std::string& GetPath() const = 0;
+		//virtual const std::string& GetPath() const = 0;
 	};
 
 	class TextureCube : public Texture
@@ -75,7 +79,7 @@ namespace Ares {
 		static Ref<TextureCube> Create(TextureFormat format, uint32_t width, uint32_t height, FilterType filterType, bool useMips);
 		static Ref<TextureCube> Create(const std::string& path, FilterType filterType, bool useMips);
 
-		virtual const std::string& GetPath() const = 0;
+		//virtual const std::string& GetPath() const = 0;
 	};
 
 }

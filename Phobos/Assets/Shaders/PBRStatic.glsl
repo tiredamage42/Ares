@@ -25,6 +25,7 @@ out vec2 TexCoords;
 out vec3 WorldPos;
 out vec3 Normal;
 out mat3 TBN;
+out vec3 CameraPos;
 
 //uniform mat4 u_ViewProjectionMatrix;
 //uniform mat4 u_Transform;
@@ -33,7 +34,8 @@ void main()
 {
 
 
-    
+    CameraPos = inverse(ares_VMatrix)[3].xyz;
+
 
     TexCoords = aTexCoords;
     
@@ -71,6 +73,7 @@ in vec2 TexCoords;
 in vec3 WorldPos;
 in vec3 Normal;
 in mat3 TBN;
+in vec3 CameraPos;
 
 // material parameters
 //uniform vec3 albedo;
@@ -114,7 +117,7 @@ struct Light {
 
 
 uniform Light lights;
-uniform vec3 u_CameraPosition;
+//uniform vec3 u_CameraPosition;
 
 //uniform vec3 camPos; 
 
@@ -221,7 +224,9 @@ void main()
 
     vec3 worldNorm = u_NormalTexToggle > .5 ? getNormalFromMap() : normalize(Normal);
     
-    vec3 viewDir = normalize(u_CameraPosition - WorldPos);
+
+    vec3 viewDir = normalize(CameraPos - WorldPos);
+    //vec3 viewDir = normalize(u_CameraPosition - WorldPos);
     //vec3 viewDir = normalize(-WorldPos);
 
     

@@ -7,25 +7,27 @@ namespace Ares {
 	class OpenGLShaderResourceDeclaration : public ShaderResourceDeclaration
 	{
 	public:
-		enum class Type
+		/*enum class Type
 		{
 			NONE, TEXTURE2D, TEXTURECUBE
-		};
+		};*/
 	private:
 		friend class OpenGLShader;
 	private:
 		std::string m_Name;
-		//uint32_t m_TexSlot = 0;
+		uint32_t m_TexSlot = 0;
 		uint32_t m_Count;
 		Type m_Type;
 	public:
 		OpenGLShaderResourceDeclaration(Type type, const std::string& name, uint32_t count);
 
 		inline const std::string& GetName() const override { return m_Name; }
-		//inline uint32_t GetRegister() const override { return m_TexSlot; }
+		inline uint32_t GetRegister() const override { return m_TexSlot; }
 		inline uint32_t GetCount() const override { return m_Count; }
 
-		inline Type GetType() const { return m_Type; }
+		//inline Type GetType() const { return m_Type; }
+		inline virtual Type GetType() const override { return m_Type; }
+
 	public:
 		static Type StringToType(const std::string& type);
 		static std::string TypeToString(Type type);
@@ -37,10 +39,10 @@ namespace Ares {
 		friend class OpenGLShader;
 		friend class OpenGLShaderUniformBufferDeclaration;
 	public:
-		enum class Type
+		/*enum class Type
 		{
 			NONE, FLOAT32, VEC2, VEC3, VEC4, MAT3, MAT4, INT32, STRUCT
-		};
+		};*/
 	private:
 		std::string m_Name;
 		uint32_t m_Size;
@@ -62,8 +64,11 @@ namespace Ares {
 		inline uint32_t GetAbsoluteOffset() const { return m_Struct ? m_Struct->GetOffset() + m_Offset : m_Offset; }
 		inline ShaderDomain GetDomain() const { return m_Domain; }
 
+
+		inline virtual Type GetType() const override { return m_Type; }
+
 		int32_t GetLocation() const { return m_Location; }
-		inline Type GetType() const { return m_Type; }
+		//inline Type GetType() const { return m_Type; }
 		inline bool IsArray() const { return m_Count > 1; }
 		inline const ShaderStruct& GetShaderUniformStruct() const { ARES_CORE_ASSERT(m_Struct, ""); return *m_Struct; }
 	protected:

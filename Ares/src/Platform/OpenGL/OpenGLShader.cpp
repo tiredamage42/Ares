@@ -413,6 +413,8 @@ namespace Ares {
 
 							uniform mat4 _ares_internal_Transform;
 							uniform mat4 ares_VPMatrix;
+							uniform mat4 ares_VMatrix;
+
 
 						)");
 					}
@@ -430,6 +432,7 @@ namespace Ares {
 							source.insert(insertVars, R"(
 								uniform mat4 _ares_internal_Transform;
 								uniform mat4 ares_VPMatrix;
+								uniform mat4 ares_VMatrix;
 							)");
 						}
 					}
@@ -645,6 +648,8 @@ namespace Ares {
 		auto& vertexSource = m_ShaderSource[GL_VERTEX_SHADER];
 		auto& fragmentSource = m_ShaderSource[GL_FRAGMENT_SHADER];
 
+		uint32_t samplers = 0;
+
 		// Vertex Shader
 		vstr = vertexSource.c_str();
 		while (token = FindToken(vstr, "struct"))
@@ -652,7 +657,7 @@ namespace Ares {
 
 		vstr = vertexSource.c_str();
 		while (token = FindToken(vstr, "uniform"))
-			ParseUniform(GetStatement(token, &vstr), ShaderDomain::Vertex, variantBuffers, variant);
+			ParseUniform(GetStatement(token, &vstr), ShaderDomain::Vertex, variantBuffers, variant, samplers);
 
 		// Fragment Shader
 		fstr = fragmentSource.c_str();
@@ -661,7 +666,7 @@ namespace Ares {
 
 		fstr = fragmentSource.c_str();
 		while (token = FindToken(fstr, "uniform"))
-			ParseUniform(GetStatement(token, &fstr), ShaderDomain::Pixel, variantBuffers, variant);
+			ParseUniform(GetStatement(token, &fstr), ShaderDomain::Pixel, variantBuffers, variant, samplers);
 	}
 
 	static bool IsTypeStringResource(const std::string& type)
@@ -673,7 +678,7 @@ namespace Ares {
 		return false;
 	}
 
-	void OpenGLShader::ParseUniform(const std::string& statement, ShaderDomain domain, ShaderVariantBuffers& variantBuffers, ShaderVariant variant)
+	void OpenGLShader::ParseUniform(const std::string& statement, ShaderDomain domain, ShaderVariantBuffers& variantBuffers, ShaderVariant variant, uint32_t& samplers)
 	{
 		std::vector<std::string> tokens = Tokenize(statement);
 
@@ -704,6 +709,21 @@ namespace Ares {
 		{
 			ShaderResourceDeclaration* declaration = new OpenGLShaderResourceDeclaration(OpenGLShaderResourceDeclaration::StringToType(typeString), name, count);
 			variantBuffers.m_Resources.push_back(declaration);
+
+
+			OpenGLShaderResourceDeclaration* ogldec = (OpenGLShaderResourceDeclaration*)declaration;
+			
+			if (ogldec->GetCount() == 1)
+			{
+				ogldec->m_TexSlot = samplers;
+				samplers++;
+			}
+			else if (declaration->GetCount() > 1)
+			{
+				ogldec->m_TexSlot = 0;
+			}
+
+
 		}
 		else
 		{
@@ -906,7 +926,7 @@ namespace Ares {
 			}
 		}
 
-		uint32_t sampler = 0;
+		//uint32_t sampler = 0;
 		for (size_t i = 0; i < buffers.m_Resources.size(); i++)
 		{
 			OpenGLShaderResourceDeclaration* resource = (OpenGLShaderResourceDeclaration*)buffers.m_Resources[i];
@@ -918,9 +938,12 @@ namespace Ares {
 			{
 				//resource->m_TexSlot = sampler;
 				if (location != -1)
-					UploadUniformInt(location, sampler);
+				{
+					//UploadUniformInt(location, sampler);
+					UploadUniformInt(location, resource->GetRegister());
+				}
 
-				sampler++;
+				//sampler++;
 			}
 			else if (resource->GetCount() > 1)
 			{

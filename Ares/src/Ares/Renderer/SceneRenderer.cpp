@@ -135,7 +135,7 @@ namespace Ares {
 		}
 	}
 
-	static void DrawRenderMap(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::vec3& cameraPosition)
+	static void DrawRenderMap(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view)//, const glm::vec3& cameraPosition)
 	{
 		// Read our shaders into the appropriate buffers
 		for (auto& shader_materials : renderMap)
@@ -145,7 +145,9 @@ namespace Ares {
 			ShaderVariant variant = shaderVarPair.Variant;
 
 			shader->Bind(variant);
+			
 			shader->SetMat4("ares_VPMatrix", viewProjection, variant);
+			shader->SetMat4("ares_VMatrix", view, variant);
 
 			const MaterialsMap& materials = shader_materials.second;
 			for (auto& materials_draws : materials)
@@ -153,7 +155,7 @@ namespace Ares {
 				Ref<Material> material = materials_draws.first;
 				const MeshDrawCalls& draws = materials_draws.second;
 
-				material->Set("u_CameraPosition", cameraPosition);
+				//material->Set("u_CameraPosition", cameraPosition);
 
 				material->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
 				material->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
@@ -550,8 +552,10 @@ namespace Ares {
 			}, "Outline Stencil mask");
 		}
 
-		auto viewProjection = s_Data.SceneData.SceneCamera.Camera.GetProjectionMatrix() * s_Data.SceneData.SceneCamera.ViewMatrix;
-		glm::vec3 cameraPosition = glm::inverse(s_Data.SceneData.SceneCamera.ViewMatrix)[3];
+
+		auto viewMatrix = s_Data.SceneData.SceneCamera.ViewMatrix;
+		auto viewProjection = s_Data.SceneData.SceneCamera.Camera.GetProjectionMatrix() * viewMatrix;
+		//glm::vec3 cameraPosition = glm::inverse(s_Data.SceneData.SceneCamera.ViewMatrix)[3];
 
 
 
@@ -575,7 +579,7 @@ namespace Ares {
 
 		RenderMap drawMap;
 		SortRenderMap(s_Data.DrawList, drawMap);
-		DrawRenderMap(drawMap, viewProjection, cameraPosition);
+		DrawRenderMap(drawMap, viewProjection, viewMatrix);// , cameraPosition);
 		drawMap.clear();
 
 
@@ -706,7 +710,7 @@ namespace Ares {
 
 
 		SortRenderMap(s_Data.SelectedMeshDrawList, drawMap);
-		DrawRenderMap(drawMap, viewProjection, cameraPosition);
+		DrawRenderMap(drawMap, viewProjection, viewMatrix);// , cameraPosition);
 
 
 		//shadersVisited.clear();

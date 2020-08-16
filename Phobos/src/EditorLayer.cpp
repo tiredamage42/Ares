@@ -12,6 +12,10 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "MaterialEditor.h"
+
+
+
 #define _2D 0
 
 namespace Ares
@@ -262,7 +266,7 @@ namespace Ares
         
 
         //m_MeshBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/pbr_anim.glsl"));
-        m_MeshBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/PBRStatic.glsl"));
+        Ref<Material> m_MeshBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/PBRStatic.glsl"));
 
 
         Entity gunEntity = m_EditorScene->CreateEntity("Gun");
@@ -270,26 +274,31 @@ namespace Ares
 
         std::vector<Ref<Material>> loadedMaterials;
         mr.Mesh = CreateRef<Mesh>(
-            //"C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\models\\m1911\\M1911Materials.fbx",
+            "C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\models\\m1911\\M1911Materials.fbx",
             //"C:\\Users\\Andres\\Desktop\\Racoon\\source\\Racoon_Anim.fbx",
             //"C:\\Users\\Andres\\Downloads\\Action Adventure Pack\\ely_k_atienza@Taunt.fbx",
-            "C:\\Users\\Andres\\Downloads\\ely_k_atienza.fbx",
+            //"C:\\Users\\Andres\\Downloads\\MixamoDownloadTest\\ely_k_atienza.fbx",
             loadedMaterials
         );
         
         //mr.MaterialOverride = CreateRef<MaterialInstance>(m_MeshBaseMaterial);
         mr.Materials = loadedMaterials;// { m_MeshBaseMaterial };
 
+        m_MeshMaterials = loadedMaterials;
+
+
         if (!loadedMaterials.size())
         {
             ARES_WARN("Couldnt Find Materials... setting custom");
             mr.Materials = { m_MeshBaseMaterial };
+            
+            m_MeshMaterials = mr.Materials;
         }
 
         gunEntity.Transform() = glm::scale(
             glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2)),
-            //glm::vec3(15.0f)
-            glm::vec3(.1f)
+            glm::vec3(15.0f)
+            //glm::vec3(.1f)
         );
 
         //m_SphereBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/pbr_static.glsl"));
@@ -654,12 +663,12 @@ namespace Ares
     }
 
 
-
+    /*
     void EditorLayer::SetPBRMaterialValues(Ref<Material> material) const//, const glm::mat4& viewProjection) const
     {
 
-        /*material->Set("u_Metalness", m_MetalnessInput.Value);
-        material->Set("u_Roughness", m_RoughnessInput.Value);*/
+        //material->Set("u_Metalness", m_MetalnessInput.Value);
+        //material->Set("u_Roughness", m_RoughnessInput.Value);
 
 
         material->Set("u_AlbedoColor", m_AlbedoInput.Color);
@@ -683,6 +692,7 @@ namespace Ares
         if (m_MetalnessInput.TextureMap) material->Set("u_MetalnessTexture", m_MetalnessInput.TextureMap);
         if (m_RoughnessInput.TextureMap) material->Set("u_RoughnessTexture", m_RoughnessInput.TextureMap);
     }
+    */
 
 
     void EditorLayer::OnUpdate()
@@ -723,17 +733,21 @@ namespace Ares
 
         //if (m_MeshBaseMaterial)
         //{
+        /*
             SetPBRMaterialValues(m_MeshBaseMaterial);// , viewProjection);
             m_MeshBaseMaterial->Set("u_Metalness", m_MetalnessInput.Value);
             m_MeshBaseMaterial->Set("u_Roughness", m_RoughnessInput.Value);
+        */
 
         //}
         //SetPBRMaterialValues(m_SphereBaseMaterial);// , viewProjection);
 
+        /*
             for (auto mat : m_SphereMaterials)
             {
                 SetPBRMaterialValues(mat);
             }
+        */
 
         //if (m_SceneType == SceneType::Spheres)
         //{
@@ -1232,6 +1246,38 @@ namespace Ares
         }
         ImGui::Separator();
 
+
+
+
+
+
+
+
+        //ImGui::Begin("Scene Hierarchy");
+        uint32_t i = 0;
+        for (auto material : m_MeshMaterials)
+        {
+            ImGuiTreeNodeFlags node_flags = (i == 0 ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+            
+            bool opened = ImGui::TreeNodeEx((void*)i, node_flags, material->GetName().c_str());
+            if (opened)
+            {
+                MaterialEditor::DrawMaterial(material);
+                ImGui::TreePop();
+            }
+
+            i++;
+        }
+        //ImGui::End();
+
+        
+            
+
+
+
+        /*
+
+
         // Textures ------------------------------------------------------------------------------
         {
             // Albedo
@@ -1441,6 +1487,7 @@ namespace Ares
                 ImGui::SliderFloat("Value##RoughnessInput", &m_RoughnessInput.Value, 0.0f, 1.0f);
             }
         }
+        */
 
         ImGui::Separator();
 

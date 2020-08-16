@@ -19,7 +19,14 @@ namespace Ares
 		//friend class OpenGLShader;
 		friend class ShaderStruct;
 	public:
+		enum class Type
+		{
+			NONE, FLOAT32, VEC2, VEC3, VEC4, MAT3, MAT4, INT32, STRUCT
+		};
+
 		virtual const std::string& GetName() const = 0;
+		virtual Type GetType() const = 0;
+
 		virtual uint32_t GetSize() const = 0;
 		virtual uint32_t GetCount() const = 0;
 		virtual uint32_t GetOffset() const = 0;
@@ -83,9 +90,17 @@ namespace Ares
 
 	class ShaderResourceDeclaration
 	{
+
 	public:
+		enum class Type
+		{
+			NONE, TEXTURE2D, TEXTURECUBE
+		};
+
+		virtual Type GetType() const = 0;
+
 		virtual const std::string& GetName() const = 0;
-		//virtual uint32_t GetRegister() const = 0;
+		virtual uint32_t GetRegister() const = 0;
 		virtual uint32_t GetCount() const = 0;
 	};
 

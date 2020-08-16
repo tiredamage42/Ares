@@ -156,6 +156,7 @@ namespace Ares {
 		m_Loaded = true;
 		m_Width = width;
 		m_Height = height;
+		m_SRGB = srgb;
 
 		
 		Renderer::Submit([=]() mutable {

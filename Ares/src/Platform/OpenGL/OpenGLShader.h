@@ -148,7 +148,7 @@ namespace Ares {
 		/*void ParseUniform(const std::string& statement, ShaderDomain domain);
 		void ParseUniformStruct(const std::string& block, ShaderDomain domain);*/
 
-		void ParseUniform(const std::string& statement, ShaderDomain domain, ShaderVariantBuffers& variantBuffers, ShaderVariant variant);
+		void ParseUniform(const std::string& statement, ShaderDomain domain, ShaderVariantBuffers& variantBuffers, ShaderVariant variant, uint32_t& samplers);
 		void ParseUniformStruct(const std::string& block, ShaderDomain domain, ShaderVariantBuffers& variantBuffers);
 
 		

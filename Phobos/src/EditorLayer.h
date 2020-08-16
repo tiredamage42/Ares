@@ -81,13 +81,19 @@ namespace Ares
 		//Ref<Texture2D> m_BRDFLUT;
 
 		//Ref<Material> m_SphereBaseMaterial, m_MeshBaseMaterial;
-		Ref<Material> m_MeshBaseMaterial;
+
+		//Ref<Material> m_MeshBaseMaterial;
+		std::vector<Ref<Material>> m_MeshMaterials;
+
+
 		std::vector<Ref<Material>> m_SphereMaterials;
 
 		//Ref<Material> m_PBRMaterialStatic, m_PBRMaterialAnim;
 		/*std::vector<Ref<MaterialInstance>> m_MetalSphereMaterialInstances;
 		std::vector<Ref<MaterialInstance>> m_DielectricSphereMaterialInstances;*/
 
+
+		/*
 		struct AlbedoInput
 		{
 			// Silver, from https://docs.unrealengine.com/en-us/Engine/Rendering/Materials/PhysicallyBased
@@ -120,6 +126,7 @@ namespace Ares
 			bool UseTexture = false;
 		};
 		RoughnessInput m_RoughnessInput;
+		*/
 
 		//Ref<RenderPass> m_GeoPass, m_CompositePass;
 		/*Ref<FrameBuffer> m_FrameBuffer;

@@ -21,6 +21,7 @@ namespace Ares {
 	class Material
 	{
 		//friend class MaterialInstance;
+		friend class MaterialEditor;
 	public:
 		Material(Ref<Shader> shader, const std::string& name = "");
 		Material(Ref<Material> other, const std::string& name = "");
@@ -66,12 +67,190 @@ namespace Ares {
 				mi->OnMaterialValueUpdated(decl);*/
 		}
 
+		std::vector<ShaderResourceDeclaration*> GetResourceDeclarations()
+		{
+			return m_Shader->GetResources(ShaderVariant::Static);
+		}
+		std::vector<ShaderUniformDeclaration*> GetUniformDeclarations()
+		{
+			std::vector<ShaderUniformDeclaration*> result;
+
+			if (m_VSUniformStorageBuffer)
+			{
+				auto& declarations = m_Shader->GetVSMaterialUniformBuffer(ShaderVariant::Static).GetUniformDeclarations();	
+				result.insert(result.end(), declarations.begin(), declarations.end());
+			}
+			if (m_PSUniformStorageBuffer)
+			{
+				auto& declarations = m_Shader->GetPSMaterialUniformBuffer(ShaderVariant::Static).GetUniformDeclarations();
+				result.insert(result.end(), declarations.begin(), declarations.end());
+			}
+			return result;
+		}
+
+		// TODO: ranges for sliders, and color specification for vec4's, toggle for floats
+
+		//void DrawImGui(Ref<Material> material)
+		//{
+		//	std::vector<ShaderUniformDeclaration*> uniforms = material->GetUniformDeclarations();
+
+		//	for (auto& uniform : uniforms)
+		//	{
+		//		auto& buffer = material->GetUniformBufferTarget(uniform);
+		//		uint32_t offset = uniform->GetOffset();
+
+		//		byte* finalVal;
+		//		bool edited = false;
+		//		switch (uniform->GetType())
+		//		{
+		//		case ShaderUniformDeclaration::Type::FLOAT32:
+		//			float value = *(float*)&buffer.Data[offset];
+
+		//			// draw
+		//			edited = false;
+
+		//			if (edited) finalVal = (byte*)&value;
+		//			break;
+		//		case ShaderUniformDeclaration::Type::INT32:
+		//			int32_t value = *(int32_t*)&buffer.Data[offset];
+
+		//			// draw
+		//			edited = false;
+
+		//			if (edited) finalVal = (byte*)&value;
+		//			break;
+		//		case ShaderUniformDeclaration::Type::VEC2:
+		//			glm::vec2 value = *(glm::vec2*) & buffer.Data[offset];
+
+		//			// draw
+		//			edited = false;
+
+		//			if (edited) finalVal = (byte*)&value;
+		//			break;
+		//		case ShaderUniformDeclaration::Type::VEC3:
+		//			glm::vec3 value = *(glm::vec3*) & buffer.Data[offset];
+
+		//			// draw
+		//			edited = false;
+
+		//			if (edited) finalVal = (byte*)&value;
+		//			break;
+		//		case ShaderUniformDeclaration::Type::VEC4:
+		//			glm::vec4 value = *(glm::vec4*) & buffer.Data[offset];
+
+		//			// draw
+		//			edited = false;
+
+		//			if (edited) finalVal = (byte*)&value;
+		//			break;
+
+
+		//			// no mat3/4 or structs for now....
+		//		}
+		//		if (edited)
+		//		{
+		//			buffer.Write(finalVal, uniform->GetSize(), offset);
+		//		}
+		//	}
+
+		//	std::vector<ShaderResourceDeclaration*> resources = GetResourceDeclarations();
+
+		//	for (auto& decl : resources)
+		//	{
+		//		std::string name = decl->GetName();
+		//		uint32_t slot = decl->GetRegister();
+
+		//		Ref<Texture> tex = nullptr;
+
+		//		if (slot < m_Textures.size())
+		//		{
+		//			tex = m_Textures[slot];
+		//		}
+
+
+		//		if (ImGui::CollapsingHeader(name, nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+		//		{
+		//			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+		//			ImGui::Image(tex ? (void*)(intptr_t)tex->GetRendererID() : (void*)(intptr_t)m_CheckerboardTex->GetRendererID(), ImVec2(64, 64));
+
+		//			// Drag 'n' Drop Support
+		//			if (ImGui::BeginDragDropTarget())
+		//			{
+		//				auto data = ImGui::AcceptDragDropPayload("selectable");
+		//				if (data)
+		//				{
+		//					std::string file = (char*)data->Data;
+		//					auto extension = AssetManager::ParseFiletype(file);
+		//					if (extension == "tga" || extension == "png")
+		//					{
+		//						tex = Texture2D::Create(file, FilterType::Trilinear, true, false);
+
+		//						if (m_Textures.size() <= slot)
+		//							m_Textures.resize((size_t)slot + 1);
+
+		//						m_Textures[slot] = tex;
+		//					}
+		//				}
+		//				ImGui::EndDragDropTarget();
+		//			}
+
+		//			ImGui::PopStyleVar();
+		//			if (ImGui::IsItemHovered())
+		//			{
+		//				if (tex)
+		//				{
+		//					ImGui::BeginTooltip();
+		//					ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+		//					ImGui::TextUnformatted(tex->GetPath().c_str());
+		//					ImGui::PopTextWrapPos();
+		//					ImGui::Image((void*)(intptr_t)tex->GetRendererID(), ImVec2(384, 384));
+		//					ImGui::EndTooltip();
+		//				}
+		//				if (ImGui::IsItemClicked())
+		//				{
+		//					std::string filename = Application::Get().OpenFile("");
+		//					if (filename != "")
+		//					{
+		//						tex = Texture2D::Create(filename, FilterType::Trilinear, true, false);
+
+
+		//						if (m_Textures.size() <= slot)
+		//							m_Textures.resize((size_t)slot + 1);
+
+		//						m_Textures[slot] = tex;
+		//					}
+		//				}
+		//			}
+
+		//			if (tex)
+		//			{
+		//			ImGui::SameLine();
+		//			ImGui::BeginGroup();
+		//				bool srgb = tex->m_SRGB;
+		//				if (ImGui::Checkbox("sRGB##AlbedoMap", &tex))
+		//				{
+		//					tex = Texture2D::Create(tex->GetPath(), FilterType::Trilinear, true, srgb);
+		//					
+		//					if (m_Textures.size() <= slot)
+		//						m_Textures.resize((size_t)slot + 1);
+
+		//					m_Textures[slot] = tex;
+		//				}
+
+		//			ImGui::EndGroup();
+		//			}
+		//		}
+		//	}
+		//}
+
+
+
 		void Set(const std::string& name, Ref<Texture> texture)
 		{
 
-			uint8_t slot;
-			auto decl = FindResourceDeclaration(name, slot);
-			//uint32_t slot = decl->GetRegister();
+			//uint8_t slot;
+			auto decl = FindResourceDeclaration(name);// , slot);
+			uint32_t slot = decl->GetRegister();
 			if (!decl)
 			{
 				//ARES_CORE_ERROR("Could not find sampler2D uniform with name '{0}'", name);
@@ -102,7 +281,7 @@ namespace Ares {
 		void BindTextures();
 
 		ShaderUniformDeclaration* FindUniformDeclaration(const std::string& name);
-		ShaderResourceDeclaration* FindResourceDeclaration(const std::string& name, uint8_t& samplerSlot);
+		ShaderResourceDeclaration* FindResourceDeclaration(const std::string& name);// , uint8_t& samplerSlot);
 		Buffer& GetUniformBufferTarget(ShaderUniformDeclaration* uniformDeclaration);
 	private:
 		std::string m_Name;

@@ -84,6 +84,7 @@ void main(void)
 	vec3 N = GetCubeMapTexCoord();
 	vec3 irradiance = vec3(0);
 
+	/*
 	vec3 S, T;
 	computeBasisVectors(N, S, T);
 
@@ -102,7 +103,7 @@ void main(void)
 	irradiance /= vec3(NumSamples);
 	
 	
-	/*
+	*/
 
 	// tangent space calculation from origin point
 	vec3 up = vec3(0.0, 1.0, 0.0);
@@ -138,7 +139,6 @@ void main(void)
 	}
 	irradiance = PI * irradiance * (1.0 / float(nrSamples));
 
-	*/
 
 
 	imageStore(outputTexture, ivec3(gl_GlobalInvocationID), vec4(irradiance, 1.0));

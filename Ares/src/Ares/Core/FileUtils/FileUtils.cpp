@@ -1,5 +1,7 @@
 #include "AresPCH.h"
 #include "FileUtils.h"
+#include <sys/stat.h>
+
 namespace Ares
 {
 	std::string FileUtils::GetFileContents(const std::string& filePath, bool& success)
@@ -48,5 +50,10 @@ namespace Ares
 		size_t lastSlash = filePath.find_last_of("/\\");
 		size_t nameStart = lastSlash == std::string::npos ? 0 : lastSlash + 1;
 		return filePath.substr(nameStart, filePath.size() - nameStart);
+	}
+	bool FileUtils::PathExists(const std::string& path)
+	{
+		struct stat buffer;
+		return (stat(path.c_str(), &buffer) == 0);	
 	}
 }

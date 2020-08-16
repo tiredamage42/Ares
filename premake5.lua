@@ -26,6 +26,7 @@ IncludeDir["stb_image"] = "Ares/vendor/stb_image"
 IncludeDir["entt"] = "Ares/vendor/entt"
 IncludeDir["FastNoise"] = "Ares/vendor/FastNoise"
 IncludeDir["json"] = "Ares/vendor/nlohmann-json"
+IncludeDir["FBXSDK"] = "Ares/vendor/FBXSDK/include"
 -- IncludeDir["assimp"] = "Ares/vendor/assimp/include"
 
 
@@ -41,7 +42,6 @@ project "Ares"
     language "C++"
     cppdialect "C++17"
     staticruntime "on"
-    
     
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -87,18 +87,21 @@ project "Ares"
         "%{IncludeDir.entt}",
         "%{IncludeDir.json}",
         "%{IncludeDir.FastNoise}",
+        "%{IncludeDir.FBXSDK}",
         "%{prj.name}/vendor/assimp/include",
         "%{prj.name}/vendor/yaml-cpp/include"
         -- "%{IncludeDir.assimp}"
     }
-    libdirs
-    {
-        
-    }
         
     links
     {
+        "zlib-mt.lib",
+        "libxml2-mt.lib",
+        "libfbxsdk-mt.lib",
+        -- "libfbxsdk-mt.lib",
+
         "GLFW",
+        -- "vendor/GLFWs/lib/glfw3.lib",
         "Glad",
         "ImGui",
         "opengl32.lib"
@@ -116,17 +119,32 @@ project "Ares"
 	filter "configurations:Debug"
         defines "ARES_DEBUG"
 		runtime "Debug"
-		symbols "on"
+        symbols "on"
+        libdirs
+        {
+            "%{prj.name}/vendor/FBXSDK/lib/debug"
+        }
+        
 
 	filter "configurations:Release"
         defines "ARES_RELEASE"
 		runtime "Release"
-		optimize "on"
+        optimize "on"
+        libdirs
+        {
+            "%{prj.name}/vendor/FBXSDK/lib/release"
+        }
+        
 
 	filter "configurations:Dist"
         defines "ARES_DIST"
 		runtime "Release"
         optimize "on"
+        libdirs
+        {
+            "%{prj.name}/vendor/FBXSDK/lib/release"
+        }
+        
         
 
 project "Sandbox"

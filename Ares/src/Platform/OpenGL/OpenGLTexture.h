@@ -46,6 +46,8 @@ namespace Ares {
 			return m_RendererID == ((OpenGLTexture2D&)other).m_RendererID;
 		}
 
+		virtual bool GetSRGB() const override { return m_SRGB; }
+
 	private:
 		uint32_t m_RendererID;
 		TextureFormat m_Format;
@@ -57,6 +59,7 @@ namespace Ares {
 		bool m_IsHDR = false;
 		bool m_Locked = false;
 		bool m_Loaded = false;
+		bool m_SRGB = false;
 
 		std::string m_Path;
 	};
@@ -88,6 +91,8 @@ namespace Ares {
 		{
 			return m_RendererID == ((OpenGLTextureCube&)other).m_RendererID;
 		}
+
+		virtual bool GetSRGB() const override { return false; }
 
 		virtual void GenerateMipMaps() const override;
 	private:

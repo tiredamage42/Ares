@@ -13,6 +13,8 @@
 #include <assimp/Importer.hpp>
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/LogStream.hpp>
+#include <assimp/pbrmaterial.h>
+
 
 #include <stb_image.h>
 
@@ -24,6 +26,16 @@
 
 #include "imgui.h"
 #include <filesystem>
+#include <iostream>
+
+
+
+#include <fbxsdk.h>
+//#include <fbxfilesdk/fbxio/fbxiosettings.h>
+
+
+
+
 
 /*
 	TODO:
@@ -467,18 +479,112 @@ namespace Ares {
 	}
 
 
-	Mesh::Mesh(const std::string& filename, std::vector<Ref<Material>>& m_Materials)
-		: m_FilePath(filename)
+
+	static void FBXSDKImport(const std::string& filePath)
+	{
+
+
+		/*
+		Initializing the importer
+			The scene importing functionality of the FBX SDK is abstracted by the FbxImporter class.
+			Instances of FbxImporter are created with a reference to the program's FbxManager singleton object. 
+			A FbxImporter must have its FbxImporter::Initialize() method called with three parameters:
+
+				- The path and filename of the file containing the scene to import.
+				
+				- The numeric file format identifier.Typically, this parameter is set to - 1 to 
+				let the importer automatically detect the file format according to the provided 
+				filename's extension.
+
+				- The FbxIOSettings object containing the import configuration options.
+				See IO Settings for more information.
+		*/
+
+		// Create the FBX SDK manager
+		FbxManager* lSdkManager = FbxManager::Create();
+
+		// Create an IOSettings object.
+		FbxIOSettings* ios = FbxIOSettings::Create(lSdkManager, IOSROOT);
+		lSdkManager->SetIOSettings(ios);
+
+		// ... Configure the FbxIOSettings object ...
+
+		// Create an importer.
+		FbxImporter* lImporter = FbxImporter::Create(lSdkManager, "");
+
+		
+		// Initialize the importer.
+		bool lImportStatus = lImporter->Initialize(filePath.c_str(), -1, lSdkManager->GetIOSettings());
+		
+		// If any errors occur in the call to FbxImporter::Initialize(), 
+		// the method returns false.To retrieve the error, you must call GetStatus().GetErrorString() 
+		// from the FbxImporter object.For more information on error handling, see Error Handling.
+
+
+		if (!lImportStatus) {
+			ARES_CORE_ERROR("Call to FbxImporter::Initialize() failed.\n");
+			ARES_CORE_ERROR("Error returned: {0}\n\n", lImporter->GetStatus().GetErrorString());
+			ARES_CORE_ASSERT(false, "");
+		}
+
+		/*
+		Importing a scene
+			Once the importer has been initialized, a scene container must be created to 
+			load the scene from the file.Scenes in the FBX SDK are abstracted by the FbxScene class.
+			For more information on scenes, see Nodesand the Scene Graph.
+		*/
+
+		// Create a new scene so it can be populated by the imported file.
+		FbxScene* lScene = FbxScene::Create(lSdkManager, "myScene");
+
+		// Import the contents of the file into the scene.
+		lImporter->Import(lScene);
+
+		// After the importer has populated the scene, it is safe to destroy it to reduce memory usage.
+		// The file has been imported; we can get rid of the importer.
+		lImporter->Destroy();
+	
+		/*
+		File version number
+			The FBX file format version is incremented to reflect newly supported 
+			features(see Supported file formats).The FBX version of the currently imported file 
+			can be obtained by calling FbxImporter::GetFileVersion().
+		*/
+
+		// File format version numbers to be populated.
+		//int lFileMajor, lFileMinor, lFileRevision;
+
+		// Populate the FBX file format version numbers with the import file.
+		//lImporter->GetFileVersion(lFileMajor, lFileMinor, lFileRevision);
+	
+		/*
+		As of FBX SDK 2012.0, the header file fbxfilesdk_version.h defines 
+		the preprocessor identifer FBXSDK_VERSION_STRING, which represents the version 
+		information as a string.
+		*/
+
+		// Destroy the SDK manager and all the other objects it was handling.
+		lSdkManager->Destroy();
+
+	}
+
+
+
+	Mesh::Mesh(const std::string& filepath, std::vector<Ref<Material>>& m_Materials)
+		: m_FilePath(filepath)
 	{
 		LogStream::Initialize();
 
-		ARES_CORE_INFO("Loading mesh: {0}", filename.c_str());
+		ARES_CORE_INFO("Loading mesh: {0}", filepath.c_str());
 
 		m_Importer = std::make_unique<Assimp::Importer>();
 		
-		const aiScene* scene = m_Importer->ReadFile(filename, s_MeshImportFlags);
+		const aiScene* scene = m_Importer->ReadFile(filepath, s_MeshImportFlags);
 		if (!scene || !scene->HasMeshes())
-			ARES_CORE_ERROR("Failed to load mesh file: {0}", filename);
+		{
+			ARES_CORE_ERROR("Failed to load mesh file: {0}", filepath);
+			ARES_CORE_ASSERT(false, "");
+		}
 
 		//double factor;
 		//scene->mMetaData->Get("UnitScaleFactor", factor);
@@ -486,6 +592,8 @@ namespace Ares {
 
 		m_Scene = scene;
 
+
+		
 		m_IsAnimated = scene->mAnimations != nullptr;
 
 		Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/PBRStatic.glsl");
@@ -673,7 +781,23 @@ namespace Ares {
 		// materials
 		if (scene->HasMaterials())
 		{
-			ARES_CORE_LOG("---- Materials - {0} ----", filename);
+			bool hasEmbeddedTextures = (bool)scene->mNumTextures;
+
+			// if we have embedded textures, import with fbx sdk
+			// to extract .fbm folder
+			if (hasEmbeddedTextures)
+			{
+				std::string fbmPath = filepath;
+				fbmPath.replace(filepath.size() - 1, 1, "m");
+
+				if (!FileUtils::PathExists(fbmPath))
+				{
+					FBXSDKImport(filepath);
+				}
+			}
+
+
+			ARES_CORE_LOG("---- Materials - {0} ----", filepath);
 
 			//m_Textures.resize(scene->mNumMaterials);
 			
@@ -719,6 +843,13 @@ namespace Ares {
 				bool hasAlbedoMap = aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &aiTexPath) == AI_SUCCESS;
 				if (hasAlbedoMap)
 				{
+					std::string imgPath = aiTexPath.data;
+					if (hasEmbeddedTextures)
+					{
+						// remove aitexpath part before ".fbm/..." then add teh filename
+						// this is pretty specific to the tests with mixamo models with embedded textures
+						imgPath = FileUtils::ExtractFileNameFromPath(filepath) + imgPath.substr(imgPath.find(".fbm"));
+					}
 
 					/*for (int i = 0; i < scene->mNumTextures; i++)
 					{
@@ -731,15 +862,16 @@ namespace Ares {
 					//auto aiTexture = scene->GetEmbeddedTexture(texture_file.C_Str());
 					//auto texture = LoadTexture(aiTexture, true);
 
-					std::string imgPath = FileUtils::RemoveDirectoryFromPath(aiTexPath.data);
-					
+					//std::string imgPath = FileUtils::RemoveDirectoryFromPath(aiTexPath.data);
+					//std::string imgPath = aiTexPath.data;
+
 					// TODO: Temp - this should be handled by our filesystem
-					std::filesystem::path path = filename;
+					std::filesystem::path path = filepath;
 					auto parentPath = path.parent_path();
 					parentPath /= imgPath;
 					std::string texturePath = parentPath.string();
 
-					texturePath = filename.substr(0, filename.size() - 1)  + "m/" + FileUtils::RemoveDirectoryFromPath(scene->mTextures[2]->mFilename.data);
+					//texturePath = filename.substr(0, filename.size() - 1)  + "m/" + FileUtils::RemoveDirectoryFromPath(scene->mTextures[2]->mFilename.data);
 
 					ARES_CORE_LOG("  Albedo Texture Path = {0}", texturePath);
 					auto texture = Texture2D::Create(texturePath, FilterType::Trilinear, true, true);
@@ -768,10 +900,20 @@ namespace Ares {
 				// Normal maps
 				if (aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &aiTexPath) == AI_SUCCESS)
 				{
+
+					std::string imgPath = aiTexPath.data;
+					if (hasEmbeddedTextures)
+					{
+						// remove aitexpath part before ".fbm/..." then add teh filename
+						// this is pretty specific to the tests with mixamo models with embedded textures
+						imgPath = FileUtils::ExtractFileNameFromPath(filepath) + imgPath.substr(imgPath.find(".fbm"));
+					}
+
+
 					// TODO: Temp - this should be handled by Hazel's filesystem
-					std::filesystem::path path = filename;
+					std::filesystem::path path = filepath;
 					auto parentPath = path.parent_path();
-					parentPath /= std::string(aiTexPath.data);
+					parentPath /= imgPath;
 					std::string texturePath = parentPath.string();
 					ARES_CORE_LOG("  Normal map path = {0}", texturePath);
 
@@ -795,14 +937,22 @@ namespace Ares {
 
 
 
-
 				// Roughness map
 				if (aiMaterial->GetTexture(aiTextureType_SHININESS, 0, &aiTexPath) == AI_SUCCESS)
 				{
+
+					std::string imgPath = aiTexPath.data;
+					if (hasEmbeddedTextures)
+					{
+						// remove aitexpath part before ".fbm/..." then add teh filename
+						// this is pretty specific to the tests with mixamo models with embedded textures
+						imgPath = FileUtils::ExtractFileNameFromPath(filepath) + imgPath.substr(imgPath.find(".fbm"));
+					}
+
 					// TODO: Temp - this should be handled by Hazel's filesystem
-					std::filesystem::path path = filename;
+					std::filesystem::path path = filepath;
 					auto parentPath = path.parent_path();
-					parentPath /= std::string(aiTexPath.data);
+					parentPath /= imgPath;
 					std::string texturePath = parentPath.string();
 					ARES_CORE_LOG("  Roughness map path = {0}", texturePath);
 
@@ -824,7 +974,52 @@ namespace Ares {
 					ARES_CORE_LOG("		no roughness map");
 					mi->Set("u_Roughness", roughness);
 				}
+
+				// metallic
+
+				//material->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE, &fileBaseColor);
+				//material->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &fileMetallicRoughness);
+				//if (aiMaterial->GetTexture(aiTextureType_UNKNOWN, 0, &aiTexPath) == AI_SUCCESS)
+				if (aiMaterial->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &aiTexPath) == AI_SUCCESS)
+				{
+
+					std::string imgPath = aiTexPath.data;
+					if (hasEmbeddedTextures)
+					{
+						// remove aitexpath part before ".fbm/..." then add teh filename
+						// this is pretty specific to the tests with mixamo models with embedded textures
+						imgPath = FileUtils::ExtractFileNameFromPath(filepath) + imgPath.substr(imgPath.find(".fbm"));
+					}
+
+					// TODO: Temp - this should be handled by Hazel's filesystem
+					std::filesystem::path path = filepath;
+					auto parentPath = path.parent_path();
+					parentPath /= imgPath;
+					std::string texturePath = parentPath.string();
+					ARES_CORE_LOG("  Metallic map path = {0}", texturePath);
+
+					auto texture = Texture2D::Create(texturePath, FilterType::Trilinear, true);
+					if (texture->Loaded())
+					{
+						mi->Set("u_MetalnessTexture", texture);
+						mi->Set("u_MetalnessTexToggle", 1.0f);
+					}
+					else
+					{
+						ARES_CORE_ERROR("		Could not load texture: {0}", texturePath);
+						//mi->Set("u_RoughnessTexToggle", 1.0f);
+						mi->Set("u_Metalness", roughness);
+					}
+				}
+				else
+				{
+					ARES_CORE_LOG("		no Metalness map");
+					mi->Set("u_Metalness", roughness);
+				}
+				//aiTextureType_REFLECTION aiTextureType_SPECULAR
+
 #if 0
+
 				// Metalness map
 				if (aiMaterial->Get("$raw.ReflectionFactor|file", aiPTI_String, 0, aiTexPath) == AI_SUCCESS)
 				{
@@ -854,11 +1049,11 @@ namespace Ares {
 					mi->Set("u_Metalness", metalness);
 				}
 #endif
+
+
+
+				/*
 				bool metalnessTextureFound = false;
-
-
-
-
 
 				for (uint32_t i = 0; i < aiMaterial->mNumProperties; i++)
 				{
@@ -901,10 +1096,21 @@ namespace Ares {
 
 							metalnessTextureFound = true;
 
+							std::string imgPath = str;
+							if (hasEmbeddedTextures)
+							{
+								// remove aitexpath part before ".fbm/..." then add teh filename
+						// this is pretty specific to the tests with mixamo models with embedded textures
+								imgPath = FileUtils::ExtractFileNameFromPath(filepath) + imgPath.substr(imgPath.find(".fbm"));
+							}
+
+
+
+
 							// TODO: Temp - this should be handled by Hazel's filesystem
-							std::filesystem::path path = filename;
+							std::filesystem::path path = filepath;
 							auto parentPath = path.parent_path();
-							parentPath /= str;
+							parentPath /= imgPath;
 							std::string texturePath = parentPath.string();
 							ARES_CORE_LOG("    Metalness map path = {0}", texturePath);
 
@@ -932,6 +1138,8 @@ namespace Ares {
 					mi->Set("u_Metalness", metalness);
 					mi->Set("u_MetalnessTexToggle", 0.0f);
 				}
+
+				*/
 
 			}
 			ARES_CORE_LOG("------------------------");
