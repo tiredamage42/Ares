@@ -3,9 +3,9 @@
 
 #properties
 {
-    u_AlbedoColor   | [COLOR];
-    u_Metalness     | [RANGE(0 : 1)];
-    u_Roughness     | [RANGE(0 : 1)];
+    u_AlbedoColor   | [COLOR, DEF(1:0:1)];
+    u_Metalness     | [RANGE(0:1)];
+    u_Roughness     | [RANGE(0:1)];
 
     u_AlbedoTexture;
     //u_AlbedoTexToggle       | [TOGGLE];
@@ -45,7 +45,7 @@ For now, we assume we always sample the environment map from its center.
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec3 aTangent;
-layout(location = 3) in vec3 aBitangent;
+//layout(location = 3) in vec3 aBitangent;
 layout(location = 4) in vec2 aTexCoords;
 
 

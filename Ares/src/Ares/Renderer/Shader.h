@@ -107,13 +107,15 @@ namespace Ares {
 		Color = BIT(1),
 		Range = BIT(2),
 		Toggle = BIT(3),
-		BumpMap = BIT(4)
+		BumpMap = BIT(4),
+		DefaultValue = BIT(5)
 	};
 
 	struct PublicUniformAttributes
 	{
 		uint32_t Attributes = 0;
 		glm::vec2 Range{ 0 };
+		byte* DefaultValue;
 
 		bool HasAttribute(UniformAttribute attribute)
 		{

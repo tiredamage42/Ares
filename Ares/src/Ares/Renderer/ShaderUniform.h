@@ -27,6 +27,9 @@ namespace Ares
 		virtual const std::string& GetName() const = 0;
 		virtual Type GetType() const = 0;
 
+		virtual bool HasDefaultValue() const = 0;
+		virtual byte* GetDefaultValue() const = 0;
+
 		virtual uint32_t GetSize() const = 0;
 		virtual uint32_t GetCount() const = 0;
 		virtual uint32_t GetOffset() const = 0;

@@ -53,12 +53,20 @@ namespace Ares {
 		uint32_t m_Offset;
 		ShaderDomain m_Domain;
 
+		bool m_HasDefaultValue = false;
+		byte* m_DefaultValue;
+
 		Type m_Type;
 		ShaderStruct* m_Struct;
 		mutable int32_t m_Location;
 	public:
 		OpenGLShaderUniformDeclaration(ShaderDomain domain, Type type, const std::string& name, uint32_t count = 1);
 		OpenGLShaderUniformDeclaration(ShaderDomain domain, ShaderStruct* uniformStruct, const std::string& name, uint32_t count = 1);
+
+
+		inline virtual bool HasDefaultValue() const override { return m_HasDefaultValue; }
+		inline virtual byte* GetDefaultValue() const override { return m_DefaultValue; }
+
 
 		inline const std::string& GetName() const override { return m_Name; }
 		inline uint32_t GetSize() const override { return m_Size; }

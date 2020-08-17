@@ -36,13 +36,50 @@ namespace Ares {
 			const auto& vsBuffer = m_Shader->GetVSMaterialUniformBuffer(ShaderVariant::Static);
 			m_VSUniformStorageBuffer.Allocate(vsBuffer.GetSize());
 			m_VSUniformStorageBuffer.ZeroInitialize();
+
+
+			auto& declarations = vsBuffer.GetUniformDeclarations();
+			for (ShaderUniformDeclaration* uniform : declarations)
+			{
+				if (uniform->HasDefaultValue())
+				{
+					m_VSUniformStorageBuffer.Write(uniform->GetDefaultValue(), uniform->GetSize(), uniform->GetOffset());
+				}
+			}
+
+
+
+
+
+
+
+
+
+
+
+
+
 		}
 		if (m_Shader->HasPSMaterialUniformBuffer())
 		{
 			const auto& psBuffer = m_Shader->GetPSMaterialUniformBuffer(ShaderVariant::Static);
 			m_PSUniformStorageBuffer.Allocate(psBuffer.GetSize());
 			m_PSUniformStorageBuffer.ZeroInitialize();
+
+
+			auto& declarations = psBuffer.GetUniformDeclarations();
+			for (ShaderUniformDeclaration* uniform : declarations)
+			{
+				if (uniform->HasDefaultValue())
+				{
+					m_PSUniformStorageBuffer.Write(uniform->GetDefaultValue(), uniform->GetSize(), uniform->GetOffset());
+				}
+			}
+
+
+
 		}
+
 
 
 		m_TextureMap.clear();

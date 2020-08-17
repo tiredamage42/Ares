@@ -750,6 +750,15 @@ namespace Ares {
 			else
 			{
 				declaration = new OpenGLShaderUniformDeclaration(domain, t, name, count);
+				if (m_PublicUniforms.find(name) != m_PublicUniforms.end())
+				{
+					PublicUniformAttributes attributes = m_PublicUniforms.at(name);
+					if (attributes.HasAttribute(UniformAttribute::DefaultValue))
+					{
+						declaration->m_HasDefaultValue = true;
+						declaration->m_DefaultValue = attributes.DefaultValue;
+					}
+				}
 			}
 
 			/*if (StartsWith(name, "r_"))
@@ -1168,7 +1177,6 @@ namespace Ares {
 			std::string propsString = source.substr(propssListStartIDX, propertiesEndIDX - propssListStartIDX);
 			propsString.erase(std::remove_if(propsString.begin(), propsString.end(), ::isspace), propsString.end());
 
-
 			std::istringstream f(propsString);
 			std::string s;
 			while (getline(f, s, ';')) {
@@ -1179,7 +1187,6 @@ namespace Ares {
 				//size_t nameEndIDX = s.find_first_of(" ", 0);
 				size_t nameEndIDX = s.find_first_of("|", 0);
 				std::string name = s.substr(0, nameEndIDX);
-
 
 				size_t attributes_start = s.find_first_of("[", nameEndIDX) + 1;
 
@@ -1193,7 +1200,6 @@ namespace Ares {
 					std::istringstream as(attributes_string);
 					std::string st;
 					while (getline(as, st, ',')) {
-						
 						
 						if (st == "TOGGLE")
 						{
@@ -1222,12 +1228,71 @@ namespace Ares {
 							std::string maxS = rangeStr.substr(commaPos + 1, rangeStr.size() - (commaPos + 1));
 
 							attributes.Range = {
-								std::stod(minS),
-								std::stod(maxS),
+								std::stof(minS),
+								std::stof(maxS),
 							};
-
 						}
-						
+						else if (st.rfind("DEF", 0) == 0)
+						{
+							attributes.Attributes |= (uint32_t)UniformAttribute::DefaultValue;
+
+							size_t parStart = st.find_first_of("(", 0) + 1;
+							size_t parEnd = st.find_first_of(")", parStart);
+							
+							std::string defValString = st.substr(parStart, parEnd - parStart);
+
+							std::vector<float> vals;
+
+							std::istringstream f2(defValString);
+							std::string s2;
+							while (getline(f2, s2, ':')) 
+							{
+								vals.push_back(std::stof(s2));
+							}
+
+							byte* value;
+							size_t size;
+							if (vals.size() == 1)
+							{
+								auto v = vals[0];
+								value = (byte*)&v;
+								size = sizeof(float);
+								attributes.DefaultValue = new uint8_t[size];
+								memcpy(attributes.DefaultValue, value, size);
+							}
+							else if (vals.size() == 2)
+							{
+								auto v = glm::vec2(vals[0], vals[1]);
+								value = (byte*)&v;
+								size = sizeof(glm::vec2);
+								attributes.DefaultValue = new uint8_t[size];
+								memcpy(attributes.DefaultValue, value, size);
+							}
+							else if (vals.size() == 3)
+							{
+
+								auto v = glm::vec3(vals[0], vals[1], vals[2]);
+								value = (byte*)&v;
+								size = sizeof(glm::vec3);
+								attributes.DefaultValue = new uint8_t[size];
+								memcpy(attributes.DefaultValue, value, size);
+							}
+							else if (vals.size() == 4)
+							{
+								auto v = glm::vec4(vals[0], vals[1], vals[2], vals[3]);
+								value = (byte*)&v;
+								size = sizeof(glm::vec4);
+								attributes.DefaultValue = new uint8_t[size];
+								memcpy(attributes.DefaultValue, value, size);
+							}
+							else
+							{
+								ARES_CORE_ASSERT(false, "Invalid number of default value components");
+							}
+
+							/*attributes.DefaultValue = new uint8_t[size];
+							memcpy(attributes.DefaultValue, value, size);*/
+						}
 					}
 
 					m_PublicUniforms[name] = attributes;
