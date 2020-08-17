@@ -95,12 +95,21 @@ project "Ares"
         
     links
     {
+        -- fbx sdk
         "zlib-mt.lib",
         "libxml2-mt.lib",
         "libfbxsdk-mt.lib",
+
+        -- glfw
         "GLFW",
+
+        -- glad
         "Glad",
+
+        -- imgui
         "ImGui",
+        
+        -- opengl
         "opengl32.lib"
     }
     filter "files:Ares/vendor/FastNoise/**.cpp or files:Ares/vendor/yaml-cpp/src/**.cpp"
