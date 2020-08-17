@@ -1,4 +1,7 @@
-#flags STANDARD_VARS
+#flags 
+{
+	STANDARD_VARS
+}
 
 #type vertex
 #version 430

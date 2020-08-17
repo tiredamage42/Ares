@@ -19,6 +19,9 @@ namespace Ares {
 		static void Init();
 		static void Shutdown();
 
+		static Ref<Texture2D> GetWhiteTexture();
+		static Ref<Texture2D> GetDefaultBumpTexture();
+
 		static void OnWindowResize(uint32_t width, uint32_t height);
 
 		template<typename FuncT>

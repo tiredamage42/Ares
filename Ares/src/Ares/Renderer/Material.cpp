@@ -42,8 +42,16 @@ namespace Ares {
 			const auto& psBuffer = m_Shader->GetPSMaterialUniformBuffer(ShaderVariant::Static);
 			m_PSUniformStorageBuffer.Allocate(psBuffer.GetSize());
 			m_PSUniformStorageBuffer.ZeroInitialize();
-
 		}
+
+
+		m_TextureMap.clear();
+		for (auto& resource : m_Shader->GetResources(ShaderVariant::Static))
+		{
+			const std::string& name = resource->GetName();
+			m_TextureMap[name] = nullptr;
+		}
+
 	}
 	void Material::CopyMaterial(Ref<Material> other)
 	{
@@ -65,6 +73,14 @@ namespace Ares {
 			const auto& psBuffer = m_Shader->GetPSMaterialUniformBuffer(ShaderVariant::Static);
 			m_PSUniformStorageBuffer.Allocate(psBuffer.GetSize());
 			memcpy(m_PSUniformStorageBuffer.Data, other->m_PSUniformStorageBuffer.Data, psBuffer.GetSize());
+		}
+
+
+		m_TextureMap.clear();
+		for (auto& resource : m_Shader->GetResources(ShaderVariant::Static))
+		{
+			const std::string& name = resource->GetName();
+			m_TextureMap[name] = other->m_TextureMap[name];
 		}
 	}
 
@@ -148,17 +164,19 @@ namespace Ares {
 		if (m_PSUniformStorageBuffer)
 			m_Shader->SetPSMaterialUniformBuffer(m_PSUniformStorageBuffer, variant);
 
+		m_Shader->SetMaterialResources(m_TextureMap, variant);
+
 		BindTextures();
 	}
 
 	void Material::BindTextures()
 	{
-		for (size_t i = 0; i < m_Textures.size(); i++)
+		/*for (size_t i = 0; i < m_Textures.size(); i++)
 		{
 			auto& texture = m_Textures[i];
 			if (texture)
 				texture->Bind(i);
-		}
+		}*/
 	}
 
 	// ============================================================

@@ -26,7 +26,7 @@ namespace Ares
 		void SelectEntity(Entity entity);
 
 	private:
-		void SetPBRMaterialValues(Ref<Material> material) const;//, const glm::mat4& viewProjection) const;
+		//void SetPBRMaterialValues(Ref<Material> material) const;//, const glm::mat4& viewProjection) const;
 		std::pair<float, float> GetMouseViewportSpace();
 		std::pair<glm::vec3, glm::vec3> CastRay(float mx, float my);
 	
@@ -84,9 +84,9 @@ namespace Ares
 
 		//Ref<Material> m_MeshBaseMaterial;
 		std::vector<Ref<Material>> m_MeshMaterials;
+		//std::vector<Ref<Material>> m_SphereMaterials;
 
 
-		std::vector<Ref<Material>> m_SphereMaterials;
 
 		//Ref<Material> m_PBRMaterialStatic, m_PBRMaterialAnim;
 		/*std::vector<Ref<MaterialInstance>> m_MetalSphereMaterialInstances;
@@ -154,17 +154,17 @@ namespace Ares
 		// PBR params
 		//float m_Exposure = 1.0f;
 
-		bool m_RadiancePrefilter = false;
-		float m_EnvMapRotation = 0.0f;
+		//bool m_RadiancePrefilter = false;
+		//float m_EnvMapRotation = 0.0f;
 
-		enum class SceneType : uint32_t
+		/*enum class SceneType : uint32_t
 		{
 			Spheres = 0, Model = 1
-		};
-		SceneType m_SceneType;
+		};*/
+		//SceneType m_SceneType;
 
 		// Editor resources
-		Ref<Texture2D> m_CheckerboardTex;
+		//Ref<Texture2D> m_CheckerboardTex;
 		Ref<Texture2D> m_PlayButtonTex;
 
 		glm::vec2 m_ViewportBounds[2];

@@ -55,7 +55,8 @@ namespace Ares {
 			SceneRendererCamera SceneCamera;
 
 			// Resources
-			float SkyboxLod, Exposure;
+			//float SkyboxLod, Exposure;
+			float Exposure;
 			//Ref<MaterialInstance> SkyboxMaterial;
 			Ref<Material> SkyboxMaterial;
 			Environment SceneEnvironment;
@@ -276,7 +277,7 @@ namespace Ares {
 		s_Data.SceneData.ActiveLight = scene->m_Light;
 
 		s_Data.SceneData.Exposure = scene->m_Exposure;
-		s_Data.SceneData.SkyboxLod = scene->m_SkyboxLod;
+		//s_Data.SceneData.SkyboxLod = scene->m_SkyboxLod;
 	}
 
 	void SceneRenderer::EndScene()
@@ -566,7 +567,8 @@ namespace Ares {
 
 		s_Data.SceneData.SkyboxMaterial->Set("u_InverseVP", glm::inverse(viewProjection));
 		//float skyboxLod = s_Data.ActiveScene->GetSkyboxLod();
-		s_Data.SceneData.SkyboxMaterial->Set("u_TextureLod", s_Data.SceneData.SkyboxLod);
+		
+		//s_Data.SceneData.SkyboxMaterial->Set("u_TextureLod", s_Data.SceneData.SkyboxLod);
 		// s_Data.SceneInfo.EnvironmentIrradianceMap->Bind(0);
 		Renderer::SubmitFullscreenQuad(s_Data.SceneData.SkyboxMaterial);
 

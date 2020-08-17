@@ -1,4 +1,30 @@
-#flags STANDARD_VARS, SKINNED
+
+
+
+#properties
+{
+    u_AlbedoColor   | [COLOR];
+    u_Metalness     | [RANGE(0 : 1)];
+    u_Roughness     | [RANGE(0 : 1)];
+
+    u_AlbedoTexture;
+    //u_AlbedoTexToggle       | [TOGGLE];
+    
+    u_NormalTexture         | [BUMP];
+    //u_NormalTexToggle       | [TOGGLE];
+    
+    u_MetalnessTexture;
+    //u_MetalnessTexToggle    | [TOGGLE];
+    
+    u_RoughnessTexture;
+    //u_RoughnessTexToggle    | [TOGGLE];
+}
+
+
+#flags 
+{
+    STANDARD_VARS, SKINNED
+}
 
 #type vertex
 #version 430
@@ -19,13 +45,16 @@ For now, we assume we always sample the environment map from its center.
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec3 aTangent;
-layout(location = 3) in vec2 aTexCoords;
+layout(location = 3) in vec3 aBitangent;
+layout(location = 4) in vec2 aTexCoords;
+
 
 out vec2 TexCoords;
 out vec3 WorldPos;
 out vec3 Normal;
 out mat3 TBN;
 out vec3 CameraPos;
+//out vec3 Tang;
 
 //uniform mat4 u_ViewProjectionMatrix;
 //uniform mat4 u_Transform;
@@ -45,12 +74,75 @@ void main()
     //mat3 transform3 = mat3(u_Transform);
     mat3 transform3 = mat3(ares_ModelMatrix);
 
-    Normal = transform3 * aNormal;
+    Normal = normalize(transform3 * aNormal);
     //Normal = transpose(inverse(u_Transform)) * aNormal;
 
+    /*vec3 T = normalize(vec3(ares_ModelMatrix * vec4(aTangent, 0.0)));
+    vec3 B = normalize(vec3(ares_ModelMatrix * vec4(aBitangent, 0.0)));
+    vec3 N = normalize(vec3(ares_ModelMatrix * vec4(aNormal, 0.0)));
+    */
 
-    vec3 B = cross(aNormal, aTangent);
-    TBN = transform3 * mat3(aTangent, B, aNormal);
+    //vec3 T = normalize(aTangent);
+    //vec3 B = normalize(aBitangent);
+    //vec3 N = normalize(aNormal);
+
+
+    // TBN must form a right handed coord system.
+    // Some models have symetric UVs. Check and fix.
+    //if (dot(cross(N, T), B) < 0.0)
+        //T = T * -1.0;
+
+
+    // re-orthogonalize T with respect to N
+    //T = normalize(T - dot(T, N) * N);
+
+    //vec3 B = cross(aNormal, aTangent);
+    //vec3 B = cross(N, T);
+
+    // TRY
+    //vec3 B = cross(T, N);
+
+    //TBN = transform3 * mat3(aTangent, B, aNormal);
+    //TBN = transform3 * mat3(aTangent, aBitangent, aNormal);
+
+
+
+    //vec3 N = normalize((ares_ModelMatrix * vec4(aNormal, 0.0)).xyz);
+    
+    vec3 T = normalize(transform3 * aTangent);// normalize((ares_ModelMatrix * vec4(aTangent, 0.0)).xyz);
+
+    T = normalize(T - (dot(T, Normal) * Normal));
+    
+    //Tang = transform3 * aTangent;
+
+
+    vec3 B = normalize(cross(Normal, T));
+    //
+    TBN = mat3(
+
+    //    //T.x, B.x, N.x,
+    //    //T.y, B.y, N.y,
+    //    //T.z, B.z, N.z
+        T, B, Normal
+    );
+
+
+    /*
+    vec3 T = normalize((mVW * vec4(tangent, 0.0)).xyz);
+    tnormal = normalize((mNormal * n).xyz);
+    vec3 B = normalize((mVW * vec4(bitangent, 0.0)).xyz);
+
+    tmTBN = transpose(mat3(
+        T.x, B.x, tnormal.x,
+        T.y, B.y, tnormal.y,
+        T.z, B.z, tnormal.z));
+
+    */
+
+
+
+
+
 
     /* maybe:
         vec3 T = normalize(transform3 * aTangent);
@@ -74,6 +166,7 @@ in vec3 WorldPos;
 in vec3 Normal;
 in mat3 TBN;
 in vec3 CameraPos;
+//in vec3 Tang;
 
 // material parameters
 //uniform vec3 albedo;
@@ -92,10 +185,10 @@ uniform sampler2D u_NormalTexture;
 uniform sampler2D u_MetalnessTexture;
 uniform sampler2D u_RoughnessTexture;
 
-uniform float u_AlbedoTexToggle;
-uniform float u_NormalTexToggle;
-uniform float u_MetalnessTexToggle;
-uniform float u_RoughnessTexToggle;
+//uniform float u_AlbedoTexToggle;
+//uniform float u_NormalTexToggle;
+//uniform float u_MetalnessTexToggle;
+//uniform float u_RoughnessTexToggle;
 
 // BRDF LUT
 uniform sampler2D u_BRDFLUTTexture;
@@ -138,7 +231,21 @@ vec3 getNormalFromMap()
     vec3 B = -normalize(cross(N, T));
     mat3 TBN = mat3(T, B, N);*/
 
+    //vec3 tangentNormal = vec3(0.5, 0.5, 1) * 2.0 - 1.0;
     vec3 tangentNormal = texture(u_NormalTexture, TexCoords).xyz * 2.0 - 1.0;
+
+
+    //vec3 B = cross(Tang, Normal);
+
+    //mat3 TBN = transpose(mat3(
+
+    //    //T.x, B.x, N.x,
+    //    //T.y, B.y, N.y,
+    //    //T.z, B.z, N.z
+    //    normalize(Tang), normalize(B), normalize(Normal)
+    //));
+
+
     return normalize(TBN * tangentNormal);
 }
 // ----------------------------------------------------------------------------
@@ -215,6 +322,18 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 
 void main()
 {
+    vec3 albedo = texture(u_AlbedoTexture, TexCoords).rgb * u_AlbedoColor;
+
+    float metallic = texture(u_MetalnessTexture, TexCoords).r * u_Metalness;
+    float roughness = texture(u_RoughnessTexture, TexCoords).r * u_Roughness;
+    //float ao = texture(aoMap, TexCoords).r;
+
+    vec3 worldNorm = getNormalFromMap();
+    //vec3 worldNorm = normalize(Normal);
+
+
+
+    /*
     //vec3 albedo = u_AlbedoTexToggle > .5 ? pow(texture(u_AlbedoTexture, TexCoords).rgb, vec3(2.2)) : u_AlbedoColor;
     vec3 albedo = u_AlbedoTexToggle > .5 ? texture(u_AlbedoTexture, TexCoords).rgb : u_AlbedoColor;
 
@@ -223,6 +342,7 @@ void main()
     //float ao = texture(aoMap, TexCoords).r;
 
     vec3 worldNorm = u_NormalTexToggle > .5 ? getNormalFromMap() : normalize(Normal);
+    */
     
 
     vec3 viewDir = normalize(CameraPos - WorldPos);
@@ -364,6 +484,10 @@ void main()
     
 
     FragColor = vec4(color, 1.0);
+    //FragColor = vec4(worldNorm, 1.0);
+
+
+
 
     //FragColor = vec4(irradiance, 1.0);
     //FragColor = vec4(TexCoords, 0, 1);

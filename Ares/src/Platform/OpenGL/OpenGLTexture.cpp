@@ -292,6 +292,11 @@ namespace Ares {
 		}, "Texture Bind");
 	}
 
+	void OpenGLTexture2D::BindImmediate(uint32_t slot) const
+	{
+		glBindTextureUnit(slot, this->m_RendererID);
+	}
+
 
 	void OpenGLTexture2D::Lock()
 	{
@@ -585,6 +590,11 @@ namespace Ares {
 			glActiveTexture(GL_TEXTURE0 + slot);
 			glBindTexture(GL_TEXTURE_CUBE_MAP, this->m_RendererID);
 		}, "Bind Cube");
+	}
+	void OpenGLTextureCube::BindImmediate(uint32_t slot) const
+	{
+		glActiveTexture(GL_TEXTURE0 + slot);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, this->m_RendererID);
 	}
 	uint32_t OpenGLTextureCube::GetMipLevelCount() const
 	{

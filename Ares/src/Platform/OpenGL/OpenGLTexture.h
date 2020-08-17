@@ -15,7 +15,7 @@ namespace Ares {
 		virtual ~OpenGLTexture2D();
 
 		virtual void Bind(uint32_t slot = 0) const override;
-
+		virtual void BindImmediate(uint32_t slot = 0) const override;
 
 		virtual TextureFormat GetFormat() const override { return m_Format; }
 		inline virtual uint32_t GetWidth() const override { return m_Width; }
@@ -73,7 +73,8 @@ namespace Ares {
 		OpenGLTextureCube(const std::string& path, FilterType type, bool useMips);
 		virtual ~OpenGLTextureCube();
 
-		virtual void Bind(uint32_t slot = 0) const;
+		virtual void Bind(uint32_t slot = 0) const override;
+		virtual void BindImmediate(uint32_t slot = 0) const override;
 
 		virtual TextureFormat GetFormat() const { return m_Format; }
 		virtual uint32_t GetWidth() const { return m_Width; }

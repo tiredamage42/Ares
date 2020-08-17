@@ -319,17 +319,23 @@ namespace Ares {
 			float f = dividend == 0.0f ? 0.0f : 1.0f / dividend;
 			
 			glm::vec3 tangent = (deltaV2 * edge1 - deltaV1 * edge2) * f;
-			//glm::vec3 bitangent = (-deltaU2 * edge1 - deltaU1 * edge2) * f;
+			glm::vec3 bitangent = (-deltaU2 * edge1 - deltaU1 * edge2) * f;
 			
 			v0.Tangent += tangent;
 			v1.Tangent += tangent;
 			v2.Tangent += tangent;
+
+			v0.Binormal += bitangent;
+			v1.Binormal += bitangent;
+			v2.Binormal += bitangent;
+
 		}
 
 		for (uint32_t i = 0; i < m_Vertices.size(); i++)
 		{
 			Vertex& v = m_Vertices[i];
 			v.Tangent = glm::normalize(v.Tangent);
+			v.Binormal = glm::normalize(v.Binormal);
 		}
 	}
 
@@ -387,7 +393,7 @@ namespace Ares {
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float3, "a_Normal" },
 			{ ShaderDataType::Float3, "a_Tangent" },
-			//{ ShaderDataType::Float3, "a_Binormal" },
+			{ ShaderDataType::Float3, "a_Binormal" },
 			{ ShaderDataType::Float2, "a_TexCoord" },
 		});
 
@@ -633,9 +639,10 @@ namespace Ares {
 			//m_Submeshes.push_back(submesh);
 			submesh.MeshName = mesh->mName.C_Str();
 
-
 			vertexCount += mesh->mNumVertices;
 			indexCount += submesh.IndexCount;
+
+
 
 			ARES_CORE_ASSERT(mesh->HasPositions(), "Meshes require positions.");
 			ARES_CORE_ASSERT(mesh->HasNormals(), "Meshes require normals.");
@@ -651,7 +658,7 @@ namespace Ares {
 					if (mesh->HasTangentsAndBitangents())
 					{
 						vertex.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
-						//vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+						vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
 					}
 
 					if (mesh->HasTextureCoords(0))
@@ -682,7 +689,7 @@ namespace Ares {
 					if (mesh->HasTangentsAndBitangents())
 					{
 						vertex.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
-						//vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+						vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
 					}
 
 					if (mesh->HasTextureCoords(0))
@@ -1156,7 +1163,7 @@ namespace Ares {
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float3, "a_Normal" },
 				{ ShaderDataType::Float3, "a_Tangent" },
-				//{ ShaderDataType::Float3, "a_Binormal" },
+				{ ShaderDataType::Float3, "a_Binormal" },
 				{ ShaderDataType::Float2, "a_TexCoord" },
 				//{ ShaderDataType::Int4, "a_BoneIDs" },
 				{ ShaderDataType::Float4, "a_BoneIDs" },
@@ -1170,7 +1177,7 @@ namespace Ares {
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float3, "a_Normal" },
 				{ ShaderDataType::Float3, "a_Tangent" },
-				//{ ShaderDataType::Float3, "a_Binormal" },
+				{ ShaderDataType::Float3, "a_Binormal" },
 				{ ShaderDataType::Float2, "a_TexCoord" },
 			});
 		}

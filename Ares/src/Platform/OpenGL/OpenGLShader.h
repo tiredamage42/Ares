@@ -60,10 +60,15 @@ namespace Ares {
 		virtual void SetVSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant) override;
 		virtual void SetPSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant) override;
 
+		virtual void SetMaterialResources(const std::unordered_map<std::string, Ref<Texture>>& name2Tex, ShaderVariant variant) override;
+
+
 		virtual void AddShaderReloadedCallback(const ShaderReloadedCallback& callback) override;
 
+		inline virtual const std::unordered_map<std::string, PublicUniformAttributes>& GetPublicUniforms() const override {
+			return m_PublicUniforms;
+		}
 		
-
 		//virtual void UploadUniformBuffer(const UniformBufferBase& uniformBuffer) override;
 
 	protected:
@@ -139,7 +144,7 @@ namespace Ares {
 
 
 
-		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
+		std::unordered_map<GLenum, std::string> PreProcess(std::string source);
 
 
 		//void Parse();
@@ -165,8 +170,11 @@ namespace Ares {
 		
 		//void ValidateUniforms();
 
+		void ResolveAndSetResources(const ShaderResourceList& resources, const std::unordered_map<std::string, Ref<Texture>>& name2Tex);
+
 		void ResolveAndSetUniforms(const Ref<OpenGLShaderUniformBufferDeclaration>& decl, Buffer buffer);
 		void ResolveAndSetUniform(OpenGLShaderUniformDeclaration* uniform, Buffer buffer);
+
 		void ResolveAndSetUniformArray(OpenGLShaderUniformDeclaration* uniform, Buffer buffer);
 		void ResolveAndSetUniformField(const OpenGLShaderUniformDeclaration& field, byte* data, int32_t offset);
 
@@ -212,6 +220,8 @@ namespace Ares {
 		std::vector<ShaderVariantBuffers> m_VariantBuffers;
 		
 
-		
+
+		std::unordered_map<std::string, PublicUniformAttributes> m_PublicUniforms;
+
 	};
 }

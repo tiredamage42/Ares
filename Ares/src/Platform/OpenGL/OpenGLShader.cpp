@@ -5,7 +5,10 @@
 
 #include "Ares/Core/FileUtils/FileUtils.h"
 
-#include <fstream>
+//#include <fstream>
+//#include <sstream>
+//#include <iostream>
+
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Ares/Renderer/Renderer.h"
@@ -25,6 +28,7 @@ namespace Ares {
 		ARES_CORE_ASSERT(false, "Unknown shader type!");
 		return 0;
 	}
+
 
 	OpenGLShader::OpenGLShader(const std::string& filepath)
 		: m_AssetPath(filepath)
@@ -396,9 +400,12 @@ namespace Ares {
 							mat4 ares_ModelMatrix = _ares_internal_Transform * _ares_internal_bone_transform;
 							mat4 ares_MVPMatrix = ares_VPMatrix * ares_ModelMatrix;
 						)");
+
+
+
 						source.insert(insertVars, R"(
-							layout(location = 4) in vec4 _ares_internal_BoneIndices;
-							layout(location = 5) in vec4 _ares_internal_BoneWeights;
+							layout(location = 5) in vec4 _ares_internal_BoneIndices;
+							layout(location = 6) in vec4 _ares_internal_BoneWeights;
 
 							uniform sampler2D _ares_internal_BoneSampler;
 
@@ -436,6 +443,7 @@ namespace Ares {
 							)");
 						}
 					}
+
 
 
 
@@ -479,7 +487,6 @@ namespace Ares {
 
 					// We don't need the shader anymore.
 					glDeleteShader(shader);
-
 
 					ARES_CORE_ERROR("Shader compilation failed:\n{0}\n{1}", m_Name, infoLog.data());
 					ARES_CORE_ASSERT(false, "Shader Compilation Failure!");
@@ -678,9 +685,12 @@ namespace Ares {
 		return false;
 	}
 
+
+
 	void OpenGLShader::ParseUniform(const std::string& statement, ShaderDomain domain, ShaderVariantBuffers& variantBuffers, ShaderVariant variant, uint32_t& samplers)
 	{
 		std::vector<std::string> tokens = Tokenize(statement);
+
 
 		ARES_CORE_ASSERT(tokens.size() == 3, "Token must be size 3");
 		uint32_t index = 0;
@@ -711,9 +721,9 @@ namespace Ares {
 			variantBuffers.m_Resources.push_back(declaration);
 
 
-			OpenGLShaderResourceDeclaration* ogldec = (OpenGLShaderResourceDeclaration*)declaration;
 			
-			if (ogldec->GetCount() == 1)
+			//OpenGLShaderResourceDeclaration* ogldec = (OpenGLShaderResourceDeclaration*)declaration;
+			/*if (ogldec->GetCount() == 1)
 			{
 				ogldec->m_TexSlot = samplers;
 				samplers++;
@@ -721,7 +731,7 @@ namespace Ares {
 			else if (declaration->GetCount() > 1)
 			{
 				ogldec->m_TexSlot = 0;
-			}
+			}*/
 
 
 		}
@@ -934,13 +944,14 @@ namespace Ares {
 			auto resourceName = resource->m_Name;
 			int32_t location = GetUniformLocation(resource->m_Name, variant);
 
+			resource->m_Location = location;
 			if (resource->GetCount() == 1)
 			{
 				//resource->m_TexSlot = sampler;
 				if (location != -1)
 				{
 					//UploadUniformInt(location, sampler);
-					UploadUniformInt(location, resource->GetRegister());
+					//UploadUniformInt(location, resource->GetRegister());
 				}
 
 				//sampler++;
@@ -966,6 +977,58 @@ namespace Ares {
 	/*void OpenGLShader::ValidateUniforms()
 	{
 	}*/
+
+
+	void OpenGLShader::ResolveAndSetResources(const ShaderResourceList& resources, const std::unordered_map<std::string, Ref<Texture>>& name2Tex)
+	{
+		
+		uint32_t i = 0;
+		for (auto& resource : resources)
+		{
+			if (resource->GetCount() == 1)
+			{
+				OpenGLShaderResourceDeclaration* uniform = (OpenGLShaderResourceDeclaration*)resource;
+				const std::string& name = resource->GetName();
+
+				Ref<Texture> tex = name2Tex.at(name);
+				if (tex)
+				{
+					/*tex->Bind(i);
+					UploadUniformInt(uniform->GetLocation(), i);
+					i++;*/
+				}
+				else
+				{
+					// bind white texture (blue texture if normal map)
+					tex = Renderer::GetWhiteTexture();
+
+					if (m_PublicUniforms.find(name) != m_PublicUniforms.end())
+					{
+						PublicUniformAttributes attributes = m_PublicUniforms.at(name);
+						if (attributes.HasAttribute(UniformAttribute::BumpMap))
+						{
+							tex = Renderer::GetDefaultBumpTexture();
+						}
+					}
+				}
+
+				tex->BindImmediate(i);
+				UploadUniformInt(uniform->GetLocation(), i);
+				i++;
+
+				//if (name2Tex.find(name) != name2Tex.end())
+				//{
+				//}
+				//else
+				//{
+				//	// bind white texture (blue texture if normal map)
+				//}
+
+
+			}
+
+		}
+	}
 
 	void OpenGLShader::ResolveAndSetUniforms(const Ref<OpenGLShaderUniformBufferDeclaration>& decl, Buffer buffer)
 	{
@@ -1089,19 +1152,163 @@ namespace Ares {
 		}
 	}
 
-	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
+
+
+	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(std::string source)
 	{
 
+		size_t propertiesStartIDX = source.find("#properties");
+		if (propertiesStartIDX != std::string::npos)
+		{
+			size_t propertiesEndIDX = source.find_first_of("}", propertiesStartIDX);
+
+			//size_t flagsListStartIDX = flagsStartIDX + 7;
+			size_t propssListStartIDX = source.find_first_of("{", propertiesStartIDX) + 1;
+
+			std::string propsString = source.substr(propssListStartIDX, propertiesEndIDX - propssListStartIDX);
+			propsString.erase(std::remove_if(propsString.begin(), propsString.end(), ::isspace), propsString.end());
+
+
+			std::istringstream f(propsString);
+			std::string s;
+			while (getline(f, s, ';')) {
+
+				if (s.find("//") == 0)
+					continue;
+				
+				//size_t nameEndIDX = s.find_first_of(" ", 0);
+				size_t nameEndIDX = s.find_first_of("|", 0);
+				std::string name = s.substr(0, nameEndIDX);
+
+
+				size_t attributes_start = s.find_first_of("[", nameEndIDX) + 1;
+
+				if (attributes_start != std::string::npos)
+				{
+					size_t attributes_end = s.find_first_of("]", attributes_start);
+					std::string attributes_string = s.substr(attributes_start, attributes_end - attributes_start);
+					//attributes_string.erase(std::remove(attributes_string.begin(), attributes_string.end(), ' '), attributes_string.end());
+
+					PublicUniformAttributes attributes;
+					std::istringstream as(attributes_string);
+					std::string st;
+					while (getline(as, st, ',')) {
+						
+						
+						if (st == "TOGGLE")
+						{
+							attributes.Attributes |= (uint32_t)UniformAttribute::Toggle;
+						}
+						else if (st == "COLOR")
+						{
+							attributes.Attributes |= (uint32_t)UniformAttribute::Color;
+						}
+						else if (st == "BUMP")
+						{
+							attributes.Attributes |= (uint32_t)UniformAttribute::BumpMap;
+						}
+						else if (st.rfind("RANGE", 0) == 0) {
+							
+							attributes.Attributes |= (uint32_t)UniformAttribute::Range;
+
+							size_t parStart = st.find_first_of("(", 0) + 1;
+							size_t parEnd = st.find_first_of(")", parStart);
+
+							std::string rangeStr = st.substr(parStart, parEnd - parStart);
+
+							size_t commaPos = rangeStr.find_first_of(":", 0);
+
+							std::string minS = rangeStr.substr(0, commaPos);
+							std::string maxS = rangeStr.substr(commaPos + 1, rangeStr.size() - (commaPos + 1));
+
+							attributes.Range = {
+								std::stod(minS),
+								std::stod(maxS),
+							};
+
+						}
+						
+					}
+
+					m_PublicUniforms[name] = attributes;
+
+				}
+				else
+				{
+					m_PublicUniforms[name] = {};
+				}
+
+			}
+
+
+
+			/*
+			size_t pos = 0;
+			while (((pos = propsString.find_first_of(",\r\n")) != std::string::npos)) {
+				auto flag = flagsString.substr(0, pos);
+
+				// remove whitespace
+				flag.erase(std::remove(flag.begin(), flag.end(), ' '), flag.end());
+
+				m_ShaderFlags.insert(flag);
+				flagsString.erase(0, pos + 1);
+			}
+			*/
+
+
+			source.erase(0, propertiesEndIDX + 1);
+		}
+
+		/*
+		#properties
+{
+    vec3 u_AlbedoColor [COLOR];
+    float u_Metalness [RANGE(0, 1)];
+    float u_Roughness [RANGE(0, 1)];
+
+    sampler2D u_AlbedoTexture;
+    sampler2D u_NormalTexture;
+    sampler2D u_MetalnessTexture;
+    sampler2D u_RoughnessTexture;
+
+    float u_AlbedoTexToggle [TOGGLE];
+    float u_NormalTexToggle [TOGGLE];
+    float u_MetalnessTexToggle [TOGGLE];
+    float u_RoughnessTexToggle [TOGGLE];
+}
+
+#flags 
+{
+    STANDARD_VARS, SKINNED
+}
+		
+		
+		*/
 		// find flags
 
 		size_t flagsStartIDX = source.find("#flags");
 
 		if (flagsStartIDX != std::string::npos)
 		{
-			size_t flagsEndIDX = source.find_first_of("\r\n", flagsStartIDX) + 1;
-			size_t flagsListStartIDX = flagsStartIDX + 7;
-			std::string flagsString = source.substr(flagsListStartIDX, flagsEndIDX - flagsListStartIDX);
+			//size_t flagsEndIDX = source.find_first_of("\r\n", flagsStartIDX) + 1;
+			size_t flagsEndIDX = source.find_first_of("}", flagsStartIDX);
 
+			//size_t flagsListStartIDX = flagsStartIDX + 7;
+			size_t flagsListStartIDX = source.find_first_of("{", flagsStartIDX) + 1;
+
+			std::string flagsString = source.substr(flagsListStartIDX, flagsEndIDX - flagsListStartIDX);
+			//flagsString.erase(std::remove(flagsString.begin(), flagsString.end(), ' '), flagsString.end());
+			flagsString.erase(std::remove_if(flagsString.begin(), flagsString.end(), ::isspace), flagsString.end());
+
+			
+			std::istringstream f(flagsString);
+			std::string s;
+			while (getline(f, s, ',')) {
+			
+				m_ShaderFlags.insert(s);
+			}
+
+			/*
 			size_t pos = 0;
 			while (((pos = flagsString.find_first_of(",\r\n")) != std::string::npos)) {
 				auto flag = flagsString.substr(0, pos);
@@ -1113,6 +1320,9 @@ namespace Ares {
 				flagsString.erase(0, pos + 1);
 			}
 
+			*/
+			
+			source.erase(0, flagsEndIDX + 1);
 		}
 
 		std::unordered_map<GLenum, std::string> shaderSources;
@@ -1349,8 +1559,23 @@ namespace Ares {
 
 
 
+	
+	void OpenGLShader::SetMaterialResources(const std::unordered_map<std::string, Ref<Texture>>& name2Tex, ShaderVariant variant)
+	{
+		// jsut make sure these are loaded before we try and bind/set them
+		auto _ = Renderer::GetWhiteTexture();
+		_ = Renderer::GetDefaultBumpTexture();
 
 
+		Renderer::Submit([this, name2Tex, variant]() {
+			/*glUseProgram(m_RendererID);
+			ResolveAndSetUniforms(m_VSMaterialUniformBuffer, buffer);*/
+
+			//glUseProgram(GetRendererID(variant));
+			ResolveAndSetResources(m_VariantBuffers[GetVariantIndex(variant)].m_Resources, name2Tex);
+
+		}, "SetVSMaterialUniformBuffer");
+	}
 
 	void OpenGLShader::SetVSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant)
 	{

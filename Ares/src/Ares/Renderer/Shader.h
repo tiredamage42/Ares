@@ -4,7 +4,7 @@
 #include "Ares/Core/Buffer.h"
 
 #include "Ares/Renderer/ShaderUniform.h"
-
+#include "Ares/Renderer/Texture.h"
 #include <string>
 #include <glm/glm.hpp>
 
@@ -99,6 +99,28 @@ namespace Ares {
 
 	//};
 
+
+
+	enum class UniformAttribute
+	{
+		None = BIT(0),
+		Color = BIT(1),
+		Range = BIT(2),
+		Toggle = BIT(3),
+		BumpMap = BIT(4)
+	};
+
+	struct PublicUniformAttributes
+	{
+		uint32_t Attributes = 0;
+		glm::vec2 Range{ 0 };
+
+		bool HasAttribute(UniformAttribute attribute)
+		{
+			return (uint32_t)attribute & Attributes;
+		}
+	};
+
 	enum class ShaderVariant : size_t
 	{
 		Static = 0, Skinned = 1
@@ -142,6 +164,8 @@ namespace Ares {
 
 		virtual void SetVSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant) = 0;
 		virtual void SetPSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant) = 0;
+		virtual void SetMaterialResources(const std::unordered_map<std::string, Ref<Texture>>& name2Tex, ShaderVariant variant) = 0;
+
 
 		/*virtual const ShaderUniformBufferList& GetVSRendererUniforms() const = 0;
 		virtual const ShaderUniformBufferList& GetPSRendererUniforms() const = 0;*/
@@ -155,6 +179,8 @@ namespace Ares {
 		virtual const ShaderResourceList& GetResources(ShaderVariant variant) const = 0;
 
 		virtual void AddShaderReloadedCallback(const ShaderReloadedCallback& callback) = 0;
+
+		virtual const std::unordered_map<std::string, PublicUniformAttributes>& GetPublicUniforms() const = 0;
 
 
 		static std::vector<Ref<Shader>> s_AllShaders;

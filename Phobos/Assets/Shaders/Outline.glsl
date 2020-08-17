@@ -1,4 +1,7 @@
-#flags STANDARD_VARS, SKINNED
+#flags 
+{
+	STANDARD_VARS, SKINNED
+}
 
 // Outline Shader
 #type vertex

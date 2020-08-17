@@ -25,15 +25,17 @@ void main()
 layout(location = 0) out vec4 finalColor;
 
 uniform samplerCube u_Texture;
-uniform float u_TextureLod;
+//uniform float u_TextureLod;
 
 in vec3 v_Position;
 
 void main()
 {
 
+	finalColor = texture(u_Texture, v_Position);
 
-	finalColor = textureLod(u_Texture, v_Position, u_TextureLod);
+	//finalColor = textureLod(u_Texture, v_Position, u_TextureLod);
+
 	//finalColor = vec4(0.0, 1.0, 0.0, 1.0);
 
 	// color correction

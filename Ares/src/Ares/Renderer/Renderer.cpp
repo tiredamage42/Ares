@@ -20,6 +20,9 @@ namespace Ares {
 		RenderCommandQueue m_CommandQueue;
 		Ref<VertexArray> m_FullscreenQuadVertexArray;
 		Ref<VertexArray> m_QuadVertexArray;
+
+		Ref<Texture2D> m_WhiteTexture;
+		Ref<Texture2D> m_DefaultBump;
 	};
 
 	static RendererData s_Data;
@@ -91,6 +94,33 @@ namespace Ares {
 	void Renderer::Shutdown()
 	{
 		Renderer2D::Shutdown();
+	}
+
+
+
+	static Ref<Texture2D> CreateDefaultTexture(uint32_t data)
+	{
+		Ref<Texture2D> tex = Texture2D::Create(TextureFormat::RGBA, 1, 1, TextureWrap::Repeat, FilterType::Point, false);
+		//tex->SetData(&data);
+		tex->Lock();
+		tex->GetWriteableBuffer().Write(&data, sizeof(uint32_t));
+		tex->Unlock();
+		return tex;
+	}
+
+
+	Ref<Texture2D> Renderer::GetWhiteTexture()
+	{
+		if (s_Data.m_WhiteTexture == nullptr)
+			s_Data.m_WhiteTexture = CreateDefaultTexture(0xffffffff);
+		return s_Data.m_WhiteTexture;
+	}
+
+	Ref<Texture2D> Renderer::GetDefaultBumpTexture()
+	{
+		if (s_Data.m_DefaultBump == nullptr)
+			s_Data.m_DefaultBump = CreateDefaultTexture(0xffff8080);
+		return s_Data.m_DefaultBump;
 	}
 
 	void Renderer::DrawIndexed(uint32_t count, PrimitiveType type, bool depthTest)

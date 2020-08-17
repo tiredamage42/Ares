@@ -35,7 +35,7 @@ namespace Ares
     EditorLayer::EditorLayer()
         : Layer("Sandbox2D"), 
         m_CameraController(1280.0f / 720.0f),
-        m_SceneType(SceneType::Model),
+        //m_SceneType(SceneType::Model),
         m_EditorCamera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f))
         //m_Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f))
     {
@@ -238,14 +238,17 @@ namespace Ares
         /*m_CheckerboardTex = Texture2D::Create("Assets/Textures/Checkerboard.png");
         m_PlayButtonTex = Texture2D::Create("Assets/Textures/PlayButton.png");*/
 
-        m_CheckerboardTex = EditorResources::GetTexture("checkerboard.png");
+        //m_CheckerboardTex = EditorResources::GetTexture("checkerboard.png");
         m_PlayButtonTex = EditorResources::GetTexture("play.png");
 
         m_AssetManagerPanel = CreateScope<AssetManagerPanel>();
 
 
 
-        auto environment = Environment::Load("Assets/Textures/birchwood_4k.hdr");
+        auto environment = Environment::Load(
+            //"Assets/Textures/birchwood_4k.hdr"
+            "C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\env\\venice_dawn_1_4k.hdr"
+        );
 
         m_EditorScene = CreateRef<Scene>("Editor Scene");
         UpdateWindowTitle("Editor Scene");
@@ -301,14 +304,14 @@ namespace Ares
             //glm::vec3(.1f)
         );
 
+
         //m_SphereBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/pbr_static.glsl"));
         //m_SphereBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/PBRStatic.glsl"));
         
         
         //auto sphereMesh = CreateRef<Mesh>("C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\meshes\\Sphere1m.fbx");
         
-        
-        auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Sphere);
+        auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Cube);
 
         float spread = 1.25f;
         uint8_t i = 0;
@@ -337,7 +340,7 @@ namespace Ares
                 m->Set("u_Metalness", metalness);
                 m->Set("u_Roughness", roughness);
 
-                m_SphereMaterials.push_back(m);
+                //m_SphereMaterials.push_back(m);
 
 
                 /*mr.MaterialOverride = CreateRef<MaterialInstance>(m_MeshBaseMaterial);
@@ -1163,7 +1166,7 @@ namespace Ares
         }
 
         //ImGui::SliderFloat("Skybox LOD", &m_ActiveScene->GetSkyboxLod(), 0.0f, 11.0f);
-        ImGui::SliderFloat("Skybox LOD", &m_EditorScene->GetSkyboxLod(), 0.0f, 11.0f);
+        //ImGui::SliderFloat("Skybox LOD", &m_EditorScene->GetSkyboxLod(), 0.0f, 11.0f);
 
 
         ImGui::Columns(2);
@@ -1192,8 +1195,8 @@ namespace Ares
         /*EditorGUI::IntSlider("Grid Scale", m_GridScale, 0, 20);
         EditorGUI::FloatSlider("Grid Size", m_GridSize, 0.0f, 0.1f);*/
 
-        EditorGUI::Toggle("Radiance Prefiltering", m_RadiancePrefilter);
-        EditorGUI::FloatSlider("Env Map Rotation", m_EnvMapRotation, -360.0f, 360.0f);
+        //EditorGUI::Toggle("Radiance Prefiltering", m_RadiancePrefilter);
+        //EditorGUI::FloatSlider("Env Map Rotation", m_EnvMapRotation, -360.0f, 360.0f);
 
         if (EditorGUI::Toggle("Show Bounding Boxes", m_UIShowBoundingBoxes))
             ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);

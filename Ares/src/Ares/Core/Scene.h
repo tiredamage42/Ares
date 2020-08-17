@@ -56,8 +56,8 @@ namespace Ares
 		float GetExposure() const { return m_Exposure; }
 		float& GetExposure() { return m_Exposure; }
 
-		float GetSkyboxLod() const { return m_SkyboxLod; }
-		float& GetSkyboxLod() { return m_SkyboxLod; }
+		//float GetSkyboxLod() const { return m_SkyboxLod; }
+		//float& GetSkyboxLod() { return m_SkyboxLod; }
 		
 		//void SetSkyboxMaterial(const Ref<MaterialInstance>& skybox) { m_SkyboxMaterial = skybox; }
 		void SetSkyboxMaterial(const Ref<Material>& skybox) { m_SkyboxMaterial = skybox; }
@@ -120,14 +120,14 @@ namespace Ares
 		//Camera m_Camera;
 
 		Light m_Light{};
-		float m_LightMultiplier = 0.3f;
+		//float m_LightMultiplier = 0.3f;
 
 		Environment m_Environment{};
 
 		Ref<Material> m_SkyboxMaterial = nullptr;
 		//Ref<MaterialInstance> m_SkyboxMaterial = nullptr;
 		
-		float m_SkyboxLod = 1.0f;
+		//float m_SkyboxLod = 1.0f;
 
 		float m_Exposure = 0.8f;
 		bool m_IsPlaying = false;

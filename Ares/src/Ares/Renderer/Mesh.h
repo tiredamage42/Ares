@@ -26,10 +26,11 @@ namespace Ares {
 
 	struct Vertex
 	{
+
 		glm::vec3 Position;
 		glm::vec3 Normal{ 0 };
 		glm::vec3 Tangent{ 0 };
-		//glm::vec3 Binormal;
+		glm::vec3 Binormal;
 		glm::vec2 Texcoord;
 	};
 	struct AnimatedVertex
@@ -37,7 +38,7 @@ namespace Ares {
 		glm::vec3 Position;
 		glm::vec3 Normal{ 0 };
 		glm::vec3 Tangent{ 0 };
-		//glm::vec3 Binormal;
+		glm::vec3 Binormal;
 		glm::vec2 Texcoord;
 
 		//uint32_t IDs[4] = { 0, 0, 0, 0 };

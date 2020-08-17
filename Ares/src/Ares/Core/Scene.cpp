@@ -393,12 +393,12 @@ namespace Ares
     {
         // Environment
         target->m_Light = m_Light;
-        target->m_LightMultiplier = m_LightMultiplier;
+        //target->m_LightMultiplier = m_LightMultiplier;
 
         target->m_Environment = m_Environment;
         target->m_SkyboxMaterial = m_SkyboxMaterial;
         target->m_SkyboxMaterial = m_SkyboxMaterial;
-        target->m_SkyboxLod = m_SkyboxLod;
+        //target->m_SkyboxLod = m_SkyboxLod;
         target->m_Exposure = m_Exposure;
 
         std::unordered_map<UUID, entt::entity> enttMap;

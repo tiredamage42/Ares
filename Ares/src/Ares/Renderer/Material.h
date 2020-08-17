@@ -247,7 +247,7 @@ namespace Ares {
 
 		void Set(const std::string& name, Ref<Texture> texture)
 		{
-
+			/*
 			//uint8_t slot;
 			auto decl = FindResourceDeclaration(name);// , slot);
 			uint32_t slot = decl->GetRegister();
@@ -261,6 +261,17 @@ namespace Ares {
 			if (m_Textures.size() <= slot)
 				m_Textures.resize((size_t)slot + 1);
 			m_Textures[slot] = texture;
+			*/
+
+			if (m_TextureMap.find(name) == m_TextureMap.end())
+			{
+				ARES_CORE_ERROR("Could not find sampler uniform with name '{0}'", name);
+				//ARES_CORE_ASSERT(false, "");
+				return;
+			}
+
+
+			m_TextureMap[name] = texture;
 		}
 
 		void Set(const std::string& name, Ref<Texture2D> texture)
@@ -291,7 +302,9 @@ namespace Ares {
 
 		Buffer m_VSUniformStorageBuffer;
 		Buffer m_PSUniformStorageBuffer;
-		std::vector<Ref<Texture>> m_Textures;
+		//std::vector<Ref<Texture>> m_Textures;
+
+		std::unordered_map<std::string, Ref<Texture>> m_TextureMap;
 
 		uint32_t m_MaterialFlags;
 	};
