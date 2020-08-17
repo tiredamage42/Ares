@@ -25,5 +25,5 @@ Double click on the `GenerateVSProject.bat` file to generate the Visual Studio p
 | [FastNoise](github.com/Auburns/FastNoise) | Noise Library |
 | [yaml-cpp](github.com/jbeder/yaml-cpp) | Scene Serialization |
 | [JSON for Modern C++](github.com/nlohmann/json) | JSON Utilities |
-| [Autodesk FBX SDK](autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-0) | Embedded FBX Media Extraction |
+| [Autodesk FBX SDK (not included due to size)](autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-0) | Embedded FBX Media Extraction |
 
