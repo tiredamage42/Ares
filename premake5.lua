@@ -14,6 +14,8 @@ workspace "Ares"
 	}
 	
 
+FBX_SDK_INSTALL_DIR = "C:/Program Files/Autodesk/FBX/FBX SDK/2019.5/";
+
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- include directories relative to root folder (solution directory)
@@ -26,20 +28,15 @@ IncludeDir["stb_image"] = "Ares/vendor/stb_image"
 IncludeDir["entt"] = "Ares/vendor/entt"
 IncludeDir["FastNoise"] = "Ares/vendor/FastNoise"
 IncludeDir["json"] = "Ares/vendor/nlohmann-json"
-
-
--- IncludeDir["FBXSDK"] = "Ares/vendor/FBXSDK/include"
-IncludeDir["FBXSDK"] = "C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2019.5\\include"
-
-
 IncludeDir["assimp"] = "Ares/vendor/assimp/include"
+
+IncludeDir["FBXSDK"] = FBX_SDK_INSTALL_DIR .. "include"
 
 
 group "Dependencies"
     include "Ares/vendor/GLFW"
     include "Ares/vendor/Glad"
     include "Ares/vendor/imgui"
-    -- include "Ares/vendor/assimp2"
 group ""
 
 project "Ares"
@@ -63,8 +60,6 @@ project "Ares"
         "%{prj.name}/vendor/stb_image/**.h",
         "%{prj.name}/vendor/stb_image/**.cpp",
         
-        -- "%{prj.name}/vendor/nlohmann-json/**.hpp",
-
         "%{prj.name}/vendor/glm/glm/**.hpp",
         "%{prj.name}/vendor/glm/glm/**.inl",
 
@@ -95,7 +90,6 @@ project "Ares"
         "%{IncludeDir.FastNoise}",
         "%{IncludeDir.FBXSDK}",
         "%{IncludeDir.assimp}",
-        -- "%{prj.name}/vendor/assimp/include",
         "%{prj.name}/vendor/yaml-cpp/include"
     }
         
@@ -104,12 +98,7 @@ project "Ares"
         "zlib-mt.lib",
         "libxml2-mt.lib",
         "libfbxsdk-mt.lib",
-        -- "libfbxsdk-mt.lib",
-
-        -- "assimp2",
-        
         "GLFW",
-        -- "vendor/GLFWs/lib/glfw3.lib",
         "Glad",
         "ImGui",
         "opengl32.lib"
@@ -120,124 +109,32 @@ project "Ares"
     
 	filter "system:windows"
         systemversion "latest"
-        defines 
-        {
-        }
-
+        
 	filter "configurations:Debug"
         defines "ARES_DEBUG"
 		runtime "Debug"
         symbols "on"
         libdirs
         {
-            "C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2019.5\\lib\\vs2017\\x64\\debug"
-            -- "%{prj.name}/vendor/FBXSDK/lib/debug"
+            FBX_SDK_INSTALL_DIR .. "lib\\vs2017\\x64\\debug"
         }
-        
-
 	filter "configurations:Release"
         defines "ARES_RELEASE"
 		runtime "Release"
         optimize "on"
         libdirs
         {
-            "C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2019.5\\lib\\vs2017\\x64\\release"
-            -- "%{prj.name}/vendor/FBXSDK/lib/release"
+            FBX_SDK_INSTALL_DIR .. "lib\\vs2017\\x64\\release"
         }
-        
-
 	filter "configurations:Dist"
         defines "ARES_DIST"
 		runtime "Release"
         optimize "on"
         libdirs
         {
-            "C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2019.5\\lib\\vs2017\\x64\\release"
-            -- "%{prj.name}/vendor/FBXSDK/lib/release"
-
-            
+            FBX_SDK_INSTALL_DIR .. "lib\\vs2017\\x64\\release"
         }
         
-        
-
--- project "Sandbox"
---     location "Sandbox"
---     kind "ConsoleApp"
---     language "C++"
---     cppdialect "C++17"
---     staticruntime "on"
-    
---     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
---     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
-
---     files
---     {
---         "%{prj.name}/src/**.h",
---         "%{prj.name}/src/**.cpp"
---     }
-
---     includedirs
---     {
---         "Ares/vendor/spdlog/include",
---         "Ares/src",
---         "Ares/vendor",
---         "%{IncludeDir.glm}"
---     }
-
---     links
---     {
---         "Ares",
---         -- "Ares/vendor/assimp/win64/assimp.lib"
---     } 
---     -- postbuildcommands 
---     -- {
---     --     '{COPY} "../Ares/vendor/assimp/win64/assimp.lib" "%{cfg.targetdir}"',
---     -- }
-
---     filter "system:windows"
---         systemversion "latest"
-        
-        
---     filter "configurations:Debug"
---         defines "ARES_DEBUG"
---         runtime "Debug"
---         symbols "on"
---         links
--- 		{
--- 			"Ares/vendor/assimp/bin/Debug/assimp-vc141-mtd.lib"
--- 		}
-
--- 		postbuildcommands 
--- 		{
--- 			'{COPY} "../Ares/vendor/assimp/bin/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"',
--- 		}
-
---     filter "configurations:Release"
---         defines "ARES_RELEASE"
---         runtime "Release"
---         optimize "on"
---         links
--- 		{
--- 			"Ares/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
--- 		}
--- 		postbuildcommands 
--- 		{
--- 			'{COPY} "../Ares/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
--- 		}
-
---     filter "configurations:Dist"
---         defines "ARES_DIST"
---         runtime "Release"
---         optimize "on"
---         links
--- 		{
--- 			"Ares/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
--- 		}
--- 		postbuildcommands 
--- 		{
--- 			'{COPY} "../Ares/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
--- 		}
-
 
 project "Phobos"
     location "Phobos"
@@ -250,7 +147,6 @@ project "Phobos"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
-    
 
     files
     {
@@ -270,14 +166,9 @@ project "Phobos"
 
     links
     {
-        "Ares",
-        -- "Ares/vendor/assimp/win64/assimp.lib"
-
+        "Ares"
     } 
-    -- postbuildcommands 
-    -- {
-    --     '{COPY} "../Ares/vendor/assimp/win64/assimp.dll" "%{cfg.targetdir}"',
-    -- }
+
     postbuildcommands 
 	{
         '{COPY} "../Phobos/Assets" "%{cfg.targetdir}/Assets"',
@@ -285,11 +176,8 @@ project "Phobos"
         '{COPY} "../Phobos/imgui.ini" "%{cfg.targetdir}"'
 	}
 	
-
-
     filter "system:windows"
         systemversion "latest"
-        
         
     filter "configurations:Debug"
         defines "ARES_DEBUG"
@@ -299,7 +187,6 @@ project "Phobos"
 		{
 			"Ares/vendor/assimp/lib/Debug/assimp-vc141-mtd.lib"
 		}
-
 		postbuildcommands 
 		{
 			'{COPY} "../Ares/vendor/assimp/lib/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"',
