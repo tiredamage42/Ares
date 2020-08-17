@@ -26,7 +26,12 @@ IncludeDir["stb_image"] = "Ares/vendor/stb_image"
 IncludeDir["entt"] = "Ares/vendor/entt"
 IncludeDir["FastNoise"] = "Ares/vendor/FastNoise"
 IncludeDir["json"] = "Ares/vendor/nlohmann-json"
-IncludeDir["FBXSDK"] = "Ares/vendor/FBXSDK/include"
+
+
+-- IncludeDir["FBXSDK"] = "Ares/vendor/FBXSDK/include"
+IncludeDir["FBXSDK"] = "C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2019.5\\include"
+
+
 IncludeDir["assimp"] = "Ares/vendor/assimp/include"
 
 
@@ -34,7 +39,7 @@ group "Dependencies"
     include "Ares/vendor/GLFW"
     include "Ares/vendor/Glad"
     include "Ares/vendor/imgui"
-    -- include "Ares/vendor/Assimp2"
+    -- include "Ares/vendor/assimp2"
 group ""
 
 project "Ares"
@@ -101,6 +106,8 @@ project "Ares"
         "libfbxsdk-mt.lib",
         -- "libfbxsdk-mt.lib",
 
+        -- "assimp2",
+        
         "GLFW",
         -- "vendor/GLFWs/lib/glfw3.lib",
         "Glad",
@@ -123,7 +130,8 @@ project "Ares"
         symbols "on"
         libdirs
         {
-            "%{prj.name}/vendor/FBXSDK/lib/debug"
+            "C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2019.5\\lib\\vs2017\\x64\\debug"
+            -- "%{prj.name}/vendor/FBXSDK/lib/debug"
         }
         
 
@@ -133,7 +141,8 @@ project "Ares"
         optimize "on"
         libdirs
         {
-            "%{prj.name}/vendor/FBXSDK/lib/release"
+            "C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2019.5\\lib\\vs2017\\x64\\release"
+            -- "%{prj.name}/vendor/FBXSDK/lib/release"
         }
         
 
@@ -143,7 +152,8 @@ project "Ares"
         optimize "on"
         libdirs
         {
-            "%{prj.name}/vendor/FBXSDK/lib/release"
+            "C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2019.5\\lib\\vs2017\\x64\\release"
+            -- "%{prj.name}/vendor/FBXSDK/lib/release"
         }
         
         
