@@ -154,87 +154,89 @@ project "Ares"
         {
             "C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2019.5\\lib\\vs2017\\x64\\release"
             -- "%{prj.name}/vendor/FBXSDK/lib/release"
+
+            
         }
         
         
 
-project "Sandbox"
-    location "Sandbox"
-    kind "ConsoleApp"
-    language "C++"
-    cppdialect "C++17"
-    staticruntime "on"
+-- project "Sandbox"
+--     location "Sandbox"
+--     kind "ConsoleApp"
+--     language "C++"
+--     cppdialect "C++17"
+--     staticruntime "on"
     
-    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+--     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+--     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
-    files
-    {
-        "%{prj.name}/src/**.h",
-        "%{prj.name}/src/**.cpp"
-    }
+--     files
+--     {
+--         "%{prj.name}/src/**.h",
+--         "%{prj.name}/src/**.cpp"
+--     }
 
-    includedirs
-    {
-        "Ares/vendor/spdlog/include",
-        "Ares/src",
-        "Ares/vendor",
-        "%{IncludeDir.glm}"
-    }
+--     includedirs
+--     {
+--         "Ares/vendor/spdlog/include",
+--         "Ares/src",
+--         "Ares/vendor",
+--         "%{IncludeDir.glm}"
+--     }
 
-    links
-    {
-        "Ares",
-        -- "Ares/vendor/assimp/win64/assimp.lib"
-    } 
-    -- postbuildcommands 
-    -- {
-    --     '{COPY} "../Ares/vendor/assimp/win64/assimp.lib" "%{cfg.targetdir}"',
-    -- }
+--     links
+--     {
+--         "Ares",
+--         -- "Ares/vendor/assimp/win64/assimp.lib"
+--     } 
+--     -- postbuildcommands 
+--     -- {
+--     --     '{COPY} "../Ares/vendor/assimp/win64/assimp.lib" "%{cfg.targetdir}"',
+--     -- }
 
-    filter "system:windows"
-        systemversion "latest"
+--     filter "system:windows"
+--         systemversion "latest"
         
         
-    filter "configurations:Debug"
-        defines "ARES_DEBUG"
-        runtime "Debug"
-        symbols "on"
-        links
-		{
-			"Ares/vendor/assimp/bin/Debug/assimp-vc141-mtd.lib"
-		}
+--     filter "configurations:Debug"
+--         defines "ARES_DEBUG"
+--         runtime "Debug"
+--         symbols "on"
+--         links
+-- 		{
+-- 			"Ares/vendor/assimp/bin/Debug/assimp-vc141-mtd.lib"
+-- 		}
 
-		postbuildcommands 
-		{
-			'{COPY} "../Ares/vendor/assimp/bin/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"',
-		}
+-- 		postbuildcommands 
+-- 		{
+-- 			'{COPY} "../Ares/vendor/assimp/bin/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"',
+-- 		}
 
-    filter "configurations:Release"
-        defines "ARES_RELEASE"
-        runtime "Release"
-        optimize "on"
-        links
-		{
-			"Ares/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
-		}
-		postbuildcommands 
-		{
-			'{COPY} "../Ares/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
-		}
+--     filter "configurations:Release"
+--         defines "ARES_RELEASE"
+--         runtime "Release"
+--         optimize "on"
+--         links
+-- 		{
+-- 			"Ares/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+-- 		}
+-- 		postbuildcommands 
+-- 		{
+-- 			'{COPY} "../Ares/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+-- 		}
 
-    filter "configurations:Dist"
-        defines "ARES_DIST"
-        runtime "Release"
-        optimize "on"
-        links
-		{
-			"Ares/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
-		}
-		postbuildcommands 
-		{
-			'{COPY} "../Ares/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
-		}
+--     filter "configurations:Dist"
+--         defines "ARES_DIST"
+--         runtime "Release"
+--         optimize "on"
+--         links
+-- 		{
+-- 			"Ares/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+-- 		}
+-- 		postbuildcommands 
+-- 		{
+-- 			'{COPY} "../Ares/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+-- 		}
 
 
 project "Phobos"
@@ -295,12 +297,12 @@ project "Phobos"
         symbols "on"
         links
 		{
-			"Ares/vendor/assimp/bin/Debug/assimp-vc141-mtd.lib"
+			"Ares/vendor/assimp/lib/Debug/assimp-vc141-mtd.lib"
 		}
 
 		postbuildcommands 
 		{
-			'{COPY} "../Ares/vendor/assimp/bin/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"',
+			'{COPY} "../Ares/vendor/assimp/lib/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"',
 		}
 
     filter "configurations:Release"
@@ -309,11 +311,11 @@ project "Phobos"
         optimize "on"
         links
 		{
-			"Ares/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+			"Ares/vendor/assimp/lib/Release/assimp-vc141-mt.lib"
 		}
 		postbuildcommands 
 		{
-			'{COPY} "../Ares/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+			'{COPY} "../Ares/vendor/assimp/lib/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
 		}
 
     filter "configurations:Dist"
@@ -322,9 +324,9 @@ project "Phobos"
         optimize "on"
         links
 		{
-			"Ares/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+			"Ares/vendor/assimp/lib/Release/assimp-vc141-mt.lib"
 		}
 		postbuildcommands 
 		{
-			'{COPY} "../Ares/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+			'{COPY} "../Ares/vendor/assimp/lib/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
 		}
