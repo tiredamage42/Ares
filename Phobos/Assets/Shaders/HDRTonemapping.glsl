@@ -3,19 +3,11 @@
 
 layout(location = 0) in vec2 a_Position;
 
-//layout(location = 0) in vec3 a_Position;
-//layout(location = 1) in vec2 a_TexCoord;
-
 out vec2 v_TexCoord;
 
 void main()
 {
-	//vec4 position = vec4(a_Position.xy, 1.0, 1.0);
-	//v_TexCoord = a_TexCoord;
-
-	//vec4 position = vec4(a_Position, 1.0, 1.0);
 	v_TexCoord = a_Position * .5 + .5;
-
 	gl_Position = vec4(a_Position, 0.0, 1.0);
 }
 
@@ -39,8 +31,6 @@ vec4 MultiSampleTexture(sampler2DMS tex, ivec2 texCoord, int samples)
 	return result;
 }
 
-
-
 void main()
 {
 	const float gamma = 2.2;
@@ -51,9 +41,7 @@ void main()
 	ivec2 texCoord = ivec2(v_TexCoord * texSize);
 	vec4 msColor = MultiSampleTexture(u_Texture, texCoord, u_TextureSamples);
 
-	vec3 color = msColor.rgb * u_Exposure;//texture(u_Texture, v_TexCoord).rgb * u_Exposure;
-	//vec3 color = texture(u_Texture, v_TexCoord).rgb * u_Exposure;
-
+	vec3 color = msColor.rgb * u_Exposure;
 	
 	// Reinhard tonemapping operator.
 	// see: "Photographic Tone Reproduction for Digital Images", eq. 4

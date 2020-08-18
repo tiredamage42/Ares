@@ -44,8 +44,8 @@ namespace std {
 
 namespace Ares {
 //#define GRID_RESOLUTION 2147483646
-#define GRID_RESOLUTION 100
-#define GRID_WIDTH .05f
+//#define GRID_RESOLUTION 100
+//#define GRID_WIDTH .05f
 
 	struct MeshDrawCall
 	{
@@ -99,7 +99,9 @@ namespace Ares {
 		// Grid
 		//Ref<MaterialInstance> GridMaterial;
 		//Ref<MaterialInstance> OutlineMaterial;
-		Ref<Material> GridMaterial;
+		//Ref<Material> GridMaterial;
+		Ref<Shader> GridShader;
+
 
 		//Ref<Material> OutlineMaterial;
 		Ref<Shader> OutlineShader;
@@ -247,7 +249,7 @@ namespace Ares {
 		compRenderPassSpec.TargetFrameBuffer = FrameBuffer::Create(compFramebufferSpec);
 		s_Data.CompositePass = CreateRef<RenderPass>(compRenderPassSpec);
 
-		s_Data.CompositeShader = Shader::Find("Assets/Shaders/hdr.glsl");
+		s_Data.CompositeShader = Shader::Find("Assets/Shaders/HDRTonemapping.glsl");
 		
 		
 		
@@ -271,10 +273,11 @@ namespace Ares {
 
 
 		// Grid
-		auto gridShader = Shader::Find("Assets/Shaders/grid.glsl");
+		//auto gridShader 
+		s_Data.GridShader = Shader::Find("Assets/Shaders/SceneGrid.glsl");
 
 		//s_Data.GridMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(gridShader));
-		s_Data.GridMaterial = CreateRef<Material>(gridShader);
+		//s_Data.GridMaterial = CreateRef<Material>(gridShader);
 
 		// TODO: SET SCENE VALUES
 		/*float gridScale = 16.025f, gridSize = 0.025f;
@@ -283,12 +286,16 @@ namespace Ares {
 
 		//s_Data.GridMaterial->Set("u_MVP", viewProjection * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
 		
-		s_Data.GridMaterial->SetValue("u_Scale", (float)GRID_RESOLUTION);
-		s_Data.GridMaterial->SetValue("u_Res", GRID_WIDTH);
+
+
+		//s_Data.GridMaterial->SetValue("u_ResAndWidth", glm::vec2(GRID_RESOLUTION, GRID_WIDTH));
+
+		//s_Data.GridMaterial->SetValue("u_Scale", (float)GRID_RESOLUTION);
+		//s_Data.GridMaterial->SetValue("u_Res", GRID_WIDTH);
 
 
 		// Outline
-		auto outlineShader = Shader::Find("Assets/Shaders/Outline.glsl");
+		auto outlineShader = Shader::Find("Assets/Shaders/UnlitColor.glsl");
 		s_Data.OutlineShader = outlineShader;
 
 		//s_Data.OutlineMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(outlineShader));
@@ -907,6 +914,7 @@ namespace Ares {
 
 				s_Data.OutlineShader->Bind(ShaderVariant::Static);
 				s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Static);
+				s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1), ShaderVariant::Static);
 
 				for (size_t i = 0; i < outlineDrawCount; i++)
 				{
@@ -914,6 +922,7 @@ namespace Ares {
 					{
 						s_Data.OutlineShader->Bind(ShaderVariant::Skinned);
 						s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Skinned);
+						s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1), ShaderVariant::Skinned);
 					}
 
 					Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, false);
@@ -1010,8 +1019,11 @@ namespace Ares {
 			//float m_GridSize = 0.025f;
 			//float m_GridSize = 0.5f;
 
-			s_Data.GridMaterial->GetShader()->Bind(ShaderVariant::Static);
-			s_Data.GridMaterial->GetShader()->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Static);
+			s_Data.GridShader->Bind(ShaderVariant::Static);
+			s_Data.GridShader->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Static);
+
+			/*s_Data.GridMaterial->GetShader()->Bind(ShaderVariant::Static);
+			s_Data.GridMaterial->GetShader()->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Static);*/
 
 			//s_Data.GridMaterial->Set("ares_VPMatrix", viewProjection);
 
@@ -1022,7 +1034,8 @@ namespace Ares {
 			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(16.0f)));
 			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
 			
-			Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(GRID_RESOLUTION * .5f + GRID_WIDTH * .5f)));
+			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));// *glm::scale(glm::mat4(1.0f), glm::vec3(GRID_RESOLUTION + GRID_WIDTH)));
+			Renderer::SubmitQuad(s_Data.GridShader, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), true);// *glm::scale(glm::mat4(1.0f), glm::vec3(GRID_RESOLUTION + GRID_WIDTH)));
 		}
 
 
@@ -1048,6 +1061,7 @@ namespace Ares {
 
 		Renderer::EndRenderPass();
 	}
+
 
 	void SceneRenderer::CompositePass()
 	{

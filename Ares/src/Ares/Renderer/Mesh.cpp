@@ -894,7 +894,7 @@ namespace Ares {
 					{
 						//m_Textures[i] = texture;
 						//mi->Set("u_AlbedoTexture", m_Textures[i]);
-						mi->SetTexture("u_AlbedoTexture", texture);
+						mi->SetTexture("u_AlbedoTex", texture);
 						//mi->Set("u_AlbedoTexToggle", 1.0f);
 					}
 					else
@@ -935,7 +935,7 @@ namespace Ares {
 					auto texture = Texture2D::Create(texturePath, FilterType::Trilinear, true);
 					if (texture->Loaded())
 					{
-						mi->SetTexture("u_NormalTexture", texture);
+						mi->SetTexture("u_NormalTex", texture);
 						//mi->Set("u_NormalTexToggle", 1.0f);
 					}
 					else

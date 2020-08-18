@@ -399,29 +399,16 @@ namespace Ares {
 					// TODO: this needs to be more robust
 					size_t startMain = source.find("void main");
 
-					size_t insertVars = startMain - 1;
+					//size_t insertVars = startMain - 1;
 
-					size_t startInMain = source.find_first_of("{", startMain) + 1;
+					//size_t startInMain = source.find_first_of("{", startMain) + 1;
 
-
+					
 					// add necessary bits here
 					if (i == 1) // teh skinneed mesh variant
 					{
-
-						source.insert(startInMain, R"(
-							mat4 _ares_internal_bone_transform = 
-								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.x) * _ares_internal_BoneWeights.x +
-								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.y) * _ares_internal_BoneWeights.y +
-								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.z) * _ares_internal_BoneWeights.z +
-								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.w) * _ares_internal_BoneWeights.w;
-
-							mat4 ares_ModelMatrix = _ares_internal_Transform * _ares_internal_bone_transform;
-							mat4 ares_MVPMatrix = ares_VPMatrix * ares_ModelMatrix;
-						)");
-
-
-
-						source.insert(insertVars, R"(
+						
+						source.insert(source.find("void main") - 1, R"(
 							layout(location = 4) in vec4 _ares_internal_BoneIndices;
 							layout(location = 5) in vec4 _ares_internal_BoneWeights;
 
@@ -435,28 +422,26 @@ namespace Ares {
 									texture2D(_ares_internal_BoneSampler, vec2(0.875, bIdx))
 								);
 							}
+						)");
 
-							uniform mat4 _ares_internal_Transform;
-							uniform mat4 ares_VPMatrix;
-							uniform mat4 ares_VMatrix;
+						source.insert(source.find_first_of("{", source.find("void main")) + 1, R"(
+							mat4 _ares_internal_bone_transform = 
+								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.x) * _ares_internal_BoneWeights.x +
+								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.y) * _ares_internal_BoneWeights.y +
+								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.z) * _ares_internal_BoneWeights.z +
+								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.w) * _ares_internal_BoneWeights.w;
+
+							mat4 ares_Object2World = _ares_internal_Transform * _ares_internal_bone_transform;
 						)");
 					}
 					else
 					{
-						// add necessary bits here
-
 						if (m_ShaderFlags.count(STANDARD_VARS_FLAG))
 						{
-
-							source.insert(startInMain, R"(
-								mat4 ares_ModelMatrix = _ares_internal_Transform;
-								mat4 ares_MVPMatrix = ares_VPMatrix * ares_ModelMatrix;
-							)");
-							source.insert(insertVars, R"(
-								uniform mat4 _ares_internal_Transform;
-								uniform mat4 ares_VPMatrix;
-								uniform mat4 ares_VMatrix;
-							)");
+							source.insert(
+								source.find_first_of("{", source.find("void main")) + 1, 
+								"\nmat4 ares_Object2World = _ares_internal_Transform;\n"
+							);
 						}
 					}
 
@@ -504,10 +489,12 @@ namespace Ares {
 					// We don't need the shader anymore.
 					glDeleteShader(shader);
 
+
 					ARES_CORE_ERROR("Shader compilation failed:\n{0}\n{1}", m_Name, infoLog.data());
 					ARES_CORE_ASSERT(false, "Shader Compilation Failure!");
 					break;
 				}
+
 			 
 				// Attach our shaders to our program
 				glAttachShader(program, shader);
@@ -777,6 +764,18 @@ namespace Ares {
 		{
 			if (isArray)
 			{
+				bool isRepeat = false;
+				for (auto u : m_ResourceArrays)
+				{
+					if (name == u->GetName())
+					{
+						isRepeat = true;
+						break;
+					}
+				}
+				if (!isRepeat)
+				{
+
 				ShaderResourceArrayDeclaration* declaration = new OpenGLShaderResourceArrayDeclaration(OpenGLShaderResourceDeclaration::StringToType(typeString), name, count);
 				//variantBuffers.m_Resources.push_back(declaration);
 				m_ResourceArrays.push_back(declaration);
@@ -785,18 +784,30 @@ namespace Ares {
 				{
 					declaration->m_Attributes = uniformAttributes.at(name);
 				}
+				}
 			}
 			else
 			{
+				bool isRepeat = false;
+				for (auto u : m_Resources)
+				{
+					if (name == u->GetName())
+					{
+						isRepeat = true;
+						break;
+					}
+				}
+				if (!isRepeat)
+				{
+					ShaderResourceDeclaration* declaration = new OpenGLShaderResourceDeclaration(OpenGLShaderResourceDeclaration::StringToType(typeString), name);// , count);
+				//variantBuffers.m_Resources.push_back(declaration);
+					m_Resources.push_back(declaration);
 
-				ShaderResourceDeclaration* declaration = new OpenGLShaderResourceDeclaration(OpenGLShaderResourceDeclaration::StringToType(typeString), name);// , count);
-			//variantBuffers.m_Resources.push_back(declaration);
-			m_Resources.push_back(declaration);
-
-			if (uniformAttributes.find(name) != uniformAttributes.end())
-			{
-				declaration->m_Attributes = uniformAttributes.at(name);
-			}
+					if (uniformAttributes.find(name) != uniformAttributes.end())
+					{
+						declaration->m_Attributes = uniformAttributes.at(name);
+					}
+				}
 			}
 
 			
@@ -815,49 +826,64 @@ namespace Ares {
 		}
 		else
 		{
-			OpenGLShaderUniformDeclaration::Type t = OpenGLShaderUniformDeclaration::StringToType(typeString);
-			OpenGLShaderUniformDeclaration* declaration = nullptr;
-
-			if (t == OpenGLShaderUniformDeclaration::Type::NONE)
+			bool isRepeat = false;
+			if (m_PSMaterialUniformBuffer)
 			{
-			/*
-				// Find struct
-				//ShaderStruct* s = FindStruct(typeString, variantBuffers);// variant);
-				ShaderStruct* s = FindStruct(typeString);// variant);
-				ARES_CORE_ASSERT(s, "");
-				//declaration = new OpenGLShaderUniformDeclaration(domain, s, name, count);
-				declaration = new OpenGLShaderUniformDeclaration(s, name, count);
-			*/
-			}
-			else
+			for (auto u : m_PSMaterialUniformBuffer->GetUniformDeclarations())
 			{
-				//declaration = new OpenGLShaderUniformDeclaration(domain, t, name, count);
-				declaration = new OpenGLShaderUniformDeclaration(t, name, count);
-				//size_t hashName = StringUtils::String2Hash(name);// declaration->GetHashName();
-
-				if (uniformAttributes.find(name) != uniformAttributes.end())
+				if (name == u->GetName())
 				{
-					declaration->m_Attributes = uniformAttributes.at(name);
-
-					/*if (attributes.HasAttribute(UniformAttribute::DefaultValue))
-					{
-						declaration->m_HasDefaultValue = true;
-						declaration->m_DefaultValue = attributes.DefaultValue;
-					}*/
+					isRepeat = true;
+					break;
 				}
 			}
-
-			/*if (StartsWith(name, "r_"))
-			{
-				if (domain == ShaderDomain::Vertex)
-					((OpenGLShaderUniformBufferDeclaration*)m_VSRendererUniformBuffers.front())->PushUniform(declaration);
-				else if (domain == ShaderDomain::Pixel)
-					((OpenGLShaderUniformBufferDeclaration*)m_PSRendererUniformBuffers.front())->PushUniform(declaration);
 			}
-			else
-			{*/
+			if (!isRepeat)
+			{
 
-			
+				OpenGLShaderUniformDeclaration::Type t = OpenGLShaderUniformDeclaration::StringToType(typeString);
+				OpenGLShaderUniformDeclaration* declaration = nullptr;
+
+				if (t == OpenGLShaderUniformDeclaration::Type::NONE)
+				{
+					/*
+						// Find struct
+						//ShaderStruct* s = FindStruct(typeString, variantBuffers);// variant);
+						ShaderStruct* s = FindStruct(typeString);// variant);
+						ARES_CORE_ASSERT(s, "");
+						//declaration = new OpenGLShaderUniformDeclaration(domain, s, name, count);
+						declaration = new OpenGLShaderUniformDeclaration(s, name, count);
+					*/
+				}
+				else
+				{
+					//declaration = new OpenGLShaderUniformDeclaration(domain, t, name, count);
+					declaration = new OpenGLShaderUniformDeclaration(t, name, count);
+					//size_t hashName = StringUtils::String2Hash(name);// declaration->GetHashName();
+
+					if (uniformAttributes.find(name) != uniformAttributes.end())
+					{
+						declaration->m_Attributes = uniformAttributes.at(name);
+
+						/*if (attributes.HasAttribute(UniformAttribute::DefaultValue))
+						{
+							declaration->m_HasDefaultValue = true;
+							declaration->m_DefaultValue = attributes.DefaultValue;
+						}*/
+					}
+				}
+
+				/*if (StartsWith(name, "r_"))
+				{
+					if (domain == ShaderDomain::Vertex)
+						((OpenGLShaderUniformBufferDeclaration*)m_VSRendererUniformBuffers.front())->PushUniform(declaration);
+					else if (domain == ShaderDomain::Pixel)
+						((OpenGLShaderUniformBufferDeclaration*)m_PSRendererUniformBuffers.front())->PushUniform(declaration);
+				}
+				else
+				{*/
+
+
 				/*if (domain == ShaderDomain::Vertex)
 				{
 					if (!variantBuffers.m_VSMaterialUniformBuffer)
@@ -867,22 +893,23 @@ namespace Ares {
 				}
 				else if (domain == ShaderDomain::Pixel)
 				{*/
-			//if (!variantBuffers.m_PSMaterialUniformBuffer)
+				//if (!variantBuffers.m_PSMaterialUniformBuffer)
 
 
-			if (declaration)
-			{
+				if (declaration)
+				{
 
-			if (!m_PSMaterialUniformBuffer)
-			{
+					if (!m_PSMaterialUniformBuffer)
+					{
 
 						//variantBuffers.m_PSMaterialUniformBuffer.reset(new OpenGLShaderUniformBufferDeclaration("", domain));
 						//variantBuffers.m_PSMaterialUniformBuffer.reset(new OpenGLShaderUniformBufferDeclaration(""));
 						m_PSMaterialUniformBuffer.reset(new OpenGLShaderUniformBufferDeclaration(""));
 
-				}
+					}
 					//variantBuffers.m_PSMaterialUniformBuffer->PushUniform(declaration);
 					m_PSMaterialUniformBuffer->PushUniform(declaration);
+				}
 			}
 				//}
 			//}
@@ -909,6 +936,7 @@ namespace Ares {
 
 			std::string type = tokens[index++];
 			std::string name = tokens[index++];
+
 
 			// Strip ; from name if present
 			if (const char* s = strstr(name.c_str(), ";"))
@@ -1459,7 +1487,14 @@ namespace Ares {
 	}
 	*/
 
-
+	static std::string ReplaceString(std::string str, const std::string& search, const std::string& replace) {
+		size_t pos = 0;
+		while ((pos = str.find(search, pos)) != std::string::npos) {
+			str.replace(pos, search.length(), replace);
+			pos += replace.length();
+		}
+		return str;
+	}
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(std::string source, std::unordered_map<std::string, UniformAttributes>& uniformAttributes)
 	{
@@ -1500,7 +1535,7 @@ namespace Ares {
 
 					std::istringstream as(attributes_string);
 					std::string st;
-					while (getline(as, st, ',')) {
+					while (getline(as, st, ':')) {
 						
 						if (st == "TOGGLE")
 						{
@@ -1523,7 +1558,7 @@ namespace Ares {
 
 							std::string rangeStr = st.substr(parStart, parEnd - parStart);
 
-							size_t commaPos = rangeStr.find_first_of(":", 0);
+							size_t commaPos = rangeStr.find_first_of(",", 0);
 
 							std::string minS = rangeStr.substr(0, commaPos);
 							std::string maxS = rangeStr.substr(commaPos + 1, rangeStr.size() - (commaPos + 1));
@@ -1546,7 +1581,7 @@ namespace Ares {
 
 							std::istringstream f2(defValString);
 							std::string s2;
-							while (getline(f2, s2, ':')) 
+							while (getline(f2, s2, ',')) 
 							{
 								vals.push_back(std::stof(s2));
 							}
@@ -1571,7 +1606,6 @@ namespace Ares {
 							}
 							else if (vals.size() == 3)
 							{
-
 								auto v = glm::vec3(vals[0], vals[1], vals[2]);
 								value = (byte*)&v;
 								size = sizeof(glm::vec3);
@@ -1622,7 +1656,7 @@ namespace Ares {
 			*/
 
 
-			source.erase(0, propertiesEndIDX + 1);
+			source.erase(propertiesStartIDX, (propertiesEndIDX + 1) - propertiesStartIDX);
 		}
 
 		/*
@@ -1669,7 +1703,8 @@ namespace Ares {
 			
 			std::istringstream f(flagsString);
 			std::string s;
-			while (getline(f, s, ',')) {
+			while (getline(f, s, ',')) 
+			{
 			
 				m_ShaderFlags.insert(s);
 			}
@@ -1688,8 +1723,27 @@ namespace Ares {
 
 			*/
 			
-			source.erase(0, flagsEndIDX + 1);
+			source.erase(flagsStartIDX, (flagsEndIDX + 1) - flagsStartIDX);
 		}
+
+
+		bool hasSharedBlock = false;
+		std::string sharedBlock;
+
+		size_t sharedStartIDX = source.find("#shared");
+
+		if (sharedStartIDX != std::string::npos)
+		{
+			hasSharedBlock = true;
+
+			size_t sharedEndIDX = source.find_first_of("}", sharedStartIDX);
+
+			size_t blockStartIDX = source.find_first_of("{", sharedStartIDX) + 1;
+			sharedBlock = source.substr(blockStartIDX, sharedEndIDX - blockStartIDX);
+			source.erase(sharedStartIDX, (sharedEndIDX + 1) - sharedStartIDX);
+		}
+
+
 
 		std::unordered_map<GLenum, std::string> shaderSources;
 
@@ -1723,7 +1777,73 @@ namespace Ares {
 			// the end of the file, or the next line we found #type
 			//shaderSources[shaderType] = source.substr(shadrSourceStartIndex, startIndexOfTypeLine - (shadrSourceStartIndex == std::string::npos ? source.size() - 1 : shadrSourceStartIndex));
 
-			shaderSources[shaderType] = source.substr(shadrSourceStartIndex, (startIndexOfTypeLine == std::string::npos ? source.size() : startIndexOfTypeLine) - shadrSourceStartIndex);
+
+			std::string shaderString = source.substr(shadrSourceStartIndex, (startIndexOfTypeLine == std::string::npos ? source.size() : startIndexOfTypeLine) - shadrSourceStartIndex);
+
+
+			if (hasSharedBlock)
+			{
+
+
+				if (shaderType == GL_VERTEX_SHADER)
+				{
+					shaderString.insert(shaderString.find_first_of("\r\n") + 1, ReplaceString(sharedBlock, "varying", "out"));
+				}
+				else if (shaderType == GL_FRAGMENT_SHADER)
+				{
+					shaderString.insert(shaderString.find_first_of("\r\n") + 1, ReplaceString(sharedBlock, "varying", "in"));
+				}
+				else
+				{
+					shaderString.insert(shaderString.find_first_of("\r\n") + 1, sharedBlock);
+				}
+			}
+
+
+
+			if (m_ShaderFlags.count(STANDARD_VARS_FLAG))
+			{
+
+				if (shaderType == GL_VERTEX_SHADER && m_ShaderFlags.count(STANDARD_VARS_FLAG))
+				{
+					/*
+						add standard attributes to shader if specified
+					*/
+					shaderString.insert(
+						shaderString.find_first_of("\r\n") + 1, 
+						R"(
+							layout(location = 0) in vec3 ares_ObjectPos;
+							layout(location = 1) in vec2 ares_ObjectUVs;
+							layout(location = 2) in vec3 ares_ObjectNormals;
+							layout(location = 3) in vec3 ares_ObjectTangents;
+
+							uniform mat4 _ares_internal_Transform;
+							uniform mat4 ares_VPMatrix;
+							uniform mat4 ares_VMatrix;
+						)"
+					);
+
+					// "ares_Object2World" will be defined in the compile step
+					// since it depends on being the skinned variation or not
+					shaderString.insert(
+						shaderString.find_first_of("{", shaderString.find("void main")) + 1,
+						"\nmat4 ares_MVPMatrix = ares_VPMatrix * ares_Object2World;\n"
+					);
+
+				}
+				else if (shaderType == GL_FRAGMENT_SHADER)
+				{
+					shaderString.insert(
+						shaderString.find_first_of("\r\n") + 1,
+						"\nlayout(location = 0) out vec4 out_Color;\n"
+					);
+
+					
+				}
+			}
+
+
+			shaderSources[shaderType] = shaderString;
 			//shaderSources[shaderType] = source.substr(shadrSourceStartIndex, startIndexOfTypeLine - shadrSourceStartIndex);
 
 

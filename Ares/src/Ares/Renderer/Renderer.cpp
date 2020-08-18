@@ -169,14 +169,13 @@ namespace Ares {
 	}
 
 
-	//void Renderer::SubmitQuad(Ref<Shader> shader, const glm::mat4& transform, bool depthTest)
-	//{
-	//	// TODO: assert that shader is bound
-	//	shader->SetMat4("u_Transform", transform);
-	//	//shader->Bind();
-	//	s_Data.m_QuadVertexArray->Bind();
-	//	DrawIndexed(6, PrimitiveType::Triangles, depthTest);
-	//}
+	void Renderer::SubmitQuad(Ref<Shader> shader, const glm::mat4& transform, bool depthTest)
+	{
+		// TODO: assert that shader is bound
+		shader->SetMat4("_ares_internal_Transform", transform, ShaderVariant::Static);
+		s_Data.m_QuadVertexArray->Bind();
+		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
+	}
 
 	//void Renderer::SubmitQuad(Ref<MaterialInstance> material, const glm::mat4& transform)
 	void Renderer::SubmitQuad(Ref<Material> material, const glm::mat4& transform)

@@ -8,14 +8,19 @@
 
 const float PI = 3.141592;
 const float TwoPI = 2 * PI;
+
+/*
 const float Epsilon = 0.00001;
 
 // lower this in distribution / release configs...
 const uint NumSamples = 64 * 1024;// 64 * 1024;
 const float InvNumSamples = 1.0 / float(NumSamples);
+*/
 
 layout(binding = 0) uniform samplerCube inputTexture;
 layout(binding = 0, rgba16f) restrict writeonly uniform imageCube outputTexture;
+
+/*
 
 // Compute Van der Corput radical inverse
 // See: http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
@@ -44,7 +49,7 @@ vec3 sampleHemisphere(float u1, float u2)
 	const float u1p = sqrt(max(0.0, 1.0 - u1 * u1));
 	return vec3(cos(TwoPI * u2) * u1p, sin(TwoPI * u2) * u1p, u1);
 }
-
+*/
 vec3 GetCubeMapTexCoord()
 {
 	vec2 st = gl_GlobalInvocationID.xy / vec2(imageSize(outputTexture));
@@ -60,7 +65,7 @@ vec3 GetCubeMapTexCoord()
 	else if (gl_GlobalInvocationID.z == 5) ret = vec3(-uv.x, uv.y, -1.0);
 	return normalize(ret);
 }
-
+/*
 // Compute orthonormal basis for converting from tanget/shading space to world space.
 void computeBasisVectors(const vec3 N, out vec3 S, out vec3 T)
 {
@@ -77,6 +82,7 @@ vec3 tangentToWorld(const vec3 v, const vec3 N, const vec3 S, const vec3 T)
 {
 	return S * v.x + T * v.y + N * v.z;
 }
+*/
 
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 void main(void)
@@ -101,9 +107,9 @@ void main(void)
 		irradiance += 2.0 * textureLod(inputTexture, Li, 0).rgb * cosTheta;
 	}
 	irradiance /= vec3(NumSamples);
-	
-	
 	*/
+	
+	
 
 	// tangent space calculation from origin point
 	vec3 up = vec3(0.0, 1.0, 0.0);
@@ -117,7 +123,7 @@ void main(void)
 
 	const float sampleDelta = 0.025;
 	float nrSamples = 0.0;
-	for (float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
+	for (float phi = 0.0; phi < TwoPI; phi += sampleDelta)
 	{
 		float cPhi = cos(phi);
 		float sPhi = sin(phi);

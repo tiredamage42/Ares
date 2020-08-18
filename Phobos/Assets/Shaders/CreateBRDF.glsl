@@ -108,29 +108,10 @@ vec2 IntegrateBRDF(float NdotV, float roughness)
 }
 // ----------------------------------------------------------------------------
 
-//vec2 GetTexCoord()
-//{
-//    vec2 st = vec2(gl_GlobalInvocationID.xy) / vec2(imageSize(outputTexture));
-//    vec2 uv = st;// 2.0 * vec2(st.x, 1.0 - st.y) - vec2(1.0);
-//    return uv;
-//}
-
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 void main()
 {
     vec2 TexCoords = vec2(gl_GlobalInvocationID.xy) / imageSize(outputTexture);
-
-    //vec2 integratedBRDF = IntegrateBRDF(TexCoords.x, TexCoords.y);
-    vec2 integratedBRDF = IntegrateBRDF(max(TexCoords.x, .001), TexCoords.y);
-
-    /*if (TexCoords.x > 1 || TexCoords.y > 1)
-    {
-        imageStore(outputTexture, ivec2(gl_GlobalInvocationID.xy), vec4(0, 0, 0, 0));
-    }
-    else
-    {
-        imageStore(outputTexture, ivec2(gl_GlobalInvocationID.xy), vec4(TexCoords, 0, 0));
-    }*/
-    
+    vec2 integratedBRDF = IntegrateBRDF(max(TexCoords.x, .001), TexCoords.y);    
     imageStore(outputTexture, ivec2(gl_GlobalInvocationID.xy), vec4(integratedBRDF, 0, 0));
 }

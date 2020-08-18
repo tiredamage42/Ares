@@ -254,13 +254,13 @@ namespace Ares {
 			//return;
 			//uint8_t slot;
 			auto decl = FindResourceDeclaration(name);// , slot);
-			uint32_t slot = decl->GetRegister();
 			if (!decl)
 			{
 				//ARES_CORE_ERROR("Could not find sampler2D uniform with name '{0}'", name);
 				//ARES_CORE_ASSERT(false, "");
 				return;
 			}
+			uint32_t slot = decl->GetRegister();
 
 			if (m_Textures.size() <= slot)
 				m_Textures.resize((size_t)slot + 1);

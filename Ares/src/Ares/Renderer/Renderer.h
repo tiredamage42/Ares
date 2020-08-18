@@ -65,10 +65,10 @@ namespace Ares {
 		static void EndRenderPass();
 
 
-		//static void SubmitQuad(Ref<Shader> shader, const glm::mat4& transform = glm::mat4(1.0f), bool depthTest = true);
 		
 		//static void SubmitQuad(Ref<MaterialInstance> material, const glm::mat4& transform = glm::mat4(1.0f));
 		static void SubmitQuad(Ref<Material> material, const glm::mat4& transform = glm::mat4(1.0f));
+		static void SubmitQuad(Ref<Shader> shader, const glm::mat4& transform = glm::mat4(1.0f), bool depthTest = true);
 		
 		//static void SubmitFullscreenQuad(Ref<MaterialInstance> material);
 		static void SubmitFullscreenQuad(Ref<Material> material);

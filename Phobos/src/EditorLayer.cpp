@@ -269,7 +269,7 @@ namespace Ares
         
 
         //m_MeshBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/pbr_anim.glsl"));
-        Ref<Material> m_MeshBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/PBRStatic.glsl"));
+        Ref<Material> m_MeshBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/Standard.glsl"));
 
 
         Entity gunEntity = m_EditorScene->CreateEntity("Gun");
@@ -313,7 +313,7 @@ namespace Ares
         
         auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Sphere);
 
-        float spread = 1.25f;
+        float spread = 1;
         uint8_t i = 0;
         for (int y = -2; y <= 2; y++)
         {
@@ -334,7 +334,7 @@ namespace Ares
                 MeshRendererComponent& mrC = sphereEntity.AddComponent<MeshRendererComponent>();
                 mrC.Mesh = sphereMesh;
 
-                Ref<Material> m = CreateRef<Material>(Shader::Find("Assets/Shaders/PBRStatic.glsl"));
+                Ref<Material> m = CreateRef<Material>(Shader::Find("Assets/Shaders/Standard.glsl"));
                 //Ref<Material> m = CreateRef<Material>(m_MeshBaseMaterial);
                 mrC.Materials = { m };
                 m->SetValue("u_Metalness", metalness);
