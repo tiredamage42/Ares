@@ -14,8 +14,7 @@ namespace Ares {
 		virtual ~OpenGLTexture2D();
 
 		virtual void Bind(uint32_t slot = 0) const override;
-		//virtual void BindImmediate(uint32_t slot = 0) const override;
-
+		
 		virtual TextureFormat GetFormat() const override { return m_Format; }
 		inline virtual uint32_t GetWidth() const override { return m_Width; }
 		inline virtual uint32_t GetHeight() const override { return m_Height; }
@@ -30,11 +29,9 @@ namespace Ares {
 		virtual void Unlock() override;
 		virtual void Resize(uint32_t width, uint32_t height) override;
 		
-
 		virtual Buffer GetWriteableBuffer() override;
 		virtual bool Loaded() const override { return m_Loaded; }
 
-		
 		virtual const std::string& GetPath() const override { return m_Path; }
 
 		inline virtual uint32_t GetRendererID() const override { return m_RendererID; }
@@ -48,7 +45,7 @@ namespace Ares {
 		virtual bool GetSRGB() const override { return m_SRGB; }
 
 	private:
-		uint32_t m_RendererID;
+		uint32_t m_RendererID = 0;
 		TextureFormat m_Format;
 		FilterType m_FilterType;
 		TextureWrap m_Wrap = TextureWrap::Clamp;
@@ -73,8 +70,7 @@ namespace Ares {
 		virtual ~OpenGLTextureCube();
 
 		virtual void Bind(uint32_t slot = 0) const override;
-		//virtual void BindImmediate(uint32_t slot = 0) const override;
-
+		
 		virtual TextureFormat GetFormat() const { return m_Format; }
 		virtual uint32_t GetWidth() const { return m_Width; }
 		virtual uint32_t GetHeight() const { return m_Height; }
@@ -96,13 +92,11 @@ namespace Ares {
 
 		virtual void GenerateMipMaps() const override;
 	private:
-		uint32_t m_RendererID;
+		uint32_t m_RendererID = 0;
 		TextureFormat m_Format;
 		FilterType m_FilterType;
 		uint32_t m_Width, m_Height;
-
-		unsigned char* m_ImageData;
-
+		unsigned char* m_ImageData = nullptr;
 		std::string m_FilePath;
 	};
 }
