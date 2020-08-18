@@ -124,48 +124,77 @@ namespace Ares {
 		}
 	};*/
 
-	enum class ShaderVariant : size_t
+	enum class ShaderVariations
 	{
-		Static = 0, Skinned = 1
+		None			= BIT(0),
+		Default			= BIT(1),
+		DefaultSkinned	= BIT(2),
+		Deferred		= BIT(3),
+		DeferredSkinned	= BIT(4),
 	};
 
 	class Shader
 	{
+	
 	public:
-		using ShaderReloadedCallback = std::function<void()>;
-
+		static uint32_t ShaderVariation2Int(ShaderVariations variation)
+		{
+			switch (variation)
+			{
+			case ShaderVariations::None:			return 0;
+			case ShaderVariations::Default:			return 0;
+			case ShaderVariations::DefaultSkinned:	return 1;
+			case ShaderVariations::Deferred:		return 2;
+			case ShaderVariations::DeferredSkinned:	return 3;
+			default:
+				return 0;
+			}
+		}
 		
+		static const uint32_t MAX_VARIANTS = 4;
+
+		using ShaderReloadedCallback = std::function<void()>;
 
 		virtual ~Shader() = default;
 
 		virtual void Reload() = 0;
 
-		virtual void Bind(ShaderVariant variant) = 0;
+		virtual void Bind(ShaderVariations variation) = 0;
 		virtual void Unbind() const = 0;
 
-		virtual uint32_t GetRendererID(ShaderVariant variant) const = 0;
+		virtual uint32_t GetRendererID(ShaderVariations variant) const = 0;
 
 		//virtual void UploadUniformBuffer(const UniformBufferBase& uniformBuffer) = 0;
 
 		virtual const std::string& GetName() const = 0;
 
-		virtual void SetInt(const std::string& name, int value, ShaderVariant variant) = 0;
-		virtual void SetIntArray(const std::string& name, int* values, uint32_t count, ShaderVariant variant, bool deleteFromMem=true) = 0;
-		virtual void SetFloat(const std::string& name, float value, ShaderVariant variant) = 0;
-		virtual void SetFloat2(const std::string& name, glm::vec2 value, ShaderVariant variant) = 0;
-		virtual void SetFloat3(const std::string& name, glm::vec3 value, ShaderVariant variant) = 0;
-		virtual void SetFloat4(const std::string& name, glm::vec4 value, ShaderVariant variant) = 0;
-		virtual void SetMat3(const std::string& name, glm::mat3 value, ShaderVariant variant) = 0;
-		virtual void SetMat4(const std::string& name, const glm::mat4& value, ShaderVariant variant) = 0;
-		
-		virtual void SetIntFromRenderThread(const std::string& name, int value, ShaderVariant variant) = 0;
-		virtual void SetIntArrayFromRenderThread(const std::string& name, int* values, uint32_t count, ShaderVariant variant) = 0;
-		virtual void SetFloatFromRenderThread(const std::string& name, float value, ShaderVariant variant) = 0;
-		virtual void SetFloat2FromRenderThread(const std::string& name, glm::vec2 value, ShaderVariant variant) = 0;
-		virtual void SetFloat3FromRenderThread(const std::string& name, glm::vec3 value, ShaderVariant variant) = 0;
-		virtual void SetFloat4FromRenderThread(const std::string& name, glm::vec4 value, ShaderVariant variant) = 0;
-		virtual void SetMat3FromRenderThread(const std::string& name, glm::mat3 value, ShaderVariant variant) = 0;
-		virtual void SetMat4FromRenderThread(const std::string& name, const glm::mat4& value, ShaderVariant variant) = 0;
+		virtual void SetInt(const std::string& name, int value, ShaderVariations variation) = 0;
+		virtual void SetFloat(const std::string& name, float value, ShaderVariations variation) = 0;
+		virtual void SetFloat2(const std::string& name, glm::vec2 value, ShaderVariations variation) = 0;
+		virtual void SetFloat3(const std::string& name, glm::vec3 value, ShaderVariations variation) = 0;
+		virtual void SetFloat4(const std::string& name, glm::vec4 value, ShaderVariations variation) = 0;
+		virtual void SetMat3(const std::string& name, glm::mat3 value, ShaderVariations variation) = 0;
+		virtual void SetMat4(const std::string& name, const glm::mat4& value, ShaderVariations variation) = 0;
+
+		virtual void SetIntArray(const std::string& name, int32_t* values, uint32_t count, ShaderVariations variation) = 0;
+		virtual void SetFloatArray(const std::string& name, float* values, uint32_t count, ShaderVariations variation) = 0;
+		virtual void SetFloat2Array(const std::string& name, const glm::vec2& values, uint32_t count, ShaderVariations variation) = 0;
+		virtual void SetFloat3Array(const std::string& name, const glm::vec3& values, uint32_t count, ShaderVariations variation) = 0;
+		virtual void SetFloat4Array(const std::string& name, const glm::vec4& values, uint32_t count, ShaderVariations variation) = 0;
+		virtual void SetMat3Array(const std::string& name, const glm::mat3& values, uint32_t count, ShaderVariations variation) = 0;
+		virtual void SetMat4Array(const std::string& name, const glm::mat4& values, uint32_t count, ShaderVariations variation) = 0;
+
+
+		/*
+		virtual void SetIntFromRenderThread(const std::string& name, int value, ShaderVariations variation) = 0;
+		virtual void SetFloatFromRenderThread(const std::string& name, float value, ShaderVariations variation) = 0;
+		virtual void SetFloat2FromRenderThread(const std::string& name, glm::vec2 value, ShaderVariations variation) = 0;
+		virtual void SetFloat3FromRenderThread(const std::string& name, glm::vec3 value, ShaderVariations variation) = 0;
+		virtual void SetFloat4FromRenderThread(const std::string& name, glm::vec4 value, ShaderVariations variation) = 0;
+		virtual void SetMat3FromRenderThread(const std::string& name, glm::mat3 value, ShaderVariations variation) = 0;
+		virtual void SetMat4FromRenderThread(const std::string& name, const glm::mat4& value, ShaderVariations variation) = 0;
+		virtual void SetIntArrayFromRenderThread(const std::string& name, int* values, uint32_t count, ShaderVariations variation) = 0;
+		*/
 
 		/*
 		virtual void SetInt		(size_t hash, int value, ShaderVariant variant) = 0;
@@ -196,7 +225,7 @@ namespace Ares {
 
 
 		//virtual void SetVSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant) = 0;
-		virtual void SetPSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant) = 0;
+		virtual void SetPSMaterialUniformBuffer(Buffer buffer, ShaderVariations variation) = 0;
 		
 		//virtual void SetMaterialResources( std::unordered_map<std::string, Ref<Texture>> name2Tex, ShaderVariant variant) = 0;
 		//virtual void SetMaterialResources(std::unordered_map<size_t, Ref<Texture>> name2Tex, ShaderVariant variant) = 0;

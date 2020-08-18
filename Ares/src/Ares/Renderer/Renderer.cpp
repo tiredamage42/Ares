@@ -172,7 +172,7 @@ namespace Ares {
 	void Renderer::SubmitQuad(Ref<Shader> shader, const glm::mat4& transform, bool depthTest)
 	{
 		// TODO: assert that shader is bound
-		shader->SetMat4("_ares_internal_Transform", transform, ShaderVariant::Static);
+		shader->SetMat4("_ares_internal_Transform", transform, ShaderVariations::Default);
 		s_Data.m_QuadVertexArray->Bind();
 		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
 	}
@@ -183,12 +183,12 @@ namespace Ares {
 		bool depthTest = true;
 		if (material)
 		{
-			material->Bind(ShaderVariant::Static);
+			material->Bind(ShaderVariations::Default);
 			depthTest = material->GetFlag(MaterialFlag::DepthTest);
 			//auto shader = material->GetShader();
 			
 			//material->GetShader()->SetMat4("u_Transform", transform);
-			material->GetShader()->SetMat4("_ares_internal_Transform", transform, ShaderVariant::Static);
+			material->GetShader()->SetMat4("_ares_internal_Transform", transform, ShaderVariations::Default);
 		}
 
 
@@ -202,7 +202,7 @@ namespace Ares {
 		bool depthTest = true;
 		if (material)
 		{
-			material->Bind(ShaderVariant::Static);
+			material->Bind(ShaderVariations::Default);
 			depthTest = material->GetFlag(MaterialFlag::DepthTest);
 		}
 
@@ -217,7 +217,7 @@ namespace Ares {
 		// TODO: check shader bound
 		mesh->m_VertexArray->Bind();
 		
-		ShaderVariant variant = mesh->m_IsAnimated ? ShaderVariant::Skinned : ShaderVariant::Static;
+		ShaderVariations variant = mesh->m_IsAnimated ? ShaderVariations::DefaultSkinned : ShaderVariations::Default;
 		if (mesh->m_IsAnimated)
 		{
 			mesh->m_BoneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
@@ -240,7 +240,7 @@ namespace Ares {
 	{
 		// TODO: Sort this out
 		mesh->m_VertexArray->Bind();
-		ShaderVariant variant = mesh->m_IsAnimated ? ShaderVariant::Skinned : ShaderVariant::Static;
+		ShaderVariations variant = mesh->m_IsAnimated ? ShaderVariations::DefaultSkinned : ShaderVariations::Default;
 
 		if (mesh->m_IsAnimated)
 		{
@@ -276,8 +276,8 @@ namespace Ares {
 
 
 
-
-
+	/*
+	
 	//void Renderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> overrideMaterial)
 	void Renderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, const std::vector<Ref<Material>>& materials)
 	{
@@ -307,11 +307,11 @@ namespace Ares {
 				//shader->SetInt("u_BoneCount", mesh->m_BoneCount);
 
 
-				/*for (size_t i = 0; i < mesh->m_BoneTransforms.size(); i++)
+				/for (size_t i = 0; i < mesh->m_BoneTransforms.size(); i++)
 				{
 					std::string uniformName = std::string("u_BoneTransforms[") + std::to_string(i) + std::string("]");
 					shader->SetMat4(uniformName, mesh->m_BoneTransforms[i]);
-				}*/
+				}/
 			}
 			shader->SetMat4("_ares_internal_Transform", transform * submesh.Transform, mesh->m_IsAnimated ? ShaderVariant::Skinned : ShaderVariant::Static);
 
@@ -326,7 +326,7 @@ namespace Ares {
 		}
 
 		// TODO: replace with render API calls
-		/*Renderer::Submit([=]()
+		/Renderer::Submit([=]()
 		{
 			for (Submesh& submesh : mesh->m_Submeshes)
 			{
@@ -341,8 +341,9 @@ namespace Ares {
 
 				glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
 			}
-		});*/
+		});/
 	}
+		*/
 
 	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
 	{

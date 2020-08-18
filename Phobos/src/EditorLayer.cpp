@@ -311,7 +311,7 @@ namespace Ares
         
         //auto sphereMesh = CreateRef<Mesh>("C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\meshes\\Sphere1m.fbx");
         
-        auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Sphere);
+        auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Cube);
 
         float spread = 1;
         uint8_t i = 0;

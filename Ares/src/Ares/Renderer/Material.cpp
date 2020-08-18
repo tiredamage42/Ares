@@ -240,7 +240,7 @@ namespace Ares {
 		*/
 	}
 
-	void Material::Bind(ShaderVariant variant)
+	void Material::Bind(ShaderVariations variant)
 	{
 		ARES_PROFILE_FUNCTION();
 		//return;

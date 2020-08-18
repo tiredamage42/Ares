@@ -47,7 +47,7 @@ namespace Ares {
 		uint32_t m_Count;
 		uint32_t m_Offset;
 		Type m_Type;
-		int32_t m_Locations[2];
+		int32_t m_Locations[Shader::MAX_VARIANTS];
 	public:
 		OpenGLShaderUniformDeclaration(Type type, const std::string& name, uint32_t count = 1);
 		inline const std::string& GetName() const override { return m_Name; }
@@ -56,7 +56,9 @@ namespace Ares {
 		inline uint32_t GetOffset() const override { return m_Offset; }
 		inline uint32_t GetAbsoluteOffset() const { return m_Offset; }
 		inline virtual Type GetType() const override { return m_Type; }
-		int32_t GetLocation(ShaderVariant variant) const { return m_Locations[(size_t)variant]; }
+		
+		int32_t GetLocation(uint32_t variantIDX) const { return m_Locations[variantIDX]; }
+
 		inline bool IsArray() const { return m_Count > 1; }
 	protected:
 		void SetOffset(uint32_t offset) override;

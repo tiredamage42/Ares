@@ -27,7 +27,7 @@ namespace Ares {
 	struct ShaderVariationPair
 	{
 		Ref<Shader> Shader;
-		ShaderVariant Variant;
+		ShaderVariations Variant;
 
 		// requred to compare in hashmap
 		bool operator==(const ShaderVariationPair& o) const
@@ -172,7 +172,7 @@ namespace Ares {
 		{
 			const ShaderVariationPair& shaderVarPair = shader_materials.first;
 			Ref<Shader> shader = shaderVarPair.Shader;
-			ShaderVariant variant = shaderVarPair.Variant;
+			ShaderVariations variant = shaderVarPair.Variant;
 			
 			ARES_PROFILE_SCOPE("per shader");
 
@@ -269,7 +269,7 @@ namespace Ares {
 
 		Ref<Shader> createBRDFLUTShader = Shader::Find("Assets/Shaders/CreateBRDF.glsl");
 
-		createBRDFLUTShader->Bind(ShaderVariant::Static);
+		createBRDFLUTShader->Bind(ShaderVariations::Default);
 
 		Renderer::Submit([BRDF_SIZE]() {
 			glBindImageTexture(0, s_Data.BRDFLUT->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RG16F);
@@ -369,7 +369,7 @@ namespace Ares {
 	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, std::vector<Ref<Material>> materials, bool isSelected)
 	{
 		
-		ShaderVariant shaderVariant = mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
+		ShaderVariations shaderVariant = mesh->IsAnimated() ? ShaderVariations::DefaultSkinned : ShaderVariations::Default;
 
 		RenderMap& drawMap = isSelected ? s_Data.SelectedDrawMap : s_Data.DrawMap;
 
@@ -555,7 +555,7 @@ namespace Ares {
 
 		ARES_CORE_ASSERT(envEquirect->GetFormat() == TextureFormat::Float16, "Texture is not HDR!");
 		 
-		equirectangularConversionShader->Bind(ShaderVariant::Static);
+		equirectangularConversionShader->Bind(ShaderVariations::Default);
 		envEquirect->Bind();
 		Renderer::Submit([envUnfiltered, cubemapSize, envEquirect](){
 
@@ -584,7 +584,7 @@ namespace Ares {
 		}, "EnvMap 1");
 
 
-		envFilteringShader->Bind(ShaderVariant::Static);
+		envFilteringShader->Bind(ShaderVariations::Default);
 		envUnfiltered->Bind();
 
 		uint32_t mipCount = envFiltered->GetMipLevelCount();
@@ -599,7 +599,7 @@ namespace Ares {
 				
 				//float roughness = (float)mipLevel / (float)(mipCount - 1);
 				// set the first float uniform to the roughness factor
-				glProgramUniform1f(envFilteringShader->GetRendererID(ShaderVariant::Static), 0, mipLevel * deltaRoughness);
+				glProgramUniform1f(envFilteringShader->GetRendererID(ShaderVariations::Default), 0, mipLevel * deltaRoughness);
 				//glProgramUniform1f(envFilteringShader->GetRendererID(), 0, roughness);
 
 				const GLuint numGroups = glm::max(1, size / 32);
@@ -611,7 +611,7 @@ namespace Ares {
 		Ref<Shader> envIrradianceShader = Shader::Find("Assets/Shaders/EnvironmentIrradiance.glsl");
 
 		Ref<TextureCube> irradianceMap = TextureCube::Create(TextureFormat::Float16, irradianceMapSize, irradianceMapSize, FilterType::Trilinear, false);
-		envIrradianceShader->Bind(ShaderVariant::Static);
+		envIrradianceShader->Bind(ShaderVariations::Default);
 
 		envFiltered->Bind();
 		//envCube->Bind();
@@ -663,7 +663,7 @@ namespace Ares {
 		// Skybox
 		// TODO: render skybox (render as last to prevent overdraw)
 		auto skyboxShader = s_Data.SceneData.SkyboxMaterial->GetShader();
-		skyboxShader->Bind(ShaderVariant::Static);
+		skyboxShader->Bind(ShaderVariations::Default);
 
 		s_Data.SceneData.SkyboxMaterial->SetValue("u_InverseVP", glm::inverse(viewProjection));
 		//float skyboxLod = s_Data.ActiveScene->GetSkyboxLod();
@@ -921,17 +921,17 @@ namespace Ares {
 				}
 				size_t skinnedVariationStart = x;
 
-				s_Data.OutlineShader->Bind(ShaderVariant::Static);
-				s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Static);
-				s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1), ShaderVariant::Static);
+				s_Data.OutlineShader->Bind(ShaderVariations::Default);
+				s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection, ShaderVariations::Default);
+				s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1), ShaderVariations::Default);
 
 				for (size_t i = 0; i < outlineDrawCount; i++)
 				{
 					if (i == skinnedVariationStart)
 					{
-						s_Data.OutlineShader->Bind(ShaderVariant::Skinned);
-						s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Skinned);
-						s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1), ShaderVariant::Skinned);
+						s_Data.OutlineShader->Bind(ShaderVariations::DefaultSkinned);
+						s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection, ShaderVariations::DefaultSkinned);
+						s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1), ShaderVariations::DefaultSkinned);
 					}
 
 					Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, false);
@@ -967,13 +967,13 @@ namespace Ares {
 
 
 
-			s_Data.OutlineShader->Bind(ShaderVariant::Static);
+			s_Data.OutlineShader->Bind(ShaderVariations::Default);
 			
 			for (size_t i = 0; i < outlineDrawCount; i++)
 			{
 				if (i == skinnedVariationStart)
 				{
-					s_Data.OutlineShader->Bind(ShaderVariant::Skinned);
+					s_Data.OutlineShader->Bind(ShaderVariations::DefaultSkinned);
 				}
 
 				Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, false);
@@ -1028,8 +1028,8 @@ namespace Ares {
 			//float m_GridSize = 0.025f;
 			//float m_GridSize = 0.5f;
 
-			s_Data.GridShader->Bind(ShaderVariant::Static);
-			s_Data.GridShader->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Static);
+			s_Data.GridShader->Bind(ShaderVariations::Default);
+			s_Data.GridShader->SetMat4("ares_VPMatrix", viewProjection, ShaderVariations::Default);
 
 			/*s_Data.GridMaterial->GetShader()->Bind(ShaderVariant::Static);
 			s_Data.GridMaterial->GetShader()->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Static);*/
@@ -1077,9 +1077,9 @@ namespace Ares {
 		ARES_PROFILE_FUNCTION();
 
 		Renderer::BeginRenderPass(s_Data.CompositePass);
-		s_Data.CompositeShader->Bind(ShaderVariant::Static);
-		s_Data.CompositeShader->SetFloat("u_Exposure", s_Data.SceneData.Exposure, ShaderVariant::Static);
-		s_Data.CompositeShader->SetInt("u_TextureSamples", s_Data.GeoPass->GetSpecs().TargetFrameBuffer->GetSpecs().Samples, ShaderVariant::Static);
+		s_Data.CompositeShader->Bind(ShaderVariations::Default);
+		s_Data.CompositeShader->SetFloat("u_Exposure", s_Data.SceneData.Exposure, ShaderVariations::Default);
+		s_Data.CompositeShader->SetInt("u_TextureSamples", s_Data.GeoPass->GetSpecs().TargetFrameBuffer->GetSpecs().Samples, ShaderVariations::Default);
 
 		s_Data.GeoPass->GetSpecs().TargetFrameBuffer->BindAsTexture();
 		Renderer::SubmitFullscreenQuad(nullptr);

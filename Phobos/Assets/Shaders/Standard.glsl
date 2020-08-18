@@ -21,9 +21,9 @@
 
 #properties
 {
-    u_AlbedoColor           | [COLOR        : DEF(1,0,1)];
-    u_Metalness             | [RANGE(0,1)   : DEF(1)];
-    u_Roughness             | [RANGE(0,1)   : DEF(1)];
+    u_AlbedoColor           | [COLOR        : DEF(1, 1, 1)];
+    u_Metalness             | [RANGE(0, 1)  : DEF(1)];
+    u_Roughness             | [RANGE(0, 1)  : DEF(1)];
     
     u_AlbedoTex;
     u_NormalTex             | [BUMP];
