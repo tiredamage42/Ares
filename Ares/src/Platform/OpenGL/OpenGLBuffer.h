@@ -24,9 +24,8 @@ namespace Ares {
 		virtual uint32_t GetRendererID() const override { return m_RendererID; }
 
 	private:
-		uint32_t m_RendererID;
+		uint32_t m_RendererID = 0;
 		BufferLayout m_Layout;
-
 		Buffer m_LocalData;
 	};
 
@@ -48,9 +47,8 @@ namespace Ares {
 		virtual uint32_t GetCount() const { return m_Count; }
 
 	private:
-		uint32_t m_RendererID;
-		uint32_t m_Count;
-
+		uint32_t m_RendererID = 0;
+		uint32_t m_Count = 0;
 		Buffer m_LocalData;
 	};
 

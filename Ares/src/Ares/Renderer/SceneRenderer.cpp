@@ -12,7 +12,16 @@
 //#include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
+/*
+	TODO:
+		update gi button/function:
+			renders skybox to cube
+			creates radiance and irradiance textures from it
 
+		this way we can have procedural skybox
+
+
+*/
 namespace Ares {
 
 	struct ShaderVariationPair
