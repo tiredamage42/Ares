@@ -13,9 +13,5 @@ namespace Ares {
 		virtual void Clear(float r, float g, float b, float a) override;
 		virtual void DrawIndexed(uint32_t indexCount, PrimitiveType type, bool depthTest) override;
 		virtual void SetLineThickness(float thickness) override;
-		
-
-		
-
 	};
 }

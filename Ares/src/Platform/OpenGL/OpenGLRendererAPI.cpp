@@ -6,10 +6,7 @@ namespace Ares {
 
 #ifdef ARES_DEBUG
 
-	void OpenGLMessageCallback(
-		unsigned source, unsigned type, unsigned id, unsigned severity,
-		int length, const char* message, const void* userParam
-	)
+	void OpenGLMessageCallback(unsigned source, unsigned type, unsigned id, unsigned severity, int length, const char* message, const void* userParam)
 	{
 		switch (severity)
 		{
@@ -19,11 +16,9 @@ namespace Ares {
 			return;
 		case GL_DEBUG_SEVERITY_MEDIUM:       
 			ARES_CORE_WARN("[OpenGL Debug MEDIUM] {0}", message);
-			//ARES_CORE_ASSERT(false, "");
 			return;
 		case GL_DEBUG_SEVERITY_LOW:          
 			ARES_CORE_INFO("[OpenGL Debug LOW] {0}", message);
-			//ARES_CORE_ASSERT(false, "");
 			return;
 		case GL_DEBUG_SEVERITY_NOTIFICATION: 
 			ARES_CORE_LOG("[OpenGL Debug NOTIFICATION] {0}", message);
@@ -100,6 +95,7 @@ namespace Ares {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	}
 	
+	// TODO: set blending options here
 	void OpenGLRendererAPI::DrawIndexed(uint32_t indexCount, PrimitiveType type, bool depthTest)
 	{
 
