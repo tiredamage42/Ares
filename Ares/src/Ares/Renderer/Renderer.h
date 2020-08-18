@@ -15,6 +15,11 @@ namespace Ares {
 	{
 	public:
 		typedef void(*RenderCommandFn)(void*);
+		
+		inline static const uint32_t BONE_SAMPLER_TEX_SLOT = 31;
+		//inline static const uint32_t WHITE_TEX_SLOT = 30;
+		//inline static const uint32_t DEF_BUMP_TEX_SLOT = 29;
+
 
 		static void Init();
 		static void Shutdown();
@@ -29,7 +34,7 @@ namespace Ares {
 		{
 
 			if (
-				//true || 
+				true || 
 				GetRenderCommandQueue().m_Deleted)
 			{
 				func();

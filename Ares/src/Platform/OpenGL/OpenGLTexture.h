@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "Ares/Renderer/Texture.h"
 #include <glad/glad.h>
 
@@ -15,7 +14,7 @@ namespace Ares {
 		virtual ~OpenGLTexture2D();
 
 		virtual void Bind(uint32_t slot = 0) const override;
-		virtual void BindImmediate(uint32_t slot = 0) const override;
+		//virtual void BindImmediate(uint32_t slot = 0) const override;
 
 		virtual TextureFormat GetFormat() const override { return m_Format; }
 		inline virtual uint32_t GetWidth() const override { return m_Width; }
@@ -74,7 +73,7 @@ namespace Ares {
 		virtual ~OpenGLTextureCube();
 
 		virtual void Bind(uint32_t slot = 0) const override;
-		virtual void BindImmediate(uint32_t slot = 0) const override;
+		//virtual void BindImmediate(uint32_t slot = 0) const override;
 
 		virtual TextureFormat GetFormat() const { return m_Format; }
 		virtual uint32_t GetWidth() const { return m_Width; }

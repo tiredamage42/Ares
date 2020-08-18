@@ -164,7 +164,7 @@ namespace Ares
 		//SceneType m_SceneType;
 
 		// Editor resources
-		//Ref<Texture2D> m_CheckerboardTex;
+		Ref<Texture2D> m_CheckerboardTex;
 		Ref<Texture2D> m_PlayButtonTex;
 
 		glm::vec2 m_ViewportBounds[2];

@@ -50,8 +50,9 @@ namespace Ares {
 		
 
 		template <typename T>
-		void Set(const std::string& name, const T& value)
+		void SetValue(const std::string& name, const T& value)
 		{
+			//return;
 			auto decl = FindUniformDeclaration(name);
 			if (!decl)
 			{
@@ -69,20 +70,22 @@ namespace Ares {
 
 		std::vector<ShaderResourceDeclaration*> GetResourceDeclarations()
 		{
-			return m_Shader->GetResources(ShaderVariant::Static);
+			//return m_Shader->GetResources(ShaderVariant::Static);
+			return m_Shader->GetResources();
 		}
 		std::vector<ShaderUniformDeclaration*> GetUniformDeclarations()
 		{
 			std::vector<ShaderUniformDeclaration*> result;
 
-			if (m_VSUniformStorageBuffer)
+			/*if (m_VSUniformStorageBuffer)
 			{
 				auto& declarations = m_Shader->GetVSMaterialUniformBuffer(ShaderVariant::Static).GetUniformDeclarations();	
 				result.insert(result.end(), declarations.begin(), declarations.end());
-			}
+			}*/
 			if (m_PSUniformStorageBuffer)
 			{
-				auto& declarations = m_Shader->GetPSMaterialUniformBuffer(ShaderVariant::Static).GetUniformDeclarations();
+				//auto& declarations = m_Shader->GetPSMaterialUniformBuffer(ShaderVariant::Static).GetUniformDeclarations();
+				auto& declarations = m_Shader->GetPSMaterialUniformBuffer().GetUniformDeclarations();
 				result.insert(result.end(), declarations.begin(), declarations.end());
 			}
 			return result;
@@ -245,9 +248,10 @@ namespace Ares {
 
 
 
-		void Set(const std::string& name, Ref<Texture> texture)
+		//void SetTextureInternal(size_t name, Ref<Texture> texture)
+		void SetTextureInternal(const std::string& name, Ref<Texture> texture)
 		{
-			/*
+			//return;
 			//uint8_t slot;
 			auto decl = FindResourceDeclaration(name);// , slot);
 			uint32_t slot = decl->GetRegister();
@@ -261,7 +265,7 @@ namespace Ares {
 			if (m_Textures.size() <= slot)
 				m_Textures.resize((size_t)slot + 1);
 			m_Textures[slot] = texture;
-			*/
+			/*
 
 			if (m_TextureMap.find(name) == m_TextureMap.end())
 			{
@@ -272,9 +276,10 @@ namespace Ares {
 
 
 			m_TextureMap[name] = texture;
+			*/
 		}
 
-		void Set(const std::string& name, Ref<Texture2D> texture)
+		/*void Set(const std::string& name, Ref<Texture2D> texture)
 		{
 			Set(name, (const Ref<Texture>&)texture);
 		}
@@ -282,6 +287,15 @@ namespace Ares {
 		void Set(const std::string& name, Ref<TextureCube> texture)
 		{
 			Set(name, (const Ref<Texture>&)texture);
+		}*/
+		void SetTexture(const std::string& name, Ref<Texture2D> texture)
+		{
+			SetTextureInternal(name, texture);
+		}
+
+		void SetTexture(const std::string& name, Ref<TextureCube> texture)
+		{
+			SetTextureInternal(name, texture);
 		}
 		const std::string& GetName() const { return m_Name; }
 
@@ -300,11 +314,12 @@ namespace Ares {
 
 		//std::unordered_set<MaterialInstance*> m_MaterialInstances;
 
-		Buffer m_VSUniformStorageBuffer;
+		//Buffer m_VSUniformStorageBuffer;
 		Buffer m_PSUniformStorageBuffer;
-		//std::vector<Ref<Texture>> m_Textures;
+		std::vector<Ref<Texture>> m_Textures;
 
-		std::unordered_map<std::string, Ref<Texture>> m_TextureMap;
+		//std::unordered_map<std::string, Ref<Texture>> m_TextureMap;
+		//std::unordered_map<size_t, Ref<Texture>> m_TextureMap;
 
 		uint32_t m_MaterialFlags;
 	};

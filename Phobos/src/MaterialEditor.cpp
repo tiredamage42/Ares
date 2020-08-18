@@ -6,13 +6,13 @@ namespace Ares
 {
 
 
-	/*void MaterialEditor::AddTextureToMaterial(Ref<Material> material, Ref<Texture> tex, const uint32_t& slot)
+	void MaterialEditor::AddTextureToMaterial(Ref<Material> material, Ref<Texture> tex, const uint32_t& slot)
 	{
-		if (material->m_Textures.size() <= slot)
-			material->m_Textures.resize((size_t)slot + 1);
+		//if (material->m_Textures.size() <= slot)
+			//material->m_Textures.resize((size_t)slot + 1);
 
 		material->m_Textures[slot] = tex;
-	}*/
+	}
 
 	// TODO: ranges for sliders, and color specification for vec4's, toggle for floats
 	// TODO: custom cubemap support, need soem way to preview cubemaps
@@ -20,17 +20,22 @@ namespace Ares
 	{
 
 		std::vector<ShaderUniformDeclaration*> uniforms = material->GetUniformDeclarations();
-		const std::unordered_map<std::string, PublicUniformAttributes>& publicUniforms = material->GetShader()->GetPublicUniforms();
+
+		//const std::unordered_map<size_t, PublicUniformAttributes>& publicUniforms = material->GetShader()->GetPublicUniforms();
 
 		
 		for (auto& uniform : uniforms)
 		{
 			std::string name = uniform->GetName();
+			//size_t hashName = uniform->GetHashName();
 
-			if (publicUniforms.find(name) == publicUniforms.end())
+			if (!uniform->m_Attributes.HasAttribute(UniformAttribute::Public))
+				continue;
+			
+			/*if (publicUniforms.find(hashName) == publicUniforms.end())
 				continue;
 
-			PublicUniformAttributes attributes = publicUniforms.at(name);
+			PublicUniformAttributes attributes = publicUniforms.at(hashName);*/
 				
 
 
@@ -46,16 +51,16 @@ namespace Ares
 				float value = *(float*)&buffer.Data[offset];
 
 				// draw
-				if (attributes.HasAttribute(UniformAttribute::Toggle))
+				if (uniform->m_Attributes.HasAttribute(UniformAttribute::Toggle))
 				{
 					bool isTrue = value >= .5f;
 					edited = EditorGUI::Toggle(name, isTrue);
 					if (edited)
 						value = (float)isTrue;
 				}
-				else if (attributes.HasAttribute(UniformAttribute::Range))
+				else if (uniform->m_Attributes.HasAttribute(UniformAttribute::Range))
 				{
-					edited = EditorGUI::FloatSlider(name, value, attributes.Range.x, attributes.Range.y);
+					edited = EditorGUI::FloatSlider(name, value, uniform->m_Attributes.Range.x, uniform->m_Attributes.Range.y);
 				}
 				else
 				{
@@ -72,16 +77,16 @@ namespace Ares
 				int32_t value = *(int32_t*)&buffer.Data[offset];
 
 				// draw
-				if (attributes.HasAttribute(UniformAttribute::Toggle))
+				if (uniform->m_Attributes.HasAttribute(UniformAttribute::Toggle))
 				{
 					bool isTrue = (bool)value;
 					edited = EditorGUI::Toggle(name, isTrue);
 					if (edited)
 						value = (int32_t)isTrue;
 				}
-				else if (attributes.HasAttribute(UniformAttribute::Range))
+				else if (uniform->m_Attributes.HasAttribute(UniformAttribute::Range))
 				{
-					edited = EditorGUI::IntSlider(name, value, (int32_t)attributes.Range.x, (int32_t)attributes.Range.y);
+					edited = EditorGUI::IntSlider(name, value, (int32_t)uniform->m_Attributes.Range.x, (int32_t)uniform->m_Attributes.Range.y);
 				}
 				else
 				{
@@ -98,9 +103,9 @@ namespace Ares
 				glm::vec2 value = *(glm::vec2*) & buffer.Data[offset];
 
 				// draw
-				if (attributes.HasAttribute(UniformAttribute::Range))
+				if (uniform->m_Attributes.HasAttribute(UniformAttribute::Range))
 				{
-					edited = EditorGUI::Vec2Slider(name, value, attributes.Range.x, attributes.Range.y);
+					edited = EditorGUI::Vec2Slider(name, value, uniform->m_Attributes.Range.x, uniform->m_Attributes.Range.y);
 				}
 				else
 				{
@@ -115,13 +120,13 @@ namespace Ares
 				glm::vec3 value = *(glm::vec3*) & buffer.Data[offset];
 
 				// draw
-				if (attributes.HasAttribute(UniformAttribute::Color))
+				if (uniform->m_Attributes.HasAttribute(UniformAttribute::Color))
 				{
 					edited = EditorGUI::Color3(name, value);
 				}
-				else if (attributes.HasAttribute(UniformAttribute::Range))
+				else if (uniform->m_Attributes.HasAttribute(UniformAttribute::Range))
 				{
-					edited = EditorGUI::Vec3Slider(name, value, attributes.Range.x, attributes.Range.y);
+					edited = EditorGUI::Vec3Slider(name, value, uniform->m_Attributes.Range.x, uniform->m_Attributes.Range.y);
 				}
 				else
 				{
@@ -137,13 +142,13 @@ namespace Ares
 				glm::vec4 value = *(glm::vec4*)&buffer.Data[offset];
 
 				// draw
-				if (attributes.HasAttribute(UniformAttribute::Color))
+				if (uniform->m_Attributes.HasAttribute(UniformAttribute::Color))
 				{
 					edited = EditorGUI::Color4(name, value);
 				}
-				else if (attributes.HasAttribute(UniformAttribute::Range))
+				else if (uniform->m_Attributes.HasAttribute(UniformAttribute::Range))
 				{
-					edited = EditorGUI::Vec4Slider(name, value, attributes.Range.x, attributes.Range.y);
+					edited = EditorGUI::Vec4Slider(name, value, uniform->m_Attributes.Range.x, uniform->m_Attributes.Range.y);
 				}
 				else
 				{
@@ -176,21 +181,30 @@ namespace Ares
 			bool is2D = decl->GetType() == ShaderResourceDeclaration::Type::TEXTURE2D;
 			if (!is2D)
 				continue;
+
+			/*if (decl->GetCount() > 1)
+				continue;*/
 			
-			const std::string& name = decl->GetName();
-			
-			if (publicUniforms.find(name) == publicUniforms.end())
+			if (!decl->m_Attributes.HasAttribute(UniformAttribute::Public))
 				continue;
 
-			PublicUniformAttributes attributes = publicUniforms.at(name);
+			const std::string& name = decl->GetName();
+			//size_t hashName = decl->GetHashName();
 
-			Ref<Texture> tex = material->m_TextureMap.at(name);
+			/*
+			if (publicUniforms.find(hashName) == publicUniforms.end())
+				continue;
 
-			if (tex)
+			PublicUniformAttributes attributes = publicUniforms.at(hashName);
+			*/
+
+			//Ref<Texture> tex = material->m_TextureMap.at(hashName);
+
+			//if (tex)
 			{
 				
 			}
-			else
+			//else
 			{
 				// bind white texture (blue texture if normal map)
 				//tex = Renderer::GetWhiteTexture();
@@ -200,13 +214,11 @@ namespace Ares
 					tex = Renderer::GetBlueTexture();
 				}*/
 			}
-				
-
-
-			//uint32_t slot = decl->GetRegister();
-			/*Ref<Texture> tex = nullptr;
-			if (slot < material->m_Textures.size())
-				tex = material->m_Textures[slot];*/
+			
+			uint32_t slot = decl->GetRegister();
+			Ref<Texture> tex = material->m_Textures[slot];
+			//if (slot < material->m_Textures.size())
+				//tex = material->m_Textures[slot];
 			
 			bool hasTexture = tex != nullptr;
 
@@ -233,8 +245,8 @@ namespace Ares
 						if (extension == "tga" || extension == "png")
 						{
 							tex = Texture2D::Create(file, FilterType::Trilinear, true, false);
-							//AddTextureToMaterial(material, tex, slot);
-							material->m_TextureMap[name] = tex;
+							AddTextureToMaterial(material, tex, slot);
+							//material->m_TextureMap[hashName] = tex;
 						}
 					}
 					ImGui::EndDragDropTarget();
@@ -258,8 +270,8 @@ namespace Ares
 						if (filename != "")
 						{
 							tex = Texture2D::Create(filename, FilterType::Trilinear, true, false);
-							//AddTextureToMaterial(material, tex, slot);
-							material->m_TextureMap[name] = tex;
+							AddTextureToMaterial(material, tex, slot);
+							//material->m_TextureMap[hashName] = tex;
 						}
 					}
 				}
@@ -272,8 +284,8 @@ namespace Ares
 					if (ImGui::Checkbox(("sRGB##" + name).c_str(), &srgb))
 					{
 						tex = Texture2D::Create(tex->GetPath(), FilterType::Trilinear, true, srgb);
-						//AddTextureToMaterial(material, tex, slot);
-						material->m_TextureMap[name] = tex;
+						AddTextureToMaterial(material, tex, slot);
+						//material->m_TextureMap[hashName] = tex;
 					}
 
 					//ImGui::EndGroup();
@@ -281,7 +293,8 @@ namespace Ares
 					//ImGui::BeginGroup();
 					if (ImGui::Button(("Remove##" + name).c_str()))
 					{
-						material->m_TextureMap[name] = nullptr;
+						material->m_Textures[slot] = nullptr;
+						//material->m_TextureMap[hashName] = nullptr;
 					}
 					ImGui::EndGroup();
 

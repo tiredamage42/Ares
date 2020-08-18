@@ -12,7 +12,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Ares/Renderer/Renderer.h"
-
+#include "Ares/Core/StringUtils.h"
 namespace Ares {
 
 
@@ -70,24 +70,36 @@ namespace Ares {
 		if (!success)
 			ARES_CORE_ASSERT(false, "");
 		
-		m_ShaderSource = PreProcess(source);
+		std::unordered_map<std::string, UniformAttributes> uniformAttributes;
+		m_ShaderSource = PreProcess(source, uniformAttributes);
+
+
+		for (size_t i = 0; i < m_UniformLocationMaps.size(); i++)
+		{
+			m_UniformLocationMaps[i].clear();
+		}
 
 		m_RendererIDs.clear();
+		m_UniformLocationMaps.clear();
+
 		uint32_t variants = m_ShaderFlags.count(SKINNED_FLAG) ? 2 : 1;
 		for (size_t i = 0; i < variants; i++)
 		{
 			m_RendererIDs.push_back(0);
+
+			m_UniformLocationMaps.push_back(std::unordered_map<std::string, GLint>());
 		}
 		
 		if (!m_IsCompute)
 		{
-			for (size_t i = 0; i < variants; i++)
+			/*for (size_t i = 0; i < variants; i++)
 			{
 				ShaderVariantBuffers& buffers = m_VariantBuffers.emplace_back();
 				
 				Parse(buffers, (ShaderVariant)i);
 
-			}
+			}*/
+			Parse(uniformAttributes);
 		}
 		
 
@@ -120,12 +132,18 @@ namespace Ares {
 				uint32_t variants = m_ShaderFlags.count(SKINNED_FLAG) ? 2 : 1;
 				for (uint32_t i = 0; i < variants; i++)
 				{
-					ShaderVariantBuffers& buffers = m_VariantBuffers[i];
-					ResolveUniforms(buffers, (ShaderVariant)i);
+					//ShaderVariantBuffers& buffers = m_VariantBuffers[i];
+					ResolveUniforms((ShaderVariant)i);
+					//ResolveUniforms2((ShaderVariant)i);
 				}
 
 				//ResolveUniforms();
 				//ValidateUniforms();
+			}
+
+			if (m_ShaderFlags.count(SKINNED_FLAG))
+			{
+				UploadUniformInt("_ares_internal_BoneSampler", Renderer::BONE_SAMPLER_TEX_SLOT, ShaderVariant::Skinned);
 			}
 
 
@@ -404,8 +422,8 @@ namespace Ares {
 
 
 						source.insert(insertVars, R"(
-							layout(location = 5) in vec4 _ares_internal_BoneIndices;
-							layout(location = 6) in vec4 _ares_internal_BoneWeights;
+							layout(location = 4) in vec4 _ares_internal_BoneIndices;
+							layout(location = 5) in vec4 _ares_internal_BoneWeights;
 
 							uniform sampler2D _ares_internal_BoneSampler;
 
@@ -421,8 +439,6 @@ namespace Ares {
 							uniform mat4 _ares_internal_Transform;
 							uniform mat4 ares_VPMatrix;
 							uniform mat4 ares_VMatrix;
-
-
 						)");
 					}
 					else
@@ -641,39 +657,70 @@ namespace Ares {
 		return string.find(start) == 0;
 	}
 
-	void OpenGLShader::Parse(ShaderVariantBuffers& variantBuffers, ShaderVariant variant)
+	//void OpenGLShader::Parse(ShaderVariantBuffers& variantBuffers, ShaderVariant variant)
+	void OpenGLShader::Parse(const std::unordered_map<std::string, UniformAttributes>& uniformAttributes)
 	{
 		const char* token;
 		const char* vstr;
 		const char* fstr;
 
-		variantBuffers.m_Resources.clear();
-		variantBuffers.m_Structs.clear();
-		variantBuffers.m_VSMaterialUniformBuffer.reset();
-		variantBuffers.m_PSMaterialUniformBuffer.reset();
+		//variantBuffers.m_Resources.clear();
+		//variantBuffers.m_Structs.clear();
+		////variantBuffers.m_VSMaterialUniformBuffer.reset();
+		//variantBuffers.m_PSMaterialUniformBuffer.reset();
+
+		m_Resources.clear();
+		//m_Structs.clear();
+		m_PSMaterialUniformBuffer.reset();
+
+
 
 		auto& vertexSource = m_ShaderSource[GL_VERTEX_SHADER];
 		auto& fragmentSource = m_ShaderSource[GL_FRAGMENT_SHADER];
 
-		uint32_t samplers = 0;
+		//uint32_t samplers = 0;
 
 		// Vertex Shader
+		/*
 		vstr = vertexSource.c_str();
 		while (token = FindToken(vstr, "struct"))
-			ParseUniformStruct(GetBlock(token, &vstr), ShaderDomain::Vertex, variantBuffers);
+		{
+
+			//ParseUniformStruct(GetBlock(token, &vstr), ShaderDomain::Vertex, variantBuffers);
+			//ParseUniformStruct(GetBlock(token, &vstr), variantBuffers);
+			ParseUniformStruct(GetBlock(token, &vstr));
+		}
+		*/
 
 		vstr = vertexSource.c_str();
 		while (token = FindToken(vstr, "uniform"))
-			ParseUniform(GetStatement(token, &vstr), ShaderDomain::Vertex, variantBuffers, variant, samplers);
+		{
+
+			//ParseUniform(GetStatement(token, &vstr), ShaderDomain::Vertex, variantBuffers, variant, samplers);
+			//ParseUniform(GetStatement(token, &vstr), variantBuffers, variant);
+			ParseUniform(GetStatement(token, &vstr), uniformAttributes);
+		}
 
 		// Fragment Shader
+		/*
 		fstr = fragmentSource.c_str();
 		while (token = FindToken(fstr, "struct"))
-			ParseUniformStruct(GetBlock(token, &fstr), ShaderDomain::Pixel, variantBuffers);
+		{
+
+			//ParseUniformStruct(GetBlock(token, &fstr), ShaderDomain::Pixel, variantBuffers);
+			//ParseUniformStruct(GetBlock(token, &fstr), variantBuffers);
+			ParseUniformStruct(GetBlock(token, &fstr));
+		}
+		*/
 
 		fstr = fragmentSource.c_str();
 		while (token = FindToken(fstr, "uniform"))
-			ParseUniform(GetStatement(token, &fstr), ShaderDomain::Pixel, variantBuffers, variant, samplers);
+		{
+
+			//ParseUniform(GetStatement(token, &fstr), ShaderDomain::Pixel, variantBuffers, variant, samplers);
+			//ParseUniform(GetStatement(token, &fstr), variantBuffers, variant);
+			ParseUniform(GetStatement(token, &fstr), uniformAttributes);
+		}
 	}
 
 	static bool IsTypeStringResource(const std::string& type)
@@ -687,17 +734,25 @@ namespace Ares {
 
 
 
-	void OpenGLShader::ParseUniform(const std::string& statement, ShaderDomain domain, ShaderVariantBuffers& variantBuffers, ShaderVariant variant, uint32_t& samplers)
+	//void OpenGLShader::ParseUniform(const std::string& statement, ShaderDomain domain, ShaderVariantBuffers& variantBuffers, ShaderVariant variant, uint32_t& samplers)
+	//void OpenGLShader::ParseUniform(const std::string& statement, ShaderVariantBuffers& variantBuffers, ShaderVariant variant)
+	void OpenGLShader::ParseUniform(const std::string& statement, const std::unordered_map<std::string, UniformAttributes>& uniformAttributes)
+
 	{
 		std::vector<std::string> tokens = Tokenize(statement);
 
 
-		ARES_CORE_ASSERT(tokens.size() == 3, "Token must be size 3");
+		//ARES_CORE_ASSERT(tokens.size() == 3, "Token must be size 3");
 		uint32_t index = 0;
 
 		index++; // "uniform"
 		std::string typeString = tokens[index++];
 		std::string name = tokens[index++];
+
+		if (StartsWith(name, "ares_"))
+		{
+			return;
+		}
 
 		// Strip ; from name if present
 		if (const char* s = strstr(name.c_str(), ";"))
@@ -706,8 +761,11 @@ namespace Ares {
 		std::string n(name);
 		int32_t count = 1;
 		const char* namestr = n.c_str();
+
+		bool isArray = false;
 		if (const char* s = strstr(namestr, "["))
 		{
+			isArray = true;
 			name = std::string(namestr, s - namestr);
 
 			const char* end = strstr(namestr, "]");
@@ -717,9 +775,29 @@ namespace Ares {
 
 		if (IsTypeStringResource(typeString))
 		{
-			ShaderResourceDeclaration* declaration = new OpenGLShaderResourceDeclaration(OpenGLShaderResourceDeclaration::StringToType(typeString), name, count);
-			variantBuffers.m_Resources.push_back(declaration);
+			if (isArray)
+			{
+				ShaderResourceArrayDeclaration* declaration = new OpenGLShaderResourceArrayDeclaration(OpenGLShaderResourceDeclaration::StringToType(typeString), name, count);
+				//variantBuffers.m_Resources.push_back(declaration);
+				m_ResourceArrays.push_back(declaration);
 
+				if (uniformAttributes.find(name) != uniformAttributes.end())
+				{
+					declaration->m_Attributes = uniformAttributes.at(name);
+				}
+			}
+			else
+			{
+
+				ShaderResourceDeclaration* declaration = new OpenGLShaderResourceDeclaration(OpenGLShaderResourceDeclaration::StringToType(typeString), name);// , count);
+			//variantBuffers.m_Resources.push_back(declaration);
+			m_Resources.push_back(declaration);
+
+			if (uniformAttributes.find(name) != uniformAttributes.end())
+			{
+				declaration->m_Attributes = uniformAttributes.at(name);
+			}
+			}
 
 			
 			//OpenGLShaderResourceDeclaration* ogldec = (OpenGLShaderResourceDeclaration*)declaration;
@@ -742,22 +820,30 @@ namespace Ares {
 
 			if (t == OpenGLShaderUniformDeclaration::Type::NONE)
 			{
+			/*
 				// Find struct
-				ShaderStruct* s = FindStruct(typeString, variantBuffers);// variant);
+				//ShaderStruct* s = FindStruct(typeString, variantBuffers);// variant);
+				ShaderStruct* s = FindStruct(typeString);// variant);
 				ARES_CORE_ASSERT(s, "");
-				declaration = new OpenGLShaderUniformDeclaration(domain, s, name, count);
+				//declaration = new OpenGLShaderUniformDeclaration(domain, s, name, count);
+				declaration = new OpenGLShaderUniformDeclaration(s, name, count);
+			*/
 			}
 			else
 			{
-				declaration = new OpenGLShaderUniformDeclaration(domain, t, name, count);
-				if (m_PublicUniforms.find(name) != m_PublicUniforms.end())
+				//declaration = new OpenGLShaderUniformDeclaration(domain, t, name, count);
+				declaration = new OpenGLShaderUniformDeclaration(t, name, count);
+				//size_t hashName = StringUtils::String2Hash(name);// declaration->GetHashName();
+
+				if (uniformAttributes.find(name) != uniformAttributes.end())
 				{
-					PublicUniformAttributes attributes = m_PublicUniforms.at(name);
-					if (attributes.HasAttribute(UniformAttribute::DefaultValue))
+					declaration->m_Attributes = uniformAttributes.at(name);
+
+					/*if (attributes.HasAttribute(UniformAttribute::DefaultValue))
 					{
 						declaration->m_HasDefaultValue = true;
 						declaration->m_DefaultValue = attributes.DefaultValue;
-					}
+					}*/
 				}
 			}
 
@@ -770,7 +856,9 @@ namespace Ares {
 			}
 			else
 			{*/
-				if (domain == ShaderDomain::Vertex)
+
+			
+				/*if (domain == ShaderDomain::Vertex)
 				{
 					if (!variantBuffers.m_VSMaterialUniformBuffer)
 						variantBuffers.m_VSMaterialUniformBuffer.reset(new OpenGLShaderUniformBufferDeclaration("", domain));
@@ -778,17 +866,34 @@ namespace Ares {
 					variantBuffers.m_VSMaterialUniformBuffer->PushUniform(declaration);
 				}
 				else if (domain == ShaderDomain::Pixel)
-				{
-					if (!variantBuffers.m_PSMaterialUniformBuffer)
-						variantBuffers.m_PSMaterialUniformBuffer.reset(new OpenGLShaderUniformBufferDeclaration("", domain));
+				{*/
+			//if (!variantBuffers.m_PSMaterialUniformBuffer)
 
-					variantBuffers.m_PSMaterialUniformBuffer->PushUniform(declaration);
+
+			if (declaration)
+			{
+
+			if (!m_PSMaterialUniformBuffer)
+			{
+
+						//variantBuffers.m_PSMaterialUniformBuffer.reset(new OpenGLShaderUniformBufferDeclaration("", domain));
+						//variantBuffers.m_PSMaterialUniformBuffer.reset(new OpenGLShaderUniformBufferDeclaration(""));
+						m_PSMaterialUniformBuffer.reset(new OpenGLShaderUniformBufferDeclaration(""));
+
 				}
+					//variantBuffers.m_PSMaterialUniformBuffer->PushUniform(declaration);
+					m_PSMaterialUniformBuffer->PushUniform(declaration);
+			}
+				//}
 			//}
 		}
 	}
 
-	void OpenGLShader::ParseUniformStruct(const std::string& block, ShaderDomain domain, ShaderVariantBuffers& variantBuffers)
+	/*
+
+	//void OpenGLShader::ParseUniformStruct(const std::string& block, ShaderDomain domain, ShaderVariantBuffers& variantBuffers)
+	//void OpenGLShader::ParseUniformStruct(const std::string& block, ShaderVariantBuffers& variantBuffers)
+	void OpenGLShader::ParseUniformStruct(const std::string& block)
 	{
 		std::vector<std::string> tokens = Tokenize(block);
 
@@ -819,30 +924,38 @@ namespace Ares {
 				std::string c(s + 1, end - s);
 				count = atoi(c.c_str());
 			}
-			ShaderUniformDeclaration* field = new OpenGLShaderUniformDeclaration(domain, OpenGLShaderUniformDeclaration::StringToType(type), name, count);
+			//ShaderUniformDeclaration* field = new OpenGLShaderUniformDeclaration(domain, OpenGLShaderUniformDeclaration::StringToType(type), name, count);
+			ShaderUniformDeclaration* field = new OpenGLShaderUniformDeclaration(OpenGLShaderUniformDeclaration::StringToType(type), name, count);
 			uniformStruct->AddField(field);
 		}
-		variantBuffers.m_Structs.push_back(uniformStruct);
+		//variantBuffers.m_Structs.push_back(uniformStruct);
+		m_Structs.push_back(uniformStruct);
 	}
+	*/
 
-	ShaderStruct* OpenGLShader::FindStruct(const std::string& name, ShaderVariantBuffers& variantBuffers)
+	/*
+	//ShaderStruct* OpenGLShader::FindStruct(const std::string& name, ShaderVariantBuffers& variantBuffers)
+	ShaderStruct* OpenGLShader::FindStruct(const std::string& name)
 	{
 
 
 		//size_t variantIndex = GetVariantIndex(variant);
 		//ShaderVariantBuffers& variantBuffers = m_VariantBuffers[variantIndex];
 
-		//for (ShaderStruct* s : m_Structs)
-		for (ShaderStruct* s : variantBuffers.m_Structs)
+		for (ShaderStruct* s : m_Structs)
+		//for (ShaderStruct* s : variantBuffers.m_Structs)
 		{
 			if (s->GetName() == name)
 				return s;
 		}
 		return nullptr;
 	}
+	*/
 
-	void OpenGLShader::ResolveUniforms(const ShaderVariantBuffers& buffers, ShaderVariant variant)
+	//void OpenGLShader::ResolveUniforms(const ShaderVariantBuffers& buffers, ShaderVariant variant)
+	void OpenGLShader::ResolveUniforms(ShaderVariant variant)
 	{
+
 		glUseProgram(GetRendererID(variant));
 
 		/*for (size_t i = 0; i < m_VSRendererUniformBuffers.size(); i++)
@@ -891,9 +1004,11 @@ namespace Ares {
 					uniform->m_Location = GetUniformLocation(uniform->m_Name);
 				}
 			}
-		}*/
+		}
+		*/
 
-		{
+		//{
+			/*
 			const auto& decl = buffers.m_VSMaterialUniformBuffer;
 			if (decl)
 			{
@@ -917,16 +1032,22 @@ namespace Ares {
 					}
 				}
 			}
-		}
+			*/
+		//}
 
 		{
-			const auto& decl = buffers.m_PSMaterialUniformBuffer;
+			/*
+			*/
+			//const auto& decl = buffers.m_PSMaterialUniformBuffer;
+			const auto& decl = m_PSMaterialUniformBuffer;
 			if (decl)
 			{
 				const ShaderUniformList& uniforms = decl->GetUniformDeclarations();
 				for (size_t j = 0; j < uniforms.size(); j++)
 				{
 					OpenGLShaderUniformDeclaration* uniform = (OpenGLShaderUniformDeclaration*)uniforms[j];
+					
+					/*
 					if (uniform->GetType() == OpenGLShaderUniformDeclaration::Type::STRUCT)
 					{
 						const ShaderStruct& s = uniform->GetShaderUniformStruct();
@@ -938,36 +1059,40 @@ namespace Ares {
 						}
 					}
 					else
+					*/
 					{
-						uniform->m_Location = GetUniformLocation(uniform->m_Name, variant);
+						uniform->m_Locations[(size_t)variant] = GetUniformLocation(uniform->m_Name, variant);
 					}
 				}
 			}
 		}
 
-		//uint32_t sampler = 0;
-		for (size_t i = 0; i < buffers.m_Resources.size(); i++)
+		uint32_t sampler = 0;
+		//for (size_t i = 0; i < buffers.m_Resources.size(); i++)
+		for (size_t i = 0; i < m_Resources.size(); i++)
 		{
-			OpenGLShaderResourceDeclaration* resource = (OpenGLShaderResourceDeclaration*)buffers.m_Resources[i];
-			
-			auto resourceName = resource->m_Name;
+			//OpenGLShaderResourceDeclaration* resource = (OpenGLShaderResourceDeclaration*)buffers.m_Resources[i];
+			OpenGLShaderResourceDeclaration* resource = (OpenGLShaderResourceDeclaration*)m_Resources[i];
+
+			//auto resourceName = resource->m_Name;
 			int32_t location = GetUniformLocation(resource->m_Name, variant);
 
-			resource->m_Location = location;
-			if (resource->GetCount() == 1)
+			//resource->m_Locations[(size_t)variant] = location;
+			//if (resource->GetCount() == 1)
 			{
-				//resource->m_TexSlot = sampler;
+				resource->m_TexSlot = sampler;
 				if (location != -1)
 				{
-					//UploadUniformInt(location, sampler);
+					UploadUniformInt(location, sampler);
 					//UploadUniformInt(location, resource->GetRegister());
 				}
 
-				//sampler++;
+				sampler++;
 			}
+			/*
 			else if (resource->GetCount() > 1)
 			{
-				//resource->m_TexSlot = 0;
+				resource->m_TexSlot = 0;
 				
 				uint32_t count = resource->GetCount();
 				
@@ -980,51 +1105,197 @@ namespace Ares {
 
 				delete[] samplers;
 			}
+			*/
+		}
+
+
+
+
+
+
+		//uint32_t sampler = 0;
+		//for (size_t i = 0; i < buffers.m_Resources.size(); i++)
+		for (size_t i = 0; i < m_ResourceArrays.size(); i++)
+		{
+			//OpenGLShaderResourceDeclaration* resource = (OpenGLShaderResourceDeclaration*)buffers.m_Resources[i];
+			OpenGLShaderResourceArrayDeclaration* resource = (OpenGLShaderResourceArrayDeclaration*)m_ResourceArrays[i];
+
+			//auto resourceName = resource->m_Name;
+			int32_t location = GetUniformLocation(resource->m_Name, variant);
+
+			//resource->m_Locations[(size_t)variant] = location;
+			//if (resource->GetCount() == 1)
+			//{
+			//	resource->m_TexSlot = sampler;
+			//	if (location != -1)
+			//	{
+			//		UploadUniformInt(location, sampler);
+			//		//UploadUniformInt(location, resource->GetRegister());
+			//	}
+
+			//	sampler++;
+			//}
+			//else if (resource->GetCount() > 1)
+			{
+				//resource->m_TexSlot = 0;
+
+				uint32_t count = resource->GetCount();
+
+				int* samplers = new int[count];
+				for (uint32_t s = 0; s < count; s++)
+					samplers[s] = s;
+
+				//UploadUniformIntArray(resource->GetName(), samplers, count);
+				UploadUniformIntArray(location, samplers, count);
+
+				delete[] samplers;
+			}
+		}
+		/*
+		*/
+	}
+
+
+	/*
+	void OpenGLShader::ResolveUniforms2(ShaderVariant variant)
+	{
+		glUseProgram(GetRendererID(variant));
+
+
+		//uint32_t sampler = 0;
+		for (size_t i = 0; i < m_Resources.size(); i++)
+		{
+			OpenGLShaderResourceDeclaration* resource = (OpenGLShaderResourceDeclaration*)m_Resources[i];
+
+			auto resourceName = resource->m_Name;
+			int32_t location = GetUniformLocation(resource->m_Name, variant);
+
+			//resource->m_Location = location;
+			if (resource->GetCount() == 1)
+			{
+			}
+			else if (resource->GetCount() > 1)
+			{
+				//resource->m_TexSlot = 0;
+
+				uint32_t count = resource->GetCount();
+
+				int* samplers = new int[count];
+				for (uint32_t s = 0; s < count; s++)
+					samplers[s] = s;
+
+				//UploadUniformIntArray(resource->GetName(), samplers, count);
+				UploadUniformIntArray(location, samplers, count);
+
+				delete[] samplers;
+			}
 		}
 	}
+	*/
+
+
 
 	/*void OpenGLShader::ValidateUniforms()
 	{
 	}*/
 
-
-	void OpenGLShader::ResolveAndSetResources(const ShaderResourceList& resources, const std::unordered_map<std::string, Ref<Texture>>& name2Tex)
+	/*
+	void OpenGLShader::ResolveAndSetResources(const ShaderResourceList& resources, std::unordered_map<size_t, Ref<Texture>> name2Tex, ShaderVariant variant)
 	{
-		
+		//ARES_PROFILE_FUNCTION();
 		uint32_t i = 0;
 		for (auto& resource : resources)
 		{
 			if (resource->GetCount() == 1)
 			{
 				OpenGLShaderResourceDeclaration* uniform = (OpenGLShaderResourceDeclaration*)resource;
-				const std::string& name = resource->GetName();
+				
+				//const std::string& uniformName = uniform->GetName();
+				//const std::string& name = resource->GetName();
+				size_t hashName = resource->GetHashName();
 
-				Ref<Texture> tex = name2Tex.at(name);
-				if (tex)
+
+				GLint location = 0;
 				{
-					/*tex->Bind(i);
-					UploadUniformInt(uniform->GetLocation(), i);
-					i++;*/
+
+				//ARES_PROFILE_SCOPE("Get Location");
+
+				location = uniform->GetLocation(variant);
+				//location = GetUniformLocation(name, variant);
+				// GLint location = uniform->GetLocation();
 				}
-				else
-				{
-					// bind white texture (blue texture if normal map)
-					tex = Renderer::GetWhiteTexture();
 
-					if (m_PublicUniforms.find(name) != m_PublicUniforms.end())
+				Ref<Texture> tex = nullptr;
+				{
+
+				//ARES_PROFILE_SCOPE("at from map");
+				//Ref<Texture> 
+					tex = name2Tex.at(hashName);
+					//tex = name2Tex[name];
+				}
+				
+				{
+
+					if (tex)
 					{
-						PublicUniformAttributes attributes = m_PublicUniforms.at(name);
-						if (attributes.HasAttribute(UniformAttribute::BumpMap))
+						tex->BindImmediate(i);
+						UploadUniformInt(location, i);
+						i++;
+					}
+					else
+					{
+						//ARES_PROFILE_SCOPE("Get Tex");
+						// bind white texture (blue texture if normal map)
+						//tex = Renderer::GetWhiteTexture();
+
+						if (uniform->m_Attributes.HasAttribute(UniformAttribute::BumpMap))
 						{
-							tex = Renderer::GetDefaultBumpTexture();
+							UploadUniformInt(location, Renderer::DEF_BUMP_TEX_SLOT);
 						}
+						else
+						{
+							UploadUniformInt(location, Renderer::WHITE_TEX_SLOT);
+						}
+						/
+						if (m_PublicUniforms.find(hashName) != m_PublicUniforms.end())
+						{
+							PublicUniformAttributes attributes = m_PublicUniforms.at(hashName);
+							//PublicUniformAttributes& attributes = m_PublicUniforms[name];
+
+							if (attributes.HasAttribute(UniformAttribute::BumpMap))
+							{
+								//tex = Renderer::GetDefaultBumpTexture();
+								UploadUniformInt(location, Renderer::DEF_BUMP_TEX_SLOT);
+
+							}
+							else
+							{
+								UploadUniformInt(location, Renderer::WHITE_TEX_SLOT);
+							}
+						}
+						else
+						{
+							UploadUniformInt(location, Renderer::WHITE_TEX_SLOT);
+						}
+						/
+
 					}
 				}
 
+				/
+				{
+
+				ARES_PROFILE_SCOPE("Bind");
+
 				tex->BindImmediate(i);
-				UploadUniformInt(uniform->GetLocation(), i);
+				}
+				{
+					ARES_PROFILE_SCOPE("Upload int");
+				UploadUniformInt(location, i);
+				}
 				i++;
 
+				/
 				//if (name2Tex.find(name) != name2Tex.end())
 				//{
 				//}
@@ -1038,8 +1309,9 @@ namespace Ares {
 
 		}
 	}
+	*/
 
-	void OpenGLShader::ResolveAndSetUniforms(const Ref<OpenGLShaderUniformBufferDeclaration>& decl, Buffer buffer)
+	void OpenGLShader::ResolveAndSetUniforms(const Ref<OpenGLShaderUniformBufferDeclaration>& decl, Buffer buffer, ShaderVariant variant)
 	{
 		const ShaderUniformList& uniforms = decl->GetUniformDeclarations();
 		for (size_t i = 0; i < uniforms.size(); i++)
@@ -1048,80 +1320,101 @@ namespace Ares {
 			if (uniform->IsArray())
 			{
 				//ARES_CORE_ASSERT(false, "arrays not implemented yet...");
-				ResolveAndSetUniformArray(uniform, buffer);
+				ResolveAndSetUniformArray(uniform, buffer, variant);
 			}
 			else
 			{
 
-				ResolveAndSetUniform(uniform, buffer);
+				ResolveAndSetUniform(uniform, buffer, variant);
 			}
 		}
 	}
 
-	void OpenGLShader::ResolveAndSetUniform(OpenGLShaderUniformDeclaration* uniform, Buffer buffer)
+	void OpenGLShader::ResolveAndSetUniform(OpenGLShaderUniformDeclaration* uniform, Buffer buffer, ShaderVariant variant)
 	{
-		if (uniform->GetLocation() == -1)
+
+		uint32_t offset = uniform->GetOffset();
+
+		/*
+		if (uniform->GetType() == OpenGLShaderUniformDeclaration::Type::STRUCT)
+		{
+			UploadUniformStruct(uniform, buffer.Data, offset, variant);
+			return;
+		}
+		*/
+
+		//GLint location = GetUniformLocation(uniform->GetName(), variant);
+		GLint location = uniform->GetLocation(variant);
+
+		if (location == -1)
 			return;
 
 		//ARES_CORE_ASSERT(uniform->GetLocation() != -1, "Uniform has invalid location!");
 
-		uint32_t offset = uniform->GetOffset();
+		
 		switch (uniform->GetType())
 		{
 		case OpenGLShaderUniformDeclaration::Type::FLOAT32:
-			UploadUniformFloat(uniform->GetLocation(), *(float*)&buffer.Data[offset]);
+			UploadUniformFloat(location, *(float*)&buffer.Data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::INT32:
-			UploadUniformInt(uniform->GetLocation(), *(int32_t*)&buffer.Data[offset]);
+			UploadUniformInt(location, *(int32_t*)&buffer.Data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC2:
-			UploadUniformFloat2(uniform->GetLocation(), *(glm::vec2*) & buffer.Data[offset]);
+			UploadUniformFloat2(location, *(glm::vec2*) & buffer.Data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC3:
-			UploadUniformFloat3(uniform->GetLocation(), *(glm::vec3*) & buffer.Data[offset]);
+			UploadUniformFloat3(location, *(glm::vec3*) & buffer.Data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC4:
-			UploadUniformFloat4(uniform->GetLocation(), *(glm::vec4*) & buffer.Data[offset]);
+			UploadUniformFloat4(location, *(glm::vec4*) & buffer.Data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::MAT3:
-			UploadUniformMat3(uniform->GetLocation(), *(glm::mat3*) & buffer.Data[offset]);
+			UploadUniformMat3(location, *(glm::mat3*) & buffer.Data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::MAT4:
-			UploadUniformMat4(uniform->GetLocation(), *(glm::mat4*) & buffer.Data[offset]);
+			UploadUniformMat4(location, *(glm::mat4*) & buffer.Data[offset]);
 			break;
+
+			/*
 		case OpenGLShaderUniformDeclaration::Type::STRUCT:
-			UploadUniformStruct(uniform, buffer.Data, offset);
+			UploadUniformStruct(uniform, buffer.Data, offset, variant);
 			break;
+			*/
 		default:
 			ARES_CORE_ASSERT(false, "Unknown uniform type!");
 		}
 	}
 
-	void OpenGLShader::ResolveAndSetUniformArray(OpenGLShaderUniformDeclaration* uniform, Buffer buffer)
+	void OpenGLShader::ResolveAndSetUniformArray(OpenGLShaderUniformDeclaration* uniform, Buffer buffer, ShaderVariant variant)
 	{
+
+		//GLint location = GetUniformLocation(uniform->GetName(), variant);
+		 GLint location = uniform->GetLocation(variant);
+
 		uint32_t offset = uniform->GetOffset();
 		switch (uniform->GetType())
 		{
 		/*case OpenGLShaderUniformDeclaration::Type::FLOAT32:
-			UploadUniformFloat(uniform->GetLocation(), *(float*)&buffer.Data[offset]);
+			UploadUniformFloat(location, *(float*)&buffer.Data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::INT32:
-			UploadUniformInt(uniform->GetLocation(), *(int32_t*)&buffer.Data[offset]);
+			UploadUniformInt(location, *(int32_t*)&buffer.Data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC2:
-			UploadUniformFloat2(uniform->GetLocation(), *(glm::vec2*) & buffer.Data[offset]);
+			UploadUniformFloat2(location, *(glm::vec2*) & buffer.Data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC3:
-			UploadUniformFloat3(uniform->GetLocation(), *(glm::vec3*) & buffer.Data[offset]);
+			UploadUniformFloat3(location, *(glm::vec3*) & buffer.Data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC4:
-			UploadUniformFloat4(uniform->GetLocation(), *(glm::vec4*) & buffer.Data[offset]);
+			UploadUniformFloat4(location, *(glm::vec4*) & buffer.Data[offset]);
 			break;*/
 		/*case OpenGLShaderUniformDeclaration::Type::MAT3:
-			UploadUniformMat3(uniform->GetLocation(), *(glm::mat3*) & buffer.Data[offset]);
+			UploadUniformMat3(location, *(glm::mat3*) & buffer.Data[offset]);
 			break;*/
 		case OpenGLShaderUniformDeclaration::Type::MAT4:
-			UploadUniformMat4Array(uniform->GetLocation(), *(glm::mat4*) & buffer.Data[offset], uniform->GetCount());
+			UploadUniformMat4Array(location, *(glm::mat4*) & buffer.Data[offset], uniform->GetCount());
 			break;
 		/*case OpenGLShaderUniformDeclaration::Type::STRUCT:
 			UploadUniformStruct(uniform, buffer.Data, offset);
@@ -1131,39 +1424,44 @@ namespace Ares {
 		}
 	}
 
-	void OpenGLShader::ResolveAndSetUniformField(const OpenGLShaderUniformDeclaration& field, byte* data, int32_t offset)
+	/*
+	void OpenGLShader::ResolveAndSetUniformField(const OpenGLShaderUniformDeclaration& field, byte* data, int32_t offset, const std::string& uniformName, ShaderVariant variant)
 	{
+
+		//GLint location = GetUniformLocation(uniformName + "." + field.GetName(), variant);
+		 GLint location = field.GetLocation(variant);
 		switch (field.GetType())
 		{
 		case OpenGLShaderUniformDeclaration::Type::FLOAT32:
-			UploadUniformFloat(field.GetLocation(), *(float*)&data[offset]);
+			UploadUniformFloat(location, *(float*)&data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::INT32:
-			UploadUniformInt(field.GetLocation(), *(int32_t*)&data[offset]);
+			UploadUniformInt(location, *(int32_t*)&data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC2:
-			UploadUniformFloat2(field.GetLocation(), *(glm::vec2*) & data[offset]);
+			UploadUniformFloat2(location, *(glm::vec2*) & data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC3:
-			UploadUniformFloat3(field.GetLocation(), *(glm::vec3*) & data[offset]);
+			UploadUniformFloat3(location, *(glm::vec3*) & data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC4:
-			UploadUniformFloat4(field.GetLocation(), *(glm::vec4*) & data[offset]);
+			UploadUniformFloat4(location, *(glm::vec4*) & data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::MAT3:
-			UploadUniformMat3(field.GetLocation(), *(glm::mat3*) & data[offset]);
+			UploadUniformMat3(location, *(glm::mat3*) & data[offset]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::MAT4:
-			UploadUniformMat4(field.GetLocation(), *(glm::mat4*) & data[offset]);
+			UploadUniformMat4(location, *(glm::mat4*) & data[offset]);
 			break;
 		default:
 			ARES_CORE_ASSERT(false, "Unknown uniform type!");
 		}
 	}
+	*/
 
 
 
-	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(std::string source)
+	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(std::string source, std::unordered_map<std::string, UniformAttributes>& uniformAttributes)
 	{
 
 		size_t propertiesStartIDX = source.find("#properties");
@@ -1187,6 +1485,7 @@ namespace Ares {
 				//size_t nameEndIDX = s.find_first_of(" ", 0);
 				size_t nameEndIDX = s.find_first_of("|", 0);
 				std::string name = s.substr(0, nameEndIDX);
+				//size_t hashName = StringUtils::String2Hash(name);
 
 				size_t attributes_start = s.find_first_of("[", nameEndIDX) + 1;
 
@@ -1196,7 +1495,9 @@ namespace Ares {
 					std::string attributes_string = s.substr(attributes_start, attributes_end - attributes_start);
 					//attributes_string.erase(std::remove(attributes_string.begin(), attributes_string.end(), ' '), attributes_string.end());
 
-					PublicUniformAttributes attributes;
+					UniformAttributes attributes;
+					attributes.Attributes |= (uint32_t)UniformAttribute::Public;
+
 					std::istringstream as(attributes_string);
 					std::string st;
 					while (getline(as, st, ',')) {
@@ -1295,12 +1596,12 @@ namespace Ares {
 						}
 					}
 
-					m_PublicUniforms[name] = attributes;
+					uniformAttributes[name] = attributes;
 
 				}
 				else
 				{
-					m_PublicUniforms[name] = {};
+					uniformAttributes[name] = {};
 				}
 
 			}
@@ -1624,44 +1925,113 @@ namespace Ares {
 
 
 
-	
-	void OpenGLShader::SetMaterialResources(const std::unordered_map<std::string, Ref<Texture>>& name2Tex, ShaderVariant variant)
+	/*
+	void OpenGLShader::SetMaterialResources(std::unordered_map<size_t, Ref<Texture>> name2Tex, ShaderVariant variant)
 	{
+		ARES_PROFILE_FUNCTION();
+		//return;
+
+
+		{
+
+		ARES_PROFILE_SCOPE("MAke sure Textures");
 		// jsut make sure these are loaded before we try and bind/set them
 		auto _ = Renderer::GetWhiteTexture();
 		_ = Renderer::GetDefaultBumpTexture();
+		}
 
 
-		Renderer::Submit([this, name2Tex, variant]() {
-			/*glUseProgram(m_RendererID);
-			ResolveAndSetUniforms(m_VSMaterialUniformBuffer, buffer);*/
+
+		/
+		uint32_t i = 0;
+		for (auto& resource : m_Resources)
+		{
+			if (resource->GetCount() == 1)
+			{
+				OpenGLShaderResourceDeclaration* uniform = (OpenGLShaderResourceDeclaration*)resource;
+				const std::string& name = uniform->GetName();
+
+				Ref<Texture> tex = name2Tex.at(name);
+				if (tex)
+				{
+					tex->Bind(i);
+					UploadUniformInt(uniform->GetLocation(), i);
+					i++;
+				}
+				else
+				{
+					// bind white texture (blue texture if normal map)
+					tex = Renderer::GetWhiteTexture();
+
+					if (m_PublicUniforms.find(name) != m_PublicUniforms.end())
+					{
+						PublicUniformAttributes attributes = m_PublicUniforms.at(name);
+						if (attributes.HasAttribute(UniformAttribute::BumpMap))
+						{
+							tex = Renderer::GetDefaultBumpTexture();
+						}
+					}
+				}
+
+				tex->Bind(i);
+				i++;
+
+				//if (name2Tex.find(name) != name2Tex.end())
+				//{
+				//}
+				//else
+				//{
+				//	// bind white texture (blue texture if normal map)
+				//}
+
+
+			}
+
+		}
+
+		/
+		{
+
+		ARES_PROFILE_SCOPE("Submit resolve and set uniforms");
+		Renderer::Submit([=]() {
+			/
+			glUseProgram(m_RendererID);
+			ResolveAndSetUniforms(m_VSMaterialUniformBuffer, buffer);
+			/
 
 			//glUseProgram(GetRendererID(variant));
-			ResolveAndSetResources(m_VariantBuffers[GetVariantIndex(variant)].m_Resources, name2Tex);
+			//ResolveAndSetResources(m_VariantBuffers[GetVariantIndex(variant)].m_Resources, name2Tex);
+			ResolveAndSetResources(m_Resources, name2Tex, variant);
 
 		}, "SetVSMaterialUniformBuffer");
+		}
 	}
+	*/
 
+	/*
 	void OpenGLShader::SetVSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant)
 	{
 		Renderer::Submit([this, buffer, variant]() {
-			/*glUseProgram(m_RendererID);
-			ResolveAndSetUniforms(m_VSMaterialUniformBuffer, buffer);*/
+			//glUseProgram(m_RendererID);
+			//ResolveAndSetUniforms(m_VSMaterialUniformBuffer, buffer);
 
 			//glUseProgram(GetRendererID(variant));
 			ResolveAndSetUniforms(m_VariantBuffers[GetVariantIndex(variant)].m_VSMaterialUniformBuffer, buffer);
 
 		}, "SetVSMaterialUniformBuffer");
 	}
+	*/
 
 	void OpenGLShader::SetPSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant)
 	{
+		//return;
 		Renderer::Submit([this, buffer, variant]() {
 			/*glUseProgram(m_RendererID);
 			ResolveAndSetUniforms(m_PSMaterialUniformBuffer, buffer);*/
 			
 			//glUseProgram(GetRendererID(variant));
-			ResolveAndSetUniforms(m_VariantBuffers[GetVariantIndex(variant)].m_PSMaterialUniformBuffer, buffer);
+			//ResolveAndSetUniforms(m_VariantBuffers[GetVariantIndex(variant)].m_PSMaterialUniformBuffer, buffer);
+			ResolveAndSetUniforms(m_PSMaterialUniformBuffer, buffer, variant);
 		}, "SetPSMaterialUniformBuffer");
 	}
 
@@ -1731,6 +2101,7 @@ namespace Ares {
 			}
 		}
 	}*/
+	
 
 	
 	void OpenGLShader::UploadUniformInt(const std::string& name, int value, ShaderVariant variant)
@@ -1812,20 +2183,34 @@ namespace Ares {
 		glUniformMatrix4fv(location, count, GL_FALSE, glm::value_ptr(values));
 	}
 
-	void OpenGLShader::UploadUniformStruct(OpenGLShaderUniformDeclaration* uniform, byte* buffer, uint32_t offset)
+
+	/*
+	void OpenGLShader::UploadUniformStruct(OpenGLShaderUniformDeclaration* uniform, byte* buffer, uint32_t offset, ShaderVariant variant)
 	{
 		const ShaderStruct& s = uniform->GetShaderUniformStruct();
 		const auto& fields = s.GetFields();
 		for (size_t k = 0; k < fields.size(); k++)
 		{
 			OpenGLShaderUniformDeclaration* field = (OpenGLShaderUniformDeclaration*)fields[k];
-			ResolveAndSetUniformField(*field, buffer, offset);
+			ResolveAndSetUniformField(*field, buffer, offset, uniform->GetName(), variant);
 			offset += field->m_Size;
 		}
 	}
+	*/
 
-	GLint OpenGLShader::GetUniformLocation(const std::string& name, ShaderVariant variant) const
+	GLint OpenGLShader::GetUniformLocation(const std::string& name, ShaderVariant variant)
 	{
+
+
+		uint32_t variantIndex = GetVariantIndex(variant);
+		std::unordered_map<std::string, GLint>& map = m_UniformLocationMaps[variantIndex];
+
+		if (map.find(name) != map.end())
+		{
+
+			return map.at(name);
+		}
+
 
 		/*if (m_UniformLocationMap.find(name) != m_UniformLocationMap.end())
 			return m_UniformLocationMap[name];*/
@@ -1837,10 +2222,11 @@ namespace Ares {
 		
 		if (location == -1)
 		{
+
 			ARES_CORE_WARN("Uniform '{0}' not found in shader '{1}'!", name, m_Name);
 			return location;
 		}
-		//m_UniformLocationMap[name] = location;
+		map[name] = location;
 		return location;
 	}
 }

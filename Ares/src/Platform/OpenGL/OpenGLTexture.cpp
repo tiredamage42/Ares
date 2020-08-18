@@ -8,6 +8,19 @@
 
 namespace Ares {
 
+	struct TextureBindsMap
+	{
+		uint32_t* textureBinds;
+
+		TextureBindsMap()
+		{
+			textureBinds = new uint32_t[32];
+			for (size_t i = 0; i < 32; i++)
+				textureBinds[i] = 0;
+			
+		}
+	};
+
 
 	/*
 	GL_NEAREST - no filtering, no mipmaps
@@ -285,17 +298,36 @@ namespace Ares {
 			glDeleteTextures(1, &rendererID);
 		}, "Delete Texture");
 	}
+	static TextureBindsMap* texture2DBinds = new TextureBindsMap();
+	
 	void OpenGLTexture2D::Bind(uint32_t slot) const
 	{
-		Renderer::Submit([this, slot]() {
-			glBindTextureUnit(slot, this->m_RendererID);
-		}, "Texture Bind");
+
+			if (texture2DBinds->textureBinds[slot] != m_RendererID)
+			{
+				Renderer::Submit([=]() {
+					glBindTextureUnit(slot, m_RendererID);
+				}, "Texture Bind");
+				texture2DBinds->textureBinds[slot] = m_RendererID;
+			}
 	}
 
+	/*
 	void OpenGLTexture2D::BindImmediate(uint32_t slot) const
 	{
-		glBindTextureUnit(slot, this->m_RendererID);
+		if (texture2DBinds->textureBinds[slot] != m_RendererID)
+		{
+			{
+
+			ARES_PROFILE_SCOPE("Bind2d");
+			glBindTextureUnit(slot, m_RendererID);
+			}
+			texture2DBinds->textureBinds[slot] = m_RendererID;
+		}
 	}
+	*/
+	/*
+	*/
 
 
 	void OpenGLTexture2D::Lock()
@@ -583,19 +615,43 @@ namespace Ares {
 			glDeleteTextures(1, &rendererID);
 		}, "Delete cube");
 	}
+
+	static TextureBindsMap* texture3DBinds = new TextureBindsMap();
+	
+
+	
 	void OpenGLTextureCube::Bind(uint32_t slot) const
 	{
-		Renderer::Submit([this, slot]() {
-			//glBindTextureUnit(slot, m_RendererID);
-			glActiveTexture(GL_TEXTURE0 + slot);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, this->m_RendererID);
-		}, "Bind Cube");
+
+		if (texture3DBinds->textureBinds[slot] != m_RendererID)
+		{
+			Renderer::Submit([=]() {
+				//glBindTextureUnit(slot, m_RendererID);
+				glActiveTexture(GL_TEXTURE0 + slot);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, m_RendererID);
+			}, "Bind Cube");
+			texture3DBinds->textureBinds[slot] = m_RendererID;
+		}
+
 	}
+	/*
 	void OpenGLTextureCube::BindImmediate(uint32_t slot) const
 	{
-		glActiveTexture(GL_TEXTURE0 + slot);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, this->m_RendererID);
+		if (texture3DBinds->textureBinds[slot] != m_RendererID)
+		{
+			{
+
+				ARES_PROFILE_SCOPE("BindCube");
+				glActiveTexture(GL_TEXTURE0 + slot);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, m_RendererID);
+			}
+
+			texture3DBinds->textureBinds[slot] = m_RendererID;
+		}
 	}
+	*/
+	/*
+	*/
 	uint32_t OpenGLTextureCube::GetMipLevelCount() const
 	{
 		return CalculateMipMapCount(m_Width, m_Height);

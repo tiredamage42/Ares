@@ -1,7 +1,7 @@
 #include "AresPCH.h"
 #include "FileUtils.h"
 #include <sys/stat.h>
-
+#include <fstream>
 namespace Ares
 {
 	std::string FileUtils::GetFileContents(const std::string& filePath, bool& success)

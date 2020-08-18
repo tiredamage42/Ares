@@ -238,7 +238,7 @@ namespace Ares
         /*m_CheckerboardTex = Texture2D::Create("Assets/Textures/Checkerboard.png");
         m_PlayButtonTex = Texture2D::Create("Assets/Textures/PlayButton.png");*/
 
-        //m_CheckerboardTex = EditorResources::GetTexture("checkerboard.png");
+        m_CheckerboardTex = EditorResources::GetTexture("checkerboard.png");
         m_PlayButtonTex = EditorResources::GetTexture("play.png");
 
         m_AssetManagerPanel = CreateScope<AssetManagerPanel>();
@@ -311,7 +311,7 @@ namespace Ares
         
         //auto sphereMesh = CreateRef<Mesh>("C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\meshes\\Sphere1m.fbx");
         
-        auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Cube);
+        auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Sphere);
 
         float spread = 1.25f;
         uint8_t i = 0;
@@ -337,8 +337,8 @@ namespace Ares
                 Ref<Material> m = CreateRef<Material>(Shader::Find("Assets/Shaders/PBRStatic.glsl"));
                 //Ref<Material> m = CreateRef<Material>(m_MeshBaseMaterial);
                 mrC.Materials = { m };
-                m->Set("u_Metalness", metalness);
-                m->Set("u_Roughness", roughness);
+                m->SetValue("u_Metalness", metalness);
+                m->SetValue("u_Roughness", roughness);
 
                 //m_SphereMaterials.push_back(m);
 
@@ -942,6 +942,7 @@ namespace Ares
 
     void EditorLayer::OnImGuiDraw()
     {
+        ARES_PROFILE_FUNCTION();
 
         static bool dockspaceOpen = true;
 

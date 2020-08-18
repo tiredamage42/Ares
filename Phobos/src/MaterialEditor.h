@@ -11,6 +11,6 @@ namespace Ares
 		static void DrawMaterial(Ref<Material> material);
 	private:
 
-		//static void AddTextureToMaterial(Ref<Material> material, Ref<Texture> tex, const uint32_t& slot);
+		static void AddTextureToMaterial(Ref<Material> material, Ref<Texture> tex, const uint32_t& slot);
 	};
 }

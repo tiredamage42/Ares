@@ -1,28 +1,35 @@
 #include "AresPCH.h"
 #include "OpenGLShaderUniform.h"
-
+#include "Ares/Core/StringUtils.h"
 namespace Ares {
 
-	OpenGLShaderUniformDeclaration::OpenGLShaderUniformDeclaration(ShaderDomain domain, Type type, const std::string& name, uint32_t count)
-		: m_Type(type), m_Struct(nullptr), m_Domain(domain)
+	//OpenGLShaderUniformDeclaration::OpenGLShaderUniformDeclaration(ShaderDomain domain, Type type, const std::string& name, uint32_t count)
+	OpenGLShaderUniformDeclaration::OpenGLShaderUniformDeclaration(Type type, const std::string& name, uint32_t count)
+		: m_Type(type)//, m_Struct(nullptr)//, m_Domain(domain)
 	{
 		m_Name = name;
+		m_HashName = StringUtils::String2Hash(name);
 		m_Count = count;
 		m_Size = SizeOfUniformType(type) * count;
 	}
 
-	OpenGLShaderUniformDeclaration::OpenGLShaderUniformDeclaration(ShaderDomain domain, ShaderStruct* uniformStruct, const std::string& name, uint32_t count)
-		: m_Struct(uniformStruct), m_Type(OpenGLShaderUniformDeclaration::Type::STRUCT), m_Domain(domain)
+	/*
+	//OpenGLShaderUniformDeclaration::OpenGLShaderUniformDeclaration(ShaderDomain domain, ShaderStruct* uniformStruct, const std::string& name, uint32_t count)
+	OpenGLShaderUniformDeclaration::OpenGLShaderUniformDeclaration(ShaderStruct* uniformStruct, const std::string& name, uint32_t count)
+		: m_Struct(uniformStruct), m_Type(OpenGLShaderUniformDeclaration::Type::STRUCT)//, m_Domain(domain)
 	{
 		m_Name = name;
 		m_Count = count;
 		m_Size = m_Struct->GetSize() * count;
 	}
+	*/
 
 	void OpenGLShaderUniformDeclaration::SetOffset(uint32_t offset)
 	{
+		/*
 		if (m_Type == OpenGLShaderUniformDeclaration::Type::STRUCT)
 			m_Struct->SetOffset(offset);
+		*/
 
 		m_Offset = offset;
 	}
@@ -69,8 +76,10 @@ namespace Ares {
 		return "Invalid Type";
 	}
 
-	OpenGLShaderUniformBufferDeclaration::OpenGLShaderUniformBufferDeclaration(const std::string& name, ShaderDomain domain)
-		: m_Name(name), m_Domain(domain), m_Size(0), m_Register(0)
+	//OpenGLShaderUniformBufferDeclaration::OpenGLShaderUniformBufferDeclaration(const std::string& name, ShaderDomain domain)
+	OpenGLShaderUniformBufferDeclaration::OpenGLShaderUniformBufferDeclaration(const std::string& name)
+		//: m_Name(name), m_Domain(domain), m_Size(0), m_Register(0)
+		: m_Name(name), m_Size(0)
 	{
 	}
 
@@ -97,11 +106,23 @@ namespace Ares {
 		return nullptr;
 	}
 
-	OpenGLShaderResourceDeclaration::OpenGLShaderResourceDeclaration(Type type, const std::string& name, uint32_t count)
+
+
+	
+	OpenGLShaderResourceArrayDeclaration::OpenGLShaderResourceArrayDeclaration(ShaderResourceDeclaration::Type type, const std::string& name, uint32_t count)
 		: m_Type(type), m_Name(name), m_Count(count)
 	{
 		m_Name = name;
+		//m_HashName = StringUtils::String2Hash(name);
 		m_Count = count;
+	}
+
+	OpenGLShaderResourceDeclaration::OpenGLShaderResourceDeclaration(Type type, const std::string& name)//, uint32_t count)
+		: m_Type(type), m_Name(name)//, m_Count(count)
+	{
+		m_Name = name;
+		//m_HashName = StringUtils::String2Hash(name);
+		//m_Count = count;
 	}
 
 	OpenGLShaderResourceDeclaration::Type OpenGLShaderResourceDeclaration::StringToType(const std::string& type)

@@ -32,9 +32,9 @@ in vec3 v_Position;
 void main()
 {
 
-	finalColor = texture(u_Texture, v_Position);
+	//finalColor = texture(u_Texture, v_Position);
+	finalColor = textureLod(u_Texture, v_Position, 0);
 
-	//finalColor = textureLod(u_Texture, v_Position, u_TextureLod);
 
 	//finalColor = vec4(0.0, 1.0, 0.0, 1.0);
 

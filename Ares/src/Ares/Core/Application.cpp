@@ -115,29 +115,46 @@ namespace Ares {
     {
         while (m_Running)
         {        
+            ARES_PROFILE_SCOPE("Update Loop");
+
             Time::Tick(Platform::GetTime()); // Platform::GetTime
 
             if (!m_Minimized)
             {
 
-                for (Layer* layer : m_LayerStack)
                 {
-                    layer->OnUpdate();
+
+                    ARES_PROFILE_SCOPE("Layer Updates");
+                    for (Layer* layer : m_LayerStack)
+                    {
+                        layer->OnUpdate();
+                    }
+
                 }
 
-                // Render ImGui on render thread
-                Renderer::Submit([this]() { 
-                RenderImGui(); 
+                {
+                    
+                    ARES_PROFILE_SCOPE("Render imgui");
+                    // Render ImGui on render thread
+                    Renderer::Submit([=]() { 
+                        RenderImGui(); 
                     }, "RenderIMGUI");
+                }
+                {
+                    ARES_PROFILE_SCOPE("Wait and render");
+                    Renderer::WaitAndRender();
+                }
             
-                Renderer::WaitAndRender();
             }
 
             /*float a = 0;
             a += 1;*/
 
+            {
+                ARES_PROFILE_SCOPE("Window update");
 
-            m_Window->OnUpdate();
+                m_Window->OnUpdate();
+            }
         }
     }
 

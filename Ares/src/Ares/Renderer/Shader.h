@@ -101,14 +101,15 @@ namespace Ares {
 
 
 
-	enum class UniformAttribute
+	/*enum class UniformAttribute
 	{
 		None = BIT(0),
-		Color = BIT(1),
-		Range = BIT(2),
-		Toggle = BIT(3),
-		BumpMap = BIT(4),
-		DefaultValue = BIT(5)
+		Public = BIT(1),
+		Color = BIT(2),
+		Range = BIT(3),
+		Toggle = BIT(4),
+		BumpMap = BIT(5),
+		DefaultValue = BIT(6)
 	};
 
 	struct PublicUniformAttributes
@@ -121,7 +122,7 @@ namespace Ares {
 		{
 			return (uint32_t)attribute & Attributes;
 		}
-	};
+	};*/
 
 	enum class ShaderVariant : size_t
 	{
@@ -132,6 +133,8 @@ namespace Ares {
 	{
 	public:
 		using ShaderReloadedCallback = std::function<void()>;
+
+		
 
 		virtual ~Shader() = default;
 
@@ -164,25 +167,58 @@ namespace Ares {
 		virtual void SetMat3FromRenderThread(const std::string& name, glm::mat3 value, ShaderVariant variant) = 0;
 		virtual void SetMat4FromRenderThread(const std::string& name, const glm::mat4& value, ShaderVariant variant) = 0;
 
-		virtual void SetVSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant) = 0;
+		/*
+		virtual void SetInt		(size_t hash, int value, ShaderVariant variant) = 0;
+		virtual void SetIntArray(size_t hash, int* values, uint32_t count, ShaderVariant variant, bool deleteFromMem = true) = 0;
+		virtual void SetFloat	(size_t hash, float value, ShaderVariant variant) = 0;
+		virtual void SetFloat2	(size_t hash, glm::vec2 value, ShaderVariant variant) = 0;
+		virtual void SetFloat3	(size_t hash, glm::vec3 value, ShaderVariant variant) = 0;
+		virtual void SetFloat4	(size_t hash, glm::vec4 value, ShaderVariant variant) = 0;
+		virtual void SetMat3	(size_t hash, glm::mat3 value, ShaderVariant variant) = 0;
+		virtual void SetMat4	(size_t hash, const glm::mat4& value, ShaderVariant variant) = 0;
+
+		virtual void SetIntFromRenderThread		(size_t hash, int value, ShaderVariant variant) = 0;
+		virtual void SetIntArrayFromRenderThread(size_t hash, int* values, uint32_t count, ShaderVariant variant) = 0;
+		virtual void SetFloatFromRenderThread	(size_t hash, float value, ShaderVariant variant) = 0;
+		virtual void SetFloat2FromRenderThread	(size_t hash, glm::vec2 value, ShaderVariant variant) = 0;
+		virtual void SetFloat3FromRenderThread	(size_t hash, glm::vec3 value, ShaderVariant variant) = 0;
+		virtual void SetFloat4FromRenderThread	(size_t hash, glm::vec4 value, ShaderVariant variant) = 0;
+		virtual void SetMat3FromRenderThread	(size_t hash, glm::mat3 value, ShaderVariant variant) = 0;
+		virtual void SetMat4FromRenderThread	(size_t hash, const glm::mat4& value, ShaderVariant variant) = 0;
+		*/
+
+
+
+
+
+
+
+
+
+		//virtual void SetVSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant) = 0;
 		virtual void SetPSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant) = 0;
-		virtual void SetMaterialResources(const std::unordered_map<std::string, Ref<Texture>>& name2Tex, ShaderVariant variant) = 0;
+		
+		//virtual void SetMaterialResources( std::unordered_map<std::string, Ref<Texture>> name2Tex, ShaderVariant variant) = 0;
+		//virtual void SetMaterialResources(std::unordered_map<size_t, Ref<Texture>> name2Tex, ShaderVariant variant) = 0;
 
 
 		/*virtual const ShaderUniformBufferList& GetVSRendererUniforms() const = 0;
 		virtual const ShaderUniformBufferList& GetPSRendererUniforms() const = 0;*/
 
-		virtual bool HasVSMaterialUniformBuffer() const = 0;
+		//virtual bool HasVSMaterialUniformBuffer() const = 0;
 		virtual bool HasPSMaterialUniformBuffer() const = 0;
 
-		virtual const ShaderUniformBufferDeclaration& GetVSMaterialUniformBuffer(ShaderVariant variant) const = 0;
-		virtual const ShaderUniformBufferDeclaration& GetPSMaterialUniformBuffer(ShaderVariant variant) const = 0;
+		//virtual const ShaderUniformBufferDeclaration& GetVSMaterialUniformBuffer(ShaderVariant variant) const = 0;
+		//virtual const ShaderUniformBufferDeclaration& GetPSMaterialUniformBuffer(ShaderVariant variant) const = 0;
+		virtual const ShaderUniformBufferDeclaration& GetPSMaterialUniformBuffer() const = 0;
 
-		virtual const ShaderResourceList& GetResources(ShaderVariant variant) const = 0;
+		//virtual const ShaderResourceList& GetResources(ShaderVariant variant) const = 0;
+		virtual const ShaderResourceList& GetResources() const = 0;
 
 		virtual void AddShaderReloadedCallback(const ShaderReloadedCallback& callback) = 0;
 
-		virtual const std::unordered_map<std::string, PublicUniformAttributes>& GetPublicUniforms() const = 0;
+		//virtual const std::unordered_map<std::string, PublicUniformAttributes>& GetPublicUniforms() const = 0;
+		//virtual const std::unordered_map<size_t, PublicUniformAttributes>& GetPublicUniforms() const = 0;
 
 
 		static std::vector<Ref<Shader>> s_AllShaders;

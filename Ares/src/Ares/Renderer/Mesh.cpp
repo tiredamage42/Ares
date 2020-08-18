@@ -28,6 +28,7 @@
 #include <filesystem>
 #include <iostream>
 
+#include "Ares/Core/StringUtils.h"
 
 
 #include <fbxsdk.h>
@@ -319,15 +320,15 @@ namespace Ares {
 			float f = dividend == 0.0f ? 0.0f : 1.0f / dividend;
 			
 			glm::vec3 tangent = (deltaV2 * edge1 - deltaV1 * edge2) * f;
-			glm::vec3 bitangent = (-deltaU2 * edge1 - deltaU1 * edge2) * f;
+			//glm::vec3 bitangent = (-deltaU2 * edge1 - deltaU1 * edge2) * f;
 			
 			v0.Tangent += tangent;
 			v1.Tangent += tangent;
 			v2.Tangent += tangent;
 
-			v0.Binormal += bitangent;
+			/*v0.Binormal += bitangent;
 			v1.Binormal += bitangent;
-			v2.Binormal += bitangent;
+			v2.Binormal += bitangent;*/
 
 		}
 
@@ -335,7 +336,7 @@ namespace Ares {
 		{
 			Vertex& v = m_Vertices[i];
 			v.Tangent = glm::normalize(v.Tangent);
-			v.Binormal = glm::normalize(v.Binormal);
+			//v.Binormal = glm::normalize(v.Binormal);
 		}
 	}
 
@@ -391,10 +392,10 @@ namespace Ares {
 		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(m_StaticVertices.data(), m_StaticVertices.size() * sizeof(Vertex));
 		vertexBuffer->SetLayout({
 			{ ShaderDataType::Float3, "a_Position" },
+			{ ShaderDataType::Float2, "a_TexCoord" },
 			{ ShaderDataType::Float3, "a_Normal" },
 			{ ShaderDataType::Float3, "a_Tangent" },
-			{ ShaderDataType::Float3, "a_Binormal" },
-			{ ShaderDataType::Float2, "a_TexCoord" },
+			//{ ShaderDataType::Float3, "a_Binormal" },
 		});
 
 		
@@ -576,6 +577,12 @@ namespace Ares {
 
 
 
+	static const size_t u_AlbedoTexture = StringUtils::String2Hash("u_AlbedoTexture");
+	static const size_t u_NormalTexture = StringUtils::String2Hash("u_NormalTexture");
+		
+
+
+
 	Mesh::Mesh(const std::string& filepath, std::vector<Ref<Material>>& m_Materials)
 		: m_FilePath(filepath)
 	{
@@ -658,7 +665,7 @@ namespace Ares {
 					if (mesh->HasTangentsAndBitangents())
 					{
 						vertex.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
-						vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+						//vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
 					}
 
 					if (mesh->HasTextureCoords(0))
@@ -689,7 +696,7 @@ namespace Ares {
 					if (mesh->HasTangentsAndBitangents())
 					{
 						vertex.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
-						vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+						//vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
 					}
 
 					if (mesh->HasTextureCoords(0))
@@ -833,7 +840,7 @@ namespace Ares {
 
 				aiColor3D aiColor;
 				aiMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, aiColor);
-
+				mi->SetValue("u_AlbedoColor", glm::vec3{ aiColor.r, aiColor.g, aiColor.b });
 
 				float shininess, metalness;
 				aiMaterial->Get(AI_MATKEY_SHININESS, shininess);
@@ -846,6 +853,7 @@ namespace Ares {
 				float roughness = 1.0f - glm::sqrt(shininess / 100.0f);
 				ARES_CORE_LOG("    COLOR = {0}, {1}, {2}", aiColor.r, aiColor.g, aiColor.b);
 				ARES_CORE_LOG("    ROUGHNESS = {0}", roughness);
+
 
 				bool hasAlbedoMap = aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &aiTexPath) == AI_SUCCESS;
 				if (hasAlbedoMap)
@@ -886,23 +894,23 @@ namespace Ares {
 					{
 						//m_Textures[i] = texture;
 						//mi->Set("u_AlbedoTexture", m_Textures[i]);
-						mi->Set("u_AlbedoTexture", texture);
-						mi->Set("u_AlbedoTexToggle", 1.0f);
+						mi->SetTexture("u_AlbedoTexture", texture);
+						//mi->Set("u_AlbedoTexToggle", 1.0f);
 					}
 					else
 					{
 						ARES_CORE_ERROR("Could not load texture: {0}", texturePath);
 						//mi->Set("u_AlbedoTexToggle", 0.0f);
-						mi->Set("u_AlbedoColor", glm::vec3{ aiColor.r, aiColor.g, aiColor.b });
+						//mi->SetValue("u_AlbedoColor", glm::vec3{ aiColor.r, aiColor.g, aiColor.b });
 					}
 				}
 				else
 				{
 					//mi->Set("u_AlbedoTexToggle", 0.0f);
-					mi->Set("u_AlbedoColor", glm::vec3{ aiColor.r, aiColor.g, aiColor.b });
+					//mi->SetValue("u_AlbedoColor", glm::vec3{ aiColor.r, aiColor.g, aiColor.b });
 					ARES_CORE_LOG("		Mesh has no albedo map");
 				}
-				continue;
+				//continue;
 
 				// Normal maps
 				if (aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &aiTexPath) == AI_SUCCESS)
@@ -927,8 +935,8 @@ namespace Ares {
 					auto texture = Texture2D::Create(texturePath, FilterType::Trilinear, true);
 					if (texture->Loaded())
 					{
-						mi->Set("u_NormalTexture", texture);
-						mi->Set("u_NormalTexToggle", 1.0f);
+						mi->SetTexture("u_NormalTexture", texture);
+						//mi->Set("u_NormalTexToggle", 1.0f);
 					}
 					else
 					{
@@ -941,6 +949,8 @@ namespace Ares {
 				{
 					ARES_CORE_LOG("Mesh has no normal map");
 				}
+				
+#if 0
 
 
 
@@ -1024,7 +1034,7 @@ namespace Ares {
 					mi->Set("u_Metalness", roughness);
 				}
 				//aiTextureType_REFLECTION aiTextureType_SPECULAR
-
+#endif
 #if 0
 
 				// Metalness map
@@ -1161,10 +1171,10 @@ namespace Ares {
 			vertBuffer = VertexBuffer::Create(m_AnimatedVertices.data(), m_AnimatedVertices.size() * sizeof(AnimatedVertex));
 			vertBuffer->SetLayout({
 				{ ShaderDataType::Float3, "a_Position" },
+				{ ShaderDataType::Float2, "a_TexCoord" },
 				{ ShaderDataType::Float3, "a_Normal" },
 				{ ShaderDataType::Float3, "a_Tangent" },
-				{ ShaderDataType::Float3, "a_Binormal" },
-				{ ShaderDataType::Float2, "a_TexCoord" },
+				//{ ShaderDataType::Float3, "a_Binormal" },
 				//{ ShaderDataType::Int4, "a_BoneIDs" },
 				{ ShaderDataType::Float4, "a_BoneIDs" },
 				{ ShaderDataType::Float4, "a_BoneWeights" },
@@ -1175,10 +1185,10 @@ namespace Ares {
 			vertBuffer = VertexBuffer::Create(m_StaticVertices.data(), m_StaticVertices.size() * sizeof(Vertex));
 			vertBuffer->SetLayout({
 				{ ShaderDataType::Float3, "a_Position" },
+				{ ShaderDataType::Float2, "a_TexCoord" },
 				{ ShaderDataType::Float3, "a_Normal" },
 				{ ShaderDataType::Float3, "a_Tangent" },
-				{ ShaderDataType::Float3, "a_Binormal" },
-				{ ShaderDataType::Float2, "a_TexCoord" },
+				//{ ShaderDataType::Float3, "a_Binormal" },
 			});
 		}
 

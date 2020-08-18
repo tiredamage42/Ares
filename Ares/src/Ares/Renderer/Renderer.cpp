@@ -98,13 +98,14 @@ namespace Ares {
 
 
 
-	static Ref<Texture2D> CreateDefaultTexture(uint32_t data)
+	static Ref<Texture2D> CreateDefaultTexture(uint32_t data)// , uint32_t slot)
 	{
-		Ref<Texture2D> tex = Texture2D::Create(TextureFormat::RGBA, 1, 1, TextureWrap::Repeat, FilterType::Point, false);
+		Ref<Texture2D> tex = Texture2D::Create(TextureFormat::RGBA, 1, 1, TextureWrap::Clamp, FilterType::Point, false);
 		//tex->SetData(&data);
 		tex->Lock();
 		tex->GetWriteableBuffer().Write(&data, sizeof(uint32_t));
 		tex->Unlock();
+		//tex->Bind(slot);
 		return tex;
 	}
 
@@ -112,14 +113,20 @@ namespace Ares {
 	Ref<Texture2D> Renderer::GetWhiteTexture()
 	{
 		if (s_Data.m_WhiteTexture == nullptr)
-			s_Data.m_WhiteTexture = CreateDefaultTexture(0xffffffff);
+		{
+			s_Data.m_WhiteTexture = CreateDefaultTexture(0xffffffff);// , WHITE_TEX_SLOT);
+			
+		}
 		return s_Data.m_WhiteTexture;
 	}
 
 	Ref<Texture2D> Renderer::GetDefaultBumpTexture()
 	{
 		if (s_Data.m_DefaultBump == nullptr)
-			s_Data.m_DefaultBump = CreateDefaultTexture(0xffff8080);
+		{
+			s_Data.m_DefaultBump = CreateDefaultTexture(0xffff8080);//, DEF_BUMP_TEX_SLOT);
+			
+		}
 		return s_Data.m_DefaultBump;
 	}
 
@@ -214,8 +221,9 @@ namespace Ares {
 		ShaderVariant variant = mesh->m_IsAnimated ? ShaderVariant::Skinned : ShaderVariant::Static;
 		if (mesh->m_IsAnimated)
 		{
-			mesh->m_BoneMatrixTexture->Bind(30);
-			boundShader->SetInt("_ares_internal_BoneSampler", 30, variant);
+			mesh->m_BoneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
+			//mesh->m_BoneMatrixTexture->Bind(30);
+			//boundShader->SetInt("_ares_internal_BoneSampler", 30, variant);
 		}
 		auto& submesh = mesh->GetSubmeshes()[submeshIndex];
 		boundShader->SetMat4("_ares_internal_Transform", transform * submesh.Transform, variant);
@@ -237,9 +245,10 @@ namespace Ares {
 
 		if (mesh->m_IsAnimated)
 		{
-			mesh->m_BoneMatrixTexture->Bind(30);
-			boundShader->SetInt("_ares_internal_BoneSampler", 30, variant);
+			mesh->m_BoneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
+			//boundShader->SetInt("_ares_internal_BoneSampler", 30, variant);
 		}
+
 		
 		for (Submesh& submesh : mesh->m_Submeshes)
 		{

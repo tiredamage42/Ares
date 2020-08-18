@@ -1,6 +1,6 @@
 #include "AresPCH.h"
 #include "JsonObject.h"
-
+#include <fstream>
 namespace glm 
 {
 	void to_json(nlohmann::json& j, const glm::vec2& vector)

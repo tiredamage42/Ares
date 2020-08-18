@@ -1,12 +1,15 @@
 
 #pragma once
 
-#include <algorithm>
+//#include <algorithm>
+//#include <thread>
+#define ARES_PROFILING 0
+
+#if ARES_PROFILING
 #include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <string>
-#include <thread>
 
 namespace Ares {
 
@@ -19,22 +22,25 @@ namespace Ares {
         FloatingPointMicroseconds Start;
         std::chrono::microseconds ElapsedTime;
 
-        std::thread::id ThreadID;
+        //std::thread::id ThreadID;
     };
 
     class Profiling
     {
     private:
-        inline static std::mutex m_Mutex;
+        //inline static std::mutex m_Mutex;
         inline static std::ofstream m_OutputStream;
+        //inline static std::string m_FilePath;
+
         inline static bool m_CurrentProfile = false;
         
     public:
         
         static void BeginSession(const std::string& name, const std::string& filepath = "results.json")
         {
+            BuildResultsIfNull();
 
-            std::lock_guard lock(m_Mutex);
+            //std::lock_guard lock(m_Mutex);
             if (m_CurrentProfile) {
                 // If there is already a current session, then close it before beginning new one.
                 // Subsequent profiling output meant for the original session will end up in the
@@ -50,6 +56,9 @@ namespace Ares {
                 InternalEndSession();
             }
 
+            //m_FilePath = filepath;
+            //m_CurrentProfile = true;
+            
             m_OutputStream.open(filepath);
 
             if (m_OutputStream.is_open()) 
@@ -60,25 +69,95 @@ namespace Ares {
             else 
             {
                 // Edge case: BeginSession() might be before Log::Init()
-                if (Log::GetCoreLogger()) 
-                { 
+                //if (Log::GetCoreLogger()) 
+                //{ 
                     ARES_CORE_ERROR("Instrumentor could not open results file '{0}'.", filepath);
-                }
+                //}
             }
+            /*
+            */
         }
 
         static void EndSession()
         {
-            std::lock_guard lock(m_Mutex);
+            //std::lock_guard lock(m_Mutex);
             InternalEndSession();
         }
-    
+
+        
+        //inline static std::vector<ProfileResult> m_Results;
+        
+        inline static const uint32_t MAX_RESULTS_PER_FLUSH = 10000;
+        inline static uint32_t m_CurrentResultIndex = 0;
+        inline static ProfileResult* m_Results = nullptr;
+
+        static void BuildResultsIfNull()
+        {
+            if (m_Results == nullptr)
+            {
+                m_Results = new ProfileResult[MAX_RESULTS_PER_FLUSH];
+            }
+        }
+
+
+        static void WriteToOutputStream()
+        {
+            for (int i = 0; i < m_CurrentResultIndex; i++)
+            {
+
+                ProfileResult result = m_Results[i];
+
+                std::stringstream json;
+
+                /*std::string name = result.Name;
+                std::replace(name.begin(), name.end(), '"', '\'');*/
+
+                json << std::setprecision(3) << std::fixed;
+
+                json << ",{";
+                json << "\"cat\":\"function\",";
+
+                json << "\"dur\":" << (result.ElapsedTime.count()) << ',';
+
+                //json << "\"name\":\"" << name << "\",";
+                json << "\"name\":\"" << result.Name << "\",";
+
+                json << "\"ph\":\"X\",";
+                json << "\"pid\":0,";
+                //json << "\"tid\":" << result.ThreadID << ",";
+                json << "\"tid\":" << 0 << ",";
+                json << "\"ts\":" << result.Start.count();
+                json << "}";
+
+                //std::lock_guard lock(m_Mutex);
+                //if (m_CurrentProfile) {
+                    m_OutputStream << json.str();
+                    m_OutputStream.flush();
+                //}
+            }
+            m_CurrentResultIndex = 0;
+        }
+
         static void WriteProfile(const ProfileResult& result)
         {
+            if (!m_CurrentProfile)
+                return;
+
+            m_Results[m_CurrentResultIndex++] = result;
+            if (m_CurrentResultIndex == MAX_RESULTS_PER_FLUSH)
+            {
+                WriteToOutputStream();
+            }
+
+            //m_Results.push_back(result);
+            return;
+
+            /*
             std::stringstream json;
 
-            /*std::string name = result.Name;
-            std::replace(name.begin(), name.end(), '"', '\'');*/
+
+            //std::string name = result.Name;
+            //std::replace(name.begin(), name.end(), '"', '\'');
 
             json << std::setprecision(3) << std::fixed;
 
@@ -99,11 +178,11 @@ namespace Ares {
             std::lock_guard lock(m_Mutex);
             if (m_CurrentProfile) {
                 m_OutputStream << json.str();
-                m_OutputStream.flush();
+                //m_OutputStream.flush();
             }
+            */
         }
     private:
-
         static void WriteHeader()
         {
             m_OutputStream << "{\"otherData\": {},\"traceEvents\":[{}";
@@ -115,13 +194,84 @@ namespace Ares {
             m_OutputStream << "]}";
             m_OutputStream.flush();
         }
+        /*
+        */
 
         // Note: you must already own lock on m_Mutex before
         // calling InternalEndSession()
         static void InternalEndSession() {
             if (m_CurrentProfile) {
+
+                //std::ofstream m_OutputStream;
+                //m_OutputStream.open(m_FilePath);
+
+                //if (m_OutputStream.is_open())
+                //{
+                    //m_CurrentProfile = true;
+                    //WriteHeader();
+                    //m_OutputStream << "{\"otherData\": {},\"traceEvents\":[{}";
+                    //m_OutputStream.flush();
+
+                WriteToOutputStream();
+
+                /*
+                    for (auto result : m_Results)
+                    {
+                        std::stringstream json;
+
+                        //std::string name = result.Name;
+                        //std::replace(name.begin(), name.end(), '"', '\'');
+
+                        json << std::setprecision(3) << std::fixed;
+
+                        json << ",{";
+                        json << "\"cat\":\"function\",";
+
+                        json << "\"dur\":" << (result.ElapsedTime.count()) << ',';
+
+                        //json << "\"name\":\"" << name << "\",";
+                        json << "\"name\":\"" << result.Name << "\",";
+
+                        json << "\"ph\":\"X\",";
+                        json << "\"pid\":0,";
+                        json << "\"tid\":" << result.ThreadID << ",";
+                        json << "\"ts\":" << result.Start.count();
+                        json << "}";
+
+                        //std::lock_guard lock(m_Mutex);
+                        if (m_CurrentProfile) {
+                            m_OutputStream << json.str();
+                            m_OutputStream.flush();
+                        }
+                    }
+                */
+
+
+                    /*m_OutputStream << "]}";
+                    m_OutputStream.flush();
+
+                    m_OutputStream.close();*/
+
+                //}
+                //else
+                //{
+                //    // Edge case: BeginSession() might be before Log::Init()
+                //    if (Log::GetCoreLogger())
+                //    {
+                //        ARES_CORE_ERROR("Instrumentor could not open results file '{0}'.", m_FilePath);
+                //    }
+                //}
+
+
+
+
+
+
                 WriteFooter();
                 m_OutputStream.close();
+                
+                
+                //m_Results.clear();
                 m_CurrentProfile = false;
             }
         }
@@ -148,7 +298,8 @@ namespace Ares {
             auto highResStart = FloatingPointMicroseconds{ m_StartTimepoint.time_since_epoch() };
             auto elapsedTime = std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch() - std::chrono::time_point_cast<std::chrono::microseconds>(m_StartTimepoint).time_since_epoch();
 
-            Profiling::WriteProfile({ m_Name, highResStart, elapsedTime, std::this_thread::get_id() });
+            //Profiling::WriteProfile({ m_Name, highResStart, elapsedTime, std::this_thread::get_id() });
+            Profiling::WriteProfile({ m_Name, highResStart, elapsedTime });
 
             m_Stopped = true;
         }
@@ -188,10 +339,6 @@ namespace Ares {
     }
 }
 
-
-#define ARES_PROFILING 0
-
-#if ARES_PROFILING
     // Resolve which function signature macro will be used. Note that this only
     // is resolved when the (pre)compiler starts, so the syntax highlighting
     // could mark the wrong one in your editor!

@@ -3,9 +3,9 @@
 
 #properties
 {
-    u_AlbedoColor   | [COLOR, DEF(1:0:1)];
-    u_Metalness     | [RANGE(0:1)];
-    u_Roughness     | [RANGE(0:1)];
+    u_AlbedoColor   | [COLOR        : DEF(1,0,1)];
+    u_Metalness     | [RANGE(0,1)   : DEF(1)];
+    u_Roughness     | [RANGE(0,1)   : DEF(1)];
 
     u_AlbedoTexture;
     //u_AlbedoTexToggle       | [TOGGLE];
@@ -43,10 +43,10 @@ For now, we assume we always sample the environment map from its center.
 
 
 layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec3 aNormal;
-layout(location = 2) in vec3 aTangent;
+layout(location = 1) in vec2 aTexCoords;
+layout(location = 2) in vec3 aNormal;
+layout(location = 3) in vec3 aTangent;
 //layout(location = 3) in vec3 aBitangent;
-layout(location = 4) in vec2 aTexCoords;
 
 
 out vec2 TexCoords;
@@ -204,12 +204,12 @@ uniform samplerCube u_EnvIrradianceTex;
 //uniform vec3 lightColors[4];
 struct Light {
     vec3 Direction;
-    vec3 Radiance;
-    float Multiplier;
+    vec3 Color;
+    //float Multiplier;
 };
 
+uniform Light ares_Light;
 
-uniform Light lights;
 //uniform vec3 u_CameraPosition;
 
 //uniform vec3 camPos; 
@@ -365,7 +365,7 @@ void main()
         // calculate per-light radiance
 
         //vec3 lightDir = normalize(lightPositions[i] - WorldPos);
-        vec3 lightDir = -normalize(lights.Direction);
+        vec3 lightDir = -normalize(ares_Light.Direction);
 
         vec3 halfwayVector = normalize(viewDir + lightDir);
 
@@ -374,7 +374,7 @@ void main()
         float attenuation = 1.0;// / (distance * distance);
         
         //vec3 radiance = lightColors[i] * attenuation;
-        vec3 radiance = lights.Radiance * lights.Multiplier * attenuation;
+        vec3 radiance = ares_Light.Color * attenuation;
 
         
         /*

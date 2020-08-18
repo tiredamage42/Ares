@@ -28,18 +28,18 @@ namespace Ares {
 	{
 
 		glm::vec3 Position;
+		glm::vec2 Texcoord;
 		glm::vec3 Normal{ 0 };
 		glm::vec3 Tangent{ 0 };
-		glm::vec3 Binormal;
-		glm::vec2 Texcoord;
+		//glm::vec3 Binormal;
 	};
 	struct AnimatedVertex
 	{
 		glm::vec3 Position;
+		glm::vec2 Texcoord;
 		glm::vec3 Normal{ 0 };
 		glm::vec3 Tangent{ 0 };
-		glm::vec3 Binormal;
-		glm::vec2 Texcoord;
+		//glm::vec3 Binormal;
 
 		//uint32_t IDs[4] = { 0, 0, 0, 0 };
 		float IDs[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
