@@ -1,9 +1,5 @@
 /*
 
-
-
-
-
 	TODO:
 		in-editor shader text editor
 		(try and get syntax highlighting / keyboard shortcuts)
@@ -21,9 +17,6 @@
 	TODO:
 		if pass doesnt exist, if is skinned, go down one
 		if still doesnt exist use error shader
-
-	
-	
 */
 	
 #include "AresPCH.h"
@@ -49,6 +42,19 @@ namespace Ares
 	{
 		return this == s_CurrentBoundShader;
 	}
+
+
+	static const std::string PROPERTIES_TAG = "#PROPERTIES";
+	static const std::string SHARED_ALL_TAG = "#SHARED_ALL";
+	static const std::string SHARED_VERT_TAG = "SHARED_VERT";
+	static const std::string SHARED_FRAG_TAG = "#SHARED_FRAG";
+	static const std::string SHARED_TAG = "#SHARED";
+	static const std::string PASS_TAG = "#PASS";
+	static const std::string END_PASS_TAG = "#END_PASS";
+	static const std::string FLAGS_TAG = "#FLAGS";
+	static const std::string SKINNED_FLAG = "SKINNED";
+	static const std::string STANDARD_VARS_FLAG = "STANDARD_VARS";
+	static const std::string LIGHTING_ON_FLAG = "LIGHTING_ON";
 
 	
 	static GLenum ShaderTypeFromString(const std::string& type)
@@ -86,21 +92,16 @@ namespace Ares
 	
 		// pre process [ get flags, properties, attributes, add standard variables ]
 		std::unordered_map<std::string, UniformAttributes> uniformAttributes;
-		//bool createObject2World;
 		std::vector<std::unordered_map<GLenum, std::string>> variant2sourceMap;
 
-		//m_ShaderSource = PreProcess(source, uniformAttributes, createObject2World);
 		PreProcess(source, variant2sourceMap, uniformAttributes);
 
 		// clear the uniform location maps
 		for (size_t i = 0; i < MAX_VARIANTS; i++)
 			m_UniformLocationMaps[i].clear();
 		
-
-
 		if (!m_IsCompute)
 		{
-
 			std::unordered_map<GLenum, std::string> sourceMap;
 			for (uint32_t i = 0; i < MAX_VARIANTS; i++)
 			{
@@ -125,8 +126,7 @@ namespace Ares
 			}
 			
 			CompileAndUploadShader(variant2sourceMap);
-			//CompileAndUploadShader(createObject2World);
-
+			
 			if (!m_IsCompute)
 			{
 				for (uint32_t i = 0; i < MAX_VARIANTS; i++)
@@ -155,13 +155,7 @@ namespace Ares
 
 						location = glGetUniformLocation(m_RendererIDs[i], "ares_EnvironmentIrradianceCube");
 						if (location != -1)	UploadUniformInt(location, Renderer::ENVIRONMENT_IRRADIANCE_TEX_SLOT);
-
-
-
-						
-
 					}
-
 				}
 			}
 
@@ -180,7 +174,6 @@ namespace Ares
 	{
 		m_ShaderReloadedCallbacks.push_back(callback);
 	}
-
 
 	OpenGLShader::~OpenGLShader()
 	{
@@ -224,25 +217,6 @@ namespace Ares
 		}
 		return ShaderVariation2Int(variation);
 	}
-
-
-
-	static const std::string PROPERTIES_TAG = "#PROPERTIES";
-
-	static const std::string SHARED_ALL_TAG = "#SHARED_ALL";
-	static const std::string SHARED_VERT_TAG = "SHARED_VERT";
-	static const std::string SHARED_FRAG_TAG = "#SHARED_FRAG";
-	static const std::string SHARED_TAG = "#SHARED";
-
-	static const std::string PASS_TAG = "#PASS";
-	static const std::string END_PASS_TAG = "#END_PASS";
-
-	static const std::string FLAGS_TAG = "#FLAGS";
-
-	static const std::string SKINNED_FLAG = "SKINNED";
-	static const std::string STANDARD_VARS_FLAG = "STANDARD_VARS";
-	static const std::string LIGHTING_ON_FLAG = "LIGHTING_ON";
-
 
 	static void ParseProperties(std::string& source, std::unordered_map<std::string, UniformAttributes>& uniformAttributes)
 	{
@@ -334,37 +308,6 @@ namespace Ares
 		}
 	}
 
-
-	/*
-		LIGHTING_ON FLAG
-
-		if not is lit
-			render with default/unlit pass variant
-
-		if is lit:
-			if forward:
-				
-				render all shaders with forward base
-					shader->setlight
-					shader->setambient
-				if shader has no forward base:
-					shader = error shader (then draw)
-
-				set gl things
-
-				render all shaders with forward add (if it has forward add)
-					for each light:
-						shader->set light
-						draw
-
-				set gl things back to normal
-	*/
-
-
-	/*
-		what if unlit but still wants shadows
-	*/
-
 	static int32_t String2PassIndex(const std::string& pass)
 	{
 		if (pass == "DEFAULT")
@@ -398,11 +341,8 @@ namespace Ares
 		return block;
 	}
 
-	//std::unordered_map<GLenum, std::string> 
 	void OpenGLShader::PreProcess(std::string fileSource, std::vector<std::unordered_map<GLenum, std::string>>& variant2Source, std::unordered_map<std::string, UniformAttributes>& uniformAttributes)//, bool& createObject2World)
 	{
-		//createObject2World = false;
-
 		fileSource = StringUtils::RemoveCommentsFrom(fileSource);
 		
 		ParseProperties(fileSource, uniformAttributes);
@@ -419,16 +359,6 @@ namespace Ares
 			while (getline(f, s, ','))
 			{
 				flags.insert(s);
-				/*
-				if (s == SKINNED_FLAG)
-				{
-					AddVariation(ShaderVariations::DefaultSkinned);
-				}
-				else if (s == STANDARD_VARS_FLAG)
-				{
-					createObject2World = true;
-				}
-				*/
 			}
 		}
 
@@ -442,12 +372,7 @@ namespace Ares
 		std::string passSharedFrag = ExtractSharedBlock(fileSource, SHARED_FRAG_TAG);
 		
 		// Passes:
-		// 0 = Default / Unlit
-		// 2 = FwdBase
-		// 4 = FwdAdd
-		// 6 = Deferred
-		// 8 = Shadow
-
+		
 		std::string passBlocks[MAX_VARIANTS];
 
 		// cehck for passes
@@ -469,7 +394,6 @@ namespace Ares
 		}
 		else
 		{
-
 			while (passStartIDX != std::string::npos)
 			{
 				size_t lastIndexOfPassLine = fileSource.find_first_of("\r\n", passStartIDX);
@@ -598,6 +522,7 @@ namespace Ares
 							shaderString.find_first_of("{", shaderString.find("void main")) + 1,
 							"\nmat4 ares_MVPMatrix = ares_VPMatrix * ares_Object2World;\n"
 						);
+
 						// skinned
 						if (i % 2 == 1)
 						{
@@ -730,18 +655,6 @@ namespace Ares
 		return SplitString(string, "\n");
 	}
 
-	std::string GetBlock(const char* str, const char** outPosition)
-	{
-		const char* end = strstr(str, "}");
-		if (!end)
-			return str;
-
-		if (outPosition)
-			*outPosition = end;
-		uint32_t length = end - str + 1;
-		return std::string(str, length);
-	}
-
 	std::string GetStatement(const char* str, const char** outPosition)
 	{
 		const char* end = strstr(str, ";");
@@ -766,7 +679,6 @@ namespace Ares
 		m_Resources.clear();
 		m_ResourceArrays.clear();
 		m_PSMaterialUniformBuffer.reset();
-
 
 		auto& vertexSource = sourceMap[GL_VERTEX_SHADER];
 		auto& fragmentSource = sourceMap[GL_FRAGMENT_SHADER];
@@ -910,7 +822,6 @@ namespace Ares
 		}
 	}
 
-	
 	void OpenGLShader::CompileAndUploadShader(std::vector<std::unordered_map<GLenum, std::string>> variant2sourceMap)//bool createObj2World)
 	{
 		
@@ -919,8 +830,6 @@ namespace Ares
 			if (!HasVariation(i))
 				continue;
 			
-			bool variationSkinned = i % 2 == 1;
-
 			std::vector<GLuint> shaderRendererIDs;
 
 			// Get a program object.
@@ -932,55 +841,6 @@ namespace Ares
 				GLenum type = kv.first;
 				
 				std::string source = kv.second;
-
-				/*
-				// add necessary code that is variation dependent here
-				if (type == GL_VERTEX_SHADER)
-				{
-					if (variationSkinned)
-					{
-						// insert the necessary bone attributes and uniforms
-						source.insert(source.find("void main") - 1, R"(
-							layout(location = 4) in vec4 _ares_internal_BoneIndices;
-							layout(location = 5) in vec4 _ares_internal_BoneWeights;
-							uniform sampler2D _ares_internal_BoneSampler;
-							mat4 _ares_internal_GetBoneMatrix(float bIdx) {
-								return mat4(
-									texture2D(_ares_internal_BoneSampler, vec2(0.125, bIdx)),
-									texture2D(_ares_internal_BoneSampler, vec2(0.375, bIdx)),
-									texture2D(_ares_internal_BoneSampler, vec2(0.625, bIdx)),
-									texture2D(_ares_internal_BoneSampler, vec2(0.875, bIdx))
-								);
-							}
-						)");
-
-						// insert some code at teh beginning of the main function in order to 
-						// create "ares_Object2World" as a matrix that takes the bone transform into account
-						source.insert(source.find_first_of("{", source.find("void main")) + 1, R"(
-							mat4 _ares_internal_bone_transform = 
-								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.x) * _ares_internal_BoneWeights.x +
-								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.y) * _ares_internal_BoneWeights.y +
-								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.z) * _ares_internal_BoneWeights.z +
-								_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.w) * _ares_internal_BoneWeights.w;
-
-							mat4 ares_Object2World = _ares_internal_Transform * _ares_internal_bone_transform;
-						)");
-					}
-					else
-					{
-						// create the "ares_Object2World" matrix at the beginning of the main function
-						if (createObj2World)
-						{
-							source.insert(
-								source.find_first_of("{", source.find("void main")) + 1, 
-								"\nmat4 ares_Object2World = _ares_internal_Transform;\n"
-							);
-						}
-					}
-
-				}
-				*/
-
 
 				// Create an empty shader handle
 				GLuint shader = glCreateShader(type);
@@ -1061,13 +921,9 @@ namespace Ares
 		}
 	}
 
-
-
 	void OpenGLShader::ResolveUniforms(uint32_t variationIDX)
 	{
-	
 		glUseProgram(m_RendererIDs[variationIDX]);
-
 		const auto& decl = m_PSMaterialUniformBuffer;
 		if (decl)
 		{
@@ -1075,26 +931,23 @@ namespace Ares
 			for (size_t j = 0; j < uniforms.size(); j++)
 			{
 				OpenGLShaderUniformDeclaration* uniform = (OpenGLShaderUniformDeclaration*)uniforms[j];
-				uniform->m_Locations[variationIDX] = GetUniformLocation(uniform->m_Name, variationIDX);
+				uniform->m_Locations[variationIDX] = glGetUniformLocation(m_RendererIDs[variationIDX], uniform->m_Name.c_str());
 			}
 		}
-
 		for (size_t i = 0; i < m_Resources.size(); i++)
 		{
 			OpenGLShaderResourceDeclaration* resource = (OpenGLShaderResourceDeclaration*)m_Resources[i];
-			int32_t location = GetUniformLocation(resource->m_Name, variationIDX);
 			resource->m_TexSlot = i;
-			UploadUniformInt(location, i);
+			UploadUniformInt(glGetUniformLocation(m_RendererIDs[variationIDX], resource->m_Name.c_str()), i);
 		}
 		for (size_t i = 0; i < m_ResourceArrays.size(); i++)
 		{
 			OpenGLShaderResourceArrayDeclaration* resource = (OpenGLShaderResourceArrayDeclaration*)m_ResourceArrays[i];
-			int32_t location = GetUniformLocation(resource->m_Name, variationIDX);
 			uint32_t count = resource->GetCount();
 			int* samplers = new int[count];
 			for (uint32_t s = 0; s < count; s++)
 				samplers[s] = s;
-			UploadUniformIntArray(location, samplers, count);
+			UploadUniformIntArray(glGetUniformLocation(m_RendererIDs[variationIDX], resource->m_Name.c_str()), samplers, count);
 			delete[] samplers;
 		}
 	}
@@ -1138,32 +991,28 @@ namespace Ares
 
 	void OpenGLShader::ResolveAndSetUniform(OpenGLShaderUniformDeclaration* uniform, Buffer buffer, uint32_t variationIDX)
 	{
-
-		GLint location = uniform->GetLocation(variationIDX);
-		uint32_t offset = uniform->GetOffset();
-
 		switch (uniform->GetType())
 		{
 		case OpenGLShaderUniformDeclaration::Type::FLOAT32:
-			UploadUniformFloat(location, *(float*)&buffer.Data[offset]);
+			UploadUniformFloat(uniform->GetLocation(variationIDX), *(float*)&buffer.Data[uniform->GetOffset()]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::INT32:
-			UploadUniformInt(location, *(int32_t*)&buffer.Data[offset]);
+			UploadUniformInt(uniform->GetLocation(variationIDX), *(int32_t*)&buffer.Data[uniform->GetOffset()]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC2:
-			UploadUniformFloat2(location, *(glm::vec2*) & buffer.Data[offset]);
+			UploadUniformFloat2(uniform->GetLocation(variationIDX), *(glm::vec2*) & buffer.Data[uniform->GetOffset()]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC3:
-			UploadUniformFloat3(location, *(glm::vec3*) & buffer.Data[offset]);
+			UploadUniformFloat3(uniform->GetLocation(variationIDX), *(glm::vec3*) & buffer.Data[uniform->GetOffset()]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC4:
-			UploadUniformFloat4(location, *(glm::vec4*) & buffer.Data[offset]);
+			UploadUniformFloat4(uniform->GetLocation(variationIDX), *(glm::vec4*) & buffer.Data[uniform->GetOffset()]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::MAT3:
-			UploadUniformMat3(location, *(glm::mat3*) & buffer.Data[offset]);
+			UploadUniformMat3(uniform->GetLocation(variationIDX), *(glm::mat3*) & buffer.Data[uniform->GetOffset()]);
 			break;
 		case OpenGLShaderUniformDeclaration::Type::MAT4:
-			UploadUniformMat4(location, *(glm::mat4*) & buffer.Data[offset]);
+			UploadUniformMat4(uniform->GetLocation(variationIDX), *(glm::mat4*) & buffer.Data[uniform->GetOffset()]);
 			break;
 		default:
 			ARES_CORE_ASSERT(false, "Unknown uniform type!");
@@ -1176,31 +1025,28 @@ namespace Ares
 	*/
 	void OpenGLShader::ResolveAndSetUniformArray(OpenGLShaderUniformDeclaration* uniform, Buffer buffer, uint32_t variationIDX)
 	{
-		GLint location = uniform->GetLocation(variationIDX);
-		uint32_t offset = uniform->GetOffset();
-
 		switch (uniform->GetType())
 		{
 		case OpenGLShaderUniformDeclaration::Type::FLOAT32:
-			UploadUniformFloatArray(location, (float*)&buffer.Data[offset], uniform->GetCount());
+			UploadUniformFloatArray(uniform->GetLocation(variationIDX), (float*)&buffer.Data[uniform->GetOffset()], uniform->GetCount());
 			break;
 		case OpenGLShaderUniformDeclaration::Type::INT32:
-			UploadUniformIntArray(location, (int32_t*)&buffer.Data[offset], uniform->GetCount());
+			UploadUniformIntArray(uniform->GetLocation(variationIDX), (int32_t*)&buffer.Data[uniform->GetOffset()], uniform->GetCount());
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC2:
-			UploadUniformFloat2Array(location, *(glm::vec2*)&buffer.Data[offset], uniform->GetCount());
+			UploadUniformFloat2Array(uniform->GetLocation(variationIDX), *(glm::vec2*)&buffer.Data[uniform->GetOffset()], uniform->GetCount());
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC3:
-			UploadUniformFloat3Array(location, *(glm::vec3*)&buffer.Data[offset], uniform->GetCount());
+			UploadUniformFloat3Array(uniform->GetLocation(variationIDX), *(glm::vec3*)&buffer.Data[uniform->GetOffset()], uniform->GetCount());
 			break;
 		case OpenGLShaderUniformDeclaration::Type::VEC4:
-			UploadUniformFloat4Array(location, *(glm::vec4*)&buffer.Data[offset], uniform->GetCount());
+			UploadUniformFloat4Array(uniform->GetLocation(variationIDX), *(glm::vec4*)&buffer.Data[uniform->GetOffset()], uniform->GetCount());
 			break;
 		case OpenGLShaderUniformDeclaration::Type::MAT3:
-			UploadUniformMat3Array(location, *(glm::mat3*)&buffer.Data[offset], uniform->GetCount());
+			UploadUniformMat3Array(uniform->GetLocation(variationIDX), *(glm::mat3*)&buffer.Data[uniform->GetOffset()], uniform->GetCount());
 			break;
 		case OpenGLShaderUniformDeclaration::Type::MAT4:
-			UploadUniformMat4Array(location, *(glm::mat4*)&buffer.Data[offset], uniform->GetCount());
+			UploadUniformMat4Array(uniform->GetLocation(variationIDX), *(glm::mat4*)&buffer.Data[uniform->GetOffset()], uniform->GetCount());
 			break;
 		default:
 			ARES_CORE_ASSERT(false, "Unknown uniform type!");
@@ -1208,9 +1054,27 @@ namespace Ares
 	}
 
 
+	GLint OpenGLShader::GetUniformLocation(const std::string& name, uint32_t variationIDX)
+	{
+		std::unordered_map<std::string, GLint>& map = m_UniformLocationMaps[variationIDX];
+
+		if (map.find(name) != map.end())
+		{
+			return map.at(name);
+		}
+
+		GLint location = glGetUniformLocation(m_RendererIDs[variationIDX], name.c_str());
+
+		if (location == -1)
+		{
+			ARES_CORE_WARN("Uniform '{0}' not found in shader '{1}'!", name, m_Name);
+			return location;
+		}
+
+		map[name] = location;
+		return location;
+	}
 #pragma region SET_UNIFORMS_WITH_NAME
-
-
 #pragma region SINGLE
 	void OpenGLShader::SetInt(const std::string& name, const int& value)
 	{
@@ -1425,24 +1289,5 @@ namespace Ares
 #pragma endregion
 #pragma endregion
 
-	GLint OpenGLShader::GetUniformLocation(const std::string& name, uint32_t variationIDX)
-	{
-		std::unordered_map<std::string, GLint>& map = m_UniformLocationMaps[variationIDX];
-
-		if (map.find(name) != map.end())
-		{
-			return map.at(name);
-		}
-
-		GLint location = glGetUniformLocation(m_RendererIDs[variationIDX], name.c_str());
-
-		if (location == -1)
-		{
-			ARES_CORE_WARN("Uniform '{0}' not found in shader '{1}'!", name, m_Name);
-			return location;
-		}
-
-		map[name] = location;
-		return location;
-	}
+	
 }

@@ -87,7 +87,6 @@ namespace Ares {
 		inline const ShaderResourceList& GetResources() const override { return m_Resources; }
 		const size_t GetVariationIndex(ShaderVariations variation) const;
 		
-		//std::unordered_map<GLenum, std::string> PreProcess(std::string source, std::unordered_map<std::string, UniformAttributes>& uniformAttributes, bool& createObject2World);
 		void PreProcess(std::string fileSource, std::vector<std::unordered_map<GLenum, std::string>>& variant2Source, std::unordered_map<std::string, UniformAttributes>& uniformAttributes);
 		void CompileAndUploadShader(std::vector<std::unordered_map<GLenum, std::string>> variant2sourceMap);// bool createObj2World);
 		
@@ -105,7 +104,6 @@ namespace Ares {
 		std::string m_Name, m_AssetPath;
 		bool m_IsCompute = false;
 		bool m_Loaded = false;
-		//std::unordered_map<GLenum, std::string> m_ShaderSource;
 		std::vector<ShaderReloadedCallback> m_ShaderReloadedCallbacks;
 		Ref<OpenGLShaderUniformBufferDeclaration> m_PSMaterialUniformBuffer;
 		ShaderResourceArrayList m_ResourceArrays;
@@ -127,10 +125,5 @@ namespace Ares {
 		{
 			return (uint32_t)(BIT(variationIndex + 1)) & m_VariationFlags;
 		}
-		/*
-		const bool HasVariation(ShaderVariations variation) const
-		{
-			return (uint32_t)variation & m_VariationFlags;
-		}*/
 	};
 }
