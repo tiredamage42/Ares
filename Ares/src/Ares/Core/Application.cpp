@@ -8,12 +8,9 @@
 #include "Ares/Renderer/Renderer.h"
 #include "Ares/Renderer/Framebuffer.h"
 
-//#include <imgui/imgui.h>
-
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
-//#include <Windows.h>
 
 
 namespace Ares {
@@ -28,7 +25,7 @@ namespace Ares {
 
         m_Window = Window::Create(props);
         m_Window->SetEventCallback(ARES_BIND_EVENT_FN(Application::OnEvent));
-        //m_Window->SetVSync(false);
+        m_Window->SetVSync(false);
 
         m_ImGuiLayer = new ImGuiLayer();
         PushOverlay(m_ImGuiLayer);
@@ -93,7 +90,6 @@ namespace Ares {
         auto& fbs = FramebufferPool::GetGlobal()->GetAll();
         for (auto& fb : fbs)
         {
-            //if (auto fbp = fb.lock())
             fb->Resize(e.GetWidth(), e.GetHeight());
         }
 
@@ -121,24 +117,18 @@ namespace Ares {
 
             if (!m_Minimized)
             {
-
                 {
-
                     ARES_PROFILE_SCOPE("Layer Updates");
                     for (Layer* layer : m_LayerStack)
                     {
                         layer->OnUpdate();
                     }
-
                 }
 
-                {
-                    
+                // Render ImGui on render thread
+                {    
                     ARES_PROFILE_SCOPE("Render imgui");
-                    // Render ImGui on render thread
-                    Renderer::Submit([=]() { 
-                        RenderImGui(); 
-                    }, "RenderIMGUI");
+                    Renderer::Submit([=]() { RenderImGui(); }, "RenderIMGUI");
                 }
                 {
                     ARES_PROFILE_SCOPE("Wait and render");
@@ -146,9 +136,6 @@ namespace Ares {
                 }
             
             }
-
-            /*float a = 0;
-            a += 1;*/
 
             {
                 ARES_PROFILE_SCOPE("Window update");
@@ -170,12 +157,7 @@ namespace Ares {
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = sizeof(szFile);
         ofn.lpstrFilter = filter;
-
-        //ofn.lpstrFilter = "All\0*.*\0";
         ofn.nFilterIndex = 1;
-        //ofn.lpstrFileTitle = NULL;
-        //ofn.nMaxFileTitle = 0;
-        //ofn.lpstrInitialDir = NULL;
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
         if (GetOpenFileNameA(&ofn) == TRUE)
@@ -186,7 +168,7 @@ namespace Ares {
     }
     std::string Application::SaveFile(const char* filter) const
     {
-        OPENFILENAMEA ofn;       // common dialog box structure
+        OPENFILENAMEA ofn;              // common dialog box structure
         CHAR szFile[260] = { 0 };       // if using TCHAR macros
 
         // Initialize OPENFILENAME
@@ -224,13 +206,7 @@ namespace Ares {
 
     const char* Application::GetPlatformName()
     {
-
         return Platform::GetName();
-//#if defined(ARES_PLATFORM_WINDOWS)
-//        return "Windows x64";
-//#else
-//#error Undefined platform?
-//#endif
     }
 
 }

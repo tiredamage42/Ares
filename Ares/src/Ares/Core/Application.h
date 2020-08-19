@@ -29,7 +29,6 @@ namespace Ares {
         void PushOverlay(Layer* layer);
         void RenderImGui();
 
-        //std::string OpenFile(const std::string& filter) const;
         std::string OpenFile(const char* filter = "All\0*.*\0") const;
         std::string SaveFile(const char* filter = "All\0*.*\0") const;
 
@@ -47,9 +46,7 @@ namespace Ares {
         bool OnWindowResize(WindowResizeEvent& e);
 
         std::unique_ptr<Window> m_Window;
-        //Ref<Window> m_Window;
-
-
+        
         ImGuiLayer* m_ImGuiLayer;
 
         bool m_Running = true;
