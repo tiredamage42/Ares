@@ -1,44 +1,49 @@
-
 /*
+	TODO: 
+		add error state
+		
+		if in error state, we just forward all calls to an error shader
+		or material just gives error shader as it's "get shader"
+
 	TODO:
+		since shadersources map shouldnt be on heap, just have shadersource map for each
+		pass / variation: 6 total so extra code can be inserted that step, not in compilation
 
-	setup system for shader compilation like so:
+		!!! MAKE SURE THAT "_ares_internal_*" UNIFORMS ARENT PICKED UP BY PARSER!!!
 
-	props {...}
-	flags {...}
+	TODO:
+		setup system for shader compilation like so:
 
-	// shared between all passes all shaders
-	shared_all {...}
+		props {...}
+		flags {...}
 
-	// shared between all passes vertex shaders
-	shared_vert {...}
+		// shared between all passes all shaders
+		shared_all {...}
 
-	// shared between all passes fragment shaders
-	shared_frag {...}
+		// shared between all passes vertex shaders
+		shared_vert {...}
 
-	pass forward
-	{
-		// shared between vertex and fragment shaders
-		shared {...}
-		vs/ps code...
-	}
-	pass deferred
-	{
-		// shared between vertex and fragment shaders
-		shared {...}
-		vs/ps code...
-	}
-	pass shadow
-	{
-		// shared between vertex and fragment shaders
-		shared {...}
-		vs/ps code...
-	}
+		// shared between all passes fragment shaders
+		shared_frag {...}
 
-	since shadersources map shouldnt be on heap, just have shadersource map for each 
-	pass / variation: 6 total so extra code can be inserted that step, not in compilation
-
-	!!! MAKE SURE THAT "_ares_internal_*" UNIFORMS ARENT PICKED UP BY PARSER!!!
+		pass forward
+		{
+			// shared between vertex and fragment shaders
+			shared {...}
+			vs/ps code...
+		}
+		pass deferred
+		{
+			// shared between vertex and fragment shaders
+			shared {...}
+			vs/ps code...
+		}
+		pass shadow
+		{
+			// shared between vertex and fragment shaders
+			shared {...}
+			vs/ps code...
+		}
 */
 	
 #include "AresPCH.h"
@@ -49,9 +54,22 @@
 
 #include "Ares/Renderer/Renderer.h"
 #include "Ares/Core/StringUtils.h"
-namespace Ares {
+namespace Ares 
+{
+	/*
+		keep track of which shader is currently bound with which variation
+		so we dont have to keep supplying the variation as a parameter
+		since we should only be calling the set uniform functions 
+		when already bound
+	*/
+	static OpenGLShader* s_CurrentBoundShader = nullptr;
+	static ShaderVariations s_CurrentBoundVariation = ShaderVariations::None;
 
-	
+	const bool OpenGLShader::IsCurrentlyBound() const
+	{
+		return this == s_CurrentBoundShader;
+	}
+
 	const std::string SKINNED_FLAG = "SKINNED";
 	const std::string STANDARD_VARS_FLAG = "STANDARD_VARS";
 
@@ -120,15 +138,15 @@ namespace Ares {
 					if (HasVariation(i))
 					{
 						ResolveUniforms(i);
+
+						// odd variations are the skinned variations
+						if (i % 2 == 1)
+						{
+							UploadUniformInt("_ares_internal_BoneSampler", Renderer::BONE_SAMPLER_TEX_SLOT, i);
+						}
 					}
 				}
 			}
-
-			if (HasVariation(ShaderVariations::DefaultSkinned))
-				UploadUniformInt("_ares_internal_BoneSampler", Renderer::BONE_SAMPLER_TEX_SLOT, ShaderVariations::DefaultSkinned);
-			if (HasVariation(ShaderVariations::DeferredSkinned))
-				UploadUniformInt("_ares_internal_BoneSampler", Renderer::BONE_SAMPLER_TEX_SLOT, ShaderVariations::DeferredSkinned);
-
 
 			if (m_Loaded)
 			{
@@ -149,6 +167,10 @@ namespace Ares {
 
 	OpenGLShader::~OpenGLShader()
 	{
+		if (IsCurrentlyBound())
+		{
+			s_CurrentBoundShader = nullptr;
+		}
 		std::vector<uint32_t> rendererIDs = m_RendererIDs;
 		Renderer::Submit([rendererIDs]() {
 			for (size_t i = 0; i < rendererIDs.size(); i++)
@@ -160,11 +182,14 @@ namespace Ares {
 
 	void OpenGLShader::Bind(ShaderVariations variation)
 	{
+		s_CurrentBoundShader = this;
+		s_CurrentBoundVariation = variation;
 		Renderer::Submit([=]() { glUseProgram(m_RendererIDs[GetVariationIndex(variation)]); }, "Bind Shader");
 	}
 
 	void OpenGLShader::Unbind() const
 	{
+		s_CurrentBoundShader = nullptr;
 		Renderer::Submit([]() { glUseProgram(0); }, "Unbidn Shader");
 	}
 
@@ -182,8 +207,6 @@ namespace Ares {
 		}
 		return ShaderVariation2Int(variation);
 	}
-
-
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(std::string source, std::unordered_map<std::string, UniformAttributes>& uniformAttributes, bool& createObject2World)
 	{
@@ -853,19 +876,29 @@ namespace Ares {
 		}
 	}
 
-	
-
-	// TODO: check shader should be bound before this is called
-	void OpenGLShader::SetPSMaterialUniformBuffer(Buffer buffer, ShaderVariations variant)
+	const uint32_t OpenGLShader::CheckBoundAndGetVariationIDX() const
 	{
-		Renderer::Submit([=]() { ResolveAndSetUniforms(m_PSMaterialUniformBuffer, buffer, variant); }, "SetPSMaterialUniformBuffer");
+		if (!IsCurrentlyBound())
+		{
+			ARES_CORE_ERROR("Trying to set uniform on Shader: '{0}' when it's not bound!", m_Name);
+			return -1;
+		}
+		return ShaderVariation2Int(s_CurrentBoundVariation);
+	}
+#define CHECK_BOUND_AND_GET_VARIATION_IDX() \
+	uint32_t variationIDX = CheckBoundAndGetVariationIDX(); \
+	if (variationIDX == -1)	return;
+
+
+	void OpenGLShader::SetPSMaterialUniformBuffer(Buffer buffer)
+	{
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { ResolveAndSetUniforms(buffer, variationIDX); }, "SetPSMaterialUniformBuffer");
 	}
 
-	void OpenGLShader::ResolveAndSetUniforms(const Ref<OpenGLShaderUniformBufferDeclaration>& decl, Buffer buffer, ShaderVariations variation)
+	void OpenGLShader::ResolveAndSetUniforms(Buffer buffer, uint32_t variationIDX)
 	{
-		uint32_t variationIDX = ShaderVariation2Int(variation);
-
-		const ShaderUniformList& uniforms = decl->GetUniformDeclarations();
+		const ShaderUniformList& uniforms = m_PSMaterialUniformBuffer->GetUniformDeclarations();
 		for (size_t i = 0; i < uniforms.size(); i++)
 		{
 			OpenGLShaderUniformDeclaration* uniform = (OpenGLShaderUniformDeclaration*)uniforms[i];
@@ -944,7 +977,7 @@ namespace Ares {
 			UploadUniformMat3Array(location, *(glm::mat3*)&buffer.Data[offset], uniform->GetCount());
 			break;
 		case OpenGLShaderUniformDeclaration::Type::MAT4:
-			UploadUniformMat4Array(location, *(glm::mat4*) & buffer.Data[offset], uniform->GetCount());
+			UploadUniformMat4Array(location, *(glm::mat4*)&buffer.Data[offset], uniform->GetCount());
 			break;
 		default:
 			ARES_CORE_ASSERT(false, "Unknown uniform type!");
@@ -953,126 +986,142 @@ namespace Ares {
 
 
 #pragma region SET_UNIFORMS_WITH_NAME
+
+
 #pragma region SINGLE
-	void OpenGLShader::SetInt(const std::string& name, int value, ShaderVariations variant)
+	void OpenGLShader::SetInt(const std::string& name, const int& value)
 	{
-		Renderer::Submit([=]() { UploadUniformInt(name, value, variant); }, "set uniform");
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { UploadUniformInt(name, value, variationIDX); }, "set uniform");
 	}
-	void OpenGLShader::SetFloat(const std::string& name, float value, ShaderVariations variant)
+	void OpenGLShader::SetFloat(const std::string& name, const float& value)
 	{
-		Renderer::Submit([=]() { UploadUniformFloat(name, value, variant); }, "set uniform");
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { UploadUniformFloat(name, value, variationIDX); }, "set uniform");
 	}
-	void OpenGLShader::SetFloat2(const std::string& name, glm::vec2 value, ShaderVariations variant)
+	void OpenGLShader::SetFloat2(const std::string& name, const glm::vec2& value)
 	{
-		Renderer::Submit([=]() { UploadUniformFloat2(name, value, variant); }, "set uniform");
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { UploadUniformFloat2(name, value, variationIDX); }, "set uniform");
 	}
-	void OpenGLShader::SetFloat3(const std::string& name, glm::vec3 value, ShaderVariations variant)
+	void OpenGLShader::SetFloat3(const std::string& name, const glm::vec3& value)
 	{
-		Renderer::Submit([=]() { UploadUniformFloat3(name, value, variant); }, "set uniform");
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { UploadUniformFloat3(name, value, variationIDX); }, "set uniform");
 	}
-	void OpenGLShader::SetFloat4(const std::string& name, glm::vec4 value, ShaderVariations variant)
+	void OpenGLShader::SetFloat4(const std::string& name, const glm::vec4& value)
 	{
-		Renderer::Submit([=]() { UploadUniformFloat4(name, value, variant); }, "set uniform");
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { UploadUniformFloat4(name, value, variationIDX); }, "set uniform");
 	}
-	void OpenGLShader::SetMat3(const std::string& name, glm::mat3 value, ShaderVariations variant)
+	void OpenGLShader::SetMat3(const std::string& name, const glm::mat3& value)
 	{
-		Renderer::Submit([=]() { UploadUniformMat3(name, value, variant); }, "set uniform");
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { UploadUniformMat3(name, value, variationIDX); }, "set uniform");
 	}
-	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value, ShaderVariations variant)
+	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
 	{
-		Renderer::Submit([=]() { UploadUniformMat4(name, value, variant); }, "set uniform");
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { UploadUniformMat4(name, value, variationIDX); }, "set uniform");
 	}
 #pragma endregion
 #pragma region ARRAY
-	void OpenGLShader::SetIntArray(const std::string& name, int32_t* values, const uint32_t count, ShaderVariations variation)
+	void OpenGLShader::SetIntArray(const std::string& name, const int32_t* values, const uint32_t count)
 	{
-		Renderer::Submit([=]() { UploadUniformIntArray(name, values, count, variation); }, "set uniform");
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { UploadUniformIntArray(name, values, count, variationIDX); }, "set uniform");
 	}
-	void OpenGLShader::SetFloatArray(const std::string& name, float* values, uint32_t count, ShaderVariations variation)
+	void OpenGLShader::SetFloatArray(const std::string& name, const float* values, uint32_t count)
 	{
-		Renderer::Submit([=]() { UploadUniformFloatArray(name, values, count, variation); }, "set uniform");
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { UploadUniformFloatArray(name, values, count, variationIDX); }, "set uniform");
 	}
-	void OpenGLShader::SetFloat2Array(const std::string& name, const glm::vec2& values, uint32_t count, ShaderVariations variation)
+	void OpenGLShader::SetFloat2Array(const std::string& name, const glm::vec2& values, uint32_t count)
 	{
-		Renderer::Submit([=]() { UploadUniformFloat2Array(name, values, count, variation); }, "set uniform");
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { UploadUniformFloat2Array(name, values, count, variationIDX); }, "set uniform");
 	}
-	void OpenGLShader::SetFloat3Array(const std::string& name, const glm::vec3& values, uint32_t count, ShaderVariations variation)
+	void OpenGLShader::SetFloat3Array(const std::string& name, const glm::vec3& values, uint32_t count)
 	{
-		Renderer::Submit([=]() { UploadUniformFloat3Array(name, values, count, variation); }, "set uniform");
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { UploadUniformFloat3Array(name, values, count, variationIDX); }, "set uniform");
 	}
-	void OpenGLShader::SetFloat4Array(const std::string& name, const glm::vec4& values, uint32_t count, ShaderVariations variation)
+	void OpenGLShader::SetFloat4Array(const std::string& name, const glm::vec4& values, uint32_t count)
 	{
-		Renderer::Submit([=]() { UploadUniformFloat4Array(name, values, count, variation); }, "set uniform");
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { UploadUniformFloat4Array(name, values, count, variationIDX); }, "set uniform");
 	}
-	void OpenGLShader::SetMat3Array(const std::string& name, const glm::mat3& values, uint32_t count, ShaderVariations variation)
+	void OpenGLShader::SetMat3Array(const std::string& name, const glm::mat3& values, uint32_t count)
 	{
-		Renderer::Submit([=]() { UploadUniformMat3Array(name, values, count, variation); }, "set uniform");
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { UploadUniformMat3Array(name, values, count, variationIDX); }, "set uniform");
 	}
-	void OpenGLShader::SetMat4Array(const std::string& name, const glm::mat4& values, uint32_t count, ShaderVariations variation)
+	void OpenGLShader::SetMat4Array(const std::string& name, const glm::mat4& values, uint32_t count)
 	{
-		Renderer::Submit([=]() { UploadUniformMat4Array(name, values, count, variation); }, "set uniform");
+		CHECK_BOUND_AND_GET_VARIATION_IDX();
+		Renderer::Submit([=]() { UploadUniformMat4Array(name, values, count, variationIDX); }, "set uniform");
 	}
 #pragma endregion
 #pragma endregion
 #pragma region UPLOAD_UNIFORMS_WITH_NAME
 #pragma region SINGLE
-	void OpenGLShader::UploadUniformInt(const std::string& name, const int& value, ShaderVariations variant)
+	void OpenGLShader::UploadUniformInt(const std::string& name, const int& value, uint32_t variationIDX)
 	{
-		UploadUniformInt(GetUniformLocation(name, ShaderVariation2Int(variant)), value);
+		UploadUniformInt(GetUniformLocation(name, variationIDX), value);
 	}
-	void OpenGLShader::UploadUniformFloat(const std::string& name, const float& value, ShaderVariations variant)
+	void OpenGLShader::UploadUniformFloat(const std::string& name, const float& value, uint32_t variationIDX)
 	{
-		UploadUniformFloat(GetUniformLocation(name, ShaderVariation2Int(variant)), value);
+		UploadUniformFloat(GetUniformLocation(name, variationIDX), value);
 	}
-	void OpenGLShader::UploadUniformFloat2(const std::string& name, const glm::vec2& value, ShaderVariations variant)
+	void OpenGLShader::UploadUniformFloat2(const std::string& name, const glm::vec2& value, uint32_t variationIDX)
 	{
-		UploadUniformFloat2(GetUniformLocation(name, ShaderVariation2Int(variant)), value);
+		UploadUniformFloat2(GetUniformLocation(name, variationIDX), value);
 	}
-	void OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& value, ShaderVariations variant)
+	void OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& value, uint32_t variationIDX)
 	{
-		UploadUniformFloat3(GetUniformLocation(name, ShaderVariation2Int(variant)), value);
+		UploadUniformFloat3(GetUniformLocation(name, variationIDX), value);
 	}
-	void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& value, ShaderVariations variant)
+	void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& value, uint32_t variationIDX)
 	{
-		UploadUniformFloat4(GetUniformLocation(name, ShaderVariation2Int(variant)), value);
+		UploadUniformFloat4(GetUniformLocation(name, variationIDX), value);
 	}
-	void OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& value, ShaderVariations variant)
+	void OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& value, uint32_t variationIDX)
 	{
-		UploadUniformMat3(GetUniformLocation(name, ShaderVariation2Int(variant)), value);
+		UploadUniformMat3(GetUniformLocation(name, variationIDX), value);
 	}
-	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& value, ShaderVariations variant)
+	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& value, uint32_t variationIDX)
 	{
-		UploadUniformMat4(GetUniformLocation(name, ShaderVariation2Int(variant)), value);
+		UploadUniformMat4(GetUniformLocation(name, variationIDX), value);
 	}
 #pragma endregion
 #pragma region ARRAY
-	void OpenGLShader::UploadUniformIntArray(const std::string& name, const int32_t* values, uint32_t count, ShaderVariations variant)
+	void OpenGLShader::UploadUniformIntArray(const std::string& name, const int32_t* values, uint32_t count, uint32_t variationIDX)
 	{
-		UploadUniformIntArray(GetUniformLocation(name, ShaderVariation2Int(variant)), values, count);
+		UploadUniformIntArray(GetUniformLocation(name, variationIDX), values, count);
 	}
-	void OpenGLShader::UploadUniformFloatArray(const std::string& name, const float* values, uint32_t count, ShaderVariations variant)
+	void OpenGLShader::UploadUniformFloatArray(const std::string& name, const float* values, uint32_t count, uint32_t variationIDX)
 	{
-		UploadUniformFloatArray(GetUniformLocation(name, ShaderVariation2Int(variant)), values, count);
+		UploadUniformFloatArray(GetUniformLocation(name, variationIDX), values, count);
 	}
-	void OpenGLShader::UploadUniformFloat2Array(const std::string& name, const glm::vec2& values, uint32_t count, ShaderVariations variant)
+	void OpenGLShader::UploadUniformFloat2Array(const std::string& name, const glm::vec2& values, uint32_t count, uint32_t variationIDX)
 	{
-		UploadUniformFloat2Array(GetUniformLocation(name, ShaderVariation2Int(variant)), values, count);
+		UploadUniformFloat2Array(GetUniformLocation(name, variationIDX), values, count);
 	}
-	void OpenGLShader::UploadUniformFloat3Array(const std::string& name, const glm::vec3& values, uint32_t count, ShaderVariations variant)
+	void OpenGLShader::UploadUniformFloat3Array(const std::string& name, const glm::vec3& values, uint32_t count, uint32_t variationIDX)
 	{
-		UploadUniformFloat3Array(GetUniformLocation(name, ShaderVariation2Int(variant)), values, count);
+		UploadUniformFloat3Array(GetUniformLocation(name, variationIDX), values, count);
 	}
-	void OpenGLShader::UploadUniformFloat4Array(const std::string& name, const glm::vec4& values, uint32_t count, ShaderVariations variant)
+	void OpenGLShader::UploadUniformFloat4Array(const std::string& name, const glm::vec4& values, uint32_t count, uint32_t variationIDX)
 	{
-		UploadUniformFloat4Array(GetUniformLocation(name, ShaderVariation2Int(variant)), values, count);
+		UploadUniformFloat4Array(GetUniformLocation(name, variationIDX), values, count);
 	}
-	void OpenGLShader::UploadUniformMat3Array(const std::string& name, const glm::mat3& values, uint32_t count, ShaderVariations variant)
+	void OpenGLShader::UploadUniformMat3Array(const std::string& name, const glm::mat3& values, uint32_t count, uint32_t variationIDX)
 	{
-		UploadUniformMat3Array(GetUniformLocation(name, ShaderVariation2Int(variant)), values, count);
+		UploadUniformMat3Array(GetUniformLocation(name, variationIDX), values, count);
 	}
-	void OpenGLShader::UploadUniformMat4Array(const std::string& name, const glm::mat4& values, uint32_t count, ShaderVariations variant)
+	void OpenGLShader::UploadUniformMat4Array(const std::string& name, const glm::mat4& values, uint32_t count, uint32_t variationIDX)
 	{
-		UploadUniformMat4Array(GetUniformLocation(name, ShaderVariation2Int(variant)), values, count);
+		UploadUniformMat4Array(GetUniformLocation(name, variationIDX), values, count);
 	}
 #pragma endregion
 #pragma endregion

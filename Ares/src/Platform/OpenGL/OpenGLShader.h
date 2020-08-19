@@ -21,40 +21,43 @@ namespace Ares {
 
 		virtual const std::string& GetName() const override { return m_Name; }
 
-		virtual void SetInt(const std::string& name, int value, ShaderVariations variation) override;
-		virtual void SetFloat(const std::string& name, float value, ShaderVariations variation) override;
-		virtual void SetFloat2(const std::string& name, glm::vec2 value, ShaderVariations variation) override;
-		virtual void SetFloat3(const std::string& name, glm::vec3 value, ShaderVariations variation) override;
-		virtual void SetFloat4(const std::string& name, glm::vec4 value, ShaderVariations variation) override;
-		virtual void SetMat3(const std::string& name, glm::mat3 value, ShaderVariations variation) override;
-		virtual void SetMat4(const std::string& name, const glm::mat4& value, ShaderVariations variation) override;
+		virtual void SetInt(const std::string& name, const int& value) override;
+		virtual void SetFloat(const std::string& name, const float& value) override;
+		virtual void SetFloat2(const std::string& name, const glm::vec2& value) override;
+		virtual void SetFloat3(const std::string& name, const glm::vec3& value) override;
+		virtual void SetFloat4(const std::string& name, const glm::vec4& value) override;
+		virtual void SetMat3(const std::string& name, const glm::mat3& value) override;
+		virtual void SetMat4(const std::string& name, const glm::mat4& value) override;
 		
-		virtual void SetIntArray(const std::string& name, int32_t* values, uint32_t count, ShaderVariations variation) override;
-		virtual void SetFloatArray(const std::string& name, float* values, uint32_t count, ShaderVariations variation) override;
-		virtual void SetFloat2Array(const std::string& name, const glm::vec2& values, uint32_t count, ShaderVariations variation) override;
-		virtual void SetFloat3Array(const std::string& name, const glm::vec3& values, uint32_t count, ShaderVariations variation) override;
-		virtual void SetFloat4Array(const std::string& name, const glm::vec4& values, uint32_t count, ShaderVariations variation) override;
-		virtual void SetMat3Array(const std::string& name, const glm::mat3& values, uint32_t count, ShaderVariations variation) override;
-		virtual void SetMat4Array(const std::string& name, const glm::mat4& values, uint32_t count, ShaderVariations variation) override;
+		virtual void SetIntArray(const std::string& name, const int32_t* values, uint32_t count) override;
+		virtual void SetFloatArray(const std::string& name, const float* values, uint32_t count) override;
+		virtual void SetFloat2Array(const std::string& name, const glm::vec2& values, uint32_t count) override;
+		virtual void SetFloat3Array(const std::string& name, const glm::vec3& values, uint32_t count) override;
+		virtual void SetFloat4Array(const std::string& name, const glm::vec4& values, uint32_t count) override;
+		virtual void SetMat3Array(const std::string& name, const glm::mat3& values, uint32_t count) override;
+		virtual void SetMat4Array(const std::string& name, const glm::mat4& values, uint32_t count) override;
 
-
-		virtual void SetPSMaterialUniformBuffer(Buffer buffer, ShaderVariations variation) override;
+		virtual void SetPSMaterialUniformBuffer(Buffer buffer) override;
 		virtual void AddShaderReloadedCallback(const ShaderReloadedCallback& callback) override;
+		virtual const bool IsCurrentlyBound() const override;
 	private:
-		void UploadUniformInt	(const std::string& name, const int& value,			ShaderVariations variation);
-		void UploadUniformFloat	(const std::string& name, const float& value,		ShaderVariations variation);
-		void UploadUniformFloat2(const std::string& name, const glm::vec2& value,	ShaderVariations variation);
-		void UploadUniformFloat3(const std::string& name, const glm::vec3& value,	ShaderVariations variation);
-		void UploadUniformFloat4(const std::string& name, const glm::vec4& value,	ShaderVariations variation);
-		void UploadUniformMat3	(const std::string& name, const glm::mat3& value,	ShaderVariations variation);
-		void UploadUniformMat4	(const std::string& name, const glm::mat4& value,	ShaderVariations variation);
-		void UploadUniformIntArray		(const std::string& name, const int32_t* values,	uint32_t count, ShaderVariations variation);
-		void UploadUniformFloatArray	(const std::string& name, const float* values,		uint32_t count, ShaderVariations variation);
-		void UploadUniformFloat2Array	(const std::string& name, const glm::vec2& values,	uint32_t count, ShaderVariations variation);
-		void UploadUniformFloat3Array	(const std::string& name, const glm::vec3& values,	uint32_t count, ShaderVariations variation);
-		void UploadUniformFloat4Array	(const std::string& name, const glm::vec4& values,	uint32_t count, ShaderVariations variation);
-		void UploadUniformMat3Array		(const std::string& name, const glm::mat3& values,	uint32_t count, ShaderVariations variation);
-		void UploadUniformMat4Array		(const std::string& name, const glm::mat4& values,	uint32_t count, ShaderVariations variation);
+
+		const uint32_t CheckBoundAndGetVariationIDX() const;
+
+		void UploadUniformInt	(const std::string& name, const int& value,			uint32_t variationIDX);
+		void UploadUniformFloat	(const std::string& name, const float& value,		uint32_t variationIDX);
+		void UploadUniformFloat2(const std::string& name, const glm::vec2& value,	uint32_t variationIDX);
+		void UploadUniformFloat3(const std::string& name, const glm::vec3& value,	uint32_t variationIDX);
+		void UploadUniformFloat4(const std::string& name, const glm::vec4& value,	uint32_t variationIDX);
+		void UploadUniformMat3	(const std::string& name, const glm::mat3& value,	uint32_t variationIDX);
+		void UploadUniformMat4	(const std::string& name, const glm::mat4& value,	uint32_t variationIDX);
+		void UploadUniformIntArray		(const std::string& name, const int32_t* values,	uint32_t count, uint32_t variationIDX);
+		void UploadUniformFloatArray	(const std::string& name, const float* values,		uint32_t count, uint32_t variationIDX);
+		void UploadUniformFloat2Array	(const std::string& name, const glm::vec2& values,	uint32_t count, uint32_t variationIDX);
+		void UploadUniformFloat3Array	(const std::string& name, const glm::vec3& values,	uint32_t count, uint32_t variationIDX);
+		void UploadUniformFloat4Array	(const std::string& name, const glm::vec4& values,	uint32_t count, uint32_t variationIDX);
+		void UploadUniformMat3Array		(const std::string& name, const glm::mat3& values,	uint32_t count, uint32_t variationIDX);
+		void UploadUniformMat4Array		(const std::string& name, const glm::mat4& values,	uint32_t count, uint32_t variationIDX);
 		void UploadUniformInt	(uint32_t location, const int& value);
 		void UploadUniformFloat	(uint32_t location, const float& value);
 		void UploadUniformFloat2(uint32_t location, const glm::vec2& value);
@@ -71,6 +74,7 @@ namespace Ares {
 		void UploadUniformMat4Array		(uint32_t location, const glm::mat4& values,	uint32_t count);
 
 
+
 		virtual bool HasPSMaterialUniformBuffer() const override { return (bool)m_PSMaterialUniformBuffer; }
 		inline const virtual ShaderUniformBufferDeclaration& GetPSMaterialUniformBuffer() const override { return *m_PSMaterialUniformBuffer; }
 		inline const ShaderResourceList& GetResources() const override { return m_Resources; }
@@ -83,7 +87,7 @@ namespace Ares {
 		void ResolveUniforms(uint32_t variationIDX);
 		int32_t GetUniformLocation(const std::string& name, uint32_t variationIDX);
 		
-		void ResolveAndSetUniforms(const Ref<OpenGLShaderUniformBufferDeclaration>& decl, Buffer buffer, ShaderVariations variation);
+		void ResolveAndSetUniforms(Buffer buffer, uint32_t variationIDX);
 		void ResolveAndSetUniform(OpenGLShaderUniformDeclaration* uniform, Buffer buffer, uint32_t variationIDX);
 		void ResolveAndSetUniformArray(OpenGLShaderUniformDeclaration* uniform, Buffer buffer, uint32_t variationIDX);
 		

@@ -172,7 +172,7 @@ namespace Ares {
 	void Renderer::SubmitQuad(Ref<Shader> shader, const glm::mat4& transform, bool depthTest)
 	{
 		// TODO: assert that shader is bound
-		shader->SetMat4("_ares_internal_Transform", transform, ShaderVariations::Default);
+		shader->SetMat4("_ares_internal_Transform", transform);
 		s_Data.m_QuadVertexArray->Bind();
 		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
 	}
@@ -183,12 +183,12 @@ namespace Ares {
 		bool depthTest = true;
 		if (material)
 		{
-			material->Bind(ShaderVariations::Default);
+			material->Bind();
 			depthTest = material->GetFlag(MaterialFlag::DepthTest);
 			//auto shader = material->GetShader();
 			
 			//material->GetShader()->SetMat4("u_Transform", transform);
-			material->GetShader()->SetMat4("_ares_internal_Transform", transform, ShaderVariations::Default);
+			material->GetShader()->SetMat4("_ares_internal_Transform", transform);
 		}
 
 
@@ -202,7 +202,7 @@ namespace Ares {
 		bool depthTest = true;
 		if (material)
 		{
-			material->Bind(ShaderVariations::Default);
+			material->Bind();
 			depthTest = material->GetFlag(MaterialFlag::DepthTest);
 		}
 
@@ -217,7 +217,6 @@ namespace Ares {
 		// TODO: check shader bound
 		mesh->m_VertexArray->Bind();
 		
-		ShaderVariations variant = mesh->m_IsAnimated ? ShaderVariations::DefaultSkinned : ShaderVariations::Default;
 		if (mesh->m_IsAnimated)
 		{
 			mesh->m_BoneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
@@ -225,7 +224,7 @@ namespace Ares {
 			//boundShader->SetInt("_ares_internal_BoneSampler", 30, variant);
 		}
 		auto& submesh = mesh->GetSubmeshes()[submeshIndex];
-		boundShader->SetMat4("_ares_internal_Transform", transform * submesh.Transform, variant);
+		boundShader->SetMat4("_ares_internal_Transform", transform * submesh.Transform);
 
 		Submit([submesh, depthTest]() {
 			if (depthTest)
@@ -240,8 +239,7 @@ namespace Ares {
 	{
 		// TODO: Sort this out
 		mesh->m_VertexArray->Bind();
-		ShaderVariations variant = mesh->m_IsAnimated ? ShaderVariations::DefaultSkinned : ShaderVariations::Default;
-
+		
 		if (mesh->m_IsAnimated)
 		{
 			mesh->m_BoneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
@@ -251,7 +249,7 @@ namespace Ares {
 		
 		for (Submesh& submesh : mesh->m_Submeshes)
 		{
-			boundShader->SetMat4("_ares_internal_Transform", transform * submesh.Transform, variant);
+			boundShader->SetMat4("_ares_internal_Transform", transform * submesh.Transform);
 
 			Submit([submesh, depthTest]() {
 				if (depthTest)

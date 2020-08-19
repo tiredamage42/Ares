@@ -239,7 +239,7 @@ namespace Ares
 
 			 //is this neeeded?
 			s_Data.TextureShader->Bind(ShaderVariations::Default);
-			s_Data.TextureShader->SetMat4("u_ViewProjection", s_Data.CameraViewProj, ShaderVariations::Default);
+			s_Data.TextureShader->SetMat4("u_ViewProjection", s_Data.CameraViewProj);
 
 
 			// bind textures
@@ -260,7 +260,7 @@ namespace Ares
 
 			// is this neeeded?
 			s_Data.LineShader->Bind(ShaderVariations::Default);
-			s_Data.LineShader->SetMat4("u_ViewProjection", s_Data.CameraViewProj, ShaderVariations::Default);
+			s_Data.LineShader->SetMat4("u_ViewProjection", s_Data.CameraViewProj);
 
 			s_Data.LineVertexArray->Bind();
 			Renderer::SetLineThickness(2.0f);

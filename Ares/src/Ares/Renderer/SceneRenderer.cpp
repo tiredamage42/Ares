@@ -179,8 +179,8 @@ namespace Ares {
 			{
 				ARES_PROFILE_SCOPE("bind shader set matrices");
 			shader->Bind(variant);
-			shader->SetMat4("ares_VPMatrix", viewProjection, variant);
-			shader->SetMat4("ares_VMatrix", view, variant);
+			shader->SetMat4("ares_VPMatrix", viewProjection);
+			shader->SetMat4("ares_VMatrix", view);
 			}
 			
 
@@ -204,7 +204,7 @@ namespace Ares {
 
 				{
 					ARES_PROFILE_SCOPE("biind material");
-					material->Bind(variant);
+					material->Bind();
 				}
 
 				bool depthTest = material->GetFlag(MaterialFlag::DepthTest);
@@ -212,8 +212,8 @@ namespace Ares {
 				{
 					{
 						ARES_PROFILE_SCOPE("set shader light vars");
-					shader->SetFloat3("ares_Light.Direction", s_Data.SceneData.ActiveLight.Direction, variant);
-					shader->SetFloat3("ares_Light.Color", s_Data.SceneData.ActiveLight.Radiance * s_Data.SceneData.ActiveLight.Multiplier, variant);
+					shader->SetFloat3("ares_Light.Direction", s_Data.SceneData.ActiveLight.Direction);
+					shader->SetFloat3("ares_Light.Color", s_Data.SceneData.ActiveLight.Radiance * s_Data.SceneData.ActiveLight.Multiplier);
 					}
 					
 					
@@ -922,16 +922,16 @@ namespace Ares {
 				size_t skinnedVariationStart = x;
 
 				s_Data.OutlineShader->Bind(ShaderVariations::Default);
-				s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection, ShaderVariations::Default);
-				s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1), ShaderVariations::Default);
+				s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection);
+				s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1));
 
 				for (size_t i = 0; i < outlineDrawCount; i++)
 				{
 					if (i == skinnedVariationStart)
 					{
 						s_Data.OutlineShader->Bind(ShaderVariations::DefaultSkinned);
-						s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection, ShaderVariations::DefaultSkinned);
-						s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1), ShaderVariations::DefaultSkinned);
+						s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection);
+						s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1));
 					}
 
 					Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, false);
@@ -1029,7 +1029,7 @@ namespace Ares {
 			//float m_GridSize = 0.5f;
 
 			s_Data.GridShader->Bind(ShaderVariations::Default);
-			s_Data.GridShader->SetMat4("ares_VPMatrix", viewProjection, ShaderVariations::Default);
+			s_Data.GridShader->SetMat4("ares_VPMatrix", viewProjection);
 
 			/*s_Data.GridMaterial->GetShader()->Bind(ShaderVariant::Static);
 			s_Data.GridMaterial->GetShader()->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Static);*/
@@ -1078,8 +1078,8 @@ namespace Ares {
 
 		Renderer::BeginRenderPass(s_Data.CompositePass);
 		s_Data.CompositeShader->Bind(ShaderVariations::Default);
-		s_Data.CompositeShader->SetFloat("u_Exposure", s_Data.SceneData.Exposure, ShaderVariations::Default);
-		s_Data.CompositeShader->SetInt("u_TextureSamples", s_Data.GeoPass->GetSpecs().TargetFrameBuffer->GetSpecs().Samples, ShaderVariations::Default);
+		s_Data.CompositeShader->SetFloat("u_Exposure", s_Data.SceneData.Exposure);
+		s_Data.CompositeShader->SetInt("u_TextureSamples", s_Data.GeoPass->GetSpecs().TargetFrameBuffer->GetSpecs().Samples);
 
 		s_Data.GeoPass->GetSpecs().TargetFrameBuffer->BindAsTexture();
 		Renderer::SubmitFullscreenQuad(nullptr);

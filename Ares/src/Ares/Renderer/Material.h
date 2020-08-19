@@ -29,7 +29,7 @@ namespace Ares {
 
 		inline const Ref<Shader> GetShader() const { return m_Shader; }
 
-		void Bind(ShaderVariations variant);
+		void Bind();
 
 		uint32_t GetFlags() const { return m_MaterialFlags; }
 

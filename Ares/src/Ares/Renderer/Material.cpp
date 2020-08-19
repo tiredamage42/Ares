@@ -240,7 +240,7 @@ namespace Ares {
 		*/
 	}
 
-	void Material::Bind(ShaderVariations variant)
+	void Material::Bind()
 	{
 		ARES_PROFILE_FUNCTION();
 		//return;
@@ -255,7 +255,7 @@ namespace Ares {
 		{
 			ARES_PROFILE_SCOPE("set material uniform buffers");
 		if (m_PSUniformStorageBuffer)
-			m_Shader->SetPSMaterialUniformBuffer(m_PSUniformStorageBuffer, variant);
+			m_Shader->SetPSMaterialUniformBuffer(m_PSUniformStorageBuffer);
 		}
 
 		{

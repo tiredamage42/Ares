@@ -163,26 +163,27 @@ namespace Ares {
 		virtual void Unbind() const = 0;
 
 		virtual uint32_t GetRendererID(ShaderVariations variant) const = 0;
+		virtual const bool IsCurrentlyBound() const = 0;
 
 		//virtual void UploadUniformBuffer(const UniformBufferBase& uniformBuffer) = 0;
 
 		virtual const std::string& GetName() const = 0;
 
-		virtual void SetInt(const std::string& name, int value, ShaderVariations variation) = 0;
-		virtual void SetFloat(const std::string& name, float value, ShaderVariations variation) = 0;
-		virtual void SetFloat2(const std::string& name, glm::vec2 value, ShaderVariations variation) = 0;
-		virtual void SetFloat3(const std::string& name, glm::vec3 value, ShaderVariations variation) = 0;
-		virtual void SetFloat4(const std::string& name, glm::vec4 value, ShaderVariations variation) = 0;
-		virtual void SetMat3(const std::string& name, glm::mat3 value, ShaderVariations variation) = 0;
-		virtual void SetMat4(const std::string& name, const glm::mat4& value, ShaderVariations variation) = 0;
+		virtual void SetInt(const std::string& name, const int& value) = 0;
+		virtual void SetFloat(const std::string& name, const float& value) = 0;
+		virtual void SetFloat2(const std::string& name, const glm::vec2& value) = 0;
+		virtual void SetFloat3(const std::string& name, const glm::vec3& value) = 0;
+		virtual void SetFloat4(const std::string& name, const glm::vec4& value) = 0;
+		virtual void SetMat3(const std::string& name, const glm::mat3& value) = 0;
+		virtual void SetMat4(const std::string& name, const glm::mat4& value) = 0;
 
-		virtual void SetIntArray(const std::string& name, int32_t* values, uint32_t count, ShaderVariations variation) = 0;
-		virtual void SetFloatArray(const std::string& name, float* values, uint32_t count, ShaderVariations variation) = 0;
-		virtual void SetFloat2Array(const std::string& name, const glm::vec2& values, uint32_t count, ShaderVariations variation) = 0;
-		virtual void SetFloat3Array(const std::string& name, const glm::vec3& values, uint32_t count, ShaderVariations variation) = 0;
-		virtual void SetFloat4Array(const std::string& name, const glm::vec4& values, uint32_t count, ShaderVariations variation) = 0;
-		virtual void SetMat3Array(const std::string& name, const glm::mat3& values, uint32_t count, ShaderVariations variation) = 0;
-		virtual void SetMat4Array(const std::string& name, const glm::mat4& values, uint32_t count, ShaderVariations variation) = 0;
+		virtual void SetIntArray(const std::string& name, const int32_t* values, uint32_t count) = 0;
+		virtual void SetFloatArray(const std::string& name, const float* values, uint32_t count) = 0;
+		virtual void SetFloat2Array(const std::string& name, const glm::vec2& values, uint32_t count) = 0;
+		virtual void SetFloat3Array(const std::string& name, const glm::vec3& values, uint32_t count) = 0;
+		virtual void SetFloat4Array(const std::string& name, const glm::vec4& values, uint32_t count) = 0;
+		virtual void SetMat3Array(const std::string& name, const glm::mat3& values, uint32_t count) = 0;
+		virtual void SetMat4Array(const std::string& name, const glm::mat4& values, uint32_t count) = 0;
 
 
 		/*
@@ -225,7 +226,7 @@ namespace Ares {
 
 
 		//virtual void SetVSMaterialUniformBuffer(Buffer buffer, ShaderVariant variant) = 0;
-		virtual void SetPSMaterialUniformBuffer(Buffer buffer, ShaderVariations variation) = 0;
+		virtual void SetPSMaterialUniformBuffer(Buffer buffer) = 0;
 		
 		//virtual void SetMaterialResources( std::unordered_map<std::string, Ref<Texture>> name2Tex, ShaderVariant variant) = 0;
 		//virtual void SetMaterialResources(std::unordered_map<size_t, Ref<Texture>> name2Tex, ShaderVariant variant) = 0;
