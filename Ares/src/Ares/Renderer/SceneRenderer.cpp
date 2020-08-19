@@ -79,6 +79,9 @@ namespace Ares {
 			float Exposure;
 			//Ref<MaterialInstance> SkyboxMaterial;
 			Ref<Material> SkyboxMaterial;
+
+			Ref<TextureCube> EnvironmentCube, EnvironmentIrradiance;
+
 			Environment SceneEnvironment;
 			Light ActiveLight;
 		} SceneData;
@@ -99,17 +102,26 @@ namespace Ares {
 			glm::mat4 Transform;
 			//std::string name;
 		};
-		std::vector<DrawCommand> DrawList;
-		std::vector<DrawCommand> SelectedMeshDrawList;
 
-		RenderMap DrawMap;
-		RenderMap SelectedDrawMap;
+		RenderMap UnlitDrawMap;
+		//std::vector<DrawCommand> UnlitDrawList;
+
+		RenderMap FwdBaseDrawMap;
+		//std::vector<DrawCommand> FwdBaseDrawList;
+
+		RenderMap FwdAddDrawMap;
+		//std::vector<DrawCommand> FwdAddDrawList;
+
+		//RenderMap SelectedDrawMap;
+		std::vector<DrawCommand> SelectedMeshDrawList;
+		std::vector<DrawCommand> DrawList;
 
 		// Grid
 		//Ref<MaterialInstance> GridMaterial;
 		//Ref<MaterialInstance> OutlineMaterial;
 		//Ref<Material> GridMaterial;
 		Ref<Shader> GridShader;
+		Ref<Shader> ErrorShader;
 
 
 		//Ref<Material> OutlineMaterial;
@@ -163,7 +175,7 @@ namespace Ares {
 	static const size_t u_BRDFLUTTexture = StringUtils::String2Hash("u_BRDFLUTTexture");
 	*/
 
-	static void DrawRenderMap(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view)//, const glm::vec3& cameraPosition)
+	static void DrawRenderMapUnlit(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view)
 	{
 		ARES_PROFILE_FUNCTION();
 
@@ -173,7 +185,53 @@ namespace Ares {
 			const ShaderVariationPair& shaderVarPair = shader_materials.first;
 			Ref<Shader> shader = shaderVarPair.Shader;
 			ShaderVariations variant = shaderVarPair.Variant;
-			
+
+			ARES_PROFILE_SCOPE("per shader");
+
+			{
+				ARES_PROFILE_SCOPE("bind shader set matrices");
+				shader->Bind(variant);
+				shader->SetMat4("ares_VPMatrix", viewProjection);
+				shader->SetMat4("ares_VMatrix", view);
+			}
+
+			const MaterialsMap& materials = shader_materials.second;
+			for (auto& materials_draws : materials)
+			{
+				ARES_PROFILE_SCOPE("Per material");
+				Ref<Material> material = materials_draws.first;
+				const MeshDrawCalls& draws = materials_draws.second;
+
+				{
+					ARES_PROFILE_SCOPE("biind material");
+					material->Bind();
+				}
+
+				{
+					ARES_PROFILE_SCOPE("Draw Mesh");
+					bool depthTest = material->GetFlag(MaterialFlag::DepthTest);
+					for (auto& dc : draws)
+					{
+						Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, depthTest);
+					}
+				}
+				
+			}
+		}
+	}
+
+
+	static void DrawRenderMapForwardBase(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view)//, const glm::vec3& cameraPosition)
+	{
+		ARES_PROFILE_FUNCTION();
+
+		// Read our shaders into the appropriate buffers
+		for (auto& shader_materials : renderMap)
+		{
+			const ShaderVariationPair& shaderVarPair = shader_materials.first;
+			Ref<Shader> shader = shaderVarPair.Shader;
+			ShaderVariations variant = shaderVarPair.Variant;
+
 			ARES_PROFILE_SCOPE("per shader");
 
 			{
@@ -193,6 +251,7 @@ namespace Ares {
 
 				//material->Set("u_CameraPosition", cameraPosition);
 
+				/*
 				{
 					ARES_PROFILE_SCOPE("Set MAterial things");
 				material->SetTexture("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
@@ -201,6 +260,7 @@ namespace Ares {
 				material->SetTexture("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
 				material->SetTexture("u_BRDFLUTTexture", s_Data.BRDFLUT);
 				}
+				*/
 
 				{
 					ARES_PROFILE_SCOPE("biind material");
@@ -231,6 +291,78 @@ namespace Ares {
 			}
 		}
 	}
+
+	static void DrawRenderMapForwardAdd(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view)//, const glm::vec3& cameraPosition)
+	{
+		ARES_PROFILE_FUNCTION();
+
+		// Read our shaders into the appropriate buffers
+		for (auto& shader_materials : renderMap)
+		{
+			const ShaderVariationPair& shaderVarPair = shader_materials.first;
+			Ref<Shader> shader = shaderVarPair.Shader;
+			ShaderVariations variant = shaderVarPair.Variant;
+
+			ARES_PROFILE_SCOPE("per shader");
+
+			{
+				ARES_PROFILE_SCOPE("bind shader set matrices");
+				shader->Bind(variant);
+				shader->SetMat4("ares_VPMatrix", viewProjection);
+				shader->SetMat4("ares_VMatrix", view);
+			}
+
+
+			const MaterialsMap& materials = shader_materials.second;
+			for (auto& materials_draws : materials)
+			{
+				ARES_PROFILE_SCOPE("Per material");
+				Ref<Material> material = materials_draws.first;
+				const MeshDrawCalls& draws = materials_draws.second;
+
+				//material->Set("u_CameraPosition", cameraPosition);
+
+				/*
+				{
+					ARES_PROFILE_SCOPE("Set MAterial things");
+				material->SetTexture("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
+
+				// pbr specific...
+				material->SetTexture("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
+				material->SetTexture("u_BRDFLUTTexture", s_Data.BRDFLUT);
+				}
+				*/
+
+				{
+					ARES_PROFILE_SCOPE("biind material");
+					material->Bind();
+				}
+
+				bool depthTest = material->GetFlag(MaterialFlag::DepthTest);
+				// foreach light (if shader is lit)
+				{
+					{
+						ARES_PROFILE_SCOPE("set shader light vars");
+						shader->SetFloat3("ares_Light.Direction", s_Data.SceneData.ActiveLight.Direction);
+						shader->SetFloat3("ares_Light.Color", s_Data.SceneData.ActiveLight.Radiance * s_Data.SceneData.ActiveLight.Multiplier);
+					}
+
+
+					// do shader set light light
+					//material->Set("lights", s_Data.SceneData.ActiveLight);
+
+					{
+						ARES_PROFILE_SCOPE("Draw Mesh");
+						for (auto& dc : draws)
+						{
+							Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, depthTest);
+						}
+					}
+				}
+			}
+		}
+	}
+
 	
 
 	
@@ -278,9 +410,7 @@ namespace Ares {
 
 
 
-
-
-
+		
 		// Grid
 		//auto gridShader 
 		s_Data.GridShader = Shader::Find("Assets/Shaders/SceneGrid.glsl");
@@ -310,6 +440,8 @@ namespace Ares {
 		//s_Data.OutlineMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(outlineShader));
 		//s_Data.OutlineMaterial = CreateRef<Material>(outlineShader);
 		//s_Data.OutlineMaterial->SetFlag(MaterialFlag::DepthTest, false);
+
+		s_Data.ErrorShader = Shader::Find("Assets/Shaders/ErrorShader.glsl");
 		
 
 	}
@@ -337,6 +469,8 @@ namespace Ares {
 
 		s_Data.SceneData.Exposure = scene->m_Exposure;
 		//s_Data.SceneData.SkyboxLod = scene->m_SkyboxLod;
+
+		
 	}
 
 	void SceneRenderer::EndScene()
@@ -357,8 +491,15 @@ namespace Ares {
 		GeometryPass();
 		CompositePass();
 
+
+		s_Data.UnlitDrawMap.clear();
+		s_Data.FwdBaseDrawMap.clear();
+		s_Data.FwdAddDrawMap.clear();
+
+		/*
 		s_Data.DrawMap.clear();
 		s_Data.SelectedDrawMap.clear();
+		*/
 
 		s_Data.DrawList.clear();
 		s_Data.SelectedMeshDrawList.clear();
@@ -366,15 +507,40 @@ namespace Ares {
 		s_Data.SceneData = {};
 	}
 
+	static void AddToDrawMap(RenderMap& drawMap, Ref<Shader> shader, ShaderVariations shaderVariant, Ref<Material> material, Ref<Mesh> mesh, uint32_t submeshIndex, const glm::mat4& transform)
+	{
+		ShaderVariationPair shaderVarPair = { shader, shaderVariant };
+
+		if (drawMap.find(shaderVarPair) == drawMap.end())
+			drawMap[shaderVarPair] = MaterialsMap();
+
+		MaterialsMap& materialsMap = drawMap.at(shaderVarPair);
+
+		if (materialsMap.find(material) == materialsMap.end())
+			materialsMap[material] = MeshDrawCalls();
+
+		MeshDrawCalls& drawCalls = materialsMap.at(material);
+		drawCalls.push_back({ mesh, submeshIndex, transform });
+	}
+
 	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, std::vector<Ref<Material>> materials, bool isSelected)
 	{
+		if (isSelected)
+		{
+			s_Data.SelectedMeshDrawList.push_back({ mesh, transform });
+		}
+		s_Data.DrawList.push_back({ mesh, transform });
+
+
+
+
 		
-		ShaderVariations shaderVariant = mesh->IsAnimated() ? ShaderVariations::DefaultSkinned : ShaderVariations::Default;
+		//ShaderVariations shaderVariant = mesh->IsAnimated() ? ShaderVariations::DefaultSkinned : ShaderVariations::Default;
 
-		RenderMap& drawMap = isSelected ? s_Data.SelectedDrawMap : s_Data.DrawMap;
+		//RenderMap& drawMap = isSelected ? s_Data.SelectedDrawMap : s_Data.DrawMap;
 
-		std::vector<SceneRendererData::DrawCommand> drawList = isSelected ? s_Data.SelectedMeshDrawList : s_Data.DrawList;
-		drawList.push_back({ mesh, transform });
+		//std::vector<SceneRendererData::DrawCommand> drawList = isSelected ? s_Data.SelectedMeshDrawList : s_Data.DrawList;
+		//drawList.push_back({ mesh, transform });
 
 
 
@@ -382,20 +548,45 @@ namespace Ares {
 		for (size_t i = 0; i < submeshes.size(); i++)
 		{
 			Ref<Material> material = materials[submeshes[i].MaterialIndex];
+			Ref<Shader> shader = material->GetShader();
 
-			ShaderVariationPair shaderVarPair = { material->GetShader(), shaderVariant };
+			bool isLit = shader->IsLit();
 
-			if (drawMap.find(shaderVarPair) == drawMap.end())
-				drawMap[shaderVarPair] = MaterialsMap();
+			if (isLit)
+			{
+				if (!shader->HasVariation(ShaderVariations::ForwardBase))
+				{
+					ARES_CORE_WARN("ForwardBase Pass: Shader '{0}' is Flagged as lit but has no Forward Base Pass", shader->GetName());
+					AddToDrawMap(s_Data.UnlitDrawMap, s_Data.ErrorShader, mesh->IsAnimated() ? ShaderVariations::DefaultSkinned : ShaderVariations::Default, material, mesh, i, transform);
+					continue;
+				}
+				else
+				{
+					ShaderVariations shaderVariant = mesh->IsAnimated() ? ShaderVariations::ForwardBaseSkinned : ShaderVariations::ForwardBase;
+					AddToDrawMap(s_Data.FwdBaseDrawMap, shader, shaderVariant, material, mesh, i, transform);
+				}
 
-			MaterialsMap& materialsMap = drawMap.at(shaderVarPair);
+				// TODO: only do this if we have more than one light
+				if (!shader->HasVariation(ShaderVariations::ForwardAdd))
+				{
+					//ARES_CORE_WARN("ForwardAdd Pass: Shader '{0}' is Flagged as lit but has no Forward Add Pass", shader->GetName());
+				}
+				else
+				{
+					ShaderVariations shaderVariant = mesh->IsAnimated() ? ShaderVariations::ForwardAddSkinned : ShaderVariations::ForwardAdd;
+					AddToDrawMap(s_Data.FwdAddDrawMap, shader, shaderVariant, material, mesh, i, transform);
+				}
+			}
+			else
+			{
+				if (!shader->HasVariation(ShaderVariations::Default))
+				{
+					ARES_CORE_WARN("Unlit Pass: Shader '{0}' is Flagged as unlit but has no Default pass", shader->GetName());
+					shader = s_Data.ErrorShader;
+				}
 
-			if (materialsMap.find(material) == materialsMap.end())
-				materialsMap[material] = MeshDrawCalls();
-
-			MeshDrawCalls& drawCalls = materialsMap.at(material);
-
-			drawCalls.push_back({ mesh, i, transform });
+				AddToDrawMap(s_Data.UnlitDrawMap, shader, mesh->IsAnimated() ? ShaderVariations::DefaultSkinned : ShaderVariations::Default, material, mesh, i, transform);
+			}
 		}
 		
 	}
@@ -632,7 +823,7 @@ namespace Ares {
 	{
 		ARES_PROFILE_FUNCTION();
 
-		bool outline = false;// s_Data.SelectedMeshDrawList.size() > 0;
+		bool outline = s_Data.SelectedMeshDrawList.size() > 0;
 
 		if (outline)
 		{
@@ -678,11 +869,22 @@ namespace Ares {
 			set standard mesh drawing shader variables
 		*/
 
+		s_Data.BRDFLUT->Bind(Renderer::BRDF_LUT_TEX_SLOT);
+		s_Data.SceneData.SceneEnvironment.RadianceMap->Bind(Renderer::ENVIRONMENT_CUBE_TEX_SLOT);
+		s_Data.SceneData.SceneEnvironment.IrradianceMap->Bind(Renderer::ENVIRONMENT_IRRADIANCE_TEX_SLOT);
+
+
+		DrawRenderMapUnlit(s_Data.UnlitDrawMap, viewProjection, viewMatrix);
+
+		DrawRenderMapForwardBase(s_Data.FwdBaseDrawMap, viewProjection, viewMatrix);
+
+		DrawRenderMapForwardAdd(s_Data.FwdAddDrawMap, viewProjection, viewMatrix);
+
 
 		//RenderMap drawMap;
 		//SortRenderMap(s_Data.DrawList, drawMap);
 		//DrawRenderMap(drawMap, viewProjection, viewMatrix);// , cameraPosition);
-		DrawRenderMap(s_Data.DrawMap, viewProjection, viewMatrix);// , cameraPosition);
+		//DrawRenderMap(s_Data.DrawMap, viewProjection, viewMatrix);// , cameraPosition);
 		//drawMap.clear();
 
 
@@ -814,7 +1016,12 @@ namespace Ares {
 
 		//SortRenderMap(s_Data.SelectedMeshDrawList, drawMap);
 		//DrawRenderMap(drawMap, viewProjection, viewMatrix);// , cameraPosition);
-		DrawRenderMap(s_Data.SelectedDrawMap, viewProjection, viewMatrix);// , cameraPosition);
+		
+		
+		/*
+			MAYBE NEED TO RE RENDER SELECTED OBJECTS...
+		*/
+		//DrawRenderMap(s_Data.SelectedDrawMap, viewProjection, viewMatrix);// , cameraPosition);
 
 
 		//shadersVisited.clear();

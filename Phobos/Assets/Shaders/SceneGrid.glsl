@@ -1,11 +1,10 @@
-#flags { STANDARD_VARS }
+#FLAGS { STANDARD_VARS }
 
-#shared
-{
+#SHARED
 	#define GRID_RESOLUTION 1000.0
 	#define GRID_WIDTH .05
 	varying vec2 Texcoord;
-}
+#SHARED
 
 #type vertex
 #version 430

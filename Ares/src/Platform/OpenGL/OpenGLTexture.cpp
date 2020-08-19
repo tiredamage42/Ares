@@ -245,11 +245,6 @@ namespace Ares {
 		Renderer::Submit([=]() { glGenerateTextureMipmap(m_RendererID); }, "Texture GenMipmaps");
 	}
 
-
-
-
-
-
 	OpenGLTextureCube::OpenGLTextureCube(TextureFormat format, uint32_t width, uint32_t height, FilterType filterType, bool useMips)
 		: m_Format(format), m_Width(width), m_Height(height), m_FilterType(filterType)
 	{

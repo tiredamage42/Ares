@@ -17,6 +17,11 @@ namespace Ares {
 		typedef void(*RenderCommandFn)(void*);
 		
 		inline static const uint32_t BONE_SAMPLER_TEX_SLOT = 31;
+		inline static const uint32_t BRDF_LUT_TEX_SLOT = 30;
+		inline static const uint32_t ENVIRONMENT_CUBE_TEX_SLOT = 29;
+		inline static const uint32_t ENVIRONMENT_IRRADIANCE_TEX_SLOT = 28;
+
+
 		//inline static const uint32_t WHITE_TEX_SLOT = 30;
 		//inline static const uint32_t DEF_BUMP_TEX_SLOT = 29;
 

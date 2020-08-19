@@ -6,12 +6,12 @@
 
 #include "Ares/Renderer/Camera.h"
 #include "Ares/Renderer/Material.h"
+#include "Ares/Renderer/Renderer.h"
 
 #include "Ares/Renderer/SceneCamera.h"
 #include "Ares/Editor/EditorCamera.h"
 
 #include "Ares/Core/StringUtils.h"
-
 namespace Ares
 {
 	class Entity;
@@ -69,6 +69,11 @@ namespace Ares
 			m_Environment = environment; 
 			m_SkyboxMaterial->SetTexture("u_Texture", environment.RadianceMap);
 			//m_SkyboxMaterial->SetTexture(StringUtils::String2Hash("u_Texture"), environment.RadianceMap);
+
+
+			//environment.RadianceMap->Bind(Renderer::ENVIRONMENT_CUBE_TEX_SLOT);
+			//environment.IrradianceMap->Bind(Renderer::ENVIRONMENT_IRRADIANCE_TEX_SLOT);
+
 		}
 		const Environment& GetEnvironment() const { return m_Environment; }
 

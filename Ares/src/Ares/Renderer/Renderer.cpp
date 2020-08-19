@@ -214,6 +214,7 @@ namespace Ares {
 
 	void Renderer::SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, const size_t& submeshIndex, const bool& depthTest)
 	{
+
 		// TODO: check shader bound
 		mesh->m_VertexArray->Bind();
 		

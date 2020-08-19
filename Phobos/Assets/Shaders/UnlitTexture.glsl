@@ -1,12 +1,9 @@
-#properties
+#PROPERTIES
 {
-    u_Color | [COLOR : DEF(1,1,1,1)];
+    u_Color [COLOR : DEF(1,1,1,1)];
     u_Texture;
 }
-#flags
-{
-    STANDARD_VARS, SKINNED
-}
+#FLAGS { SKINNED }
 
 #type vertex
 #version 330 core

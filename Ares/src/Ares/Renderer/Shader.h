@@ -126,11 +126,19 @@ namespace Ares {
 
 	enum class ShaderVariations
 	{
-		None			= BIT(0),
-		Default			= BIT(1),
-		DefaultSkinned	= BIT(2),
-		Deferred		= BIT(3),
-		DeferredSkinned	= BIT(4),
+		None				= BIT(0),
+		
+		Default				= BIT(1), // or unlit
+		DefaultSkinned		= BIT(2),
+		
+		ForwardBase			= BIT(3),
+		ForwardBaseSkinned	= BIT(4),
+		
+		ForwardAdd			= BIT(5),
+		ForwardAddSkinned	= BIT(6),
+
+		Deferred			= BIT(7),
+		DeferredSkinned		= BIT(8),
 	};
 
 	class Shader
@@ -141,17 +149,21 @@ namespace Ares {
 		{
 			switch (variation)
 			{
-			case ShaderVariations::None:			return 0;
-			case ShaderVariations::Default:			return 0;
-			case ShaderVariations::DefaultSkinned:	return 1;
-			case ShaderVariations::Deferred:		return 2;
-			case ShaderVariations::DeferredSkinned:	return 3;
+			case ShaderVariations::None:				return 0;
+			case ShaderVariations::Default:				return 0;
+			case ShaderVariations::DefaultSkinned:		return 1;
+			case ShaderVariations::ForwardBase:			return 2;
+			case ShaderVariations::ForwardBaseSkinned:	return 3;
+			case ShaderVariations::ForwardAdd:			return 4;
+			case ShaderVariations::ForwardAddSkinned:	return 5;
+			case ShaderVariations::Deferred:			return 6;
+			case ShaderVariations::DeferredSkinned:		return 7;
 			default:
 				return 0;
 			}
 		}
 		
-		static const uint32_t MAX_VARIANTS = 4;
+		static const uint32_t MAX_VARIANTS = 8;
 
 		using ShaderReloadedCallback = std::function<void()>;
 
@@ -184,7 +196,8 @@ namespace Ares {
 		virtual void SetFloat4Array(const std::string& name, const glm::vec4& values, uint32_t count) = 0;
 		virtual void SetMat3Array(const std::string& name, const glm::mat3& values, uint32_t count) = 0;
 		virtual void SetMat4Array(const std::string& name, const glm::mat4& values, uint32_t count) = 0;
-
+		virtual const bool IsLit() const = 0;
+		virtual const bool HasVariation(ShaderVariations variation) const = 0;
 
 		/*
 		virtual void SetIntFromRenderThread(const std::string& name, int value, ShaderVariations variation) = 0;

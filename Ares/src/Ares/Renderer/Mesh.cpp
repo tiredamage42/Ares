@@ -609,7 +609,8 @@ namespace Ares {
 		
 		m_IsAnimated = scene->mAnimations != nullptr;
 
-		Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/PBRStatic.glsl");
+		//Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/PBRStatic.glsl");
+		Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/Standard.glsl");
 
 		/*Ref<Shader> m_MeshShader = nullptr;
 		

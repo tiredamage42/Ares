@@ -40,5 +40,44 @@ namespace Ares
 			}
 			return str;
 		}
+
+		static std::string RemoveCommentsFrom(const std::string& str)
+		{
+			size_t n = str.length();
+			std::string res;
+
+			// Flags to indicate that single line and multpile line comments 
+			// have started or not. 
+			bool s_cmt = false;
+			bool m_cmt = false;
+
+			// Traverse the given program 
+			for (size_t i = 0; i < n; i++)
+			{
+				const char& c = str[i];
+
+				// If single line comment flag is on, then check for end of it 
+				if (s_cmt && (c == '\n' || c == '\r'))
+					s_cmt = false;
+
+				// If multiple line comment is on, then check for end of it 
+				else if (m_cmt && c == '*' && str[i + 1] == '/')
+					m_cmt = false, i++;
+
+				// If this character is in a comment, ignore it 
+				else if (s_cmt || m_cmt)
+					continue;
+
+				// Check for beginning of comments and set the approproate flags 
+				else if (c == '/' && str[i + 1] == '/')
+					s_cmt = true, i++;
+				else if (c == '/' && str[i + 1] == '*')
+					m_cmt = true, i++;
+
+				// If current character is a non-comment character, append it to res 
+				else  res += c;
+			}
+			return res;
+		}
 	};
 }

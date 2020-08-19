@@ -4,7 +4,7 @@
     
     Syntax:
 
-        uniformName | [ comma seperated attributes ];
+        uniformName [ comma seperated attributes ];
 
     Available Attributes:
         
@@ -19,14 +19,14 @@
                                 map will be set (recommended for all normal map samplers)
 */
 
-#properties
+#PROPERTIES
 {
-    u_AlbedoColor           | [COLOR        : DEF(1, 1, 1)];
-    u_Metalness             | [RANGE(0, 1)  : DEF(1)];
-    u_Roughness             | [RANGE(0, 1)  : DEF(1)];
+    u_AlbedoColor           [COLOR        : DEF(1, 1, 1)];
+    u_Metalness             [RANGE(0, 1)  : DEF(1)];
+    u_Roughness             [RANGE(0, 1)  : DEF(1)];
     
     u_AlbedoTex;
-    u_NormalTex             | [BUMP];
+    u_NormalTex             [BUMP];
     u_MetalnessTex;
     u_RoughnessTex;
     u_AmbientOcclusionTex;
@@ -46,26 +46,31 @@
             vec3 ares_ObjectTangents;
 
     "SKINNED" flag compiles the shader with variant that can be used with an animated mesh.
-        - using this wihtout "STANDARD_VARS" flag could lead to undefined behavior
+        - adds same variables as STANDARD_VARS flag
+
+    "LIGHTING_ON" flag labels this shader as a lit shader
+        - if lighting is on, the shader must have at least a FWD_BASE pass
 */
-#flags 
+#FLAGS 
 {
-    STANDARD_VARS, SKINNED
+    STANDARD_VARS, SKINNED, LIGHTING_ON
 }
+
+
+#PASS FWD_BASE
 
 /*
     this shared block will be accessible betwen vertex and fragment shaders
     the "varying" keyword is safe to use here as it will be replaced
     with "in" and "out" when sent to either vertex or fragment shaders
 */
-#shared
-{
+#SHARED
     varying vec2 TexCoords;
     varying vec3 WorldPos;
     varying vec3 Normal;
     varying mat3 TBN;
     varying vec3 CameraPos;
-}
+#SHARED
 
 #type vertex
 #version 430
@@ -101,11 +106,10 @@ uniform sampler2D u_RoughnessTex;
 uniform sampler2D u_AmbientOcclusionTex;
 
 // BRDF LUT
-uniform sampler2D u_BRDFLUTTexture;
-
+uniform sampler2D ares_BRDFLUT;
 // Environment maps
-uniform samplerCube u_EnvRadianceTex;
-uniform samplerCube u_EnvIrradianceTex;
+uniform samplerCube ares_EnvironmentCube;
+uniform samplerCube ares_EnvironmentIrradianceCube;
 
 // lights
 struct Light 
@@ -261,15 +265,15 @@ void main()
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
 
-    vec3 irradiance = texture(u_EnvIrradianceTex, worldNorm).rgb;
+    vec3 irradiance = texture(ares_EnvironmentIrradianceCube, worldNorm).rgb;
     
     vec3 diffuse = irradiance * albedo;
 
     vec3 R = reflect(-viewDir, worldNorm);
-    int u_EnvRadianceTexLevels = textureQueryLevels(u_EnvRadianceTex);
-    vec3 prefilteredColor = textureLod(u_EnvRadianceTex, R, roughness * u_EnvRadianceTexLevels).rgb;
+    int u_EnvRadianceTexLevels = textureQueryLevels(ares_EnvironmentCube);
+    vec3 prefilteredColor = textureLod(ares_EnvironmentCube, R, (roughness * roughness) * u_EnvRadianceTexLevels).rgb;
 
-    vec2 envBRDF = texture(u_BRDFLUTTexture, vec2(NdotV, roughness)).rg;
+    vec2 envBRDF = texture(ares_BRDFLUT, vec2(NdotV, roughness)).rg;
     vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
 
     vec3 ambient = (kD * diffuse + specular) * ao;
@@ -283,3 +287,4 @@ void main()
 
     out_Color = vec4(color, 1.0);
 }
+#END_PASS
