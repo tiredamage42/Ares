@@ -29,8 +29,7 @@ namespace Ares {
 	public:
 		virtual ~Texture() = default;
 		virtual void Bind(uint32_t slot = 0) const = 0;
-		//virtual void BindImmediate(uint32_t slot = 0) const = 0;
-
+		
 		virtual uint32_t GetRendererID() const = 0;		
 		virtual bool operator==(const Texture& other) const = 0;
 
@@ -47,7 +46,6 @@ namespace Ares {
 		virtual void GenerateMipMaps() const = 0;
 
 		virtual const std::string& GetPath() const = 0;
-
 	};
 
 	class Texture2D : public Texture
@@ -59,20 +57,13 @@ namespace Ares {
 		static void CalculateTilingAndOffsetForSubTexture(glm::vec2* tiling, glm::vec2* offset, const Ref<Texture2D>& texture, const glm::vec2& coords, const glm::vec2& cellSize, const glm::vec2& spriteSize = { 1, 1 });
 		static void CalculateTilingAndOffsetForSubTexture(glm::vec2* tiling, glm::vec2* offset, uint32_t width, uint32_t height, const glm::vec2& coords, const glm::vec2& cellSize, const glm::vec2& spriteSize = { 1, 1 });
 
-		//virtual void SetData(void* data) = 0;
-
 		virtual void Lock() = 0;
 		virtual void Unlock() = 0;
-
-		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		virtual Buffer GetWriteableBuffer() = 0;
-
+		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		virtual void SetData(void* data) = 0;
 
 		virtual bool Loaded() const = 0;
-
-
-		//virtual const std::string& GetPath() const = 0;
 	};
 
 	class TextureCube : public Texture
@@ -80,8 +71,6 @@ namespace Ares {
 	public:
 		static Ref<TextureCube> Create(TextureFormat format, uint32_t width, uint32_t height, FilterType filterType, bool useMips);
 		static Ref<TextureCube> Create(const std::string& path, FilterType filterType, bool useMips);
-
-		//virtual const std::string& GetPath() const = 0;
 	};
 
 }
