@@ -54,6 +54,10 @@ namespace Ares
 		static bool Color4Field(PARAMS(Vector4));
 		static bool Color4Field(PARAMS(ImVec4));
 
+
+
+		static bool EditorButton(const char* label, float width, bool isActive);
+
 		static void InitializeGUIColors();
 		static void DrawEditorColorPickers();
 

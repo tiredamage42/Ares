@@ -20,6 +20,7 @@ namespace Ares {
 		virtual uint32_t GetRendererID(ShaderVariations variant) const override;
 
 		virtual const std::string& GetName() const override { return m_Name; }
+		virtual const std::string& GetPath() const override { return m_AssetPath; }
 
 		virtual void SetInt(const std::string& name, const int& value) override;
 		virtual void SetFloat(const std::string& name, const float& value) override;

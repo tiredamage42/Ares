@@ -189,7 +189,15 @@ namespace Ares
 
 
 
-
+	bool EditorGUI::EditorButton(const char* label, float width, bool isActive)
+	{
+		bool pressed = false;
+		ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[isActive ? ImGuiCol_TabActive : ImGuiCol_Button]);
+		if (ImGui::Button(label, ImVec2(width, -1)))
+			pressed = true;
+		ImGui::PopStyleColor();
+		return pressed;
+	}
 
 
 

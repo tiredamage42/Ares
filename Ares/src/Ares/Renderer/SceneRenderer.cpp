@@ -61,6 +61,7 @@ namespace Ares {
 		Ref<Mesh> Mesh;
 		size_t SubmeshIndex;
 		glm::mat4 Transform;
+		bool Outlined;
 	};
 
 	typedef std::vector<MeshDrawCall> MeshDrawCalls;
@@ -175,7 +176,7 @@ namespace Ares {
 	static const size_t u_BRDFLUTTexture = StringUtils::String2Hash("u_BRDFLUTTexture");
 	*/
 
-	static void DrawRenderMapUnlit(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view)
+	static void DrawRenderMapUnlit(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view, bool drawOutlined)
 	{
 		ARES_PROFILE_FUNCTION();
 
@@ -212,7 +213,44 @@ namespace Ares {
 					bool depthTest = material->GetFlag(MaterialFlag::DepthTest);
 					for (auto& dc : draws)
 					{
+
+						if (dc.Outlined)
+						{
+							/*
+							Renderer::Submit([]() {
+							glStencilFunc(GL_ALWAYS, 1, 0xff);
+							glStencilMask(0xff);
+								}, "outline other stuff");
+							*/
+							Renderer::Submit([]() {
+
+								// enable writing to the stencil buffer
+								// We clear the stencil buffer to 0s at the start of the frame and for the outlined object 
+								// we update the stencil buffer to 1 for each fragment drawn:
+								glStencilMask(0xff);
+								}, "outline other stuff");
+						}
+							
+							
+						//if (drawOutlined == dc.Outlined)
+						{
+
 						Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, depthTest);
+						}
+
+						if (dc.Outlined)
+						{
+							// make sure we don't update the stencil buffer while drawing the floor
+							Renderer::Submit([]() {
+								glStencilMask(0x00);
+								}, "Outline Stencil mask");
+
+							/*
+								Renderer::Submit([]() {
+								glStencilMask(0);
+									}, "Outline Stencil mask");
+							*/
+						}
 					}
 				}
 				
@@ -221,7 +259,7 @@ namespace Ares {
 	}
 
 
-	static void DrawRenderMapForwardBase(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view)//, const glm::vec3& cameraPosition)
+	static void DrawRenderMapForwardBase(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view, bool drawOutlined)//, const glm::vec3& cameraPosition)
 	{
 		ARES_PROFILE_FUNCTION();
 
@@ -284,7 +322,47 @@ namespace Ares {
 						ARES_PROFILE_SCOPE("Draw Mesh");
 						for (auto& dc : draws)
 						{
+							if (dc.Outlined)
+							{
+								/*
+								Renderer::Submit([]() {
+									glStencilFunc(GL_ALWAYS, 1, 0xff);
+									glStencilMask(0xff);
+									}, "outline other stuff");
+								*/
+								Renderer::Submit([]() {
+
+									// enable writing to the stencil buffer
+									// We clear the stencil buffer to 0s at the start of the frame and for the outlined object 
+									// we update the stencil buffer to 1 for each fragment drawn:
+									glStencilMask(0xff);
+									}, "outline other stuff");
+							}
+							else
+							{
+
+							}
+
+							//if (drawOutlined == dc.Outlined)
+							{
+
 							Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, depthTest);
+							}
+
+							if (dc.Outlined)
+							{
+
+								// make sure we don't update the stencil buffer while drawing the floor
+								Renderer::Submit([]() {
+									glStencilMask(0x00);
+								}, "Outline Stencil mask");
+
+								/*
+								Renderer::Submit([]() {
+									glStencilMask(0);
+									}, "Outline Stencil mask");
+								*/
+							}
 						}
 					}
 				}
@@ -507,7 +585,7 @@ namespace Ares {
 		s_Data.SceneData = {};
 	}
 
-	static void AddToDrawMap(RenderMap& drawMap, Ref<Shader> shader, ShaderVariations shaderVariant, Ref<Material> material, Ref<Mesh> mesh, uint32_t submeshIndex, const glm::mat4& transform)
+	static void AddToDrawMap(RenderMap& drawMap, Ref<Shader> shader, ShaderVariations shaderVariant, Ref<Material> material, Ref<Mesh> mesh, uint32_t submeshIndex, const glm::mat4& transform, bool outlined)
 	{
 		ShaderVariationPair shaderVarPair = { shader, shaderVariant };
 
@@ -520,7 +598,7 @@ namespace Ares {
 			materialsMap[material] = MeshDrawCalls();
 
 		MeshDrawCalls& drawCalls = materialsMap.at(material);
-		drawCalls.push_back({ mesh, submeshIndex, transform });
+		drawCalls.push_back({ mesh, submeshIndex, transform, outlined });
 	}
 
 	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, std::vector<Ref<Material>> materials, bool isSelected)
@@ -557,13 +635,13 @@ namespace Ares {
 				if (!shader->HasVariation(ShaderVariations::ForwardBase))
 				{
 					ARES_CORE_WARN("ForwardBase Pass: Shader '{0}' is Flagged as lit but has no Forward Base Pass", shader->GetName());
-					AddToDrawMap(s_Data.UnlitDrawMap, s_Data.ErrorShader, mesh->IsAnimated() ? ShaderVariations::DefaultSkinned : ShaderVariations::Default, material, mesh, i, transform);
+					AddToDrawMap(s_Data.UnlitDrawMap, s_Data.ErrorShader, mesh->IsAnimated() ? ShaderVariations::DefaultSkinned : ShaderVariations::Default, material, mesh, i, transform, isSelected);
 					continue;
 				}
 				else
 				{
 					ShaderVariations shaderVariant = mesh->IsAnimated() ? ShaderVariations::ForwardBaseSkinned : ShaderVariations::ForwardBase;
-					AddToDrawMap(s_Data.FwdBaseDrawMap, shader, shaderVariant, material, mesh, i, transform);
+					AddToDrawMap(s_Data.FwdBaseDrawMap, shader, shaderVariant, material, mesh, i, transform, isSelected);
 				}
 
 				// TODO: only do this if we have more than one light
@@ -574,7 +652,7 @@ namespace Ares {
 				else
 				{
 					ShaderVariations shaderVariant = mesh->IsAnimated() ? ShaderVariations::ForwardAddSkinned : ShaderVariations::ForwardAdd;
-					AddToDrawMap(s_Data.FwdAddDrawMap, shader, shaderVariant, material, mesh, i, transform);
+					AddToDrawMap(s_Data.FwdAddDrawMap, shader, shaderVariant, material, mesh, i, transform, isSelected);
 				}
 			}
 			else
@@ -585,7 +663,7 @@ namespace Ares {
 					shader = s_Data.ErrorShader;
 				}
 
-				AddToDrawMap(s_Data.UnlitDrawMap, shader, mesh->IsAnimated() ? ShaderVariations::DefaultSkinned : ShaderVariations::Default, material, mesh, i, transform);
+				AddToDrawMap(s_Data.UnlitDrawMap, shader, mesh->IsAnimated() ? ShaderVariations::DefaultSkinned : ShaderVariations::Default, material, mesh, i, transform, isSelected);
 			}
 		}
 		
@@ -819,6 +897,8 @@ namespace Ares {
 		//return { envCube, irradianceMap };
 	}
 
+
+	
 	void SceneRenderer::GeometryPass()
 	{
 		ARES_PROFILE_FUNCTION();
@@ -827,9 +907,9 @@ namespace Ares {
 
 		if (outline)
 		{
-			Renderer::Submit([](){
+			/*Renderer::Submit([](){
 				glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-			}, "Outline STart");
+			}, "Outline STart");*/
 		}
 
 		Renderer::BeginRenderPass(s_Data.GeoPass);
@@ -839,10 +919,57 @@ namespace Ares {
 
 		if (outline)
 		{
+
+			Renderer::Submit([]() {
+				glStencilOp(
+
+					// action to take if the stencil test fails.
+					GL_KEEP,	// If any of the tests fail we do nothing; we keep the currently stored value 
+								// that is in the stencil buffer. 
+
+					// action to take if the stencil test passes, but the depth test fails.
+					GL_REPLACE,
+
+					// action to take if both the stenciland the depth test pass
+					GL_REPLACE	// If both the stencil test and the depth test succeed however, 
+								// we want to replace the stored stencil value with the reference value set 
+								// via glStencilFunc which we later set to 1.
+				);
+				}, "Outline STart");
+			Renderer::Submit([]() {
+
+				// all fragments should pass the stencil test
+				glStencilFunc(GL_ALWAYS, 1, 0xff);
+
+				}, "outline other stuff");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			// make sure we don't update the stencil buffer while drawing the floor
 			Renderer::Submit([](){
-				glStencilMask(0);
+				glStencilMask(0x00); 
+
 			}, "Outline Stencil mask");
 		}
+		/*
+		*/
+
 
 
 		auto viewMatrix = s_Data.SceneData.SceneCamera.ViewMatrix;
@@ -874,11 +1001,10 @@ namespace Ares {
 		s_Data.SceneData.SceneEnvironment.IrradianceMap->Bind(Renderer::ENVIRONMENT_IRRADIANCE_TEX_SLOT);
 
 
-		DrawRenderMapUnlit(s_Data.UnlitDrawMap, viewProjection, viewMatrix);
+		DrawRenderMapUnlit(s_Data.UnlitDrawMap, viewProjection, viewMatrix, false);
+		DrawRenderMapForwardBase(s_Data.FwdBaseDrawMap, viewProjection, viewMatrix, false);
 
-		DrawRenderMapForwardBase(s_Data.FwdBaseDrawMap, viewProjection, viewMatrix);
-
-		DrawRenderMapForwardAdd(s_Data.FwdAddDrawMap, viewProjection, viewMatrix);
+		//DrawRenderMapForwardAdd(s_Data.FwdAddDrawMap, viewProjection, viewMatrix);
 
 
 		//RenderMap drawMap;
@@ -1001,16 +1127,53 @@ namespace Ares {
 		//}
 
 
-
 		if (outline)
 		{
+			/*
 
+			Renderer::Submit([]() {
+				glStencilOp(
+
+					// action to take if the stencil test fails.
+					GL_KEEP,	// If any of the tests fail we do nothing; we keep the currently stored value 
+								// that is in the stencil buffer. 
+					
+					// action to take if the stencil test passes, but the depth test fails.
+					GL_REPLACE,
+					
+					// action to take if both the stenciland the depth test pass
+					GL_REPLACE	// If both the stencil test and the depth test succeed however, 
+								// we want to replace the stored stencil value with the reference value set 
+								// via glStencilFunc which we later set to 1.
+				);
+				}, "Outline STart");
+			Renderer::Submit([]() {
+				
+				// all fragments should pass the stencil test
+				glStencilFunc(GL_ALWAYS, 1, 0xff); 
+
+				// enable writing to the stencil buffer
+				// We clear the stencil buffer to 0s at the start of the frame and for the outlined object 
+				// we update the stencil buffer to 1 for each fragment drawn:
+				glStencilMask(0xff);	
+			}, "outline other stuff");
 			
-			Renderer::Submit([](){
-					glStencilFunc(GL_ALWAYS, 1, 0xff);
-					glStencilMask(0xff);
-				}, "outline other stuff");
+			DrawRenderMapUnlit(s_Data.UnlitDrawMap, viewProjection, viewMatrix, true);
+			DrawRenderMapForwardBase(s_Data.FwdBaseDrawMap, viewProjection, viewMatrix, true);
+			*/
+		
+			/*
+				By using GL_REPLACE as the stencil op function we make sure that each of the containers' 
+				fragments update the stencil buffer with a stencil value of 1. 
+				Because the fragments always pass the stencil test, the stencil buffer is updated 
+				with the reference value wherever we've drawn them.
+
+			*/
 		}
+
+
+/*
+*/
 
 
 
@@ -1020,8 +1183,58 @@ namespace Ares {
 		
 		/*
 			MAYBE NEED TO RE RENDER SELECTED OBJECTS...
-		*/
 		//DrawRenderMap(s_Data.SelectedDrawMap, viewProjection, viewMatrix);// , cameraPosition);
+		size_t outlineDrawCount = s_Data.SelectedMeshDrawList.size();
+		std::vector<SceneRendererData::DrawCommand> outlineDraws;
+		outlineDraws.resize(s_Data.SelectedMeshDrawList.size());
+		size_t x = 0;
+		size_t y = outlineDrawCount - 1;
+		for (auto& dc : s_Data.SelectedMeshDrawList)
+		{
+			if (dc.Mesh->IsAnimated())
+				outlineDraws[y--] = dc;
+			else
+				outlineDraws[x++] = dc;
+			
+		}
+		size_t skinnedVariationStart = x;
+
+		s_Data.OutlineShader->Bind(ShaderVariations::Default);
+		s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection);
+		s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1));
+
+		for (size_t i = 0; i < outlineDrawCount; i++)
+		{
+			if (i == skinnedVariationStart)
+			{
+				s_Data.OutlineShader->Bind(ShaderVariations::DefaultSkinned);
+				s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection);
+				s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1));
+			}
+
+			Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, true);
+		}
+		*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 		//shadersVisited.clear();
@@ -1091,15 +1304,30 @@ namespace Ares {
 
 		if (outline)
 		{
-			Renderer::Submit([](){
-					glStencilFunc(GL_NOTEQUAL, 1, 0xff);
-					glStencilMask(0);
 
-					glLineWidth(10);
-					glEnable(GL_LINE_SMOOTH);
-					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-					glDisable(GL_DEPTH_TEST);
-				}, "Draw Outline Prepare");
+			/*
+				Now that the stencil buffer is updated with 1s where the containers were drawn 
+				we're going to draw the upscaled containers, but this time with the appropriate 
+				test function and disabling writes to the stencil buffer:
+			*/
+			
+			/*
+				We set the stencil function to GL_NOTEQUAL to make sure that we're only drawing parts 
+				of the containers that are not equal to 1. This way we only draw the part of the containers 
+				that are outside the previously drawn containers. Note that we also disable depth testing so 
+				the scaled up containers (e.g. the borders) do not get overwritten by the floor. 
+			*/
+			Renderer::Submit([]() {
+				glStencilFunc(GL_NOTEQUAL, 1, 0xff);
+				glStencilMask(0x00); // disable writing to the stencil buffer
+
+
+				glLineWidth(10);
+				glEnable(GL_LINE_SMOOTH);
+				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				glPolygonMode(GL_FRONT, GL_LINE);
+				//glDisable(GL_DEPTH_TEST);
+			}, "Draw Outline Prepare");
 
 			// Draw outline here
 
@@ -1169,7 +1397,8 @@ namespace Ares {
 
 			Renderer::Submit([](){
 					glPointSize(10);
-					glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+					//glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+					glPolygonMode(GL_FRONT, GL_POINT);
 				}, "Draw Outline polymode");
 
 
@@ -1192,17 +1421,22 @@ namespace Ares {
 			//	Renderer::SubmitMesh(dc.Mesh, dc.Transform, outlineMaterials);
 			//}
 
+
+
+
+
 			Renderer::Submit([](){
-					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 					glStencilMask(0xff);
 					glStencilFunc(GL_ALWAYS, 1, 0xff);
-					glEnable(GL_DEPTH_TEST);
+					//glEnable(GL_DEPTH_TEST);
+					glPolygonMode(GL_FRONT, GL_FILL);
 				}, "Outline End");
 		}
 
 
 
 
+		
 
 		// DEBUG THE BRDF TEXTURE
 

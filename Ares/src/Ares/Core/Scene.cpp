@@ -104,6 +104,14 @@ namespace Ares
         }*/
         
     }
+    void Scene::ForEachEntity(std::function<void(const Entity&)> foreach)
+    {
+        m_Registry.each([&](auto entity)
+        {
+            Entity e(entity, this);
+            foreach(e);
+        });
+    }
     void Scene::OnUpdate()
     {
         // 3d
@@ -188,7 +196,7 @@ namespace Ares
         // RENDER SPRITES HERE
     }
 
-    void Scene::OnRenderEditor(const EditorCamera& editorCamera)
+    void Scene::OnRenderEditor(const EditorCamera& editorCamera, const Entity& selectedEntity)
     {
         auto group = m_Registry.group<MeshRendererComponent>(entt::get<TransformComponent>);
         SceneRenderer::BeginScene(this, { editorCamera, editorCamera.GetViewMatrix() });
@@ -200,7 +208,7 @@ namespace Ares
                 meshComponent.Mesh->OnUpdate();
 
                 // TODO: Should we render (logically)
-                SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent, meshComponent.Materials, m_SelectedEntity == entity);
+                SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent, meshComponent.Materials, selectedEntity == entity);
             }
         }
         SceneRenderer::EndScene();

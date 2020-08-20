@@ -2,8 +2,8 @@
 #include <Ares.h>
 //#include "imgui/imgui_internal.h"
 #include "Ares/Editor/EditorCamera.h"
-#include "Ares/Editor/SceneHierarchyPanel.h"
-
+//#include "Ares/Editor/SceneHierarchyPanel.h"
+#include "StatsWindow.h"
 namespace Ares
 {
 	class EditorLayer : public Layer
@@ -20,19 +20,22 @@ namespace Ares
 		bool OnKeyPressedEvent(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
-		void ShowBoundingBoxes(bool show, bool onTop = false);
-		void SelectEntity(Entity entity);
-		void DrawToolbar();
+		//void ShowBoundingBoxes(bool show, bool onTop = false);
+		//void SelectEntity(Entity entity);
+		void DrawSceneViewport();
 		void DrawMenu();
 		void ToolbarUI();
 		
 	private:
+
+		StatsWindow m_StatsWindow;
+
 		std::pair<float, float> GetMouseViewportSpace();
 		std::pair<Vector3, Vector3> CastRay(float mx, float my);
 	
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
-		float m_FrameTimeGraph[100];
-		int values_offset = 0;
+		//float m_FrameTimeGraph[100];
+		//int values_offset = 0;
 		Vector2 m_ViewportSize = { 0,0 };
 		
 		// 2d
@@ -51,7 +54,7 @@ namespace Ares
 		// 3d
 		FileSystemWatcher m_FileSystemWatcher;
 		Scope<AssetManagerPanel> m_AssetManagerPanel;
-		Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
+		//Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
 		
 		Ref<Scene> m_RuntimeScene, m_EditorScene;
 
@@ -68,10 +71,10 @@ namespace Ares
 		float m_SnapValue = 0.5f;
 
 		bool m_AllowViewportCameraEvents = false;
-		bool m_DrawOnTopBoundingBoxes = false;
+		//bool m_DrawOnTopBoundingBoxes = false;
 
-		bool m_UIShowBoundingBoxes = false;
-		bool m_UIShowBoundingBoxesOnTop = false;
+		//bool m_UIShowBoundingBoxes = false;
+		//bool m_UIShowBoundingBoxesOnTop = false;
 
 		bool m_ViewportPanelMouseOver = false;
 		bool m_ViewportPanelFocused = false;
@@ -82,15 +85,15 @@ namespace Ares
 		};
 		SceneState m_SceneState = SceneState::Edit;
 
-
+		
 		struct SelectedSubmesh
 		{
 			Entity Entity;
 			Submesh* Mesh = nullptr;
 			float Distance = 0.0f;
 		};
-		void OnSelected(const SelectedSubmesh& selectionContext);
-		void OnEntityDeleted(Entity e);
+		//void OnSelected(const SelectedSubmesh& selectionContext);
+		//void OnEntityDeleted(Entity e);
 
 		Ray CastMouseRay();
 
@@ -99,14 +102,18 @@ namespace Ares
 
 		void UpdateWindowTitle(const std::string& sceneName);
 
+		/*
 		enum class SelectionMode
 		{
 			None = 0, Entity = 1, SubMesh = 2
 		};
+		*/
 
-		SelectionMode m_SelectionMode = SelectionMode::Entity;
-		std::vector<SelectedSubmesh> m_SelectionContext;
-		Matrix4* m_RelativeTransform = nullptr;
-		Matrix4* m_CurrentlySelectedTransform = nullptr;
+		//SelectionMode m_SelectionMode = SelectionMode::Entity;
+		//std::vector<SelectedSubmesh> m_SelectionContext;
+		//Matrix4* m_RelativeTransform = nullptr;
+		//Matrix4* m_CurrentlySelectedTransform = nullptr;
+
+		Entity m_SelectedEntity;
 	};
 }

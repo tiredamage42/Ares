@@ -12,6 +12,14 @@ namespace Ares
 
 		typedef std::pair<std::function<void()>, std::function<void()>> UndoRedoPair;
 	public:
+		inline static bool CanUndo()
+		{
+			return (bool)s_UndoStack.size();
+		}
+		inline static bool CanRedo()
+		{
+			return (bool)s_RedoStack.size();
+		}
 		
 		inline static void AddToUndoStack(UndoRedoPair undoRedoPair)
 		{

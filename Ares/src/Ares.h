@@ -26,7 +26,7 @@
 #include "Ares/Core/FileUtils/JSON/JSONObject.h"
 
 #include "imgui/imgui.h"
-#include "Ares/Editor/SceneHierarchyPanel.h"
+//#include "Ares/Editor/SceneHierarchyPanel.h"
 #include "Ares/Editor/AssetManagerPanel.h"
 #include "Ares/Editor/FileSystemWatcher.h"
 #include "Ares/Editor/AssetManager.h"

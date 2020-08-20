@@ -41,7 +41,7 @@ namespace Ares
 
 		void OnUpdate();
 		void OnRenderRuntime();
-		void OnRenderEditor(const EditorCamera& editorCamera);
+		void OnRenderEditor(const EditorCamera& editorCamera, const Entity& selectedEntity);
 		void OnEvent(Event& e);
 
 		// Runtime
@@ -82,6 +82,8 @@ namespace Ares
 
 		void OnViewportResize(uint32_t width, uint32_t height);
 
+		void ForEachEntity(std::function<void(const Entity&)> foreach);
+
 		const EntityMap& GetEntityMap() const { return m_EntityIDMap; }
 		void CopyTo(Ref<Scene>& target);
 
@@ -90,7 +92,7 @@ namespace Ares
 		static Ref<Scene> GetScene(UUID uuid);
 
 		// Editor-specific
-		void SetSelectedEntity(entt::entity entity) { m_SelectedEntity = entity; }
+		//void SetSelectedEntity(entt::entity entity) { m_SelectedEntity = entity; }
 
 	private:
 		UUID m_SceneID;
@@ -112,7 +114,7 @@ namespace Ares
 		float m_Exposure = 0.8f;
 		bool m_IsPlaying = false;
 
-		entt::entity m_SelectedEntity;
+		//entt::entity m_SelectedEntity;
 
 		friend class SceneRenderer;
 		friend class Entity;
