@@ -28,26 +28,23 @@ namespace Ares
 		}
 
 		template <typename T, typename... Args>
-		T& AddComponent(Args&&... args) const
+		T* AddComponent(Args&&... args) const
 		{
 			ARES_CORE_ASSERT(!HasComponent<T>(), "Entity Already Has Component!");
-
-			return m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+			return &m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
 		}
 
 		// maybe try_get
 		template <typename T>
-		T& GetComponent() const
+		T* GetComponent() const
 		{
-			ARES_CORE_ASSERT(HasComponent<T>(), "Entity Doesn't Have Component!");
-
-			return m_Scene->m_Registry.get<T>(m_EntityHandle);
+			return m_Scene->m_Registry.try_get<T>(m_EntityHandle);
 		}
 
 		template <typename T, typename... Args>
-		T& GetOrAddComponent(Args&&... args) const
+		T* GetOrAddComponent(Args&&... args) const
 		{
-			return m_Scene->m_Registry.get_or_emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+			return &m_Scene->m_Registry.get_or_emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
 		}
 
 		template <typename T>
@@ -56,16 +53,13 @@ namespace Ares
 			return m_Scene->m_Registry.remove_if_exists<T>(m_EntityHandle);
 		}
 		
-
 		glm::mat4& Transform() { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
 		const glm::mat4& Transform() const { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
-
-		const std::string& GetName() const { return GetComponent<TagComponent>().Tag; }
+		const std::string& GetName() const { return m_Scene->m_Registry.get<TagComponent>(m_EntityHandle).Tag; }
 
 		operator uint32_t () const { return (uint32_t)m_EntityHandle; }
 		operator entt::entity() const { return m_EntityHandle; }
 		operator bool() const { return m_EntityHandle != entt::null && m_Scene; }
-		//operator bool() const { return (uint32_t)m_EntityHandle && m_Scene; }
 
 		bool operator==(const Entity& other) const
 		{
@@ -76,7 +70,8 @@ namespace Ares
 		{
 			return !(*this == other);
 		}
-		UUID GetUUID() { return GetComponent<IDComponent>().ID; }
+
+		UUID GetUUID() { return m_Scene->m_Registry.get<IDComponent>(m_EntityHandle).ID; }
 		UUID GetSceneUUID() { return m_Scene->GetUUID(); }
 	private:
 

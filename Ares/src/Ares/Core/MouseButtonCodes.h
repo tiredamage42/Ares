@@ -1,9 +1,7 @@
 #pragma once
 
-
 namespace Ares
 {
-
 	// From glfw3.h
 
 	#define _ARES_MOUSE_BUTTON_0      0
@@ -43,17 +41,3 @@ namespace Ares
 		return os;
 	}
 }
-// from glfw3.h
-
-//#define ARES_MOUSE_BUTTON_0      ::Ares::MouseButton::Button0
-//#define ARES_MOUSE_BUTTON_1      ::Ares::MouseButton::Button1
-//#define ARES_MOUSE_BUTTON_2      ::Ares::MouseButton::Button2
-//#define ARES_MOUSE_BUTTON_3      ::Ares::MouseButton::Button3
-//#define ARES_MOUSE_BUTTON_4      ::Ares::MouseButton::Button4
-//#define ARES_MOUSE_BUTTON_5      ::Ares::MouseButton::Button5
-//#define ARES_MOUSE_BUTTON_6      ::Ares::MouseButton::Button6
-//#define ARES_MOUSE_BUTTON_7      ::Ares::MouseButton::Button7
-//#define ARES_MOUSE_BUTTON_LAST   ::Ares::MouseButton::ButtonLast
-//#define ARES_MOUSE_BUTTON_LEFT   ::Ares::MouseButton::ButtonLeft
-//#define ARES_MOUSE_BUTTON_RIGHT  ::Ares::MouseButton::ButtonRight
-//#define ARES_MOUSE_BUTTON_MIDDLE ::Ares::MouseButton::ButtonMiddle

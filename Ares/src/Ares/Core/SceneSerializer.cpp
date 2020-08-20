@@ -163,7 +163,7 @@ namespace Ares {
 
 	static void SerializeEntity(YAML::Emitter& out, Entity entity)
 	{
-		UUID uuid = entity.GetComponent<IDComponent>().ID;
+		UUID uuid = entity.GetComponent<IDComponent>()->ID;
 		out << YAML::BeginMap; // Entity
 		out << YAML::Key << "Entity";
 		out << YAML::Value << uuid;
@@ -173,7 +173,7 @@ namespace Ares {
 			out << YAML::Key << "TagComponent";
 			out << YAML::BeginMap; // TagComponent
 
-			auto& tag = entity.GetComponent<TagComponent>().Tag;
+			auto& tag = entity.GetComponent<TagComponent>()->Tag;
 			out << YAML::Key << "Tag" << YAML::Value << tag;
 
 			out << YAML::EndMap; // TagComponent
@@ -184,7 +184,7 @@ namespace Ares {
 			out << YAML::Key << "TransformComponent";
 			out << YAML::BeginMap; // TransformComponent
 
-			auto& transform = entity.GetComponent<TransformComponent>().Transform;
+			auto& transform = entity.GetComponent<TransformComponent>()->Transform;
 			auto [pos, rot, scale] = GetTransformDecomposition(transform);
 			out << YAML::Key << "Position" << YAML::Value << pos;
 			out << YAML::Key << "Rotation" << YAML::Value << rot;
@@ -199,7 +199,7 @@ namespace Ares {
 			out << YAML::Key << "MeshComponent";
 			out << YAML::BeginMap; // MeshComponent
 
-			auto mesh = entity.GetComponent<MeshRendererComponent>().Mesh;
+			auto mesh = entity.GetComponent<MeshRendererComponent>()->Mesh;
 			out << YAML::Key << "AssetPath" << YAML::Value << mesh->GetFilePath();
 
 			out << YAML::EndMap; // MeshComponent
@@ -210,9 +210,9 @@ namespace Ares {
 			out << YAML::Key << "CameraComponent";
 			out << YAML::BeginMap; // CameraComponent
 
-			auto& cameraComponent = entity.GetComponent<CameraComponent>();
+			auto* cameraComponent = entity.GetComponent<CameraComponent>();
 			out << YAML::Key << "Camera" << YAML::Value << "some camera data...";
-			out << YAML::Key << "Primary" << YAML::Value << cameraComponent.Primary;
+			out << YAML::Key << "Primary" << YAML::Value << cameraComponent->Primary;
 
 			out << YAML::EndMap; // CameraComponent
 		}
@@ -330,7 +330,7 @@ namespace Ares {
 				if (transformComponent)
 				{
 					// Entities always have transforms
-					auto& transform = deserializedEntity.GetComponent<TransformComponent>().Transform;
+					auto& transform = deserializedEntity.GetComponent<TransformComponent>()->Transform;
 					glm::vec3 translation = transformComponent["Position"].as<glm::vec3>();
 					glm::quat rotation = transformComponent["Rotation"].as<glm::quat>();
 					glm::vec3 scale = transformComponent["Scale"].as<glm::vec3>();
@@ -352,10 +352,10 @@ namespace Ares {
 					// TEMP (because script creates mesh component...)
 					if (!deserializedEntity.HasComponent<MeshRendererComponent>())
 					{
-						MeshRendererComponent& mrComponent = deserializedEntity.AddComponent<MeshRendererComponent>();
+						MeshRendererComponent* mrComponent = deserializedEntity.AddComponent<MeshRendererComponent>();
 						std::vector<Ref<Material>> materials;
-						mrComponent.Mesh = CreateRef<Mesh>(meshPath, materials);
-						mrComponent.Materials = materials;
+						mrComponent->Mesh = CreateRef<Mesh>(meshPath, materials);
+						mrComponent->Materials = materials;
 
 					}
 
@@ -365,18 +365,18 @@ namespace Ares {
 				auto cameraComponent = entity["CameraComponent"];
 				if (cameraComponent)
 				{
-					auto& component = deserializedEntity.AddComponent<CameraComponent>();
-					component.Camera = SceneCamera();
-					component.Primary = cameraComponent["Primary"].as<bool>();
+					auto* component = deserializedEntity.AddComponent<CameraComponent>();
+					component->Camera = SceneCamera();
+					component->Primary = cameraComponent["Primary"].as<bool>();
 
-					ARES_CORE_INFO("  Primary Camera: {0}", component.Primary);
+					ARES_CORE_INFO("  Primary Camera: {0}", component->Primary);
 				}
 
 				auto spriteRendererComponent = entity["SpriteRendererComponent"];
 				if (spriteRendererComponent)
 				{
-					auto& component = deserializedEntity.AddComponent<SpriteRendererComponent>();
-					component.Color = spriteRendererComponent["Color"].as<glm::vec4>();
+					auto* component = deserializedEntity.AddComponent<SpriteRendererComponent>();
+					component->Color = spriteRendererComponent["Color"].as<glm::vec4>();
 					//component.TilingFactor = spriteRendererComponent["TilingFactor"].as<float>();
 
 					ARES_CORE_INFO("  SpriteRendererComponent present.");

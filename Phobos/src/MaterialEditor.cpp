@@ -18,8 +18,7 @@ namespace Ares
 	// TODO: custom cubemap support, need soem way to preview cubemaps
 	void MaterialEditor::DrawMaterial(Ref<Material> material)
 	{
-
-		std::vector<ShaderUniformDeclaration*> uniforms = material->GetUniformDeclarations();
+		std::vector<ShaderUniformDeclaration*> uniforms = material->m_Shader->GetPSMaterialUniformBuffer().GetUniformDeclarations();
 
 		//const std::unordered_map<size_t, PublicUniformAttributes>& publicUniforms = material->GetShader()->GetPublicUniforms();
 
@@ -39,7 +38,7 @@ namespace Ares
 				
 
 
-			auto& buffer = material->GetUniformBufferTarget(uniform);
+			auto& buffer = material->m_PSUniformStorageBuffer;
 			uint32_t offset = uniform->GetOffset();
 
 			byte* finalVal;
@@ -172,7 +171,7 @@ namespace Ares
 			}
 		}
 
-		std::vector<ShaderResourceDeclaration*> resources = material->GetResourceDeclarations();
+		std::vector<ShaderResourceDeclaration*> resources = material->m_Shader->GetResources();
 
 		Ref<Texture2D> checkerboardTex = EditorResources::GetTexture("checkerboard.png");
 

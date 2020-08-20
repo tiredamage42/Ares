@@ -16,10 +16,6 @@
 #include <assimp/pbrmaterial.h>
 
 
-#include <stb_image.h>
-
-//#include <glad/glad.h>
-
 #include "Ares/Core/FileUtils/FileUtils.h"
 #include "Ares/Renderer/Renderer.h"
 #include "Ares/Core/Time.h"
@@ -30,13 +26,8 @@
 
 #include "Ares/Core/StringUtils.h"
 
-
 #include <fbxsdk.h>
 //#include <fbxfilesdk/fbxio/fbxiosettings.h>
-
-
-
-
 
 /*
 	TODO:
@@ -48,7 +39,6 @@ namespace Ares {
 	static const uint32_t s_MeshImportFlags =
 
 		aiProcess_CalcTangentSpace |        // Create binormals/tangents just in case
-		//aiProcess_GenNormals |              // Make sure we have legit normals
 		aiProcess_GenSmoothNormals |
 		aiProcess_Triangulate |             // Make sure we're triangles
 		aiProcess_SortByPType |             // Split meshes by primitive type
@@ -67,17 +57,6 @@ namespace Ares {
 		result[0][3] = matrix.d1; result[1][3] = matrix.d2; result[2][3] = matrix.d3; result[3][3] = matrix.d4;
 		return result;
 	}
-	//static glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from)
-	//{
-	//	glm::mat4 to;
-	//	//the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
-	//	to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
-	//	to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
-	//	to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
-	//	to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
-	//	return to;
-	//}
-
 	struct LogStream : public Assimp::LogStream
 	{
 		static void Initialize()
@@ -85,7 +64,7 @@ namespace Ares {
 			if (Assimp::DefaultLogger::isNullLogger())
 			{
 				Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE);
-				Assimp::DefaultLogger::get()->attachStream(new LogStream, Assimp::Logger::Err | Assimp::Logger::Warn | Assimp::Logger::Info);
+				Assimp::DefaultLogger::get()->attachStream(new LogStream, Assimp::Logger::Err | Assimp::Logger::Warn);// | Assimp::Logger::Info);
 			}
 		}
 
@@ -151,55 +130,6 @@ namespace Ares {
 				}
 			}
 		}
-
-
-
-		//const uint32_t X_SEGMENTS = 64;
-		//const uint32_t Y_SEGMENTS = 64;
-		//
-		//const uint32_t numVertices = (Y_SEGMENTS + 1) * (X_SEGMENTS + 1);
-		//const uint32_t numIndicies = (Y_SEGMENTS) * (X_SEGMENTS + 1) * 2;
-
-		//m_Vertices.reserve(numVertices);
-		//m_Indices.reserve(numIndicies);
-
-		//for (uint32_t y = 0; y <= Y_SEGMENTS; y++)
-		//{
-		//	for (uint32_t x = 0; x <= X_SEGMENTS; ++x)
-		//	{
-		//		float xSegment = (float)x / (float)X_SEGMENTS;
-		//		float ySegment = (float)y / (float)Y_SEGMENTS;
-
-		//		float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
-		//		float yPos = std::cos(ySegment * PI);
-		//		float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
-
-		//		Vertex vertex;
-		//		vertex.Position = glm::vec3(xPos, yPos, zPos);
-		//		vertex.Normal = glm::vec3(xPos, yPos, zPos);
-		//		vertex.Texcoord = glm::vec2(xSegment, ySegment);
-		//		m_Vertices.push_back(vertex);
-		//	}
-		//	if (y < Y_SEGMENTS)
-		//	{
-		//		if (y % 2 == 0) // even rows
-		//		{
-		//			for (uint32_t x = 0; x <= X_SEGMENTS; x++)
-		//			{
-		//				m_Indices.push_back(y * (X_SEGMENTS + 1) + x);
-		//				m_Indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
-		//			}
-		//		}
-		//		else
-		//		{
-		//			for (int x = X_SEGMENTS; x >= 0; x--)
-		//			{
-		//				m_Indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
-		//				m_Indices.push_back(y * (X_SEGMENTS + 1) + x);
-		//			}
-		//		}
-		//	}
-		//}
 	}
 
 	static void GetCubeVertInfo(std::vector<Vertex>& m_Vertices, std::vector<uint32_t>& m_Indices)
@@ -237,15 +167,7 @@ namespace Ares {
 		glm::vec2 uv10 = { 1, 0 };
 		glm::vec2 uv01 = { 0, 1 };
 		glm::vec2 uv11 = { 1, 1 };
-
-		glm::vec2 uvs[] = {
-			uv01, uv11, uv10, uv00, // Bottom
-			//uv01, uv11, uv10, uv00, // Left
-			//uv01, uv11, uv10, uv00, // Front
-			//uv01, uv11, uv10, uv00, // Back	        
-			//uv01, uv11, uv10, uv00, // Right 
-			//uv01, uv11, uv10, uv00  // Top
-		};
+		glm::vec2 uvs[] = { uv01, uv11, uv10, uv00 };
 
 		const uint32_t numVertices = 24;
 		m_Vertices.reserve(numVertices);
@@ -268,14 +190,6 @@ namespace Ares {
 			m_Indices.push_back(offset + 2);
 			m_Indices.push_back(offset + 1);
 		}
-		//m_Indices = {
-		//	3,  1,  0,		3,  2,  1,      // Bottom	
-		//	7,  5,  4,		7,  6,  5,      // Left
-		//	11, 9,  8,		11, 10, 9,      // Front
-		//	15, 13, 12,		15, 14, 13,     // Back
-		//	19, 17, 16,		19, 18, 17,	    // Right
-		//	23, 21, 20,		23, 22, 21,	    // Top
-		//};
 	}
 
 	static void GetQuadVertInfo(std::vector<Vertex>& m_Vertices, std::vector<uint32_t>& m_Indices)
@@ -386,7 +300,6 @@ namespace Ares {
 		CalcTangents(m_StaticVertices, m_Indices);
 		//CalcNormals(m_StaticVertices, m_Indices);
 		
-
 		m_VertexArray = VertexArray::Create();
 
 		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(m_StaticVertices.data(), m_StaticVertices.size() * sizeof(Vertex));
@@ -395,7 +308,6 @@ namespace Ares {
 			{ ShaderDataType::Float2, "a_TexCoord" },
 			{ ShaderDataType::Float3, "a_Normal" },
 			{ ShaderDataType::Float3, "a_Tangent" },
-			//{ ShaderDataType::Float3, "a_Binormal" },
 		});
 
 		
@@ -404,18 +316,13 @@ namespace Ares {
 		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.capacity());
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 
-		//Submesh submesh;
 		Submesh& submesh = m_Submeshes.emplace_back();
 
 		submesh.BaseVertex = 0;
 		submesh.BaseIndex = 0;
 		submesh.MaterialIndex = 0;
 		submesh.IndexCount = m_Indices.capacity();
-		//m_Submeshes.push_back(submesh);
 		submesh.MeshName = "PrimitiveType";
-
-
-
 
 		auto& aabb = submesh.BoundingBox;
 		aabb.Min = { FLT_MAX, FLT_MAX, FLT_MAX };
@@ -442,50 +349,7 @@ namespace Ares {
 			);
 		}
 
-
-		//Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/PBRStatic.glsl");
-		//m_Materials.resize(1);
-		//m_Materials[0] = CreateRef<Material>(m_MeshShader);;
-		
-
-		//Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/pbr_static.glsl");
-
-
-		//m_BaseMaterial = CreateRef<Material>(m_MeshShader);
-		/*m_MaterialOverrides.resize(1);
-		m_MaterialOverrides[0] = CreateRef<MaterialInstance>(m_BaseMaterial);;*/
 	}
-
-
-	static Ref<Texture2D> LoadTexture(const aiTexture* texture, bool srgb)
-	{
-
-		int width, height, components_per_pixel;
-
-		unsigned char* image_data = nullptr;
-
-		if (texture->mHeight == 0)
-		{
-			image_data = stbi_load_from_memory(reinterpret_cast<unsigned char*>(texture->pcData), texture->mWidth, &width, &height, &components_per_pixel, 0);
-		}
-		else
-		{
-			image_data = stbi_load_from_memory(reinterpret_cast<unsigned char*>(texture->pcData), texture->mWidth * texture->mHeight, &width, &height, &components_per_pixel, 0);
-		}
-
-		// components_per_pixel?
-		Ref<Texture2D> t = Texture2D::Create(
-			srgb ? TextureFormat::RGB : TextureFormat::RGBA, 
-			width, height, 
-			TextureWrap::Clamp,
-			FilterType::Trilinear, 
-			true
-		);
-		t->SetData(image_data);
-		return t;
-	}
-
-
 
 	static void FBXSDKImport(const std::string& filePath)
 	{
@@ -528,7 +392,8 @@ namespace Ares {
 		// from the FbxImporter object.For more information on error handling, see Error Handling.
 
 
-		if (!lImportStatus) {
+		if (!lImportStatus) 
+		{
 			ARES_CORE_ERROR("Call to FbxImporter::Initialize() failed.\n");
 			ARES_CORE_ERROR("Error returned: {0}\n\n", lImporter->GetStatus().GetErrorString());
 			ARES_CORE_ASSERT(false, "");
@@ -574,15 +439,7 @@ namespace Ares {
 		lSdkManager->Destroy();
 
 	}
-
-
-
-	static const size_t u_AlbedoTexture = StringUtils::String2Hash("u_AlbedoTexture");
-	static const size_t u_NormalTexture = StringUtils::String2Hash("u_NormalTexture");
-		
-
-
-
+	
 	Mesh::Mesh(const std::string& filepath, std::vector<Ref<Material>>& m_Materials)
 		: m_FilePath(filepath)
 	{
@@ -604,28 +461,10 @@ namespace Ares {
 		//ARES_CORE_INFO("FBX Scene Scale: {0}", factor);
 
 		m_Scene = scene;
-
-
 		
 		m_IsAnimated = scene->mAnimations != nullptr;
 
-		//Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/PBRStatic.glsl");
 		Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/Standard.glsl");
-
-		/*Ref<Shader> m_MeshShader = nullptr;
-		
-		if (m_IsAnimated)
-		{
-			m_MeshShader = Shader::Find("Assets/Shaders/pbr_anim.glsl");
-		}
-		else
-		{
-			m_MeshShader = Shader::Find("Assets/Shaders/pbr_static.glsl");
-		}*/
-
-		//m_BaseMaterial = CreateRef<Material>(m_MeshShader);
-
-		// m_MaterialInstance = std::make_shared<MaterialInstance>(m_BaseMaterial);
 
 		m_InverseTransform = glm::inverse(Mat4FromAssimpMat4(scene->mRootNode->mTransformation));
 
@@ -637,14 +476,11 @@ namespace Ares {
 		{
 			aiMesh* mesh = scene->mMeshes[m];
 
-
-			//Submesh submesh;
 			Submesh& submesh = m_Submeshes.emplace_back();
 			submesh.BaseVertex = vertexCount;
 			submesh.BaseIndex = indexCount;
 			submesh.MaterialIndex = mesh->mMaterialIndex;
 			submesh.IndexCount = mesh->mNumFaces * 3;
-			//m_Submeshes.push_back(submesh);
 			submesh.MeshName = mesh->mName.C_Str();
 
 			vertexCount += mesh->mNumVertices;
@@ -733,11 +569,8 @@ namespace Ares {
 			}
 		}
 
-		/*ARES_CORE_LOG("NODES:");
-		ARES_CORE_LOG("-----------------------------");*/
 		TraverseNodes(scene->mRootNode);
-		//ARES_CORE_LOG("-----------------------------");
-
+		
 		// Bones
 		if (m_IsAnimated)
 		{
@@ -773,8 +606,7 @@ namespace Ares {
 					{
 						int VertexID = submesh.BaseVertex + bone->mWeights[j].mVertexId;
 						float Weight = bone->mWeights[j].mWeight;
-						//m_AnimatedVertices[VertexID].AddBoneData(boneIndex, Weight);
-						m_AnimatedVertices[VertexID].AddBoneData2((float)boneIndex, Weight);
+						m_AnimatedVertices[VertexID].AddBoneData((float)boneIndex, Weight);
 					}
 				}
 			}
@@ -811,75 +643,29 @@ namespace Ares {
 				}
 			}
 
-
 			ARES_CORE_LOG("---- Materials - {0} ----", filepath);
 
-			//m_Textures.resize(scene->mNumMaterials);
-			
-			//m_MaterialOverrides.resize(scene->mNumMaterials);
 			m_Materials.resize(scene->mNumMaterials);
-
-
 
 			for (uint32_t i = 0; i < scene->mNumMaterials; i++)
 			{
 				auto aiMaterial = scene->mMaterials[i];
 				auto aiMaterialName = aiMaterial->GetName();
 
-				/*auto mi = CreateRef<MaterialInstance>(m_BaseMaterial, aiMaterialName.data);
-				m_MaterialOverrides[i] = mi;*/
-
 				auto mi = CreateRef<Material>(m_MeshShader, aiMaterialName.data);
 				m_Materials[i] = mi;
 
-
-
 				ARES_CORE_INFO(" {0}; Index = {1}", aiMaterialName.data, i);
 				aiString aiTexPath;
-				uint32_t textureCount = aiMaterial->GetTextureCount(aiTextureType_DIFFUSE);
-				ARES_CORE_LOG("  TextureCount = {0}", textureCount);
-
-				aiColor3D aiColor;
-				aiMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, aiColor);
-				mi->SetValue("u_AlbedoColor", glm::vec3{ aiColor.r, aiColor.g, aiColor.b });
-
-				float shininess, metalness;
-				aiMaterial->Get(AI_MATKEY_SHININESS, shininess);
-				aiMaterial->Get(AI_MATKEY_REFLECTIVITY, metalness);
-				metalness = 0;
-
-
-				// float roughness = 1.0f - shininess * 0.01f;
-				// roughness *= roughness;
-				float roughness = 1.0f - glm::sqrt(shininess / 100.0f);
-				ARES_CORE_LOG("    COLOR = {0}, {1}, {2}", aiColor.r, aiColor.g, aiColor.b);
-				ARES_CORE_LOG("    ROUGHNESS = {0}", roughness);
-
-
+				
 				bool hasAlbedoMap = aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &aiTexPath) == AI_SUCCESS;
 				if (hasAlbedoMap)
 				{
 					std::string imgPath = aiTexPath.data;
 					if (hasEmbeddedTextures)
 					{
-						// remove aitexpath part before ".fbm/..." then add teh filename
-						// this is pretty specific to the tests with mixamo models with embedded textures
 						imgPath = FileUtils::ExtractFileNameFromPath(filepath) + imgPath.substr(imgPath.find(".fbm"));
 					}
-
-					/*for (int i = 0; i < scene->mNumTextures; i++)
-					{
-						auto t = scene->mTextures[i];
-					}*/
-
-
-					//aiString texture_file;
-					//aiMaterial->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), texture_file);
-					//auto aiTexture = scene->GetEmbeddedTexture(texture_file.C_Str());
-					//auto texture = LoadTexture(aiTexture, true);
-
-					//std::string imgPath = FileUtils::RemoveDirectoryFromPath(aiTexPath.data);
-					//std::string imgPath = aiTexPath.data;
 
 					// TODO: Temp - this should be handled by our filesystem
 					std::filesystem::path path = filepath;
@@ -887,31 +673,21 @@ namespace Ares {
 					parentPath /= imgPath;
 					std::string texturePath = parentPath.string();
 
-					//texturePath = filename.substr(0, filename.size() - 1)  + "m/" + FileUtils::RemoveDirectoryFromPath(scene->mTextures[2]->mFilename.data);
-
 					ARES_CORE_LOG("  Albedo Texture Path = {0}", texturePath);
 					auto texture = Texture2D::Create(texturePath, FilterType::Trilinear, true, true);
 					if (texture->Loaded())
 					{
-						//m_Textures[i] = texture;
-						//mi->Set("u_AlbedoTexture", m_Textures[i]);
 						mi->SetTexture("u_AlbedoTex", texture);
-						//mi->Set("u_AlbedoTexToggle", 1.0f);
 					}
 					else
 					{
 						ARES_CORE_ERROR("Could not load texture: {0}", texturePath);
-						//mi->Set("u_AlbedoTexToggle", 0.0f);
-						//mi->SetValue("u_AlbedoColor", glm::vec3{ aiColor.r, aiColor.g, aiColor.b });
 					}
 				}
 				else
 				{
-					//mi->Set("u_AlbedoTexToggle", 0.0f);
-					//mi->SetValue("u_AlbedoColor", glm::vec3{ aiColor.r, aiColor.g, aiColor.b });
 					ARES_CORE_LOG("		Mesh has no albedo map");
 				}
-				//continue;
 
 				// Normal maps
 				if (aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &aiTexPath) == AI_SUCCESS)
@@ -937,13 +713,10 @@ namespace Ares {
 					if (texture->Loaded())
 					{
 						mi->SetTexture("u_NormalTex", texture);
-						//mi->Set("u_NormalTexToggle", 1.0f);
 					}
 					else
 					{
 						ARES_CORE_ERROR("Could not load texture: {0}", texturePath);
-						//mi->Set("u_AlbedoTexToggle", 0.0f);
-						// mi->Set("u_AlbedoColor", glm::vec3{ color.r, color.g, color.b });
 					}
 				}
 				else
@@ -951,214 +724,6 @@ namespace Ares {
 					ARES_CORE_LOG("Mesh has no normal map");
 				}
 				
-#if 0
-
-
-
-				// Roughness map
-				if (aiMaterial->GetTexture(aiTextureType_SHININESS, 0, &aiTexPath) == AI_SUCCESS)
-				{
-
-					std::string imgPath = aiTexPath.data;
-					if (hasEmbeddedTextures)
-					{
-						// remove aitexpath part before ".fbm/..." then add teh filename
-						// this is pretty specific to the tests with mixamo models with embedded textures
-						imgPath = FileUtils::ExtractFileNameFromPath(filepath) + imgPath.substr(imgPath.find(".fbm"));
-					}
-
-					// TODO: Temp - this should be handled by Hazel's filesystem
-					std::filesystem::path path = filepath;
-					auto parentPath = path.parent_path();
-					parentPath /= imgPath;
-					std::string texturePath = parentPath.string();
-					ARES_CORE_LOG("  Roughness map path = {0}", texturePath);
-
-					auto texture = Texture2D::Create(texturePath, FilterType::Trilinear, true);
-					if (texture->Loaded())
-					{
-						mi->Set("u_RoughnessTexture", texture);
-						mi->Set("u_RoughnessTexToggle", 1.0f);
-					}
-					else
-					{
-						ARES_CORE_ERROR("		Could not load texture: {0}", texturePath);
-						//mi->Set("u_RoughnessTexToggle", 1.0f);
-						mi->Set("u_Roughness", roughness);
-					}
-				}
-				else
-				{
-					ARES_CORE_LOG("		no roughness map");
-					mi->Set("u_Roughness", roughness);
-				}
-
-				// metallic
-
-				//material->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE, &fileBaseColor);
-				//material->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &fileMetallicRoughness);
-				//if (aiMaterial->GetTexture(aiTextureType_UNKNOWN, 0, &aiTexPath) == AI_SUCCESS)
-				if (aiMaterial->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &aiTexPath) == AI_SUCCESS)
-				{
-
-					std::string imgPath = aiTexPath.data;
-					if (hasEmbeddedTextures)
-					{
-						// remove aitexpath part before ".fbm/..." then add teh filename
-						// this is pretty specific to the tests with mixamo models with embedded textures
-						imgPath = FileUtils::ExtractFileNameFromPath(filepath) + imgPath.substr(imgPath.find(".fbm"));
-					}
-
-					// TODO: Temp - this should be handled by Hazel's filesystem
-					std::filesystem::path path = filepath;
-					auto parentPath = path.parent_path();
-					parentPath /= imgPath;
-					std::string texturePath = parentPath.string();
-					ARES_CORE_LOG("  Metallic map path = {0}", texturePath);
-
-					auto texture = Texture2D::Create(texturePath, FilterType::Trilinear, true);
-					if (texture->Loaded())
-					{
-						mi->Set("u_MetalnessTexture", texture);
-						mi->Set("u_MetalnessTexToggle", 1.0f);
-					}
-					else
-					{
-						ARES_CORE_ERROR("		Could not load texture: {0}", texturePath);
-						//mi->Set("u_RoughnessTexToggle", 1.0f);
-						mi->Set("u_Metalness", roughness);
-					}
-				}
-				else
-				{
-					ARES_CORE_LOG("		no Metalness map");
-					mi->Set("u_Metalness", roughness);
-				}
-				//aiTextureType_REFLECTION aiTextureType_SPECULAR
-#endif
-#if 0
-
-				// Metalness map
-				if (aiMaterial->Get("$raw.ReflectionFactor|file", aiPTI_String, 0, aiTexPath) == AI_SUCCESS)
-				{
-					// TODO: Temp - this should be handled by Hazel's filesystem
-					std::filesystem::path path = filename;
-					auto parentPath = path.parent_path();
-					parentPath /= std::string(aiTexPath.data);
-					std::string texturePath = parentPath.string();
-					ARES_CORE_LOG("  Metalness map path = {0}", texturePath);
-
-					auto texture = Texture2D::Create(texturePath);
-					if (texture->Loaded())
-					{
-						mi->Set("u_MetalnessTexture", texture);
-						mi->Set("u_MetalnessTexToggle", 1.0f);
-					}
-					else
-					{
-						ARES_CORE_ERROR("Could not load texture: {0}", texturePath);
-						mi->Set("u_Metalness", metalness);
-						//mi->Set("u_MetalnessTexToggle", 1.0f);
-					}
-				}
-				else
-				{
-					ARES_CORE_LOG("Mesh has no metalness map");
-					mi->Set("u_Metalness", metalness);
-				}
-#endif
-
-
-
-				/*
-				bool metalnessTextureFound = false;
-
-				for (uint32_t i = 0; i < aiMaterial->mNumProperties; i++)
-				{
-					auto prop = aiMaterial->mProperties[i];
-					
-					ARES_CORE_LOG("Material Property:");
-					ARES_CORE_LOG("  Name = {0}", prop->mKey.data);
-					ARES_CORE_LOG("  Type = {0}", prop->mType);
-					ARES_CORE_LOG("  Size = {0}", prop->mDataLength);
-					float data = *(float*)prop->mData;
-					ARES_CORE_LOG("  Value = {0}", data);
-
-
-					switch (prop->mSemantic)
-					{
-					case aiTextureType_NONE:			ARES_CORE_LOG("  Semantic = aiTextureType_NONE");			break;
-					case aiTextureType_DIFFUSE:			ARES_CORE_LOG("  Semantic = aiTextureType_DIFFUSE");		break;
-					case aiTextureType_SPECULAR:		ARES_CORE_LOG("  Semantic = aiTextureType_SPECULAR");		break;
-					case aiTextureType_AMBIENT:			ARES_CORE_LOG("  Semantic = aiTextureType_AMBIENT");		break;
-					case aiTextureType_EMISSIVE:		ARES_CORE_LOG("  Semantic = aiTextureType_EMISSIVE");		break;
-					case aiTextureType_HEIGHT:			ARES_CORE_LOG("  Semantic = aiTextureType_HEIGHT");			break;
-					case aiTextureType_NORMALS:			ARES_CORE_LOG("  Semantic = aiTextureType_NORMALS");		break;
-					case aiTextureType_SHININESS:		ARES_CORE_LOG("  Semantic = aiTextureType_SHININESS");		break;
-					case aiTextureType_OPACITY:			ARES_CORE_LOG("  Semantic = aiTextureType_OPACITY");		break;
-					case aiTextureType_DISPLACEMENT:	ARES_CORE_LOG("  Semantic = aiTextureType_DISPLACEMENT");	break;
-					case aiTextureType_LIGHTMAP:		ARES_CORE_LOG("  Semantic = aiTextureType_LIGHTMAP");		break;
-					case aiTextureType_REFLECTION:		ARES_CORE_LOG("  Semantic = aiTextureType_REFLECTION");		break;
-					case aiTextureType_UNKNOWN:			ARES_CORE_LOG("  Semantic = aiTextureType_UNKNOWN");		break;
-					}
-
-					if (prop->mType == aiPTI_String)
-					{
-						uint32_t strLength = *(uint32_t*)prop->mData;
-						std::string str(prop->mData + 4, strLength);
-						//ARES_CORE_LOG("  Value = {0}", str);
-
-						std::string key = prop->mKey.data;
-						if (key == "$raw.ReflectionFactor|file")
-						{
-
-							metalnessTextureFound = true;
-
-							std::string imgPath = str;
-							if (hasEmbeddedTextures)
-							{
-								// remove aitexpath part before ".fbm/..." then add teh filename
-						// this is pretty specific to the tests with mixamo models with embedded textures
-								imgPath = FileUtils::ExtractFileNameFromPath(filepath) + imgPath.substr(imgPath.find(".fbm"));
-							}
-
-
-
-
-							// TODO: Temp - this should be handled by Hazel's filesystem
-							std::filesystem::path path = filepath;
-							auto parentPath = path.parent_path();
-							parentPath /= imgPath;
-							std::string texturePath = parentPath.string();
-							ARES_CORE_LOG("    Metalness map path = {0}", texturePath);
-
-							auto texture = Texture2D::Create(texturePath, FilterType::Trilinear, true);
-							if (texture->Loaded())
-							{
-								//ARES_CORE_LOG("  Metalness map path = {0}", texturePath);
-								mi->Set("u_MetalnessTexture", texture);
-								mi->Set("u_MetalnessTexToggle", 1.0f);
-							}
-							else
-							{
-								ARES_CORE_ERROR("Could not load texture: {0}", texturePath);
-								mi->Set("u_Metalness", metalness);
-								//mi->Set("u_MetalnessTexToggle", 1.0f);
-							}
-							break;
-						}
-					}
-				}
-				if (!metalnessTextureFound)
-				{
-					ARES_CORE_LOG("    No metalness map");
-
-					mi->Set("u_Metalness", metalness);
-					mi->Set("u_MetalnessTexToggle", 0.0f);
-				}
-
-				*/
-
 			}
 			ARES_CORE_LOG("------------------------");
 		}
@@ -1175,8 +740,6 @@ namespace Ares {
 				{ ShaderDataType::Float2, "a_TexCoord" },
 				{ ShaderDataType::Float3, "a_Normal" },
 				{ ShaderDataType::Float3, "a_Tangent" },
-				//{ ShaderDataType::Float3, "a_Binormal" },
-				//{ ShaderDataType::Int4, "a_BoneIDs" },
 				{ ShaderDataType::Float4, "a_BoneIDs" },
 				{ ShaderDataType::Float4, "a_BoneWeights" },
 			});
@@ -1189,7 +752,6 @@ namespace Ares {
 				{ ShaderDataType::Float2, "a_TexCoord" },
 				{ ShaderDataType::Float3, "a_Normal" },
 				{ ShaderDataType::Float3, "a_Tangent" },
-				//{ ShaderDataType::Float3, "a_Binormal" },
 			});
 		}
 
@@ -1221,8 +783,6 @@ namespace Ares {
 		for (uint32_t i = 0; i < node->mNumMeshes; i++)
 		{
 			uint32_t mesh = node->mMeshes[i];
-			//m_Submeshes[mesh].Transform = transform;
-
 			auto& submesh = m_Submeshes[mesh];
 			submesh.NodeName = node->mName.C_Str();
 			submesh.Transform = transform;
@@ -1390,11 +950,8 @@ namespace Ares {
 	void Mesh::BoneTransform(float time)
 	{
 		ReadNodeHierarchy(time, m_Scene->mRootNode, glm::mat4(1.0f));
-		//m_BoneTransforms.resize(m_BoneCount);
 		for (size_t i = 0; i < m_BoneCount; i++)
 		{
-			//m_BoneTransforms[i] = m_BoneInfo[i].FinalTransformation;
-			
 			const float* pSource = (const float*)glm::value_ptr(m_BoneInfo[i].FinalTransformation);
 			std::copy(pSource, pSource + 16, m_BoneMatrixData + 16 * i);
 		}
@@ -1420,70 +977,6 @@ namespace Ares {
 
 	}
 
-	//void Mesh::Render(Ref<Shader> shader, const glm::mat4& transform)
-	//{
-
-	//	if (m_IsAnimated)
-	//	{
-
-	//		if (m_AnimationPlaying)
-	//		{
-	//			m_WorldTime += Time::GetDeltaTime();
-
-	//			float ticksPerSecond = (float)(m_Scene->mAnimations[0]->mTicksPerSecond != 0 ? m_Scene->mAnimations[0]->mTicksPerSecond : 25.0f) * m_TimeMultiplier;
-	//			m_AnimationTime += Time::GetDeltaTime() * ticksPerSecond;
-	//			m_AnimationTime = fmod(m_AnimationTime, (float)m_Scene->mAnimations[0]->mDuration);
-	//		}
-
-	//		BoneTransform(m_AnimationTime);
-	//	}
-
-	//	m_VertexArray->Bind();
-	//	
-	//	Renderer::Submit([this, shader, transform]() {
-	//		for (Submesh& submesh : this->m_Submeshes)
-	//		{
-
-	//			if (m_IsAnimated)
-	//			{
-	//				for (size_t i = 0; i < this->m_BoneTransforms.size(); i++)
-	//				{
-	//					std::string uniformName = std::string("u_BoneTransforms[") + std::to_string(i) + std::string("]");
-	//					shader->SetMat4FromRenderThread(uniformName, this->m_BoneTransforms[i]);
-	//				}
-	//			}
-
-	//			/*if (shader)
-	//			{
-	//				shader->SetMat4FromRenderThread("u_ModelMatrix", transform * submesh.Transform);
-	//			}*/
-
-	//			glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
-	//		}
-	//	});
-	//}
-
-	/*void Mesh::OnImGuiRender()
-	{
-		ImGui::Begin("Mesh Debug");
-		if (ImGui::CollapsingHeader(m_FilePath.c_str()))
-		{
-			if (m_IsAnimated)
-			{
-
-				if (ImGui::CollapsingHeader("Animation"))
-				{
-					if (ImGui::Button(m_AnimationPlaying ? "Pause" : "Play"))
-						m_AnimationPlaying = !m_AnimationPlaying;
-
-					ImGui::SliderFloat("##AnimationTime", &m_AnimationTime, 0.0f, (float)m_Scene->mAnimations[0]->mDuration);
-					ImGui::DragFloat("Time Scale", &m_TimeMultiplier, 0.05f, 0.0f, 10.0f);
-				}
-			}
-		}
-
-		ImGui::End();
-	}*/
 
 	void Mesh::DumpVertexBuffer()
 	{
@@ -1499,7 +992,6 @@ namespace Ares {
 				ARES_CORE_LOG("Vertex: {0}", i);
 				ARES_CORE_LOG("Position: {0}, {1}, {2}", vertex.Position.x, vertex.Position.y, vertex.Position.z);
 				ARES_CORE_LOG("Normal: {0}, {1}, {2}", vertex.Normal.x, vertex.Normal.y, vertex.Normal.z);
-				//ARES_CORE_LOG("Binormal: {0}, {1}, {2}", vertex.Binormal.x, vertex.Binormal.y, vertex.Binormal.z);
 				ARES_CORE_LOG("Tangent: {0}, {1}, {2}", vertex.Tangent.x, vertex.Tangent.y, vertex.Tangent.z);
 				ARES_CORE_LOG("TexCoord: {0}, {1}", vertex.Texcoord.x, vertex.Texcoord.y);
 				ARES_CORE_LOG("--");
@@ -1513,7 +1005,6 @@ namespace Ares {
 				ARES_CORE_LOG("Vertex: {0}", i);
 				ARES_CORE_LOG("Position: {0}, {1}, {2}", vertex.Position.x, vertex.Position.y, vertex.Position.z);
 				ARES_CORE_LOG("Normal: {0}, {1}, {2}", vertex.Normal.x, vertex.Normal.y, vertex.Normal.z);
-				//ARES_CORE_LOG("Binormal: {0}, {1}, {2}", vertex.Binormal.x, vertex.Binormal.y, vertex.Binormal.z);
 				ARES_CORE_LOG("Tangent: {0}, {1}, {2}", vertex.Tangent.x, vertex.Tangent.y, vertex.Tangent.z);
 				ARES_CORE_LOG("TexCoord: {0}, {1}", vertex.Texcoord.x, vertex.Texcoord.y);
 				ARES_CORE_LOG("--");

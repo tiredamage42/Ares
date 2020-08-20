@@ -178,7 +178,7 @@ namespace Ares {
 
 
 		//
-		const char* name = entity.GetComponent<TagComponent>().Tag.c_str();
+		const char* name = entity.GetComponent<TagComponent>()->Tag.c_str();
 
 		ImGuiTreeNodeFlags node_flags = (entity == m_SelectionContext ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 		bool opened = ImGui::TreeNodeEx((void*)(uint32_t)entity, node_flags, name);
@@ -202,7 +202,7 @@ namespace Ares {
 		{
 			if (entity.HasComponent<MeshRendererComponent>())
 			{
-				auto mesh = entity.GetComponent<MeshRendererComponent>().Mesh;
+				auto mesh = entity.GetComponent<MeshRendererComponent>()->Mesh;
 				// if (mesh)
 				// 	DrawMeshNode(mesh);
 			}
@@ -397,7 +397,7 @@ namespace Ares {
 			{
 				bool removeComponent = false;
 
-				auto& component = entity.GetComponent<T>();
+				auto* component = entity.GetComponent<T>();
 				bool open = ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(T).hash_code()), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap, name.c_str());
 				ImGui::SameLine();
 				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
@@ -445,11 +445,11 @@ namespace Ares {
 		{
 			ImGui::AlignTextToFramePadding();
 
-			auto id = entity.GetComponent<IDComponent>().ID;
+			auto id = entity.GetComponent<IDComponent>()->ID;
 
 			if (entity.HasComponent<TagComponent>())
 			{
-				auto& tag = entity.GetComponent<TagComponent>().Tag;
+				auto& tag = entity.GetComponent<TagComponent>()->Tag;
 				char buffer[256];
 				memset(buffer, 0, 256);
 				memcpy(buffer, tag.c_str(), tag.length());
@@ -466,10 +466,10 @@ namespace Ares {
 
 			if (entity.HasComponent<TransformComponent>())
 			{
-				auto& tc = entity.GetComponent<TransformComponent>();
+				auto* tc = entity.GetComponent<TransformComponent>();
 				if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(TransformComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Transform"))
 				{
-					auto [translation, rotationQuat, scale] = GetTransformDecomposition(tc);
+					auto [translation, rotationQuat, scale] = GetTransformDecomposition(tc->Transform);
 					glm::vec3 rotation = glm::degrees(glm::eulerAngles(rotationQuat));
 
 					ImGui::Columns(2);
@@ -517,7 +517,7 @@ namespace Ares {
 
 					if (updateTransform)
 					{
-						tc.Transform = glm::translate(glm::mat4(1.0f), translation) *
+						tc->Transform = glm::translate(glm::mat4(1.0f), translation) *
 							glm::toMat4(glm::quat(glm::radians(rotation))) *
 							glm::scale(glm::mat4(1.0f), scale);
 					}
@@ -529,7 +529,7 @@ namespace Ares {
 				ImGui::Separator();
 			}
 
-			DrawComponent<MeshRendererComponent>("Mesh", entity, [](MeshRendererComponent& mc)
+			DrawComponent<MeshRendererComponent>("Mesh", entity, [](MeshRendererComponent* mc)
 
 				//if (entity.HasComponent<MeshRendererComponent>())
 				//{
@@ -543,8 +543,8 @@ namespace Ares {
 					ImGui::Text("File Path");
 					ImGui::NextColumn();
 					ImGui::PushItemWidth(-1);
-					if (mc.Mesh)
-						ImGui::InputText("##meshfilepath", (char*)mc.Mesh->GetFilePath().c_str(), 256, ImGuiInputTextFlags_ReadOnly);
+					if (mc->Mesh)
+						ImGui::InputText("##meshfilepath", (char*)mc->Mesh->GetFilePath().c_str(), 256, ImGuiInputTextFlags_ReadOnly);
 					else
 						ImGui::InputText("##meshfilepath", (char*)"Null", 256, ImGuiInputTextFlags_ReadOnly);
 					ImGui::PopItemWidth();
@@ -556,8 +556,8 @@ namespace Ares {
 						if (!file.empty())
 						{
 							std::vector<Ref<Material>> materials;
-							mc.Mesh = CreateRef<Mesh>(file, materials);
-							mc.Materials = materials;
+							mc->Mesh = CreateRef<Mesh>(file, materials);
+							mc->Materials = materials;
 						}
 					}
 					/*ImGui::NextColumn();
@@ -573,7 +573,7 @@ namespace Ares {
 			});
 
 
-			DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent& cc)
+			DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent* cc)
 
 			/*if (entity.HasComponent<CameraComponent>())
 			{
@@ -582,7 +582,7 @@ namespace Ares {
 				{
 					// Projection Type
 					const char* projTypeStrings[] = { "Perspective", "Orthographic" };
-					const char* currentProj = projTypeStrings[(int)cc.Camera.GetProjectionType()];
+					const char* currentProj = projTypeStrings[(int)cc->Camera.GetProjectionType()];
 					if (ImGui::BeginCombo("Projection", currentProj))
 					{
 						for (int type = 0; type < 2; type++)
@@ -591,7 +591,7 @@ namespace Ares {
 							if (ImGui::Selectable(projTypeStrings[type], is_selected))
 							{
 								currentProj = projTypeStrings[type];
-								cc.Camera.SetProjectionType((SceneCamera::ProjectionType)type);
+								cc->Camera.SetProjectionType((SceneCamera::ProjectionType)type);
 							}
 							if (is_selected)
 								ImGui::SetItemDefaultFocus();
@@ -601,35 +601,35 @@ namespace Ares {
 
 					BeginPropertyGrid();
 					// Perspective parameters
-					if (cc.Camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
+					if (cc->Camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
 					{
-						float verticalFOV = cc.Camera.GetPerspectiveVerticalFOV();
+						float verticalFOV = cc->Camera.GetPerspectiveVerticalFOV();
 						if (Property("Vertical FOV", verticalFOV))
-							cc.Camera.SetPerspectiveVerticalFOV(verticalFOV);
+							cc->Camera.SetPerspectiveVerticalFOV(verticalFOV);
 
-						float nearClip = cc.Camera.GetPerspectiveNearClip();
+						float nearClip = cc->Camera.GetPerspectiveNearClip();
 						if (Property("Near Clip", nearClip))
-							cc.Camera.SetPerspectiveNearClip(nearClip);
+							cc->Camera.SetPerspectiveNearClip(nearClip);
 						ImGui::SameLine();
-						float farClip = cc.Camera.GetPerspectiveFarClip();
+						float farClip = cc->Camera.GetPerspectiveFarClip();
 						if (Property("Far Clip", farClip))
-							cc.Camera.SetPerspectiveFarClip(farClip);
+							cc->Camera.SetPerspectiveFarClip(farClip);
 					}
 
 					// Orthographic parameters
-					else if (cc.Camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic)
+					else if (cc->Camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic)
 					{
-						float orthoSize = cc.Camera.GetOrthographicSize();
+						float orthoSize = cc->Camera.GetOrthographicSize();
 						if (Property("Size", orthoSize))
-							cc.Camera.SetOrthographicSize(orthoSize);
+							cc->Camera.SetOrthographicSize(orthoSize);
 
-						float nearClip = cc.Camera.GetOrthographicNearClip();
+						float nearClip = cc->Camera.GetOrthographicNearClip();
 						if (Property("Near Clip", nearClip))
-							cc.Camera.SetOrthographicNearClip(nearClip);
+							cc->Camera.SetOrthographicNearClip(nearClip);
 						ImGui::SameLine();
-						float farClip = cc.Camera.GetOrthographicFarClip();
+						float farClip = cc->Camera.GetOrthographicFarClip();
 						if (Property("Far Clip", farClip))
-							cc.Camera.SetOrthographicFarClip(farClip);
+							cc->Camera.SetOrthographicFarClip(farClip);
 					}
 
 					EndPropertyGrid();
@@ -641,7 +641,7 @@ namespace Ares {
 
 
 
-			DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](SpriteRendererComponent& sr)
+			DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](SpriteRendererComponent* sr)
 			{
 			});
 

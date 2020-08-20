@@ -12,7 +12,7 @@ namespace Ares {
 	
 	/*RenderCommandQueue Renderer::s_CommandQueue;
 	Ref<RenderPass> Renderer::s_ActiveRenderPass;*/
-
+	 
 
 	struct RendererData
 	{

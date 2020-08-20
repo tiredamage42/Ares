@@ -33,17 +33,13 @@ namespace Ares
 	{
 
 	}
-
-	FramebufferPool::~FramebufferPool()
-	{
-
-	}
-
+	/*
 	std::weak_ptr<FrameBuffer> FramebufferPool::AllocateBuffer()
 	{
 		// m_Pool.push_back();
 		return std::weak_ptr<FrameBuffer>();
 	}
+	*/
 
 	void FramebufferPool::Add(const Ref<FrameBuffer>& framebuffer)
 	{

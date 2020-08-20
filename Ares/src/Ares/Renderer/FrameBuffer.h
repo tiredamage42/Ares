@@ -49,9 +49,9 @@ namespace Ares
 	{
 	public:
 		FramebufferPool(uint32_t maxFBs = 32);
-		~FramebufferPool();
+		~FramebufferPool() = default;
 
-		std::weak_ptr<FrameBuffer> AllocateBuffer();
+		//std::weak_ptr<FrameBuffer> AllocateBuffer();
 		void Add(const Ref<FrameBuffer>& framebuffer);
 
 		std::vector<Ref<FrameBuffer>>& GetAll() { return m_Pool; }

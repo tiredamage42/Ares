@@ -59,13 +59,8 @@ namespace Ares
     struct MeshRendererComponent
     {
         Ref<Mesh> Mesh = nullptr;
-        //Ref<Material> Material;
         std::vector<Ref<Material>> Materials;
 
-        //Ref<MaterialInstance> MaterialOverride = nullptr;
-        //std::vector<Ref<MaterialInstance>> MaterialOverrides;
-
-        
         MeshRendererComponent() = default;
         MeshRendererComponent(const MeshRendererComponent&) = default;
     };

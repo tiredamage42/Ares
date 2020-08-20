@@ -47,8 +47,11 @@ namespace Ares {
 
 		void Write(void* data, uint32_t size, uint32_t offset = 0)
 		{
-			/*ARES_CORE_ERROR("Cap {0} Try {1}", Size, size);
-			ARES_CORE_ASSERT(offset + size <= Size, "Buffer overflow!");*/
+			if (offset + size > Size)
+			{
+				ARES_CORE_ERROR("Cap: {0} :: Try Size: {1} :: Try Offset: {2}", Size, size, offset);
+				ARES_CORE_ASSERT(false, "Buffer overflow!");
+			}
 			memcpy(Data + offset, data, size);
 		}
 

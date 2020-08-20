@@ -231,12 +231,13 @@ namespace Ares
 			while (getline(f, s, ';')) {
 
 				size_t nameEndIDX = s.find_first_of("[", 0);
+				UniformAttributes attributes;
+				attributes.Attributes |= (uint32_t)UniformAttribute::Public;
 				
 				std::string name;
 				if (nameEndIDX == std::string::npos)
 				{
 					name = s;
-					uniformAttributes[name] = {};
 				}
 				else
 				{
@@ -244,9 +245,6 @@ namespace Ares
 					size_t attributes_start = nameEndIDX + 1;
 					size_t attributes_end = s.find_first_of("]", attributes_start);
 					std::string attributes_string = s.substr(attributes_start, attributes_end - attributes_start);
-
-					UniformAttributes attributes;
-					attributes.Attributes |= (uint32_t)UniformAttribute::Public;
 
 					std::istringstream as(attributes_string);
 					std::string st;
@@ -302,8 +300,8 @@ namespace Ares
 							memcpy(attributes.DefaultValue, (byte*)&v, size);
 						}
 					}
-					uniformAttributes[name] = attributes;
 				}
+				uniformAttributes[name] = attributes;
 			}
 		}
 	}

@@ -273,10 +273,10 @@ namespace Ares
 
 
         Entity gunEntity = m_EditorScene->CreateEntity("Gun");
-        MeshRendererComponent& mr = gunEntity.AddComponent<MeshRendererComponent>();
+        MeshRendererComponent* mr = gunEntity.AddComponent<MeshRendererComponent>();
 
         std::vector<Ref<Material>> loadedMaterials;
-        mr.Mesh = CreateRef<Mesh>(
+        mr->Mesh = CreateRef<Mesh>(
             "C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\models\\m1911\\M1911Materials.fbx",
             //"C:\\Users\\Andres\\Desktop\\Racoon\\source\\Racoon_Anim.fbx",
             //"C:\\Users\\Andres\\Downloads\\Action Adventure Pack\\ely_k_atienza@Taunt.fbx",
@@ -285,7 +285,7 @@ namespace Ares
         );
         
         //mr.MaterialOverride = CreateRef<MaterialInstance>(m_MeshBaseMaterial);
-        mr.Materials = loadedMaterials;// { m_MeshBaseMaterial };
+        mr->Materials = loadedMaterials;// { m_MeshBaseMaterial };
 
         m_MeshMaterials = loadedMaterials;
 
@@ -293,9 +293,9 @@ namespace Ares
         if (!loadedMaterials.size())
         {
             ARES_WARN("Couldnt Find Materials... setting custom");
-            mr.Materials = { m_MeshBaseMaterial };
+            mr->Materials = { m_MeshBaseMaterial };
             
-            m_MeshMaterials = mr.Materials;
+            m_MeshMaterials = mr->Materials;
         }
 
         gunEntity.Transform() = glm::scale(
@@ -331,12 +331,12 @@ namespace Ares
 
                 Entity sphereEntity = m_EditorScene->CreateEntity("Sphere M:" + std::to_string(metalness) + " / R:" + std::to_string(roughness));
 
-                MeshRendererComponent& mrC = sphereEntity.AddComponent<MeshRendererComponent>();
-                mrC.Mesh = sphereMesh;
+                MeshRendererComponent* mrC = sphereEntity.AddComponent<MeshRendererComponent>();
+                mrC->Mesh = sphereMesh;
 
                 Ref<Material> m = CreateRef<Material>(Shader::Find("Assets/Shaders/Standard.glsl"));
                 //Ref<Material> m = CreateRef<Material>(m_MeshBaseMaterial);
-                mrC.Materials = { m };
+                mrC->Materials = { m };
                 m->SetValue("u_Metalness", metalness);
                 m->SetValue("u_Roughness", roughness);
 
@@ -888,7 +888,7 @@ namespace Ares
                     auto viewProj = m_EditorCamera.GetViewProjection();
                     Renderer2D::BeginScene(viewProj, false);
                     glm::vec4 color = (m_SelectionMode == SelectionMode::Entity) ? glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f } : glm::vec4{ 0.2f, 0.9f, 0.2f, 1.0f };
-                    Renderer::DrawAABB(selection.Mesh->BoundingBox, selection.Entity.GetComponent<TransformComponent>().Transform * selection.Mesh->Transform, color);
+                    Renderer::DrawAABB(selection.Mesh->BoundingBox, selection.Entity.GetComponent<TransformComponent>()->Transform * selection.Mesh->Transform, color);
                     Renderer2D::EndScene();
                     Renderer::EndRenderPass();
                 }
@@ -927,7 +927,7 @@ namespace Ares
         SelectedSubmesh selection;
         if (entity.HasComponent<MeshRendererComponent>())
         {
-            selection.Mesh = &entity.GetComponent<MeshRendererComponent>().Mesh->GetSubmeshes()[0];
+            selection.Mesh = &entity.GetComponent<MeshRendererComponent>()->Mesh->GetSubmeshes()[0];
         }
         selection.Entity = entity;
         m_SelectionContext.clear();
@@ -1703,14 +1703,14 @@ namespace Ares
             Entity selectedEntity = m_SelectionContext.front().Entity;
             if (selectedEntity.HasComponent<MeshRendererComponent>())
             {
-                MeshRendererComponent& mrComponent = selectedEntity.GetComponent<MeshRendererComponent>();
-                Ref<Mesh> mesh = mrComponent.Mesh;
+                MeshRendererComponent* mrComponent = selectedEntity.GetComponent<MeshRendererComponent>();
+                Ref<Mesh> mesh = mrComponent->Mesh;
                 if (mesh)
                 {
                     //auto& materials = mesh->GetMaterialOverrides();
                     //auto& materials = mesh->GetMaterials();
 
-                    auto& materials = mrComponent.Materials;
+                    auto& materials = mrComponent->Materials;
 
                     static uint32_t selectedMaterialIndex = 0;
                     for (uint32_t i = 0; i < materials.size(); i++)
@@ -1860,7 +1860,7 @@ namespace Ares
 
                 {
                     Entity entity = { e, m_EditorScene.get() };
-                    auto mesh = entity.GetComponent<MeshRendererComponent>().Mesh;
+                    auto mesh = entity.GetComponent<MeshRendererComponent>()->Mesh;
                     if (!mesh)
                         continue;
 
@@ -1882,9 +1882,9 @@ namespace Ares
                         auto& submesh = submeshes[i];
                         Ray ray = {
                             glm::inverse(
-                                entity.GetComponent<TransformComponent>().Transform * submesh.Transform
+                                entity.GetComponent<TransformComponent>()->Transform * submesh.Transform
                             ) * glm::vec4(origin, 1.0f),
-                            glm::inverse(glm::mat3(entity.GetComponent<TransformComponent>().Transform) * glm::mat3(submesh.Transform)) * direction
+                            glm::inverse(glm::mat3(entity.GetComponent<TransformComponent>()->Transform) * glm::mat3(submesh.Transform)) * direction
                         };
 
                         float t;
