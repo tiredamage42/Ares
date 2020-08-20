@@ -4,7 +4,8 @@
 #include "Ares/Renderer/Texture.h"
 #include "Ares/Renderer/SceneCamera.h"
 #include "Ares/Renderer/Mesh.h"
-#include <glm/glm.hpp>
+//#include <glm/glm.hpp>
+#include "Ares/Math/Math.h"
 namespace Ares
 {
 

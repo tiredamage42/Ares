@@ -5,10 +5,14 @@
 #include "Ares/Core/Input.h"
 
 //#include <glfw/glfw3.h>
+
+#include "Ares/Math/Math.h"
+/*
 #include <glm/gtc/quaternion.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
+*/
 
 #define M_PI 3.14159f
 
@@ -76,7 +80,7 @@ namespace Ares
 	void EditorCamera::Update()
 	{
 
-		if (Input::IsKeyPressed(KeyCode::LeftAlt))
+		if (Input::GetKey(KeyCode::LeftAlt))
 		//if (Input::IsKeyPressed(ARES_KEY_LEFT_ALT))
 		{
 			const glm::vec2& mouse{ Input::GetMouseX(), Input::GetMouseY() };
@@ -87,17 +91,17 @@ namespace Ares
 
 			delta *= Time::GetDeltaTime();
 
-			if (Input::IsMouseButtonPressed(MouseButtonCode::ButtonMiddle))
+			if (Input::GetMouseButton(MouseButtonCode::ButtonMiddle))
 
 			//if (Input::IsMouseButtonPressed(ARES_MOUSE_BUTTON_MIDDLE))
 				MousePan(delta);
 
-			else if (Input::IsMouseButtonPressed(MouseButtonCode::ButtonLeft))
+			else if (Input::GetMouseButton(MouseButtonCode::ButtonLeft))
 
 			//else if (Input::IsMouseButtonPressed(ARES_MOUSE_BUTTON_LEFT))
 				MouseRotate(delta);
 
-			else if (Input::IsMouseButtonPressed(MouseButtonCode::ButtonRight))
+			else if (Input::GetMouseButton(MouseButtonCode::ButtonRight))
 
 			//else if (Input::IsMouseButtonPressed(ARES_MOUSE_BUTTON_RIGHT))
 				MouseZoom(delta.y);

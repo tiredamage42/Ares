@@ -11,7 +11,7 @@ namespace Ares
 			return s_TexturesMap.at(filePath);
 
 		//std::string str = "EditorResources/" + filePath;
-		Ref<Texture2D> texture = Texture2D::Create("EditorResources/" + filePath, FilterType::Point, false);
+		Ref<Texture2D> texture = Texture2D::Create("EditorResources/" + filePath, FilterType::Trilinear, false);
 		s_TexturesMap[filePath] = texture;
 
 		return texture;

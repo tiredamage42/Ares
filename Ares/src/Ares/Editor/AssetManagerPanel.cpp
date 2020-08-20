@@ -288,7 +288,7 @@ namespace Ares
 		{
 			if (m_isInListView)
 			{
-				if (ImGui::ImageButton((void*)m_gridView->GetRendererID(), ImVec2(20, 18)))
+				if (ImGui::ImageButton((void*)(size_t)m_gridView->GetRendererID(), ImVec2(20, 18)))
 				{
 					m_isInListView = !m_isInListView;
 				}
@@ -297,7 +297,7 @@ namespace Ares
 			}
 			else
 			{
-				if (ImGui::ImageButton((void*)m_listView->GetRendererID(), ImVec2(20, 18)))
+				if (ImGui::ImageButton((void*)(size_t)m_listView->GetRendererID(), ImVec2(20, 18)))
 				{
 					m_isInListView = !m_isInListView;
 				}
@@ -337,7 +337,7 @@ namespace Ares
 				ImGui::SameLine();
 			//}
 
-			if (ImGui::ImageButton((void*)m_backbtnTex->GetRendererID(), ImVec2(20, 18)))
+			if (ImGui::ImageButton((void*)(size_t)m_backbtnTex->GetRendererID(), ImVec2(20, 18)))
 			{
 				if (strlen(m_CurrentDirPath.c_str()) != m_basePathLen)
 				{
@@ -347,7 +347,7 @@ namespace Ares
 				}
 			}
 			ImGui::SameLine();
-			if (ImGui::ImageButton((void*)m_fwrdbtnTex->GetRendererID(), ImVec2(20, 18)))
+			if (ImGui::ImageButton((void*)(size_t)m_fwrdbtnTex->GetRendererID(), ImVec2(20, 18)))
 			{
 				m_prevDirPath = AssetManager::GetParentPath(m_CurrentDirPath);
 				m_CurrentDirPath = m_lastNavPath;
@@ -360,7 +360,7 @@ namespace Ares
 			for (int i = 0; i < data.size(); i++)
 			{
 				if (data[i] != m_BaseDirPath) {
-					ImGui::Image((void*)m_folderRightTex->GetRendererID(), ImVec2(22, 23));
+					ImGui::Image((void*)(size_t)m_folderRightTex->GetRendererID(), ImVec2(22, 23));
 				}
 				ImGui::SameLine();
 				ImGui::Text(data[i].c_str());
@@ -382,7 +382,7 @@ namespace Ares
 		/*auto fileID = AssetTypes::GetParsedAssetID(m_CurrentDir[dirIndex].fileType);
 		auto iconRef = assetIconMaps[fileID]->GetRendererID();*/
 
-		auto iconRef = GetIcon(m_CurrentDirContents[dirIndex].fileType)->GetRendererID();
+		auto iconRef = (size_t)GetIcon(m_CurrentDirContents[dirIndex].fileType)->GetRendererID();
 
 		ImGui::Image((void*)iconRef, ImVec2(20, 20));
 		ImGui::SameLine();
@@ -401,7 +401,7 @@ namespace Ares
 			ImGui::Image((void*)iconRef, ImVec2(20, 20));
 			ImGui::SameLine();
 			ImGui::Text(m_CurrentDirContents[dirIndex].filename.c_str());
-			int size = sizeof(const char*) + strlen(m_CurrentDirContents[dirIndex].absolutePath.c_str());
+			size_t size = sizeof(const char*) + strlen(m_CurrentDirContents[dirIndex].absolutePath.c_str());
 			ImGui::SetDragDropPayload("selectable", m_CurrentDirContents[dirIndex].absolutePath.c_str(), size);
 			m_IsDragging = true;
 			ImGui::EndDragDropSource();
@@ -414,7 +414,7 @@ namespace Ares
 
 		/*auto fileID = AssetTypes::GetParsedAssetID(m_CurrentDir[dirIndex].fileType);
 		auto iconRef = assetIconMaps[fileID]->GetRendererID();*/
-		auto iconRef = GetIcon(m_CurrentDirContents[dirIndex].fileType)->GetRendererID();
+		auto iconRef = (size_t)GetIcon(m_CurrentDirContents[dirIndex].fileType)->GetRendererID();
 
 
 
@@ -431,7 +431,7 @@ namespace Ares
 			ImGui::SameLine();
 
 			ImGui::Text(m_CurrentDirContents[dirIndex].filename.c_str());
-			int size = sizeof(const char*) + strlen(m_CurrentDirContents[dirIndex].absolutePath.c_str());
+			size_t size = sizeof(const char*) + strlen(m_CurrentDirContents[dirIndex].absolutePath.c_str());
 			ImGui::SetDragDropPayload("selectable", m_CurrentDirContents[dirIndex].absolutePath.c_str(), size);
 			m_IsDragging = true;
 			ImGui::EndDragDropSource();
@@ -440,7 +440,7 @@ namespace Ares
 
 	void AssetManagerPanel::RenderDircListView(int dirIndex)
 	{
-		ImGui::Image((void*)m_folderTex->GetRendererID(), ImVec2(20, 20));
+		ImGui::Image((void*)(size_t)m_folderTex->GetRendererID(), ImVec2(20, 20));
 		ImGui::SameLine();
 
 		if (ImGui::Selectable(m_CurrentDirContents[dirIndex].filename.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick))
@@ -455,10 +455,10 @@ namespace Ares
 
 		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_AcceptNoDrawDefaultRect))
 		{
-			ImGui::Image((void*)m_folderTex->GetRendererID(), ImVec2(20, 20));
+			ImGui::Image((void*)(size_t)m_folderTex->GetRendererID(), ImVec2(20, 20));
 			ImGui::SameLine();
 			ImGui::Text(m_CurrentDirContents[dirIndex].filename.c_str());
-			int size = sizeof(const char*) + strlen(m_CurrentDirContents[dirIndex].absolutePath.c_str());
+			size_t size = sizeof(const char*) + strlen(m_CurrentDirContents[dirIndex].absolutePath.c_str());
 			ImGui::SetDragDropPayload("selectable", m_CurrentDirContents[dirIndex].absolutePath.c_str(), size);
 			m_IsDragging = true;
 			ImGui::EndDragDropSource();
@@ -468,7 +468,7 @@ namespace Ares
 	void AssetManagerPanel::RenderDircGridView(int dirIndex)
 	{
 		ImGui::BeginGroup();
-		ImGui::ImageButton((void*)m_folderTex->GetRendererID(), ImVec2(70, 70));
+		ImGui::ImageButton((void*)(size_t)m_folderTex->GetRendererID(), ImVec2(70, 70));
 
 		if (ImGui::IsMouseDoubleClicked(0))
 		{

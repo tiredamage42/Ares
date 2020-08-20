@@ -67,7 +67,7 @@ namespace Ares
 		std::string m_MovePath;
 		std::string m_lastNavPath;
 
-		int m_basePathLen;
+		size_t m_basePathLen;
 		bool m_IsDragging;
 		bool m_isInListView;
 		//bool m_updateBreadCrumbs;

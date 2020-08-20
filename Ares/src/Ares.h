@@ -1,5 +1,7 @@
 #pragma once
 
+
+
 // for use by Ares applications
 #include "Ares/Core/Application.h"
 #include "Ares/Core/Log.h"
@@ -53,3 +55,4 @@
 
 #include "Ares/Renderer/CameraController.h"
 #include "Ares/Renderer/Renderer2D.h"
+#include "Ares/Math/Math.h"

@@ -8,10 +8,11 @@
 #include "Ares/Core/Entity.h"
 #include <assimp/scene.h>
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/matrix_decompose.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "Ares/Math/Math.h"
+//#define GLM_ENABLE_EXPERIMENTAL
+//#include <glm/gtx/quaternion.hpp>
+//#include <glm/gtx/matrix_decompose.hpp>
+//#include <glm/gtc/type_ptr.hpp>
 
 // TODO:
 // - Eventually change imgui node IDs to be entity/asset GUID
@@ -181,7 +182,7 @@ namespace Ares {
 		const char* name = entity.GetComponent<TagComponent>()->Tag.c_str();
 
 		ImGuiTreeNodeFlags node_flags = (entity == m_SelectionContext ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-		bool opened = ImGui::TreeNodeEx((void*)(uint32_t)entity, node_flags, name);
+		bool opened = ImGui::TreeNodeEx((void*)(size_t)(uint32_t)entity, node_flags, name);
 		if (ImGui::IsItemClicked())
 		{
 

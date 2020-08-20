@@ -1,6 +1,7 @@
 #pragma once
 #include <json.hpp>
-#include <glm\glm.hpp>
+//#include <glm\glm.hpp>
+#include "Ares/Math/Math.h"
 
 /*
 	===========================================================================

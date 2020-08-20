@@ -5,9 +5,10 @@
 #include "Ares/Core/Time.h"
 #include "Ares/Core/Input.h"
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include "Ares/Math/Math.h"
+//#define GLM_ENABLE_EXPERIMENTAL
+//#include <glm/gtx/quaternion.hpp>
+//#include <glm/gtc/matrix_transform.hpp>
 
 #define M_PI 3.14159f
 

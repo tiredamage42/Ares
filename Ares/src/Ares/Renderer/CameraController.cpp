@@ -17,23 +17,23 @@ namespace Ares {
 	{
 		float deltaTime = (float)Time::GetDeltaTime();
 
-		if (Input::IsKeyPressed(KeyCode::A))
+		if (Input::GetKey(KeyCode::A))
 		{
 			m_CameraPosition.x -= cos(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
 			m_CameraPosition.y -= sin(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
 		}
-		if (Input::IsKeyPressed(KeyCode::D))
+		if (Input::GetKey(KeyCode::D))
 		{
 			m_CameraPosition.x += cos(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
 			m_CameraPosition.y += sin(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
 		}
 
-		if (Input::IsKeyPressed(KeyCode::W))
+		if (Input::GetKey(KeyCode::W))
 		{
 			m_CameraPosition.x += -sin(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
 			m_CameraPosition.y += cos(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
 		}
-		if (Input::IsKeyPressed(KeyCode::S))
+		if (Input::GetKey(KeyCode::S))
 		{
 			m_CameraPosition.x -= -sin(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
 			m_CameraPosition.y -= cos(glm::radians(m_CameraRotation)) * m_PositionSpeed * deltaTime;
@@ -41,9 +41,9 @@ namespace Ares {
 		
 		if (m_Rotation)
 		{
-			if (Input::IsKeyPressed(KeyCode::Q))
+			if (Input::GetKey(KeyCode::Q))
 				m_CameraRotation += m_RotationSpeed * deltaTime;
-			if (Input::IsKeyPressed(KeyCode::E))
+			if (Input::GetKey(KeyCode::E))
 				m_CameraRotation -= m_RotationSpeed * deltaTime;
 			
 			if (m_CameraRotation > 180.0f)

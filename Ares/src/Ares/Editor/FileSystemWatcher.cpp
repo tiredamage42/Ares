@@ -1,6 +1,10 @@
 #include "AresPCH.h"
 #include "FileSystemWatcher.h"
+#include <codecvt>
 
+#ifndef ARES_PLATFORM_WINDOWS
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+#endif
 namespace Ares
 {
 	DWORD WINAPI FileSystemWatcher::StartWatcherThread(LPVOID lparam)
@@ -91,8 +95,21 @@ namespace Ares
 
 	std::string FileSystemWatcher::wchar_to_string(wchar_t* input)
 	{
-		std::wstring string_input(input);
-		std::string converted(string_input.begin(), string_input.end());
-		return converted;
+
+
+		std::wstring wstr(input);
+#if defined ARES_PLATFORM_WINDOWS
+		int size = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
+		std::string ret = std::string(size, 0);
+		WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, &wstr[0], (int)wstr.size(), &ret[0], size, NULL, NULL);
+		return ret;
+#else
+		
+		return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().to_bytes(wstr);
+#endif
+
 	}
+
+	
+
 }

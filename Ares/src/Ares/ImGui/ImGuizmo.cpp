@@ -1286,7 +1286,7 @@ namespace ImGuizmo
 
         // Check for modifiers
         //if (Ares::Input::IsKeyPressed(ARES_KEY_LEFT_ALT) || Ares::Input::IsKeyPressed(ARES_KEY_LEFT_SHIFT) || Ares::Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL))
-        if (Ares::Input::IsKeyPressed(Ares::KeyCode::LeftAlt) || Ares::Input::IsKeyPressed(Ares::KeyCode::LeftShift) || Ares::Input::IsKeyPressed(Ares::KeyCode::LeftControl))
+        if (Ares::Input::GetKey(Ares::KeyCode::LeftAlt) || Ares::Input::GetKey(Ares::KeyCode::LeftShift) || Ares::Input::GetKey(Ares::KeyCode::LeftControl))
 
             return false;
 

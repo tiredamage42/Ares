@@ -23,7 +23,7 @@
 #include "Platform/OpenGL/OpenGLShader.h"
 
 #include "Ares/Core/FileUtils/FileUtils.h"
-#include <glm/gtc/type_ptr.hpp>
+//#include <glm/gtc/type_ptr.hpp>
 
 #include "Ares/Renderer/Renderer.h"
 #include "Ares/Core/StringUtils.h"
@@ -279,7 +279,7 @@ namespace Ares
 							std::istringstream f2(StringUtils::ExtractStringFromBetweenBrackets(st, 0, false, "()"));
 							std::string s2;
 							glm::vec4 v{ 0 };
-							size_t i = 0;
+							uint32_t i = 0;
 							while (getline(f2, s2, ','))
 							{
 								if (i >= 4)
@@ -661,7 +661,7 @@ namespace Ares
 
 		if (outPosition)
 			*outPosition = end;
-		uint32_t length = end - str + 1;
+		size_t length = end - str + 1;
 		return std::string(str, length);
 	}
 
@@ -932,7 +932,7 @@ namespace Ares
 				uniform->m_Locations[variationIDX] = glGetUniformLocation(m_RendererIDs[variationIDX], uniform->m_Name.c_str());
 			}
 		}
-		for (size_t i = 0; i < m_Resources.size(); i++)
+		for (uint32_t i = 0; i < m_Resources.size(); i++)
 		{
 			OpenGLShaderResourceDeclaration* resource = (OpenGLShaderResourceDeclaration*)m_Resources[i];
 			resource->m_TexSlot = i;

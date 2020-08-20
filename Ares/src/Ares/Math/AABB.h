@@ -1,7 +1,7 @@
 #pragma once
 
-#include <glm/glm.hpp>
-
+//#include <glm/glm.hpp>
+#include "Ares/Math/Math.h"
 namespace Ares {
 	/*
 		axis aligned bounding box

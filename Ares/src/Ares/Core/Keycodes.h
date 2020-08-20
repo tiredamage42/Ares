@@ -3,7 +3,7 @@
 
 namespace Ares
 {
-
+	
 // from glfw3.h
 #define _ARES_KEY_SPACE           32
 #define _ARES_KEY_APOSTROPHE      39
@@ -265,6 +265,271 @@ namespace Ares
 		RightSuper		= _ARES_KEY_RIGHT_SUPER     ,
 		Menu			= _ARES_KEY_MENU            
 	} Key;
+
+	static uint32_t KeyCode2Index(KeyCode code)
+	{
+		switch (code)
+		{
+			case KeyCode::Space:		return 0;
+			case KeyCode::Apostrophe:	return 1;
+			case KeyCode::Comma:		return 2;
+			case KeyCode::Minus:		return 3;
+			case KeyCode::Period:		return 4;
+			case KeyCode::Slash:		return 5;
+			case KeyCode::D0:			return 6;
+			case KeyCode::D1:			return 7;
+			case KeyCode::D2:			return 8;
+			case KeyCode::D3:			return 9;
+			case KeyCode::D4:			return 10;
+			case KeyCode::D5:			return 11;
+			case KeyCode::D6:			return 12;
+			case KeyCode::D7:			return 13;
+			case KeyCode::D8:			return 14;
+			case KeyCode::D9:			return 15;
+			case KeyCode::Semicolon:	return 16;
+			case KeyCode::Equal:		return 17;
+			case KeyCode::A:			return 18;
+			case KeyCode::B:			return 19;
+			case KeyCode::C:			return 20;
+			case KeyCode::D:			return 21;
+			case KeyCode::E:			return 22;
+			case KeyCode::F:			return 23;
+			case KeyCode::G:			return 24;
+			case KeyCode::H:			return 25;
+			case KeyCode::I:			return 26;
+			case KeyCode::J:			return 27;
+			case KeyCode::K:			return 28;
+			case KeyCode::L:			return 29;
+			case KeyCode::M:			return 30;
+			case KeyCode::N:			return 31;
+			case KeyCode::O:			return 32;
+			case KeyCode::P:			return 33;
+			case KeyCode::Q:			return 34;
+			case KeyCode::R:			return 35;
+			case KeyCode::S:			return 36;
+			case KeyCode::T:			return 37;
+			case KeyCode::U:			return 38;
+			case KeyCode::V:			return 39;
+			case KeyCode::W:			return 40;
+			case KeyCode::X:			return 41;
+			case KeyCode::Y:			return 42;
+			case KeyCode::Z:			return 43;
+			case KeyCode::LeftBracket:	return 44;
+			case KeyCode::Backslash:	return 45;
+			case KeyCode::RightBracket:	return 46;
+			case KeyCode::GraveAccent:	return 47;
+			case KeyCode::World2:		return 48;
+			case KeyCode::World1:		return 49;
+			case KeyCode::Escape:		return 50;
+			case KeyCode::Enter:		return 51;
+			case KeyCode::Tab:			return 52;
+			case KeyCode::Backspace:	return 53;
+			case KeyCode::Insert:		return 54;
+			case KeyCode::Delete:		return 55;
+			case KeyCode::Right:		return 56;
+			case KeyCode::Left:			return 57;
+			case KeyCode::Down:			return 58;
+			case KeyCode::Up:			return 59;
+			case KeyCode::PageUp:		return 60;
+			case KeyCode::PageDown:		return 61;
+			case KeyCode::Home:			return 62;
+			case KeyCode::End:			return 63;
+			case KeyCode::CapsLock:		return 64;
+			case KeyCode::ScrollLock:	return 65;
+			case KeyCode::NumLock:		return 66;
+			case KeyCode::PrintScreen:	return 67;
+			case KeyCode::Pause:		return 68;
+			case KeyCode::F1:			return 69;
+			case KeyCode::F2:			return 70;
+			case KeyCode::F3:			return 71;
+			case KeyCode::F4:			return 72;
+			case KeyCode::F5:			return 73;
+			case KeyCode::F6:			return 74;
+			case KeyCode::F7:			return 75;
+			case KeyCode::F8:			return 76;
+			case KeyCode::F9:			return 77;
+			case KeyCode::F10:			return 78;
+			case KeyCode::F11:			return 79;
+			case KeyCode::F12:			return 80;
+			case KeyCode::F13:			return 81;
+			case KeyCode::F14:			return 82;
+			case KeyCode::F15:			return 83;
+			case KeyCode::F16:			return 84;
+			case KeyCode::F17:			return 85;
+			case KeyCode::F18:			return 86;
+			case KeyCode::F19:			return 87;
+			case KeyCode::F20:			return 88;
+			case KeyCode::F21:			return 89;
+			case KeyCode::F22:			return 90;
+			case KeyCode::F23:			return 91;
+			case KeyCode::F24:			return 92;
+			case KeyCode::F25:			return 93;
+			case KeyCode::KP0:			return 94;
+			case KeyCode::KP1:			return 95;
+			case KeyCode::KP2:			return 96;
+			case KeyCode::KP3:			return 97;
+			case KeyCode::KP4:			return 98;
+			case KeyCode::KP5:			return 99;
+			case KeyCode::KP6:			return 100;
+			case KeyCode::KP7:			return 101;
+			case KeyCode::KP8:			return 102;
+			case KeyCode::KP9:			return 103;
+			case KeyCode::KPDecimal:	return 104;
+			case KeyCode::KPDivide:		return 105;
+			case KeyCode::KPMultiply:	return 106;
+			case KeyCode::KPSubtract:	return 107;
+			case KeyCode::KPAdd:		return 108;
+			case KeyCode::KPEnter:		return 109;
+			case KeyCode::KPEqual:		return 110;
+			case KeyCode::LeftShift:	return 111;
+			case KeyCode::LeftControl:	return 112;
+			case KeyCode::LeftAlt:		return 113;
+			case KeyCode::LeftSuper:	return 114;
+			case KeyCode::RightShift:	return 115;
+			case KeyCode::RightControl:	return 116;
+			case KeyCode::RightAlt:		return 117;
+			case KeyCode::RightSuper:	return 118;
+			case KeyCode::Menu:			return 119;
+		default:
+			break;
+		}
+		return 0;
+	}
+	
+	static const KeyCode ALL_KEYCODES[] = {
+	
+		KeyCode::Space			,
+		KeyCode::Apostrophe		, 
+		KeyCode::Comma			, 
+		KeyCode::Minus			, 
+		KeyCode::Period			, 
+		KeyCode::Slash			, 
+		KeyCode::D0				, 
+		KeyCode::D1				, 
+		KeyCode::D2				, 
+		KeyCode::D3				, 
+		KeyCode::D4				, 
+		KeyCode::D5				, 
+		KeyCode::D6				, 
+		KeyCode::D7				, 
+		KeyCode::D8				, 
+		KeyCode::D9				, 
+		KeyCode::Semicolon		, 
+		KeyCode::Equal			, 
+		KeyCode::A				,
+		KeyCode::B				,
+		KeyCode::C				,
+		KeyCode::D				,
+		KeyCode::E				,
+		KeyCode::F				,
+		KeyCode::G				,
+		KeyCode::H				,
+		KeyCode::I				,
+		KeyCode::J				,
+		KeyCode::K				,
+		KeyCode::L				,
+		KeyCode::M				,
+		KeyCode::N				,
+		KeyCode::O				,
+		KeyCode::P				,
+		KeyCode::Q				,
+		KeyCode::R				,
+		KeyCode::S				,
+		KeyCode::T				,
+		KeyCode::U				,
+		KeyCode::V				,
+		KeyCode::W				,
+		KeyCode::X				,
+		KeyCode::Y				,
+		KeyCode::Z				,
+		KeyCode::LeftBracket		,  
+		KeyCode::Backslash		,  
+		KeyCode::RightBracket	,  
+		KeyCode::GraveAccent		,  
+		KeyCode::World2			, 
+		KeyCode::World1			, 
+		KeyCode::Escape			,
+		KeyCode::Enter			,
+		KeyCode::Tab				,
+		KeyCode::Backspace		,
+		KeyCode::Insert			,
+		KeyCode::Delete			,
+		KeyCode::Right			,
+		KeyCode::Left			,
+		KeyCode::Down			,
+		KeyCode::Up				,
+		KeyCode::PageUp			,
+		KeyCode::PageDown		,
+		KeyCode::Home			,
+		KeyCode::End				,
+		KeyCode::CapsLock		,
+		KeyCode::ScrollLock		,
+		KeyCode::NumLock			,
+		KeyCode::PrintScreen		,
+		KeyCode::Pause			,
+		KeyCode::F1				,
+		KeyCode::F2				,
+		KeyCode::F3				,
+		KeyCode::F4				,
+		KeyCode::F5				,
+		KeyCode::F6				,
+		KeyCode::F7				,
+		KeyCode::F8				,
+		KeyCode::F9				,
+		KeyCode::F10				,
+		KeyCode::F11				,
+		KeyCode::F12				,
+		KeyCode::F13				,
+		KeyCode::F14				,
+		KeyCode::F15				,
+		KeyCode::F16				,
+		KeyCode::F17				,
+		KeyCode::F18				,
+		KeyCode::F19				,
+		KeyCode::F20				,
+		KeyCode::F21				,
+		KeyCode::F22				,
+		KeyCode::F23				,
+		KeyCode::F24				,
+		KeyCode::F25				,
+		KeyCode::KP0				,
+		KeyCode::KP1				,
+		KeyCode::KP2				,
+		KeyCode::KP3				,
+		KeyCode::KP4				,
+		KeyCode::KP5				,
+		KeyCode::KP6				,
+		KeyCode::KP7				,
+		KeyCode::KP8				,
+		KeyCode::KP9				,
+		KeyCode::KPDecimal		,
+		KeyCode::KPDivide		,
+		KeyCode::KPMultiply		,
+		KeyCode::KPSubtract		,
+		KeyCode::KPAdd			,
+		KeyCode::KPEnter			,
+		KeyCode::KPEqual			,
+		KeyCode::LeftShift		,
+		KeyCode::LeftControl		,
+		KeyCode::LeftAlt			,
+		KeyCode::LeftSuper		,
+		KeyCode::RightShift		,
+		KeyCode::RightControl	,
+		KeyCode::RightAlt		,
+		KeyCode::RightSuper		,
+		KeyCode::Menu			
+	};
+
+	static const size_t KEYCODES_COUNT = sizeof(ALL_KEYCODES) / sizeof(ALL_KEYCODES[0]);
+
+
+	
+
+
+
+
+
+
 
 	inline std::ostream& operator<<(std::ostream& os, KeyCode keyCode)
 	{

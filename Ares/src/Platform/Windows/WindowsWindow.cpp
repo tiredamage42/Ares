@@ -1,17 +1,14 @@
 #include "AresPCH.h"
 #include "Platform/Windows/WindowsWindow.h"
-
-//#include "Ares/Core/Input.h"
-
 #include "Ares/Events/ApplicationEvent.h"
 #include "Ares/Events/MouseEvent.h"
 #include "Ares/Events/KeyEvent.h"
 #include "Ares/Renderer/Renderer.h"
-
 #include <glad/glad.h>
 #include <imgui.h>
 
 namespace Ares {
+
 
 	static uint8_t s_GLFWWindowCount = 0;
 
@@ -191,7 +188,7 @@ namespace Ares {
 	{
 		int x, y;
 		glfwGetWindowPos(m_Window, &x, &y);
-		return { x, y };
+		return { (float)x, (float)y };
 	}
 
 	void WindowsWindow::Shutdown()
@@ -209,8 +206,8 @@ namespace Ares {
 	void WindowsWindow::OnUpdate()
 	{
 		{
-			ARES_PROFILE_SCOPE("poll events");
-		glfwPollEvents();
+			//ARES_PROFILE_SCOPE("poll events");
+		//glfwPollEvents();
 		}
 		{
 			ARES_PROFILE_SCOPE("swap buffers");

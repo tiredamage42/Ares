@@ -6,8 +6,8 @@
 #include "Ares/Renderer/ShaderUniform.h"
 #include "Ares/Renderer/Texture.h"
 #include <string>
-#include <glm/glm.hpp>
-
+//#include <glm/glm.hpp>
+#include "Ares/Math/Math.h"
 namespace Ares {
 	
 	enum class ShaderVariations

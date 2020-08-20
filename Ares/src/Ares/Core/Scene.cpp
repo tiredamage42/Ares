@@ -6,10 +6,13 @@
 #include "Ares/Renderer/SceneRenderer.h"
 #include "Ares/Core/Entity.h"
 
+#include "Ares/Math/Math.h"
+/*
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtc/type_ptr.hpp>
+*/
 
 namespace Ares
 {

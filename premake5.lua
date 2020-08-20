@@ -73,7 +73,8 @@ project "Ares"
     defines
     {
         "_CRT_SECURE_NO_WARNINGS",
-        "GLFW_INCLUDE_NONE"
+        "GLFW_INCLUDE_NONE",
+        "GLM_ENABLE_EXPERIMENTAL"
     }
     
 	includedirs
@@ -157,6 +158,9 @@ project "Phobos"
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
+    pchheader "PhobosPCH.h"
+    pchsource "Phobos/src/PhobosPCH.cpp"
+
     files
     {
         "%{prj.name}/src/**.h",
@@ -172,7 +176,7 @@ project "Phobos"
         "%{IncludeDir.entt}",
         "%{IncludeDir.json}"
     }
-
+    
     links
     {
         "Ares"

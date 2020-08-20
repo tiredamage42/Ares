@@ -2,8 +2,8 @@
 
 #include <vector>
 #include <string>
-#include <glm/glm.hpp>
-
+//#include <glm/glm.hpp>
+#include "Ares/Math/Math.h"
 #include "Ares/Renderer/VertexArray.h"
 #include "Ares/Renderer/Material.h"
 #include "Ares/Math/AABB.h"

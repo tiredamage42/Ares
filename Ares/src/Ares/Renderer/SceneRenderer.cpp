@@ -6,8 +6,8 @@
 #include "Ares/Core/Components.h"
 #include "Ares/Core/Application.h"
 #include "Ares/Renderer/Renderer2D.h"
-#include <glm/gtc/matrix_transform.hpp>
-
+//#include <glm/gtc/matrix_transform.hpp>
+#include "Ares/Math/Math.h"
 
 //#include <GLFW/glfw3.h>
 #include <glad/glad.h>
@@ -545,7 +545,7 @@ namespace Ares {
 
 
 		auto& submeshes = mesh->GetSubmeshes();
-		for (size_t i = 0; i < submeshes.size(); i++)
+		for (uint32_t i = 0; i < submeshes.size(); i++)
 		{
 			Ref<Material> material = materials[submeshes[i].MaterialIndex];
 			Ref<Shader> shader = material->GetShader();
@@ -778,13 +778,13 @@ namespace Ares {
 		envFilteringShader->Bind(ShaderVariations::Default);
 		envUnfiltered->Bind();
 
-		uint32_t mipCount = envFiltered->GetMipLevelCount();
+		int32_t mipCount = envFiltered->GetMipLevelCount();
 
 		Renderer::Submit([envUnfiltered, envFiltered, cubemapSize, mipCount, envFilteringShader]() {
 			
 			const float deltaRoughness = 1.0f / glm::max((float)(mipCount - 1.0f), 1.0f);
 
-			for (int mipLevel = 1, size = cubemapSize / 2; mipLevel < mipCount; mipLevel++, size /= 2) // <= ?
+			for (int32_t mipLevel = 1, size = cubemapSize / 2; mipLevel < mipCount; mipLevel++, size /= 2) // <= ?
 			{
 				glBindImageTexture(0, envFiltered->GetRendererID(), mipLevel, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
 				

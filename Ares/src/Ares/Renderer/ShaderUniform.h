@@ -3,8 +3,8 @@
 #include "Ares/Core/Log.h"
 #include <vector>
 #include <string>
-#include <glm/glm.hpp>
-
+//#include <glm/glm.hpp>
+#include "Ares/Math/Math.h"
 namespace Ares
 {
 

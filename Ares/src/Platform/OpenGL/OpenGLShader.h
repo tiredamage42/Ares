@@ -3,7 +3,7 @@
 #include "Ares/Renderer/Shader.h"
 #include "Platform/OpenGL/OpenGLShaderUniform.h"
 #include <glad/glad.h>
-#include <glm/glm.hpp>
+#include "Ares/Math/Math.h"
 
 namespace Ares {
 	class OpenGLShader : public Shader
@@ -115,7 +115,7 @@ namespace Ares {
 
 		void AddVariation(uint32_t variationIndex)
 		{
-			m_VariationFlags |= (uint32_t)(BIT(variationIndex + 1));
+			m_VariationFlags |= (uint32_t)(BIT((variationIndex + 1)));
 		}
 		void AddVariation(ShaderVariations variation)
 		{
@@ -123,7 +123,7 @@ namespace Ares {
 		}
 		const bool HasVariation(uint32_t variationIndex) const
 		{
-			return (uint32_t)(BIT(variationIndex + 1)) & m_VariationFlags;
+			return (uint32_t)(BIT((variationIndex + 1))) & m_VariationFlags;
 		}
 	};
 }

@@ -168,7 +168,7 @@ void main()
 {
     vec3 albedo = texture(u_AlbedoTex, TexCoords).rgb * u_AlbedoColor;
     float metallic = texture(u_MetalnessTex, TexCoords).r * u_Metalness;
-    float roughness = texture(u_RoughnessTex, TexCoords).r * u_Roughness;
+    float roughness = max(texture(u_RoughnessTex, TexCoords).r * u_Roughness, .05);
     float ao = texture(u_AmbientOcclusionTex, TexCoords).r;
 
     vec3 worldNorm = GetWorldNormal();

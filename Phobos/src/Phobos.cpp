@@ -1,9 +1,8 @@
 
+#include "PhobosPCH.h"
 #include <Ares.h>
 #include <Ares/Core/EntryPoint.h>
-
 #include "EditorLayer.h"
-
 namespace Ares
 {
 

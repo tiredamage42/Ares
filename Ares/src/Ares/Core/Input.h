@@ -20,34 +20,164 @@ namespace Ares {
 
 	class Input
 	{
-	public:
-		static bool IsKeyPressed(const KeyCode key);
-		static bool IsMouseButtonPressed(const MouseButtonCode button);
-		static std::pair<float, float> GetMousePosition();
-		static float GetMouseX();
-		static float GetMouseY();
+		friend class Application;
 
-		static bool IsInputPressed(const std::string& name)
+	public:
+
+		static bool GetKeyDown(KeyCode keycode)
+		{
+			uint32_t i = KeyCode2Index(keycode);
+			return s_KeyPressed[curFrame][i] && !s_KeyPressed[(curFrame + 1) % 2][i];
+		}
+		static bool GetKeyUp(KeyCode keycode)
+		{
+			uint32_t i = KeyCode2Index(keycode);
+			return !s_KeyPressed[curFrame][i] && s_KeyPressed[(curFrame + 1) % 2][i];
+		}
+		static bool GetKey(KeyCode keycode)
+		{
+			return s_KeyPressed[curFrame][KeyCode2Index(keycode)];
+		}
+
+
+		static bool GetMouseButtonDown(MouseButtonCode button)
+		{
+			uint32_t i = MouseCode2Index(button);
+			return s_MousePressed[curFrame][i] && !s_MousePressed[(curFrame + 1) % 2][i];
+		}
+		static bool GetMouseButtonUp(MouseButtonCode button)
+		{
+			uint32_t i = MouseCode2Index(button);
+			return !s_MousePressed[curFrame][i] && s_MousePressed[(curFrame + 1) % 2][i];
+		}
+		static bool GetMouseButton(MouseButtonCode button)
+		{
+			return s_MousePressed[curFrame][MouseCode2Index(button)];
+		}
+
+
+
+
+
+		static bool GetButton(const std::string& name)
 		{
 			if (s_Mapping.count(name) != 0)
-				return IsInputPressed(s_Mapping[name]);
+				return GetButton(s_Mapping[name]);
 
 			ARES_CORE_WARN("The input {0} is not mapped!", name);
 			return false;
 		}
 
-		inline static bool IsInputPressed(InputKey inputKey)
+		inline static bool GetButton(InputKey inputKey)
 		{
 			if (std::holds_alternative<KeyCode>(inputKey.value))
-				return IsKeyPressed(std::get<KeyCode>(inputKey.value));
+				return GetKey(std::get<KeyCode>(inputKey.value));
 
 			if (std::holds_alternative<MouseButtonCode>(inputKey.value))
-				return IsMouseButtonPressed(std::get<MouseButtonCode>(inputKey.value));
+				return GetMouseButton(std::get<MouseButtonCode>(inputKey.value));
 
 			// control should never fall down here;
 			ARES_CORE_WARN("Unknown Input type!");
 			return false;
 		}
+
+
+		static bool GetButtonDown(const std::string& name)
+		{
+			if (s_Mapping.count(name) != 0)
+				return GetButtonDown(s_Mapping[name]);
+
+			ARES_CORE_WARN("The input {0} is not mapped!", name);
+			return false;
+		}
+
+		inline static bool GetButtonDown(InputKey inputKey)
+		{
+			if (std::holds_alternative<KeyCode>(inputKey.value))
+				return GetKeyDown(std::get<KeyCode>(inputKey.value));
+
+			if (std::holds_alternative<MouseButtonCode>(inputKey.value))
+				return GetMouseButtonDown(std::get<MouseButtonCode>(inputKey.value));
+
+			// control should never fall down here;
+			ARES_CORE_WARN("Unknown Input type!");
+			return false;
+		}
+
+
+		static bool GetButtonUp(const std::string& name)
+		{
+			if (s_Mapping.count(name) != 0)
+				return GetButtonUp(s_Mapping[name]);
+
+			ARES_CORE_WARN("The input {0} is not mapped!", name);
+			return false;
+		}
+
+		inline static bool GetButtonUp(InputKey inputKey)
+		{
+			if (std::holds_alternative<KeyCode>(inputKey.value))
+				return GetKeyUp(std::get<KeyCode>(inputKey.value));
+
+			if (std::holds_alternative<MouseButtonCode>(inputKey.value))
+				return GetMouseButtonUp(std::get<MouseButtonCode>(inputKey.value));
+
+			// control should never fall down here;
+			ARES_CORE_WARN("Unknown Input type!");
+			return false;
+		}
+
+	protected:
+		inline static bool s_KeyPressed[2][KEYCODES_COUNT];
+		inline static bool s_MousePressed[2][MOUSECODES_COUNT];
+
+		inline static uint32_t curFrame = 0;
+		static void InitializeInput()
+		{
+			curFrame = 0;
+			for (uint32_t i = 0; i < KEYCODES_COUNT; i++)
+			{
+				s_KeyPressed[0][i] = false;
+				s_KeyPressed[1][i] = false;
+			}
+			for (uint32_t i = 0; i < MOUSECODES_COUNT; i++)
+			{
+				s_MousePressed[0][i] = false;
+				s_MousePressed[1][i] = false;
+			}
+		}
+		static void UpdateInputPolls();
+
+	public:
+		//static bool IsKeyPressed(const KeyCode key);
+		//static bool IsKeyHeld(const KeyCode key);
+		//static bool IsMouseButtonPressed(const MouseButtonCode button);
+
+		static std::pair<float, float> GetMousePosition();
+		static float GetMouseX();
+		static float GetMouseY();
+
+		//static bool IsInputPressed(const std::string& name)
+		//{
+		//	if (s_Mapping.count(name) != 0)
+		//		return IsInputPressed(s_Mapping[name]);
+
+		//	ARES_CORE_WARN("The input {0} is not mapped!", name);
+		//	return false;
+		//}
+
+		//inline static bool IsInputPressed(InputKey inputKey)
+		//{
+		//	if (std::holds_alternative<KeyCode>(inputKey.value))
+		//		return IsKeyPressed(std::get<KeyCode>(inputKey.value));
+
+		//	if (std::holds_alternative<MouseButtonCode>(inputKey.value))
+		//		return IsMouseButtonPressed(std::get<MouseButtonCode>(inputKey.value));
+
+		//	// control should never fall down here;
+		//	ARES_CORE_WARN("Unknown Input type!");
+		//	return false;
+		//}
 
 		inline static std::unordered_map<std::string, InputKey> s_Mapping;
 

@@ -1,12 +1,13 @@
 #include "AresPCH.h" 
 #include "Mesh.h"
 
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/matrix_decompose.hpp>
+#include "Ares/Math/Math.h"
+//#include <glm/gtc/type_ptr.hpp>
+//#include <glm/ext/matrix_transform.hpp>
+//#include <glm/gtc/quaternion.hpp>
+//#define GLM_ENABLE_EXPERIMENTAL
+//#include <glm/gtx/quaternion.hpp>
+//#include <glm/gtx/matrix_decompose.hpp>
 
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -180,9 +181,9 @@ namespace Ares {
 			m_Vertices.push_back(vertex);
 		}
 
-		for (size_t i = 0; i < 6; i++)
+		for (uint32_t i = 0; i < 6; i++)
 		{
-			size_t offset = 4 * i;
+			uint32_t offset = 4 * i;
 			m_Indices.push_back(offset + 3);
 			m_Indices.push_back(offset + 1);
 			m_Indices.push_back(offset + 0);
@@ -217,9 +218,9 @@ namespace Ares {
 	{
 		for (uint32_t i = 0; i < m_Indices.size(); i += 3) {
 			
-			Vertex& v0 = m_Vertices[m_Indices[i + 0]];
-			Vertex& v1 = m_Vertices[m_Indices[i + 1]];
-			Vertex& v2 = m_Vertices[m_Indices[i + 2]];
+			Vertex& v0 = m_Vertices[m_Indices[i + static_cast<uint32_t>(0)]];
+			Vertex& v1 = m_Vertices[m_Indices[i + static_cast<uint32_t>(1)]];
+			Vertex& v2 = m_Vertices[m_Indices[i + static_cast<uint32_t>(2)]];
 
 			glm::vec3 edge1 = v1.Position - v0.Position;
 			glm::vec3 edge2 = v2.Position - v0.Position;
@@ -258,9 +259,9 @@ namespace Ares {
 	{
 		for (uint32_t i = 0; i < m_Indices.size(); i += 3)
 		{
-			Vertex& v0 = m_Vertices[m_Indices[i + 0]];
-			Vertex& v1 = m_Vertices[m_Indices[i + 1]];
-			Vertex& v2 = m_Vertices[m_Indices[i + 2]];
+			Vertex& v0 = m_Vertices[m_Indices[i + static_cast<uint32_t>(0)]];
+			Vertex& v1 = m_Vertices[m_Indices[i + static_cast<uint32_t>(1)]];
+			Vertex& v2 = m_Vertices[m_Indices[i + static_cast<uint32_t>(2)]];
 
 			glm::vec3 norm = glm::normalize(glm::cross(
 				v1.Position - v0.Position, 
@@ -302,7 +303,7 @@ namespace Ares {
 		
 		m_VertexArray = VertexArray::Create();
 
-		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(m_StaticVertices.data(), m_StaticVertices.size() * sizeof(Vertex));
+		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(m_StaticVertices.data(), (uint32_t)(m_StaticVertices.size() * sizeof(Vertex)));
 		vertexBuffer->SetLayout({
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float2, "a_TexCoord" },
@@ -313,7 +314,7 @@ namespace Ares {
 		
 		m_VertexArray->AddVertexBuffer(vertexBuffer);
 
-		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.capacity());
+		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), (uint32_t)m_Indices.capacity());
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 
 		Submesh& submesh = m_Submeshes.emplace_back();
@@ -321,7 +322,7 @@ namespace Ares {
 		submesh.BaseVertex = 0;
 		submesh.BaseIndex = 0;
 		submesh.MaterialIndex = 0;
-		submesh.IndexCount = m_Indices.capacity();
+		submesh.IndexCount = (uint32_t)m_Indices.capacity();
 		submesh.MeshName = "PrimitiveType";
 
 		auto& aabb = submesh.BoundingBox;
@@ -343,9 +344,9 @@ namespace Ares {
 		{
 
 			m_TriangleCache[0].emplace_back(
-				m_StaticVertices[m_Indices[i + 0]],
-				m_StaticVertices[m_Indices[i + 1]],
-				m_StaticVertices[m_Indices[i + 2]]
+				m_StaticVertices[m_Indices[i + static_cast<uint32_t>(0)]],
+				m_StaticVertices[m_Indices[i + static_cast<uint32_t>(1)]],
+				m_StaticVertices[m_Indices[i + static_cast<uint32_t>(2)]]
 			);
 		}
 
@@ -472,7 +473,7 @@ namespace Ares {
 		uint32_t indexCount = 0;
 
 		m_Submeshes.reserve(scene->mNumMeshes);
-		for (size_t m = 0; m < scene->mNumMeshes; m++)
+		for (uint32_t m = 0; m < scene->mNumMeshes; m++)
 		{
 			aiMesh* mesh = scene->mMeshes[m];
 
@@ -560,9 +561,9 @@ namespace Ares {
 				if (!m_IsAnimated)
 				{
 					m_TriangleCache[m].emplace_back(
-						m_StaticVertices[mesh->mFaces[i].mIndices[0] + submesh.BaseVertex], 
-						m_StaticVertices[mesh->mFaces[i].mIndices[1] + submesh.BaseVertex],
-						m_StaticVertices[mesh->mFaces[i].mIndices[2] + submesh.BaseVertex]
+						m_StaticVertices[mesh->mFaces[i].mIndices[0] + static_cast<uint32_t>(submesh.BaseVertex)],
+						m_StaticVertices[mesh->mFaces[i].mIndices[1] + static_cast<uint32_t>(submesh.BaseVertex)],
+						m_StaticVertices[mesh->mFaces[i].mIndices[2] + static_cast<uint32_t>(submesh.BaseVertex)]
 					);
 
 				}
@@ -622,7 +623,7 @@ namespace Ares {
 			}
 
 			m_BoneMatrixTexture = Texture2D::Create(TextureFormat::Float16, 4, m_BoneCount, TextureWrap::Clamp, FilterType::Point, false);
-			m_BoneMatrixData = new float[16 * m_BoneCount];
+			m_BoneMatrixData = new float[16 * static_cast<uint32_t>(m_BoneCount)];
 		}
 
 		// materials
@@ -734,7 +735,7 @@ namespace Ares {
 		
 		if (m_IsAnimated)
 		{
-			vertBuffer = VertexBuffer::Create(m_AnimatedVertices.data(), m_AnimatedVertices.size() * sizeof(AnimatedVertex));
+			vertBuffer = VertexBuffer::Create(m_AnimatedVertices.data(), (uint32_t)(m_AnimatedVertices.size() * sizeof(AnimatedVertex)));
 			vertBuffer->SetLayout({
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float2, "a_TexCoord" },
@@ -746,7 +747,7 @@ namespace Ares {
 		}
 		else
 		{
-			vertBuffer = VertexBuffer::Create(m_StaticVertices.data(), m_StaticVertices.size() * sizeof(Vertex));
+			vertBuffer = VertexBuffer::Create(m_StaticVertices.data(), (uint32_t)(m_StaticVertices.size() * sizeof(Vertex)));
 			vertBuffer->SetLayout({
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float2, "a_TexCoord" },
@@ -757,7 +758,7 @@ namespace Ares {
 
 		m_VertexArray->AddVertexBuffer(vertBuffer);
 	
-		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.capacity());
+		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), (uint32_t)m_Indices.capacity());
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 
 		//m_Scene = scene;
@@ -965,10 +966,10 @@ namespace Ares {
 
 			if (m_AnimationPlaying)
 			{
-				m_WorldTime += Time::GetDeltaTime();
+				m_WorldTime += (float)Time::GetDeltaTime();
 
 				float ticksPerSecond = (float)(m_Scene->mAnimations[0]->mTicksPerSecond != 0 ? m_Scene->mAnimations[0]->mTicksPerSecond : 25.0f) * m_TimeMultiplier;
-				m_AnimationTime += Time::GetDeltaTime() * ticksPerSecond;
+				m_AnimationTime += (float)Time::GetDeltaTime() * ticksPerSecond;
 				m_AnimationTime = fmod(m_AnimationTime, (float)m_Scene->mAnimations[0]->mDuration);
 			}
 

@@ -32,6 +32,8 @@ namespace Ares {
 
         Renderer::Init();
         Renderer::WaitAndRender();
+
+        Input::InitializeInput();
     }
 
     Application::~Application()
@@ -114,6 +116,8 @@ namespace Ares {
             ARES_PROFILE_SCOPE("Update Loop");
 
             Time::Tick(Platform::GetTime()); // Platform::GetTime
+
+            Input::UpdateInputPolls();
 
             if (!m_Minimized)
             {

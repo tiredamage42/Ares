@@ -40,4 +40,41 @@ namespace Ares
 		os << static_cast<int32_t>(mouseCode);
 		return os;
 	}
+
+
+
+
+
+
+	static uint32_t MouseCode2Index(MouseButtonCode code)
+	{
+		switch (code)
+		{
+			case MouseButtonCode::Button0: return 0;
+			case MouseButtonCode::Button1: return 1;
+			case MouseButtonCode::Button2: return 2;
+			case MouseButtonCode::Button3: return 3;
+			case MouseButtonCode::Button4: return 4;
+			case MouseButtonCode::Button5: return 5;
+			case MouseButtonCode::Button6: return 6;
+			case MouseButtonCode::Button7: return 7;
+			
+		default:
+			break;
+		}
+		return 0;
+	}
+
+	static const MouseButtonCode ALL_MOUSECODES[] = {
+		MouseButtonCode::Button0,
+		MouseButtonCode::Button1,
+		MouseButtonCode::Button2,
+		MouseButtonCode::Button3,
+		MouseButtonCode::Button4,
+		MouseButtonCode::Button5,
+		MouseButtonCode::Button6,
+		MouseButtonCode::Button7,
+	};
+
+	static const size_t MOUSECODES_COUNT = sizeof(ALL_MOUSECODES) / sizeof(ALL_MOUSECODES[0]);		
 }

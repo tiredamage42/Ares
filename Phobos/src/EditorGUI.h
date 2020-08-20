@@ -1,36 +1,61 @@
 #pragma once
-
-#include <glm/glm.hpp>
-
+#include <Ares.h>
 #include <string>
 namespace Ares
 {
 
+#define CUSTOM_UNDO_REDO(TYPE)					const std::function<void(TYPE)>& CUSTOM_UNDO
+
+#define PARAMS(TYPE)							const std::string& name, TYPE& value
+#define PARAMS_CUSTOM_UNDO_REDO(TYPE)			PARAMS(TYPE), CUSTOM_UNDO_REDO(TYPE)
+#define PARAMS_SLIDER(TYPE)						PARAMS(TYPE), float min, float max
+#define PARAMS_SLIDER_CUSTOM_UNDO_REDO(TYPE)	PARAMS_SLIDER(TYPE), CUSTOM_UNDO_REDO(TYPE)
+
+	
 	// ImGui UI helpers
 	class EditorGUI
 	{
 	public:
 		static void ShowTooltip(const char* text);
 
-		static bool Toggle(const std::string& name, bool& value);
-		
-		static bool Float(const std::string& name, float& value);
-		static bool FloatSlider(const std::string& name, float& value, float min = -1.0f, float max = 1.0f);
-		
-		static bool Int(const std::string& name, int& value);
-		static bool IntSlider(const std::string& name, int& value, int min = -1, int max = 1);
-		
-		static bool Vec2(const std::string& name, glm::vec2& value);
-		static bool Vec2Slider(const std::string& name, glm::vec2& value, float min = -1.0f, float max = 1.0f);
-		
-		static bool Vec3(const std::string& name, glm::vec3& value);
-		static bool Vec3Slider(const std::string& name, glm::vec3& value, float min = -1.0f, float max = 1.0f);
-		
-		static bool Vec4(const std::string& name, glm::vec4& value);
-		static bool Vec4Slider(const std::string& name, glm::vec4& value, float min = -1.0f, float max = 1.0f);
+		static bool ToggleField(PARAMS_CUSTOM_UNDO_REDO(bool));
+		static bool ToggleField(PARAMS(bool));
 
-		static bool Color3(const std::string& name, glm::vec3& value);
-		static bool Color4(const std::string& name, glm::vec4& value);
+		static bool FloatField(PARAMS_CUSTOM_UNDO_REDO(float));
+		static bool FloatSliderField(PARAMS_SLIDER_CUSTOM_UNDO_REDO(float));
+		static bool FloatField(PARAMS(float));
+		static bool FloatSliderField(PARAMS_SLIDER(float));
+
+		static bool IntField(PARAMS_CUSTOM_UNDO_REDO(int));
+		static bool IntSliderField(PARAMS_SLIDER_CUSTOM_UNDO_REDO(int));
+		static bool IntField(PARAMS(int));
+		static bool IntSliderField(PARAMS_SLIDER(int));
+
+		static bool Vec2Field(PARAMS_CUSTOM_UNDO_REDO(Vector2));
+		static bool Vec2SliderField(PARAMS_SLIDER_CUSTOM_UNDO_REDO(Vector2));
+		static bool Vec2Field(PARAMS(Vector2));
+		static bool Vec2SliderField(PARAMS_SLIDER(Vector2));
+
+		static bool Vec3Field(PARAMS_CUSTOM_UNDO_REDO(Vector3));
+		static bool Vec3SliderField(PARAMS_SLIDER_CUSTOM_UNDO_REDO(Vector3));
+		static bool Vec3Field(PARAMS(Vector3));
+		static bool Vec3SliderField(PARAMS_SLIDER(Vector3));
+
+		static bool Vec4Field(PARAMS_CUSTOM_UNDO_REDO(Vector4));
+		static bool Vec4SliderField(PARAMS_SLIDER_CUSTOM_UNDO_REDO(Vector4));
+		static bool Vec4Field(PARAMS(Vector4));
+		static bool Vec4SliderField(PARAMS_SLIDER(Vector4));
+
+		static bool Color3Field(PARAMS_CUSTOM_UNDO_REDO(Vector3));
+		static bool Color4Field(PARAMS_CUSTOM_UNDO_REDO(Vector4));
+		static bool Color4Field(PARAMS_CUSTOM_UNDO_REDO(ImVec4));
+
+		static bool Color3Field(PARAMS(Vector3));
+		static bool Color4Field(PARAMS(Vector4));
+		static bool Color4Field(PARAMS(ImVec4));
+
+		static void InitializeGUIColors();
+		static void DrawEditorColorPickers();
 
 	};
 }
