@@ -1,7 +1,8 @@
 #pragma once
 #include <Ares.h>
 //#include "imgui/imgui_internal.h"
-#include "Ares/Editor/EditorCamera.h"
+//#include "Ares/Editor/EditorCamera.h"
+#include "EditorCamera.h"
 //#include "Ares/Editor/SceneHierarchyPanel.h"
 #include "StatsWindow.h"
 namespace Ares
@@ -17,7 +18,6 @@ namespace Ares
 		virtual void OnUpdate() override;// float deltaTime) override;
 		virtual void OnImGuiDraw() override;
 		virtual void OnEvent(Event& e) override;
-		bool OnKeyPressedEvent(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
 		//void ShowBoundingBoxes(bool show, bool onTop = false);
@@ -25,7 +25,7 @@ namespace Ares
 		void DrawSceneViewport();
 		void DrawMenu();
 		void ToolbarUI();
-		
+		void DrawEditorPreferencesWindow();
 	private:
 
 		StatsWindow m_StatsWindow;
@@ -33,7 +33,7 @@ namespace Ares
 		std::pair<float, float> GetMouseViewportSpace();
 		std::pair<Vector3, Vector3> CastRay(float mx, float my);
 	
-		bool m_ViewportFocused = false, m_ViewportHovered = false;
+		//bool m_ViewportFocused = false, m_ViewportHovered = false;
 		//float m_FrameTimeGraph[100];
 		//int values_offset = 0;
 		Vector2 m_ViewportSize = { 0,0 };
@@ -63,11 +63,11 @@ namespace Ares
 		std::vector<Ref<Material>> m_MeshMaterials;
 
 		// Editor resources
-		Ref<Texture2D> m_PlayButtonTex;
+		//Ref<Texture2D> m_PlayButtonTex;
 
 		glm::vec2 m_ViewportBounds[2];
 
-		int m_GizmoType = -1; // -1 = no gizmo
+		uint32_t m_GizmoType = 0; // -1 = no gizmo
 		float m_SnapValue = 0.5f;
 
 		bool m_AllowViewportCameraEvents = false;
@@ -78,6 +78,7 @@ namespace Ares
 
 		bool m_ViewportPanelMouseOver = false;
 		bool m_ViewportPanelFocused = false;
+		bool m_SceneHierarchyFocused = false;
 
 		enum class SceneState
 		{
@@ -89,7 +90,7 @@ namespace Ares
 		struct SelectedSubmesh
 		{
 			Entity Entity;
-			Submesh* Mesh = nullptr;
+			//Submesh* Mesh = nullptr;
 			float Distance = 0.0f;
 		};
 		//void OnSelected(const SelectedSubmesh& selectionContext);

@@ -9,6 +9,11 @@
 
 #define _2D 0
 
+/*
+    TODO:
+    display grid as lines2D
+
+*/
 namespace Ares
 {
 
@@ -53,7 +58,7 @@ namespace Ares
 
 #else
         // Editor
-        m_PlayButtonTex = EditorResources::GetTexture("play.png");
+        //m_PlayButtonTex = EditorResources::GetTexture("play.png");
 
         m_AssetManagerPanel = CreateScope<AssetManagerPanel>();
 
@@ -215,7 +220,7 @@ namespace Ares
     void EditorLayer::OnUpdate()
     {        
         
-
+        // undo redo
         if (Input::GetKeyDown(KeyCode::Z))
         {
             bool controlHeld = Input::GetKey(KeyCode::LeftControl) || Input::GetKey(KeyCode::RightControl);
@@ -232,6 +237,64 @@ namespace Ares
             }
         }
 
+        if (m_ViewportPanelFocused)
+        {
+            if (Input::GetKeyDown(KeyCode::D1))
+            {
+                m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+            }
+            if (Input::GetKeyDown(KeyCode::D2))
+            {
+                m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+            }
+            if (Input::GetKeyDown(KeyCode::D3))
+            {
+                m_GizmoType = ImGuizmo::OPERATION::SCALE;
+            }
+            if (Input::GetKeyDown(KeyCode::D4))
+            {
+                m_EditorCamera.m_FreeCamMode = !m_EditorCamera.m_FreeCamMode;
+                //m_EditorCamera.m_MoveMode = (EditorCamera::MoveMode)((((uint32_t)m_EditorCamera.m_MoveMode) + 1) % 3);
+            }
+
+            if (m_SelectedEntity)
+            {
+                if (Input::GetKeyDown(KeyCode::F))
+                {
+                    m_EditorCamera.Focus(m_SelectedEntity.GetComponent<TransformComponent>()->Transform[3], 5);
+                }
+            }
+
+            if (Input::GetKeyDown(KeyCode::Space))
+            {
+                m_EditorCamera.StraightenAngles();
+            }
+        }
+
+        if (m_ViewportPanelFocused || m_SceneHierarchyFocused)
+        {
+            if (m_SelectedEntity)
+            {
+                if (Input::GetKey(KeyCode::LeftControl) || Input::GetKey(KeyCode::RightControl))
+                {
+                    if (Input::GetKeyDown(KeyCode::D))
+                    {
+                        // duplicate
+                        m_EditorScene->DuplicateEntity(m_SelectedEntity);
+                        // TODO: undo/redo duplicating
+                    }
+                    if (Input::GetKeyDown(KeyCode::Delete) || Input::GetKeyDown(KeyCode::Backspace))
+                    {
+                        // delete
+                        m_EditorScene->DestroyEntity(m_SelectedEntity);
+                        m_SelectedEntity = {};
+                        // TODO: undo/redo deleting
+                    }
+                }
+            }
+        }
+
+
 
         switch (m_SceneState)
         {
@@ -240,7 +303,7 @@ namespace Ares
             //if (m_ViewportPanelFocused)
                 m_EditorCamera.Update();
 
-            m_EditorScene->OnRenderEditor(m_EditorCamera, m_SelectedEntity);
+            m_EditorScene->OnRenderEditor(m_EditorCamera, m_EditorCamera.m_ViewMatrix, m_SelectedEntity);
 
             /*
             if (m_DrawOnTopBoundingBoxes)
@@ -356,16 +419,93 @@ namespace Ares
         DrawMenu();
         menuBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
 
-        ImTextureID buttonTex = (ImTextureID)(intptr_t)(m_PlayButtonTex->GetRendererID());
         ImVec2 buttonSize = ImVec2(37, 37);
 
         ImVec4 backGroundActive = ImGui::GetStyle().Colors[ImGuiCol_TabActive];
         ImVec4 activeTint = ImGui::GetStyle().Colors[ImGuiCol_Text];
 
-        float startx = toolbarWidth * .5f - buttonSize.x * .5f;
+        float buttonPad = 10;
+
+        float xl = buttonPad;
+        ImGui::SetCursorPos(ImVec2(xl, ImGui::GetCursorPos().y));
+
+        if (EditorGUI::EditorImageButton(EditorResources::GetTexture("Translate.png"), buttonSize, m_GizmoType == ImGuizmo::OPERATION::TRANSLATE))
+        {
+            m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+        }
+
+        xl += buttonSize.x + buttonPad;
+        ImGui::SameLine(xl);
+        if (EditorGUI::EditorImageButton(EditorResources::GetTexture("Rotate.png"), buttonSize, m_GizmoType == ImGuizmo::OPERATION::ROTATE))
+        {
+            m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+        }
+
+        xl += buttonSize.x + buttonPad;
+        ImGui::SameLine(xl);
+        if (EditorGUI::EditorImageButton(EditorResources::GetTexture("Scale.png"), buttonSize, m_GizmoType == ImGuizmo::OPERATION::SCALE))
+        {
+            m_GizmoType = ImGuizmo::OPERATION::SCALE;    
+        }
+
+
+
+
+
+
+
+
         
-        ImGui::SetCursorPos(ImVec2(startx, ImGui::GetCursorPos().y));
-        if (ImGui::ImageButton(buttonTex, buttonSize, ImVec2(0, 0), ImVec2(1, 1), 0, m_SceneState == SceneState::Edit ? ImVec4(0, 0, 0, 0) : backGroundActive, activeTint))
+        xl += buttonSize.x + buttonPad;
+        ImGui::SameLine(xl);
+
+        float divSize = 10;
+        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button]);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_Button]);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetStyle().Colors[ImGuiCol_Button]);
+        ImGui::Button("", ImVec2(divSize, toolbarSize));
+        ImGui::PopStyleColor(3);
+
+        float buttonW = 100;
+        xl += divSize + buttonPad;
+        ImGui::SameLine(xl);
+
+        const char* camName = m_EditorCamera.m_FreeCamMode ? "Free Cam" : "Editor Cam";
+
+        //if (EditorGUI::EditorButton("Cam Default", buttonW, m_EditorCamera.m_MoveMode == EditorCamera::MoveMode::Default))
+        if (EditorGUI::EditorButton(camName, buttonW, false))
+        {
+            m_EditorCamera.m_FreeCamMode = !m_EditorCamera.m_FreeCamMode;
+            //m_EditorCamera.m_MoveMode = EditorCamera::MoveMode::Default;
+        }
+
+        /*
+        xl += buttonW + buttonPad;
+        ImGui::SameLine(xl);
+        if (EditorGUI::EditorButton("Cam Pan", buttonW, m_EditorCamera.m_MoveMode == EditorCamera::MoveMode::Pan))
+        {
+            m_EditorCamera.m_MoveMode = EditorCamera::MoveMode::Pan;
+        }
+        xl += buttonW + buttonPad;
+        ImGui::SameLine(xl);
+        if (EditorGUI::EditorButton("Free Cam", buttonW, m_EditorCamera.m_MoveMode == EditorCamera::MoveMode::FreeCamera))
+        {
+            m_EditorCamera.m_MoveMode = EditorCamera::MoveMode::FreeCamera;
+        }
+        */
+
+
+
+
+        
+
+
+
+
+        
+        float mx = toolbarWidth * .5f - buttonSize.x * .5f;
+        ImGui::SameLine(mx);
+        if (EditorGUI::EditorImageButton(EditorResources::GetTexture("play.png"), buttonSize, m_SceneState == SceneState::Play))
         {
             if (m_SceneState == SceneState::Edit)
             {
@@ -377,30 +517,31 @@ namespace Ares
             }
         }
 
+
+
         float buttonWidth = 100;
-        float buttonPad = 10;
-        float x = (toolbarWidth - buttonPad) - buttonWidth;
-        ImGui::SameLine(x);
+        float xr = (toolbarWidth - buttonPad) - buttonWidth;
+        ImGui::SameLine(xr);
         if (EditorGUI::EditorButton("Show Stats", buttonWidth, showStats))
         {
             showStats = !showStats;
         }
 
-        x = (x - buttonPad) - buttonWidth;
-        ImGui::SameLine(x);
+        xr = (xr - buttonPad) - buttonWidth;
+        ImGui::SameLine(xr);
         if (EditorGUI::EditorButton("Show AABB", buttonWidth, SceneRenderer::GetOptions().ShowBoundingBoxes))
         {
             SceneRenderer::GetOptions().ShowBoundingBoxes = !SceneRenderer::GetOptions().ShowBoundingBoxes;
         }
-        
-        /*
-        x = (x - buttonPad) - buttonWidth;
-        ImGui::SameLine(x);
-        if (EditorGUI::EditorButton(m_SelectionMode == SelectionMode::Entity ? "Selection Mode: Entity" : "Selection Mode: Mesh", buttonWidth, false))
+
+        xr = (xr - buttonPad) - buttonWidth;
+        ImGui::SameLine(xr);
+        if (EditorGUI::EditorButton("Show Grid", buttonWidth, SceneRenderer::GetOptions().ShowGrid))
         {
-            m_SelectionMode = m_SelectionMode == SelectionMode::Entity ? SelectionMode::SubMesh : SelectionMode::Entity;
+            SceneRenderer::GetOptions().ShowGrid = !SceneRenderer::GetOptions().ShowGrid;
         }
-        */
+
+        
         
         ImGui::End();
     }
@@ -482,7 +623,7 @@ namespace Ares
     {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
-        ImGui::Begin("Viewport", 0);
+        ImGui::Begin("Viewport", 0);//, ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoNavFocus);
         {
             ImVec2 viewportOffset = ImGui::GetCursorPos(); // includes tab bar
             ImVec2 viewportSize = ImGui::GetContentRegionAvail();
@@ -490,10 +631,10 @@ namespace Ares
             m_ViewportPanelMouseOver = ImGui::IsWindowHovered();
             m_ViewportPanelFocused = ImGui::IsWindowFocused();
 
-            m_ViewportFocused = ImGui::IsWindowFocused();
-            m_ViewportHovered = ImGui::IsWindowHovered();
+            //m_ViewportFocused = ImGui::IsWindowFocused();
+            //m_ViewportHovered = ImGui::IsWindowHovered();
 
-            Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
+            Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportPanelFocused || !m_ViewportPanelMouseOver);
 
 
 #if _2D
@@ -507,7 +648,7 @@ namespace Ares
             if (m_RuntimeScene)
                 m_RuntimeScene->OnViewportResize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
             m_EditorCamera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
-            m_EditorCamera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+            //m_EditorCamera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 
             ImGui::Image((void*)(intptr_t)SceneRenderer::GetFinalColorBufferRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
 
@@ -523,18 +664,69 @@ namespace Ares
 
             m_AllowViewportCameraEvents = ImGui::IsMouseHoveringRect(minBound, maxBound);
 
-#endif
+#endif      
+            float rw = (float)ImGui::GetWindowWidth();
+            float rh = (float)ImGui::GetWindowHeight();
+            ImGuizmo::SetOrthographic(false);
+            ImGuizmo::SetDrawlist();
+            ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, rw, rh);
+
+            glm::mat4 im = glm::mat4(1.0);
+            /*
+            ImGuizmo::DrawGrid(
+                glm::value_ptr(m_EditorCamera.m_ViewMatrix),
+                glm::value_ptr(m_EditorCamera.m_ProjectionMatrix),
+                glm::value_ptr(im), 
+                10.0f);
+            */
+
+
+            float viewManipSize = 128;
+            ImGuizmo::ViewManipulate(
+                glm::value_ptr(m_EditorCamera.m_ViewMatrix), m_EditorCamera.m_Distance, 
+                ImVec2(ImGui::GetWindowPos().x + (ImGui::GetWindowWidth() - viewManipSize), ImGui::GetWindowPos().y + (ImGui::GetWindowHeight() - viewManipSize)), 
+                ImVec2(viewManipSize, viewManipSize), 
+                0x80808080
+            );
+            //m_EditorCamera.SetViewMatrix(m_EditorCamera.m_ViewMatrix);
+
+            //ImGuizmo::SetOrthographic(false);
+
+            //ImGuizmo::ViewManipulate(glm::value_ptr(m_EditorCamera.m_ViewMatrix), 8.0f, ImVec2(ImGui::GetWindowPos().x + (ImGui::GetWindowWidth() - 256), ImGui::GetWindowPos().y), ImVec2(256, 256), 0xff101010);
+
+            {
+                /*
+                float ar = (float)ImGui::GetWindowHeight() / (float)ImGui::GetWindowWidth();
+                float compassDist = 2;
+                ImGuizmo::SetOrthographic(false);
+                ImGuizmo::SetDrawlist();
+                ImGuizmo::SetRect(ImGui::GetWindowPos().x + (ImGui::GetWindowWidth() - 256), ImGui::GetWindowPos().y + (ImGui::GetWindowHeight() - 256 * ar), 256, 256 * ar);
+
+                glm::quat camRot = glm::quat(glm::vec3(-m_EditorCamera.m_Pitch, -m_EditorCamera.m_Yaw, 0.0f));
+                glm::mat4 view = glm::inverse(glm::translate(glm::mat4(1.0f), -glm::rotate(camRot, glm::vec3(0.0f, 0.0f, -1.0f)) * compassDist) * glm::toMat4(camRot));
+                glm::mat4 m = glm::mat4(1.0f);
+                //ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(m_EditorCamera.m_ProjectionMatrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(m), nullptr, nullptr);
+                ImGuizmo::DrawCube(glm::value_ptr(view), glm::value_ptr(m_EditorCamera.m_ProjectionMatrix), glm::value_ptr(m));
+                */
+
+            }
+
 
             // Gizmos
             if (m_GizmoType != -1 && m_SelectedEntity)//m_SelectionContext.size())
             {
                 //auto& selection = m_SelectionContext[0];
 
+                /*
                 float rw = (float)ImGui::GetWindowWidth();
                 float rh = (float)ImGui::GetWindowHeight();
                 ImGuizmo::SetOrthographic(false);
                 ImGuizmo::SetDrawlist();
                 ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, rw, rh);
+                */
+
+
+
                 //ImGuizmo::Manipulate(glm::value_ptr(m_Camera.GetViewMatrix()), glm::value_ptr(m_Camera.GetProjectionMatrix()), (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(m_Transform));
                 //ImGuizmo::Manipulate(
                 //    glm::value_ptr(m_ActiveScene->GetCamera().GetViewMatrix()), // view
@@ -563,8 +755,9 @@ namespace Ares
                 
                 //if (m_SelectionMode == SelectionMode::Entity)
                 {
-                    ImGuizmo::Manipulate(glm::value_ptr(m_EditorCamera.GetViewMatrix()),
-                        glm::value_ptr(m_EditorCamera.GetProjectionMatrix()),
+                    ImGuizmo::Manipulate(
+                        glm::value_ptr(m_EditorCamera.m_ViewMatrix),
+                        glm::value_ptr(m_EditorCamera.m_ProjectionMatrix),
 
                         //ImGuizmo::Manipulate(glm::value_ptr(camera.GetViewMatrix()),
                         //    glm::value_ptr(camera.GetProjectionMatrix()),
@@ -574,6 +767,14 @@ namespace Ares
                         nullptr,
                         snap ? snapValue : nullptr);
                 }
+
+
+
+
+
+
+
+                
                 
                 //else
                 //{
@@ -607,6 +808,46 @@ namespace Ares
         ImGui::PopStyleVar();
     }
 
+    // camera straighten angles and focus
+
+    void EditorLayer::DrawEditorPreferencesWindow()
+    {
+        ImGui::Begin("Editor Settings:");
+
+
+        if (ImGui::CollapsingHeader("Scene View Free Camera Speeds", nullptr, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Selected))
+        {
+
+            ImGui::Columns(2);
+            EditorGUI::FloatSliderField("Move Speed Fast", m_EditorCamera.m_MoveSpeedFast, 1, 50);
+            EditorGUI::FloatSliderField("Move Speed", m_EditorCamera.m_MoveSpeed, 1, 50);
+            EditorGUI::FloatSliderField("Rotation Speed Fast", m_EditorCamera.m_RotSpeedFast, 1, 50);
+            EditorGUI::FloatSliderField("Rotation Speed", m_EditorCamera.m_RotSpeed, 1, 50);
+            ImGui::Columns(1);
+        }
+        ImGui::Separator();
+        if (ImGui::CollapsingHeader("Scene View Camera Speeds", nullptr, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Selected))
+        {
+
+            ImGui::Columns(2);
+            EditorGUI::Vec2SliderField("Pan Speed", m_EditorCamera.m_PanSpeed, .1f, 50);
+            EditorGUI::FloatSliderField("Orbit Speed", m_EditorCamera.m_OrbitSpeed, .1, 50);
+            
+            ImGui::Columns(1);
+        }
+        ImGui::Separator();
+
+        if (ImGui::CollapsingHeader("Editor Colors", nullptr, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Selected))
+        {
+            ImGui::Columns(2);
+            EditorGUI::DrawEditorColorPickers();
+            ImGui::Columns(1);
+        }
+
+        ImGui::End();
+
+    }
+
 
 
         
@@ -637,7 +878,9 @@ namespace Ares
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
         window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+        window_flags |= ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoNavFocus;
+
 
         // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background 
         // and handle the pass-thru hole, so we ask Begin() to not render a background.
@@ -665,7 +908,7 @@ namespace Ares
         }
 
         ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
-        EditorGUI::DrawEditorColorPickers();
+        DrawEditorPreferencesWindow();
 
         ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
         DrawSceneViewport();
@@ -676,9 +919,13 @@ namespace Ares
         ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
         //m_SceneHierarchyPanel->OnImGuiRender();
 
-        bool selectionChanged;
-        Entity deletedEntity;
-        SceneHierarchyPanel::Draw(m_EditorScene, m_SelectedEntity, selectionChanged, deletedEntity);
+        //bool selectionChanged;
+        //Entity deletedEntity;
+        SceneHierarchyPanel::Draw(m_EditorScene, m_SelectedEntity, m_SceneHierarchyFocused);// , deletedEntity);
+
+        
+
+
         /*if (selectionChanged)
         {
             SelectEntity(m_SelectedEntity);
@@ -845,92 +1092,15 @@ namespace Ares
         }
 
         EventDispatcher dispatcher(e);
-        dispatcher.Dispatch<KeyPressedEvent>(ARES_BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
         dispatcher.Dispatch<MouseButtonPressedEvent>(ARES_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
-    }
-    bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)
-    {
-
-        if (m_ViewportPanelFocused)
-        {
-
-            switch (e.GetKeyCode())
-            {
-            case KeyCode::Q:
-                m_GizmoType = -1;
-                break;
-            case KeyCode::W:
-                m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
-                break;
-            case KeyCode::E:
-                m_GizmoType = ImGuizmo::OPERATION::ROTATE;
-                break;
-            case KeyCode::R:
-                m_GizmoType = ImGuizmo::OPERATION::SCALE;
-                break;
-
-            case KeyCode::Delete:
-                //if (m_SelectionContext.size())
-                if (m_SelectedEntity)
-                {
-                    m_EditorScene->DestroyEntity(m_SelectedEntity);
-                    m_SelectedEntity = {};
-
-
-/*
-                    Entity selectedEntity = m_SelectionContext[0].Entity;
-                    m_EditorScene->DestroyEntity(selectedEntity);
-                    m_SelectionContext.clear();
-                    m_EditorScene->SetSelectedEntity({});
-*/
-                    //m_SceneHierarchyPanel->SetSelected({});
-                }
-                break;
-            }
-        }
-        if (Input::GetKey(KeyCode::LeftControl))
-        {
-            switch (e.GetKeyCode())
-            {
-
-
-
-            case KeyCode::G:
-                // Toggle grid
-                //if (Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL))
-                SceneRenderer::GetOptions().ShowGrid = !SceneRenderer::GetOptions().ShowGrid;
-                break;
-            case KeyCode::B:
-                // Toggle bounding boxes 
-                //if (Input::IsKeyPressed(ARES_KEY_LEFT_CONTROL))
-            {
-
-                SceneRenderer::GetOptions().ShowBoundingBoxes = !SceneRenderer::GetOptions().ShowBoundingBoxes;
-                /*m_UIShowBoundingBoxes = !m_UIShowBoundingBoxes;
-                ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);*/
-            }
-            break;
-            case KeyCode::D:
-                if (m_SelectedEntity)
-                {
-                    m_EditorScene->DuplicateEntity(m_SelectedEntity);
-                }
-                /*
-                if (m_SelectionContext.size())
-                {
-                    Entity selectedEntity = m_SelectionContext[0].Entity;
-                    m_EditorScene->DuplicateEntity(selectedEntity);
-                }
-                */
-                break;
-            }
-        }
-        return false;
     }
 
     bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
     {
-        auto [mx, my] = Input::GetMousePosition();
+        //auto [mx, my] = Input::GetMousePosition();
+        auto mp = Input::GetMousePosition();
+        float mx = mp.x;
+        float my = mp.y;
         if (e.GetMouseButton() == MouseButtonCode::ButtonLeft && !Input::GetKey(KeyCode::LeftAlt) && !ImGuizmo::IsOver() && m_SceneState != SceneState::Play)
         {
             auto [mouseX, mouseY] = GetMouseViewportSpace();
@@ -972,7 +1142,7 @@ namespace Ares
                     //auto mesh = entityS.GetComponent<MeshRendererComponent>().Mesh;
 
                     auto& submeshes = mesh->GetSubmeshes();
-                    float lastT = std::numeric_limits<float>::max();
+                    //constexpr float lastT = std::numeric_limits<float>::max();
                     for (uint32_t i = 0; i < submeshes.size(); i++)
                     {
                         auto& submesh = submeshes[i];
@@ -994,7 +1164,8 @@ namespace Ares
                                 {
                                     ARES_WARN("INTERSECTION: {0}, t={1}", submesh.NodeName, t);
                                     //m_SelectedSubmeshes.push_back({ entityS, &submesh, t });
-                                    m_SelectionContext.push_back({ entity, &submesh, t });
+                                    //m_SelectionContext.push_back({ entity, &submesh, t });
+                                    m_SelectionContext.push_back({ entity, t });
 
                                     break;
                                 }
@@ -1038,8 +1209,8 @@ namespace Ares
     {
         glm::vec4 mouseClipPos = { mx, my, -1.0f, 1.0f };
 
-        auto inverseProj = glm::inverse(m_EditorCamera.GetProjectionMatrix());
-        auto inverseView = glm::inverse(glm::mat3(m_EditorCamera.GetViewMatrix()));
+        auto inverseProj = glm::inverse(m_EditorCamera.m_ProjectionMatrix);
+        auto inverseView = glm::inverse(glm::mat3(m_EditorCamera.m_ViewMatrix));
 
         /*auto inverseProj = glm::inverse(m_CameraEntity.GetComponent<CameraComponent>().Camera.GetProjectionMatrix());
         auto inverseView = glm::inverse(glm::mat3(m_CameraEntity.GetComponent<CameraComponent>().Camera.GetViewMatrix()));*/
@@ -1051,7 +1222,7 @@ namespace Ares
 
         //glm::vec3 rayPos = m_Scene->GetCamera().GetPosition();
         //glm::vec3 rayPos = m_CameraEntity.GetComponent<CameraComponent>().Camera.GetPosition();
-        glm::vec3 rayPos = m_EditorCamera.GetPosition();
+        glm::vec3 rayPos = glm::inverse(m_EditorCamera.m_ViewMatrix)[3];//.m_Position;
 
         glm::vec3 rayDir = inverseView * glm::vec3(ray);
 

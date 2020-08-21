@@ -9,7 +9,7 @@
 #include "Ares/Renderer/Renderer.h"
 
 #include "Ares/Renderer/SceneCamera.h"
-#include "Ares/Editor/EditorCamera.h"
+//#include "Ares/Editor/EditorCamera.h"
 
 namespace Ares
 {
@@ -41,7 +41,7 @@ namespace Ares
 
 		void OnUpdate();
 		void OnRenderRuntime();
-		void OnRenderEditor(const EditorCamera& editorCamera, const Entity& selectedEntity);
+		void OnRenderEditor(const Camera& editorCamera, const glm::mat4& viewMatrix, const Entity& selectedEntity);
 		void OnEvent(Event& e);
 
 		// Runtime

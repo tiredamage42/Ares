@@ -1,5 +1,5 @@
 #pragma once
-
+#define GLM_FORCE_RADIANS
 //#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -25,10 +25,10 @@ namespace Ares
         {
             Vector3 scale, translation, skew;
             Vector4 perspective;
-            Quaternion orientation;
-            glm::decompose(transform, scale, orientation, translation, skew, perspective);
-
-            return { translation, orientation, scale };
+            Quaternion rotation;
+            glm::decompose(transform, scale, rotation, translation, skew, perspective);
+            //rotation = glm::conjugate(rotation);
+            return { translation, rotation, scale };
         }
 	};
 }

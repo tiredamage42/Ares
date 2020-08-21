@@ -196,10 +196,11 @@ namespace Ares
         // RENDER SPRITES HERE
     }
 
-    void Scene::OnRenderEditor(const EditorCamera& editorCamera, const Entity& selectedEntity)
+    void Scene::OnRenderEditor(const Camera& editorCamera, const glm::mat4& viewMatrix, const Entity& selectedEntity)
     {
+        SceneRenderer::BeginScene(this, { editorCamera, viewMatrix });
+        
         auto group = m_Registry.group<MeshRendererComponent>(entt::get<TransformComponent>);
-        SceneRenderer::BeginScene(this, { editorCamera, editorCamera.GetViewMatrix() });
         for (auto entity : group)
         {
             auto [transformComponent, meshComponent] = group.get<TransformComponent, MeshRendererComponent>(entity);

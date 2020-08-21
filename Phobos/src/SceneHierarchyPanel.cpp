@@ -4,10 +4,11 @@
 
 namespace Ares {
 
-	void SceneHierarchyPanel::Draw(Ref<Scene> scene, Entity& selectedEntity, bool& selectionChanged, Entity& deletedEntity)
+	void SceneHierarchyPanel::Draw(Ref<Scene> scene, Entity& selectedEntity, bool& windowFocused)//, Entity& deletedEntity)
 	{
-		deletedEntity = {};
+		//deletedEntity = {};
 		ImGui::Begin("Scene Hierarchy");
+		windowFocused = ImGui::IsWindowFocused();
 
 		scene->ForEachEntity([&](const Entity& entity)
 		{
@@ -18,7 +19,7 @@ namespace Ares {
 			if (entityClicked)
 			{
 				selectedEntity = entity;
-				selectionChanged = true;
+				//selectionChanged = true;
 			}
 
 			if (entityDeleted)
@@ -27,7 +28,7 @@ namespace Ares {
 				if (entity == selectedEntity)
 					selectedEntity = {};
 
-				deletedEntity = entity;	
+				//deletedEntity = entity;	
 			}
 		});
 	

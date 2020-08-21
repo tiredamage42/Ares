@@ -7,7 +7,8 @@ namespace Ares {
 	/*
 		events are currently blocking.
 		when an event occurs it immediately gets dispatched
-		and must be dealth with right away
+		and must be de
+		h with right away
 
 		for the future, a better strategy might be to buffer
 		events in an event bus and prcess them during the "event"

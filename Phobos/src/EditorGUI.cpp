@@ -156,7 +156,6 @@ namespace Ares
 	}
 
 	const ImGuiColorEditFlags colorFlags = ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview;
-
 	bool EditorGUI::Color3Field(PARAMS_CUSTOM_UNDO_REDO(Vector3))
 	{
 		EDITOR_FIELD_CUSTOM_UNDO_REDO(ImGui::ColorEdit3(id.c_str(), glm::value_ptr(value)), Vector3, oldValue3);
@@ -183,12 +182,6 @@ namespace Ares
 		EDITOR_FIELD(ImGui::ColorEdit4(id.c_str(), &value.x, colorFlags), ImVec4, oldValueim4);
 	}
 
-
-
-
-
-
-
 	bool EditorGUI::EditorButton(const char* label, float width, bool isActive)
 	{
 		bool pressed = false;
@@ -199,6 +192,12 @@ namespace Ares
 		return pressed;
 	}
 
+	bool EditorGUI::EditorImageButton(Ref<Texture2D> icon, ImVec2 size, bool isActive)
+	{
+		ImVec4 backGroundActive = ImGui::GetStyle().Colors[ImGuiCol_TabActive];
+		ImVec4 activeTint = ImGui::GetStyle().Colors[ImGuiCol_Text];
+		return ImGui::ImageButton((ImTextureID)(intptr_t)(icon->GetRendererID()), size, ImVec2(0, 1), ImVec2(1, 0), 0, isActive ? backGroundActive : ImVec4(0, 0, 0, 0), activeTint);
+	}
 
 
 
@@ -268,8 +267,8 @@ namespace Ares
 
 	void EditorGUI::DrawEditorColorPickers()
 	{
-		ImGui::Begin("Editor Colors");
-		ImGui::Columns(2);
+		//ImGui::Begin("Editor Colors");
+		//ImGui::Columns(2);
 
 		ImVec4* colors = ImGui::GetStyle().Colors;
 
@@ -278,8 +277,8 @@ namespace Ares
 			Color4Field(s_ImGuiColorKeys[i], colors[i]);
 		}
 
-		ImGui::Columns(1);
-		ImGui::End();
+		//ImGui::Columns(1);
+		//ImGui::End();
 	}
 
 	void EditorGUI::InitializeGUIColors()

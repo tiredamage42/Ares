@@ -46,7 +46,7 @@ namespace Ares
 
 
 
-	static uint32_t MouseCode2Index(MouseButtonCode code)
+	static uint32_t MouseButtonCode2Index(MouseButtonCode code)
 	{
 		switch (code)
 		{
