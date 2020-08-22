@@ -1316,6 +1316,95 @@ namespace Ares {
 		if (outline)
 		{
 
+			Renderer::Submit([]() {
+				//glStencilFunc(GL_NOTEQUAL, 1, 0xff);
+				glStencilMask(0x00); // disable writing to the stencil buffer
+
+				glLineWidth(2);
+				glEnable(GL_LINE_SMOOTH);
+				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				glPolygonMode(GL_FRONT, GL_LINE);
+				//glDisable(GL_DEPTH_TEST);
+				}, "Draw Outline Prepare");
+
+			// Draw outline here
+
+
+
+				//Ref<Shader> outlineShader = s_Data.OutlineMaterial->GetShader();
+
+				//std::unordered_set<ShaderVariant> outlineVariantsVisited;
+				//std::vector<Ref<Material>> outlineMaterials = { s_Data.OutlineMaterial };
+
+			size_t outlineDrawCount = s_Data.SelectedMeshDrawList.size();
+			std::vector<SceneRendererData::DrawCommand> outlineDraws;
+			outlineDraws.resize(s_Data.SelectedMeshDrawList.size());
+			size_t x = 0;
+			size_t y = outlineDrawCount - 1;
+			for (auto& dc : s_Data.SelectedMeshDrawList)
+			{
+				if (dc.Mesh->IsAnimated())
+					outlineDraws[y--] = dc;
+				/*{
+				}*/
+				else
+					outlineDraws[x++] = dc;
+				/*{
+				}*/
+			}
+			size_t skinnedVariationStart = x;
+
+			s_Data.OutlineShader->Bind(ShaderVariations::Default);
+			s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection);
+			s_Data.OutlineShader->SetFloat4("u_Color", GetOptions().MeshTrianglesColor);
+
+			for (size_t i = 0; i < outlineDrawCount; i++)
+			{
+				if (i == skinnedVariationStart)
+				{
+					s_Data.OutlineShader->Bind(ShaderVariations::DefaultSkinned);
+					s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection);
+					s_Data.OutlineShader->SetFloat4("u_Color", GetOptions().MeshTrianglesColor);
+				}
+
+				Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, true);
+			}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 			/*
 				Now that the stencil buffer is updated with 1s where the containers were drawn 
 				we're going to draw the upscaled containers, but this time with the appropriate 
@@ -1349,11 +1438,17 @@ namespace Ares {
 				//std::unordered_set<ShaderVariant> outlineVariantsVisited;
 				//std::vector<Ref<Material>> outlineMaterials = { s_Data.OutlineMaterial };
 
-				size_t outlineDrawCount = s_Data.SelectedMeshDrawList.size();
-				std::vector<SceneRendererData::DrawCommand> outlineDraws;
+				//size_t 
+					outlineDrawCount = s_Data.SelectedMeshDrawList.size();
+				//std::vector<SceneRendererData::DrawCommand> outlineDraws;
+
+					outlineDraws.clear();
+
 				outlineDraws.resize(s_Data.SelectedMeshDrawList.size());
-				size_t x = 0;
-				size_t y = outlineDrawCount - 1;
+				//size_t 
+					x = 0;
+				//size_t 
+					y = outlineDrawCount - 1;
 				for (auto& dc : s_Data.SelectedMeshDrawList)
 				{
 					if (dc.Mesh->IsAnimated())
@@ -1365,11 +1460,12 @@ namespace Ares {
 					/*{
 					}*/
 				}
-				size_t skinnedVariationStart = x;
+				//size_t 
+					skinnedVariationStart = x;
 
 				s_Data.OutlineShader->Bind(ShaderVariations::Default);
 				s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection);
-				s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1));
+				s_Data.OutlineShader->SetFloat4("u_Color", GetOptions().OutlineColor);
 
 				for (size_t i = 0; i < outlineDrawCount; i++)
 				{
@@ -1377,7 +1473,7 @@ namespace Ares {
 					{
 						s_Data.OutlineShader->Bind(ShaderVariations::DefaultSkinned);
 						s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection);
-						s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1));
+						s_Data.OutlineShader->SetFloat4("u_Color", GetOptions().OutlineColor);
 					}
 
 					Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, false);

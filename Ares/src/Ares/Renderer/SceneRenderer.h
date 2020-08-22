@@ -6,7 +6,10 @@
 namespace Ares {
 	struct SceneRendererOptions
 	{
-		Vector4 AABBColor{ 51.0f /255.0f, 105.0f /255.0f, 173.0f /255.0f, 1.0f };
+		Vector4 MeshTrianglesColor{ 51.0f / 255.0f, 105.0f / 255.0f, 173.0f / 255.0f, 1.0f };
+		Vector4 AABBColor{ 0, 1, 0, 1.0f };
+
+		Vector4 OutlineColor{ 1, .5f, 0, 1 };
 		bool ShowGrid = true;
 		bool ShowBoundingBoxes = false;
 		Vector4 GridColor{ .75f, .75f, .75f, 50.0f / 255.0f };

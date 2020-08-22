@@ -59,8 +59,8 @@ namespace Ares
 		static bool EditorButton(const char* label, float width, bool isActive);
 		static bool EditorImageButton(Ref<Texture2D> icon, ImVec2 size, bool isActive);
 
-		static void InitializeGUIColors();
-		static void DrawEditorColorPickers();
+		//static void InitializeGUIColors();
+		//static void DrawEditorColorPickers();
 
 	};
 }
