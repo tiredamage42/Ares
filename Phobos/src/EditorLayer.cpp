@@ -318,6 +318,13 @@ namespace Ares
             */
 
 
+            //Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false, false, false);
+            //Renderer::BeginRenderPass(SceneRenderer::GetGeometryPass(), false, false, false);
+
+            /*
+            auto viewProj = m_EditorCamera.GetViewProjection();
+            Renderer2D::BeginScene(viewProj, glm::inverse(m_EditorCamera.m_ViewMatrix)[3]);// , false);
+            
             //if (m_SelectionContext.size() && false)
             if (m_SelectedEntity)
             {
@@ -327,21 +334,44 @@ namespace Ares
                 if (m_SelectedEntity.HasComponent<MeshRendererComponent>())
                 {
                     MeshRendererComponent* mr = m_SelectedEntity.GetComponent<MeshRendererComponent>();
-                    Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
-                    auto viewProj = m_EditorCamera.GetViewProjection();
-                    Renderer2D::BeginScene(viewProj, false);
                     //glm::vec4 color = (m_SelectionMode == SelectionMode::Entity) ? glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f } : glm::vec4{ 0.2f, 0.9f, 0.2f, 1.0f };
                     glm::vec4 color = glm::vec4{ 0.2f, 0.9f, 0.2f, 1.0f };
                     
-                    Renderer::DrawAABB(mr->Mesh, m_SelectedEntity.GetComponent<TransformComponent>()->Transform, color);
+                    Renderer::DrawAABB(mr->Mesh, m_SelectedEntity.GetComponent<TransformComponent>()->Transform, color, true);
 
                     //Renderer::DrawAABB(mr->Mesh->GetBounds(), selection.Entity.GetComponent<TransformComponent>()->Transform * selection.Mesh->Transform, color);
                     //Renderer::DrawAABB(selection.Mesh->BoundingBox, selection.Entity.GetComponent<TransformComponent>()->Transform * selection.Mesh->Transform, color);
 
-                    Renderer2D::EndScene();
-                    Renderer::EndRenderPass();
+
+
+                    
+
                 }
             }
+
+
+            
+            Vector3 camPos = glm::inverse(m_EditorCamera.m_ViewMatrix)[3];
+            camPos.y = 0;
+            camPos.x = (int)camPos.x;
+            camPos.z = (int)camPos.z;
+
+
+
+            Vector4 gridColor = { .8f, .8f, .8f, .5f };
+            const int gridRes = 30;
+            for (int i = -m_GridResolution; i <= m_GridResolution; i++)
+            {
+
+                Renderer2D::SubmitLine(camPos + Vector3{ i, 0, -m_GridResolution }, camPos + Vector3{ i, 0, m_GridResolution }, m_GridColor, true, m_GridCameraRange);
+                //Renderer2D::SubmitLine(camPos + Vector3{ -m_GridResolution, 0, i }, camPos + Vector3{ m_GridResolution, 0, i }, m_GridColor, true, m_GridCameraRange);
+            }
+
+
+
+            Renderer2D::EndScene();
+            Renderer::EndRenderPass();
+            */
             
             break;
         }
@@ -529,10 +559,13 @@ namespace Ares
 
         xr = (xr - buttonPad) - buttonWidth;
         ImGui::SameLine(xr);
+
         if (EditorGUI::EditorButton("Show AABB", buttonWidth, SceneRenderer::GetOptions().ShowBoundingBoxes))
         {
             SceneRenderer::GetOptions().ShowBoundingBoxes = !SceneRenderer::GetOptions().ShowBoundingBoxes;
         }
+        /*
+        */
 
         xr = (xr - buttonPad) - buttonWidth;
         ImGui::SameLine(xr);
@@ -681,13 +714,16 @@ namespace Ares
             */
 
 
-            float viewManipSize = 128;
-            ImGuizmo::ViewManipulate(
-                glm::value_ptr(m_EditorCamera.m_ViewMatrix), m_EditorCamera.m_Distance, 
-                ImVec2(ImGui::GetWindowPos().x + (ImGui::GetWindowWidth() - viewManipSize), ImGui::GetWindowPos().y + (ImGui::GetWindowHeight() - viewManipSize)), 
-                ImVec2(viewManipSize, viewManipSize), 
-                0x80808080
-            );
+            if (!m_EditorCamera.m_FreeCamMode)
+            {
+                float viewManipSize = 128;
+                ImGuizmo::ViewManipulate(
+                    glm::value_ptr(m_EditorCamera.m_ViewMatrix), m_EditorCamera.m_Distance, 
+                    ImVec2(ImGui::GetWindowPos().x + (ImGui::GetWindowWidth() - viewManipSize), ImGui::GetWindowPos().y + (ImGui::GetWindowHeight() - viewManipSize)), 
+                    ImVec2(viewManipSize, viewManipSize), 
+                    0x80808080
+                );
+            }
             //m_EditorCamera.SetViewMatrix(m_EditorCamera.m_ViewMatrix);
 
             //ImGuizmo::SetOrthographic(false);
@@ -814,8 +850,22 @@ namespace Ares
     {
         ImGui::Begin("Editor Settings:");
 
+        if (ImGui::CollapsingHeader("Scene View AABB", nullptr, ImGuiTreeNodeFlags_Selected))
+        {
+            EditorGUI::Color4Field("Gizmo Color", SceneRenderer::GetOptions().AABBColor);
+        }
+        ImGui::Separator();
+        static bool open0 = true;
+        if (ImGui::CollapsingHeader("Scene View Grid", nullptr, ImGuiTreeNodeFlags_Selected))
+        {
+            EditorGUI::Color4Field("Color", SceneRenderer::GetOptions().GridColor);
+            EditorGUI::IntSliderField("Resolution", SceneRenderer::GetOptions().GridResolution, 1, 100);
+            EditorGUI::Vec2Field("Camera Range", SceneRenderer::GetOptions().GridCameraRange);
+        }
 
-        if (ImGui::CollapsingHeader("Scene View Free Camera Speeds", nullptr, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Selected))
+        ImGui::Separator();
+        static bool open1 = true;
+        if (ImGui::CollapsingHeader("Scene View Free Camera Speeds", nullptr, ImGuiTreeNodeFlags_Selected))
         {
 
             ImGui::Columns(2);
@@ -826,7 +876,8 @@ namespace Ares
             ImGui::Columns(1);
         }
         ImGui::Separator();
-        if (ImGui::CollapsingHeader("Scene View Camera Speeds", nullptr, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Selected))
+        static bool open2 = true;
+        if (ImGui::CollapsingHeader("Scene View Camera Speeds", nullptr, ImGuiTreeNodeFlags_Selected))
         {
 
             ImGui::Columns(2);
@@ -837,7 +888,8 @@ namespace Ares
         }
         ImGui::Separator();
 
-        if (ImGui::CollapsingHeader("Editor Colors", nullptr, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Selected))
+        static bool open3 = true;
+        if (ImGui::CollapsingHeader("Editor Colors", nullptr, ImGuiTreeNodeFlags_Selected))
         {
             ImGui::Columns(2);
             EditorGUI::DrawEditorColorPickers();
@@ -846,7 +898,7 @@ namespace Ares
 
         ImGui::End();
 
-    }
+    } 
 
 
 

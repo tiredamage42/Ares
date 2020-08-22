@@ -36,7 +36,7 @@ namespace Ares {
 
 		virtual void Init() = 0;
 		virtual void Clear() = 0;
-		virtual void Clear(float r, float g, float b, float a) = 0;
+		virtual void Clear(float r, float g, float b, float a, bool clearColor, bool clearDepth, bool clearStencil) = 0;
 		virtual void SetClearColor(const glm::vec4& color) = 0;
 
 		virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;

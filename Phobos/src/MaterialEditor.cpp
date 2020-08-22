@@ -177,7 +177,8 @@ namespace Ares
 
 			void* rendererID = (void*)(intptr_t)(hasTexture ? tex->GetRendererID() : checkerboardTex->GetRendererID());
 	
-			ImGui::CollapsingHeader(name.c_str(), nullptr, ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Selected);
+			//ImGui::CollapsingHeader(name.c_str(), nullptr, ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Selected);
+			ImGui::CollapsingHeader(name.c_str(), nullptr, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Selected);
 			{
 				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
 				ImGui::Image(rendererID, ImVec2(64, 64));

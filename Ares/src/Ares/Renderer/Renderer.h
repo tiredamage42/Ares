@@ -58,7 +58,7 @@ namespace Ares {
 			new (storageBuffer) FuncT(std::forward<FuncT>(func));
 		}
 
-		static void Clear(float r, float g, float b, float a);
+		static void Clear(float r, float g, float b, float a, bool clearColor, bool clearDepth, bool clearStencil);
 		static void WaitAndRender();
 		static void DrawIndexed(uint32_t count, PrimitiveType type, bool depthTest = true);
 		// For OpenGL
@@ -66,7 +66,7 @@ namespace Ares {
 
 
 		// ~Actual~ Renderer here... TODO: remove confusion later
-		static void BeginRenderPass(Ref<RenderPass> renderPass, bool clear = true);
+		static void BeginRenderPass(Ref<RenderPass> renderPass, bool clearColor, bool clearDepth, bool clearStencil);
 		static void EndRenderPass();
 
 
@@ -76,10 +76,10 @@ namespace Ares {
 		static void SubmitQuad(Ref<Shader> shader, const glm::mat4& transform = glm::mat4(1.0f), bool depthTest = true);
 		
 		//static void SubmitFullscreenQuad(Ref<MaterialInstance> material);
-		static void SubmitFullscreenQuad(Ref<Material> material);
+		static void SubmitFullscreenQuad(Ref<Material> material, bool depthTest);
 
 		//static void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> overrideMaterial);
-		static void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, const std::vector<Ref<Material>>& materials);
+		//static void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, const std::vector<Ref<Material>>& materials);
 
 		//static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Shader>& overrideMaterial = nullptr);
 		
@@ -89,8 +89,8 @@ namespace Ares {
 
 
 		//static void DrawAABB(const Ref<Mesh>& mesh, const glm::vec4& color = glm::vec4(1.0f));
-		static void DrawAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
-		static void DrawAABB(Ref<Mesh> mesh, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
+		static void DrawAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color, bool depthTest);
+		static void DrawAABB(Ref<Mesh> mesh, const glm::mat4& transform, const glm::vec4& color, bool depthTest);
 
 
 		static RenderCommandQueue& GetRenderCommandQueue();

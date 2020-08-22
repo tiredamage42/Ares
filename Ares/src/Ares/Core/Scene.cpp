@@ -145,7 +145,7 @@ namespace Ares
 
                 glm::mat4 viewProj = mainCamera->GetProjectionMatrix() * glm::inverse(*cameraTransform);
 
-                Renderer2D::BeginScene(viewProj, true);
+                Renderer2D::BeginScene(viewProj, (*cameraTransform)[3]);// , true);
                 //Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), *cameraTransform);
 
                 auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
@@ -156,7 +156,7 @@ namespace Ares
 
                     auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
             
-                    Renderer2D::DrawQuad(transform, sprite.Texture, sprite.Tiling, sprite.Offset, sprite.Color);
+                    Renderer2D::SubmitQuad(transform, sprite.Texture, sprite.Tiling, sprite.Offset, sprite.Color, true);
                 }
 
                 Renderer2D::EndScene();

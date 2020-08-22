@@ -158,8 +158,8 @@ namespace Ares
 				 angles.x = M_PI + angles.x;
 			}
 
-			angles.x = angles.x + GetAxis(KeyCode::Up, KeyCode::Down) * rotMult;
-			//angles.x = ClampAngle(angles.x + GetAxis(KeyCode::Up, KeyCode::Down) * rotMult, -89, 89);
+			//angles.x = angles.x - GetAxis(KeyCode::Up, KeyCode::Down) * rotMult;
+			angles.x = ClampAngle(angles.x - GetAxis(KeyCode::Up, KeyCode::Down) * rotMult, -89, 89);
 			//angles.x += M_PI * addBack;
 
 			if (angles.z <= -3.14 || angles.z >= 3.14)

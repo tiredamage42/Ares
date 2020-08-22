@@ -21,6 +21,10 @@
 		this way we can have procedural skybox
 
 
+	TODO:
+	remove editor specific stuff
+
+
 */
 namespace Ares {
 
@@ -912,7 +916,7 @@ namespace Ares {
 			}, "Outline STart");*/
 		}
 
-		Renderer::BeginRenderPass(s_Data.GeoPass);
+		Renderer::BeginRenderPass(s_Data.GeoPass, true, true, true);
 
 		//auto viewProjection = s_Data.SceneData.SceneCamera.GetProjectionMatrix() * s_Data.SceneData.SceneCamera.GetViewMatrix();
 		//auto viewProjection = s_Data.SceneData.SceneCamera.GetViewProjection();
@@ -974,11 +978,15 @@ namespace Ares {
 
 		auto viewMatrix = s_Data.SceneData.SceneCamera.ViewMatrix;
 		auto viewProjection = s_Data.SceneData.SceneCamera.Camera.GetProjectionMatrix() * viewMatrix;
-		//glm::vec3 cameraPosition = glm::inverse(s_Data.SceneData.SceneCamera.ViewMatrix)[3];
+		glm::vec3 cameraPosition = glm::inverse(s_Data.SceneData.SceneCamera.ViewMatrix)[3];
 
 
 
 		// Skybox
+		Renderer::Submit([]() {
+			glDepthMask(false);	
+		}, "");
+		
 		// TODO: render skybox (render as last to prevent overdraw)
 		auto skyboxShader = s_Data.SceneData.SkyboxMaterial->GetShader();
 		skyboxShader->Bind(ShaderVariations::Default);
@@ -988,7 +996,10 @@ namespace Ares {
 		
 		//s_Data.SceneData.SkyboxMaterial->Set("u_TextureLod", s_Data.SceneData.SkyboxLod);
 		// s_Data.SceneInfo.EnvironmentIrradianceMap->Bind(0);
-		Renderer::SubmitFullscreenQuad(s_Data.SceneData.SkyboxMaterial);
+		Renderer::SubmitFullscreenQuad(s_Data.SceneData.SkyboxMaterial, true);
+		Renderer::Submit([]() {
+			glDepthMask(true);
+		}, "");
 
 
 
@@ -1430,6 +1441,7 @@ namespace Ares {
 					glStencilFunc(GL_ALWAYS, 1, 0xff);
 					//glEnable(GL_DEPTH_TEST);
 					glPolygonMode(GL_FRONT, GL_FILL);
+					glEnable(GL_DEPTH_TEST);
 				}, "Outline End");
 		}
 
@@ -1460,8 +1472,122 @@ namespace Ares {
 
 
 
-		// Grid
+
+
+
+
+		
+
+		//auto viewProj = m_EditorCamera.GetViewProjection();
+		Renderer2D::BeginScene(viewProjection, cameraPosition);// , false);
+
+		//if (m_SelectionContext.size() && false)
+		if (outline)
+		{
+
+			size_t outlineDrawCount = s_Data.SelectedMeshDrawList.size();
+			std::vector<SceneRendererData::DrawCommand> outlineDraws;
+			outlineDraws.resize(s_Data.SelectedMeshDrawList.size());
+			size_t x = 0;
+			size_t y = outlineDrawCount - 1;
+			for (auto& dc : s_Data.SelectedMeshDrawList)
+			{
+				if (dc.Mesh->IsAnimated())
+					outlineDraws[y--] = dc;
+				/*{
+				}*/
+				else
+					outlineDraws[x++] = dc;
+				/*{
+				}*/
+			}
+			size_t skinnedVariationStart = x;
+
+			
+			for (size_t i = 0; i < outlineDrawCount; i++)
+			{
+				if (i == skinnedVariationStart)
+				{
+				}
+
+
+				Renderer::DrawAABB(outlineDraws[i].Mesh, outlineDraws[i].Transform, GetOptions().AABBColor, false);
+				
+			}
+		}
+
+		if (GetOptions().ShowBoundingBoxes)
+		{
+			//Renderer2D::BeginScene(viewProjection, cameraPosition);
+			for (auto& dc : s_Data.DrawList)
+				Renderer::DrawAABB(dc.Mesh, dc.Transform, GetOptions().AABBColor, true);
+			//Renderer2D::EndScene();
+		}
+
+
+		
+		
 		if (GetOptions().ShowGrid)
+		//if (showGrid)
+		{
+
+			Vector3 camPos = cameraPosition;// glm::inverse(m_EditorCamera.m_ViewMatrix)[3];
+			camPos.y = 0;
+			camPos.x = (int)camPos.x;
+			camPos.z = (int)camPos.z;
+
+			for (int i = -GetOptions().GridResolution; i <= GetOptions().GridResolution; i++)
+			{
+
+				Renderer2D::SubmitLine(camPos + Vector3{ i, 0, -GetOptions().GridResolution }, camPos + Vector3{ i, 0, GetOptions().GridResolution }, GetOptions().GridColor, true, GetOptions().GridCameraRange);
+				Renderer2D::SubmitLine(camPos + Vector3{ -GetOptions().GridResolution, 0, i }, camPos + Vector3{ GetOptions().GridResolution, 0, i }, GetOptions().GridColor, true, GetOptions().GridCameraRange);
+			}
+
+		}
+
+		Renderer2D::EndScene();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		// Grid
+		//if (GetOptions().ShowGrid)
 		{
 
 
@@ -1469,8 +1595,8 @@ namespace Ares {
 			//float m_GridSize = 0.025f;
 			//float m_GridSize = 0.5f;
 
-			s_Data.GridShader->Bind(ShaderVariations::Default);
-			s_Data.GridShader->SetMat4("ares_VPMatrix", viewProjection);
+			//s_Data.GridShader->Bind(ShaderVariations::Default);
+			//s_Data.GridShader->SetMat4("ares_VPMatrix", viewProjection);
 
 			/*s_Data.GridMaterial->GetShader()->Bind(ShaderVariant::Static);
 			s_Data.GridMaterial->GetShader()->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Static);*/
@@ -1484,18 +1610,25 @@ namespace Ares {
 			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(16.0f)));
 			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
 			
+
 			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));// *glm::scale(glm::mat4(1.0f), glm::vec3(GRID_RESOLUTION + GRID_WIDTH)));
-			Renderer::SubmitQuad(s_Data.GridShader, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), true);// *glm::scale(glm::mat4(1.0f), glm::vec3(GRID_RESOLUTION + GRID_WIDTH)));
+			
+			
+			
+			
+			// used
+			//Renderer::SubmitQuad(s_Data.GridShader, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), true);// *glm::scale(glm::mat4(1.0f), glm::vec3(GRID_RESOLUTION + GRID_WIDTH)));
 		}
 
-
+		/*
 		if (GetOptions().ShowBoundingBoxes)
 		{
-			Renderer2D::BeginScene(viewProjection);
+			Renderer2D::BeginScene(viewProjection, cameraPosition);
 			for (auto& dc : s_Data.DrawList)
-				Renderer::DrawAABB(dc.Mesh, dc.Transform);
+				Renderer::DrawAABB(dc.Mesh, dc.Transform, GetOptions().AABBColor, true);
 			Renderer2D::EndScene();
 		}
+		*/
 
 		/*
 		// Skybox
@@ -1517,20 +1650,38 @@ namespace Ares {
 	{
 		ARES_PROFILE_FUNCTION();
 
-		Renderer::BeginRenderPass(s_Data.CompositePass);
+		Renderer::Submit([]() {
+			glDepthMask(false);
+		}, "");
+		/*
+		*/
+
+		Renderer::BeginRenderPass(s_Data.CompositePass, true, true, true);
 		s_Data.CompositeShader->Bind(ShaderVariations::Default);
 		s_Data.CompositeShader->SetFloat("u_Exposure", s_Data.SceneData.Exposure);
 		s_Data.CompositeShader->SetInt("u_TextureSamples", s_Data.GeoPass->GetSpecs().TargetFrameBuffer->GetSpecs().Samples);
 
 		s_Data.GeoPass->GetSpecs().TargetFrameBuffer->BindAsTexture();
-		Renderer::SubmitFullscreenQuad(nullptr);
+		Renderer::SubmitFullscreenQuad(nullptr, false);
 		Renderer::EndRenderPass();
+		
+		Renderer::Submit([]() {
+			glDepthMask(true);
+		}, "");
+		/*
+		*/
+
 	}
 
 	Ref<RenderPass> SceneRenderer::GetFinalRenderPass()
 	{
 		return s_Data.CompositePass;
 	}
+	Ref<RenderPass> SceneRenderer::GetGeometryPass()
+	{
+		return s_Data.GeoPass;
+	}
+
 
 	
 	uint32_t SceneRenderer::GetFinalColorBufferRendererID()

@@ -21,9 +21,9 @@ namespace Ares {
 		{
 			s_RendererAPI->Clear();
 		}
-		inline static void Clear(float r, float g, float b, float a)
+		inline static void Clear(float r, float g, float b, float a, bool clearColor, bool clearDepth, bool clearStencil)
 		{
-			s_RendererAPI->Clear(r, g, b, a);
+			s_RendererAPI->Clear(r, g, b, a, clearColor, clearDepth, clearStencil);
 		}
 		inline static void DrawIndexed(uint32_t indexCount, PrimitiveType type, bool depthTest)
 		{

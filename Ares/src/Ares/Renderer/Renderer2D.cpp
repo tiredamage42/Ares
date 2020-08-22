@@ -20,6 +20,7 @@ namespace Ares
 	{
 		glm::vec3 Position;
 		glm::vec4 Color;
+		glm::vec2 CamRange;
 	};
 
 
@@ -37,33 +38,53 @@ namespace Ares
 		Ref<VertexArray> QuadVertexArray;
 		Ref<VertexBuffer> QuadVertexBuffer;
 		Ref<Shader> TextureShader;
-
-		uint32_t QuadIndexCount = 0;
-		QuadVertex* QuadVertexBufferBase = nullptr;
-		QuadVertex* QuadVertexBufferPtr = nullptr;
-
-		//stack allocated array
-		std::array<Ref<Texture2D>, MAX_TEXTURE_SLOTS> TextureSlots;
-		uint32_t TextureSlotIndex = 1; // 0 = white texture
-
-		glm::mat4 QuadVertices;
-
 		// Lines
 		Ref<VertexArray> LineVertexArray;
 		Ref<VertexBuffer> LineVertexBuffer;
 		Ref<Shader> LineShader;
 
-		uint32_t LineIndexCount = 0;
-		LineVertex* LineVertexBufferBase = nullptr;
-		LineVertex* LineVertexBufferPtr = nullptr;
+		glm::mat4 QuadVertices;
+
+		struct DrawData
+		{
+			uint32_t QuadIndexCount = 0;
+			QuadVertex* QuadVertexBufferBase = nullptr;
+			QuadVertex* QuadVertexBufferPtr = nullptr;
+
+			//stack allocated array
+			std::array<Ref<Texture2D>, MAX_TEXTURE_SLOTS> TextureSlots;
+			uint32_t TextureSlotIndex = 1; // 0 = white texture
+
+			uint32_t LineIndexCount = 0;
+			LineVertex* LineVertexBufferBase = nullptr;
+			LineVertex* LineVertexBufferPtr = nullptr;
+		};
+
+		DrawData DrawDataDepthTest;
+		DrawData DrawDataNonDepthTest;
+
+		//uint32_t QuadIndexCount = 0;
+		//QuadVertex* QuadVertexBufferBase = nullptr;
+		//QuadVertex* QuadVertexBufferPtr = nullptr;
+
+		////stack allocated array
+		//std::array<Ref<Texture2D>, MAX_TEXTURE_SLOTS> TextureSlots;
+		//uint32_t TextureSlotIndex = 1; // 0 = white texture
+
+
+
+		//uint32_t LineIndexCount = 0;
+		//LineVertex* LineVertexBufferBase = nullptr;
+		//LineVertex* LineVertexBufferPtr = nullptr;
 
 		glm::mat4 CameraViewProj;
-		bool DepthTest = true;
+		Vector3 CameraPosition;
+		//bool DepthTest = true;
 
 		
 		Renderer2D::Statistics Stats;
-
 	};
+
 
 	static Renderer2DData s_Data;
 
@@ -87,7 +108,11 @@ namespace Ares
 
 		s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
 
-		s_Data.QuadVertexBufferBase = new QuadVertex[Renderer2DData::MAX_VERTS];
+
+		s_Data.DrawDataDepthTest.QuadVertexBufferBase = new QuadVertex[Renderer2DData::MAX_VERTS];
+		s_Data.DrawDataNonDepthTest.QuadVertexBufferBase = new QuadVertex[Renderer2DData::MAX_VERTS];
+		//s_Data.QuadVertexBufferBase = new QuadVertex[Renderer2DData::MAX_VERTS];
+
 		
 		// INDEX BUFFER =============================================================================
 		uint32_t* quadIndicies = new uint32_t[Renderer2DData::MAX_INDICIES];
@@ -131,7 +156,11 @@ namespace Ares
 		whiteTexture->Unlock();
 		*/
 
-		s_Data.TextureSlots[0] = Renderer::GetWhiteTexture();// whiteTexture;
+		s_Data.DrawDataDepthTest.TextureSlots[0] = Renderer::GetWhiteTexture();// whiteTexture;
+		s_Data.DrawDataNonDepthTest.TextureSlots[0] = Renderer::GetWhiteTexture();// whiteTexture;
+
+		//s_Data.TextureSlots[0] = Renderer::GetWhiteTexture();// whiteTexture;
+
 
 		s_Data.QuadVertices = { 
 			{ -0.5f, -0.5f, 0.0f, 1.0f },
@@ -151,11 +180,14 @@ namespace Ares
 		s_Data.LineVertexBuffer = VertexBuffer::Create(s_Data.MAX_LINE_VERTS * sizeof(LineVertex));
 		s_Data.LineVertexBuffer->SetLayout({
 			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float4, "a_Color" }
-			});
+			{ ShaderDataType::Float4, "a_Color" },
+			{ ShaderDataType::Float2, "a_CamRange" }
+		});
 		s_Data.LineVertexArray->AddVertexBuffer(s_Data.LineVertexBuffer);
 
-		s_Data.LineVertexBufferBase = new LineVertex[s_Data.MAX_LINE_VERTS];
+		s_Data.DrawDataDepthTest.LineVertexBufferBase = new LineVertex[s_Data.MAX_LINE_VERTS];
+		s_Data.DrawDataNonDepthTest.LineVertexBufferBase = new LineVertex[s_Data.MAX_LINE_VERTS];
+		//s_Data.LineVertexBufferBase = new LineVertex[s_Data.MAX_LINE_VERTS];
 
 		uint32_t* lineIndices = new uint32_t[s_Data.MAX_LINE_INDICIES];
 		for (uint32_t i = 0; i < s_Data.MAX_LINE_INDICIES; i++)
@@ -168,18 +200,27 @@ namespace Ares
 
 	void Renderer2D::Shutdown()
 	{
-		delete[] s_Data.QuadVertexBufferBase;
-		delete[] s_Data.LineVertexBufferBase;
+		delete[] s_Data.DrawDataDepthTest.QuadVertexBufferBase;
+		delete[] s_Data.DrawDataDepthTest.LineVertexBufferBase;
+		delete[] s_Data.DrawDataNonDepthTest.QuadVertexBufferBase;
+		delete[] s_Data.DrawDataNonDepthTest.LineVertexBufferBase;
+
+		
+		//delete[] s_Data.QuadVertexBufferBase;
+		//delete[] s_Data.LineVertexBufferBase;
 	}
 	//void Renderer2D::BeginScene(const glm::mat4& projection, const glm::mat4& transform) 
-	void Renderer2D::BeginScene(const glm::mat4& viewProj, bool depthTest)
+	void Renderer2D::BeginScene(const glm::mat4& viewProj, const Vector3& cameraPosition)//, bool depthTest)
 	{
 
 		// reset stats
 		memset(&s_Data.Stats, 0, sizeof(Renderer2D::Statistics));
 
+		s_Data.CameraPosition = cameraPosition;
 		s_Data.CameraViewProj = viewProj;
-		s_Data.DepthTest = depthTest;
+		//s_Data.DepthTest = depthTest;
+
+
 
 		// from 2D
 		//glm::mat4 viewProj = projection * glm::inverse(transform);
@@ -188,6 +229,29 @@ namespace Ares
 		//s_Data.TextureShader->Bind(ShaderVariant::Static);
 		//s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj, ShaderVariant::Static);
 
+
+		ResetQuadsDepthTest();
+		ResetQuadsNonDepthTest();
+		ResetLinesDepthTest();
+		ResetLinesNonDepthTest();
+/*
+		s_Data.DrawDataDepthTest.QuadIndexCount = 0;
+		s_Data.DrawDataDepthTest.QuadVertexBufferPtr = s_Data.DrawDataDepthTest.QuadVertexBufferBase;
+		s_Data.DrawDataDepthTest.TextureSlotIndex = 1;
+
+		s_Data.DrawDataDepthTest.LineIndexCount = 0;
+		s_Data.DrawDataDepthTest.LineVertexBufferPtr = s_Data.DrawDataDepthTest.LineVertexBufferBase;
+
+		s_Data.DrawDataNonDepthTest.QuadIndexCount = 0;
+		s_Data.DrawDataNonDepthTest.QuadVertexBufferPtr = s_Data.DrawDataNonDepthTest.QuadVertexBufferBase;
+		s_Data.DrawDataNonDepthTest.TextureSlotIndex = 1;
+
+		s_Data.DrawDataNonDepthTest.LineIndexCount = 0;
+		s_Data.DrawDataNonDepthTest.LineVertexBufferPtr = s_Data.DrawDataNonDepthTest.LineVertexBufferBase;
+*/
+
+		
+		/*
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 
@@ -195,7 +259,37 @@ namespace Ares
 		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
 
 		s_Data.TextureSlotIndex = 1;
+		*/
 	}
+
+	
+	void Renderer2D::ResetQuadsDepthTest()
+	{
+		s_Data.DrawDataDepthTest.QuadIndexCount = 0;
+		s_Data.DrawDataDepthTest.QuadVertexBufferPtr = s_Data.DrawDataDepthTest.QuadVertexBufferBase;
+		s_Data.DrawDataDepthTest.TextureSlotIndex = 1;
+	}
+	void Renderer2D::ResetQuadsNonDepthTest()
+	{
+		s_Data.DrawDataNonDepthTest.QuadIndexCount = 0;
+		s_Data.DrawDataNonDepthTest.QuadVertexBufferPtr = s_Data.DrawDataNonDepthTest.QuadVertexBufferBase;
+		s_Data.DrawDataNonDepthTest.TextureSlotIndex = 1;
+	}
+
+	void Renderer2D::ResetLinesDepthTest()
+	{
+		s_Data.DrawDataDepthTest.LineIndexCount = 0;
+		s_Data.DrawDataDepthTest.LineVertexBufferPtr = s_Data.DrawDataDepthTest.LineVertexBufferBase;
+	}
+	void Renderer2D::ResetLinesNonDepthTest()
+	{
+		s_Data.DrawDataNonDepthTest.LineIndexCount = 0;
+		s_Data.DrawDataNonDepthTest.LineVertexBufferPtr = s_Data.DrawDataNonDepthTest.LineVertexBufferBase;
+	}
+
+
+
+
 	//void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	//{
 	//	// reset stats
@@ -208,26 +302,147 @@ namespace Ares
 	//	s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 	//	s_Data.TextureSlotIndex = 1;
 	//}
-	void Renderer2D::FlushAndReset()
+
+	/*
+	void Renderer2D::FlushAndReset(bool quadDT, bool quadNDT, bool linesDT, bool linesNDT)
 	{
-		EndScene();
+		EndScene(quadDT, quadNDT, linesDT, linesNDT);
+		if (quadDT)		ResetQuadsDepthTest();
+		if (quadNDT)	ResetQuadsNonDepthTest();
+		if (linesDT)	ResetLinesDepthTest();
+		if (linesNDT)	ResetLinesNonDepthTest();
+
+		/
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 		s_Data.TextureSlotIndex = 1;
+		/
 	}
+	*/
+	/*
 	void Renderer2D::FlushAndResetLines()
 	{
-		/*EndScene();
+		/EndScene();
 		s_Data.LineIndexCount = 0;
 		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
-		s_Data.TextureSlotIndex = 1;*/
+		s_Data.TextureSlotIndex = 1;/
+	}
+	*/
+
+	void Renderer2D::EndSceneQuadsDepthTest()
+	{
+		uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.DrawDataDepthTest.QuadVertexBufferPtr - (uint8_t*)s_Data.DrawDataDepthTest.QuadVertexBufferBase);
+
+		if (dataSize)
+		{
+			s_Data.QuadVertexBuffer->SetData(s_Data.DrawDataDepthTest.QuadVertexBufferBase, dataSize);
+
+			// Nothing to draw
+			/*if (s_Data.QuadIndexCount == 0)
+				return; */
+
+				//is this neeeded?
+			s_Data.TextureShader->Bind(ShaderVariations::Default);
+			s_Data.TextureShader->SetMat4("u_ViewProjection", s_Data.CameraViewProj);
+
+
+			// bind textures
+			for (uint32_t i = 0; i < s_Data.DrawDataDepthTest.TextureSlotIndex; i++)
+				s_Data.DrawDataDepthTest.TextureSlots[i]->Bind(i);
+
+
+			s_Data.QuadVertexArray->Bind();
+			Renderer::DrawIndexed(s_Data.DrawDataDepthTest.QuadIndexCount, PrimitiveType::Triangles, true);
+
+			s_Data.Stats.DrawCalls++;
+		}
+
+	}
+
+	void Renderer2D::EndSceneQuadsNonDepthTest()
+	{
+		uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.DrawDataNonDepthTest.QuadVertexBufferPtr - (uint8_t*)s_Data.DrawDataNonDepthTest.QuadVertexBufferBase);
+
+		if (dataSize)
+		{
+			s_Data.QuadVertexBuffer->SetData(s_Data.DrawDataNonDepthTest.QuadVertexBufferBase, dataSize);
+
+			// Nothing to draw
+			/*if (s_Data.QuadIndexCount == 0)
+				return; */
+
+				//is this neeeded?
+			s_Data.TextureShader->Bind(ShaderVariations::Default);
+			s_Data.TextureShader->SetMat4("u_ViewProjection", s_Data.CameraViewProj);
+
+
+			// bind textures
+			for (uint32_t i = 0; i < s_Data.DrawDataNonDepthTest.TextureSlotIndex; i++)
+				s_Data.DrawDataNonDepthTest.TextureSlots[i]->Bind(i);
+
+
+			s_Data.QuadVertexArray->Bind();
+			Renderer::DrawIndexed(s_Data.DrawDataNonDepthTest.QuadIndexCount, PrimitiveType::Triangles, false);
+
+			s_Data.Stats.DrawCalls++;
+		}
+	}
+	void Renderer2D::EndSceneLinesDepthTest()
+	{
+		uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.DrawDataDepthTest.LineVertexBufferPtr - (uint8_t*)s_Data.DrawDataDepthTest.LineVertexBufferBase);
+		if (dataSize)
+		{
+			s_Data.LineVertexBuffer->SetData(s_Data.DrawDataDepthTest.LineVertexBufferBase, dataSize);
+
+			// is this neeeded?
+			s_Data.LineShader->Bind(ShaderVariations::Default);
+			s_Data.LineShader->SetMat4("u_ViewProjection", s_Data.CameraViewProj);
+			s_Data.LineShader->SetFloat3("ares_CamPosition", s_Data.CameraPosition);
+
+
+
+			s_Data.LineVertexArray->Bind();
+			Renderer::SetLineThickness(2.0f);
+			Renderer::DrawIndexed(s_Data.DrawDataDepthTest.LineIndexCount, PrimitiveType::Lines, true);
+			s_Data.Stats.DrawCalls++;
+		}
+	}
+	void Renderer2D::EndSceneLinesNonDepthTest()
+	{
+		uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.DrawDataNonDepthTest.LineVertexBufferPtr - (uint8_t*)s_Data.DrawDataNonDepthTest.LineVertexBufferBase);
+		if (dataSize)
+		{
+			s_Data.LineVertexBuffer->SetData(s_Data.DrawDataNonDepthTest.LineVertexBufferBase, dataSize);
+
+			// is this neeeded?
+			s_Data.LineShader->Bind(ShaderVariations::Default);
+			s_Data.LineShader->SetMat4("u_ViewProjection", s_Data.CameraViewProj);
+			s_Data.LineShader->SetFloat3("ares_CamPosition", s_Data.CameraPosition);
+
+
+
+			s_Data.LineVertexArray->Bind();
+			Renderer::SetLineThickness(2.0f);
+			Renderer::DrawIndexed(s_Data.DrawDataNonDepthTest.LineIndexCount, PrimitiveType::Lines, false);
+			s_Data.Stats.DrawCalls++;
+		}
 	}
 
 
-	void Renderer2D::EndScene()
+	void Renderer2D::EndScene(bool quadDT, bool quadNDT, bool linesDT, bool linesNDT)
 	{
+		if (quadDT)		EndSceneQuadsDepthTest();
+		if (quadNDT)	EndSceneQuadsNonDepthTest();
+		if (linesDT)	EndSceneLinesDepthTest();
+		if (linesNDT)	EndSceneLinesNonDepthTest();
 
+		if (quadDT)		ResetQuadsDepthTest();
+		if (quadNDT)	ResetQuadsNonDepthTest();
+		if (linesDT)	ResetLinesDepthTest();
+		if (linesNDT)	ResetLinesNonDepthTest();
 
+		
+		/*
 		uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
 		
 		if (dataSize)
@@ -235,8 +450,8 @@ namespace Ares
 			s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
 
 			// Nothing to draw
-			/*if (s_Data.QuadIndexCount == 0)
-				return; */
+			/if (s_Data.QuadIndexCount == 0)
+				return; /
 
 			 //is this neeeded?
 			s_Data.TextureShader->Bind(ShaderVariations::Default);
@@ -262,42 +477,51 @@ namespace Ares
 			// is this neeeded?
 			s_Data.LineShader->Bind(ShaderVariations::Default);
 			s_Data.LineShader->SetMat4("u_ViewProjection", s_Data.CameraViewProj);
+			s_Data.LineShader->SetFloat3("ares_CamPosition", s_Data.CameraPosition);
+			
+
 
 			s_Data.LineVertexArray->Bind();
 			Renderer::SetLineThickness(2.0f);
 			Renderer::DrawIndexed(s_Data.LineIndexCount, PrimitiveType::Lines, s_Data.DepthTest);
 			s_Data.Stats.DrawCalls++;
 		}
+		*/
 		
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec2& position, float rotation, const glm::vec2& size, const Ref<Texture2D>& texture, const glm::vec2& tiling, const glm::vec2& offset, const glm::vec4& color)
+	void Renderer2D::SubmitQuad(const glm::vec2& position, float rotation, const glm::vec2& size, const Ref<Texture2D>& texture, const glm::vec2& tiling, const glm::vec2& offset, const glm::vec4& color, bool depthTest)
 	{
-		DrawQuad({ position.x, position.y, 0.0f }, rotation, size, texture, tiling, color);
+		SubmitQuad({ position.x, position.y, 0.0f }, rotation, size, texture, tiling, offset, color, depthTest);
 	}
-	void Renderer2D::DrawQuad(const glm::vec3& position, float rotation, const glm::vec2& size, const Ref<Texture2D>& texture, const glm::vec2& tiling, const glm::vec2& offset, const glm::vec4& color)
+	void Renderer2D::SubmitQuad(const glm::vec3& position, float rotation, const glm::vec2& size, const Ref<Texture2D>& texture, const glm::vec2& tiling, const glm::vec2& offset, const glm::vec4& color, bool depthTest)
 	{
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position);
 		
 		if (rotation != 0.0f)
 			transform = glm::rotate(transform, rotation, { 0.0f, 0.0f, 1.0f });
 		
-		DrawQuad(glm::scale(transform, { size.x, size.y, 1.0f }), texture, tiling, color);
+		SubmitQuad(glm::scale(transform, { size.x, size.y, 1.0f }), texture, tiling, offset, color, depthTest);
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tiling, const glm::vec2& offset, const glm::vec4& color)
+	void Renderer2D::SubmitQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tiling, const glm::vec2& offset, const glm::vec4& color, bool depthTest)
 	{
-		if (s_Data.QuadIndexCount / 6 > s_MaxQuadsPerDraw || s_Data.QuadIndexCount >= Renderer2DData::MAX_INDICIES)
-			FlushAndReset();
+		Renderer2DData::DrawData& drawData = depthTest ? s_Data.DrawDataDepthTest : s_Data.DrawDataNonDepthTest;
+
+		if (drawData.QuadIndexCount / 6 > s_MaxQuadsPerDraw || drawData.QuadIndexCount >= Renderer2DData::MAX_INDICIES)
+		{
+			EndScene(depthTest, !depthTest, false, false);
+			//FlushAndReset(depthTest, !depthTest, false, false);
+		}
 
 		float textureIndex = 0.0f;
 
 		if (texture)
 		{
-			for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
+			for (uint32_t i = 1; i < drawData.TextureSlotIndex; i++)
 			{
 				// check if we've already submitted this texture
-				if (*s_Data.TextureSlots[i].get() == *texture.get())
+				if (*drawData.TextureSlots[i].get() == *texture.get())
 				{
 					textureIndex = (float)i;
 					break;
@@ -306,13 +530,16 @@ namespace Ares
 
 			if (textureIndex == 0.0f)
 			{
-				if (s_Data.TextureSlotIndex >= Renderer2DData::MAX_TEXTURE_SLOTS)
-					FlushAndReset();
+				if (drawData.TextureSlotIndex >= Renderer2DData::MAX_TEXTURE_SLOTS)
+				{
+					EndScene(depthTest, !depthTest, false, false);
+					//FlushAndReset(depthTest, !depthTest, false, false);
+				}
 
-				textureIndex = (float)s_Data.TextureSlotIndex;
-				s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
+				textureIndex = (float)drawData.TextureSlotIndex;
+				drawData.TextureSlots[drawData.TextureSlotIndex] = texture;
 
-				s_Data.TextureSlotIndex++;
+				drawData.TextureSlotIndex++;
 			}
 		}
 
@@ -320,35 +547,89 @@ namespace Ares
 
 		for (uint32_t i = 0; i < 4; i++)
 		{
-			s_Data.QuadVertexBufferPtr->Position = transformedVerts[i];
-			s_Data.QuadVertexBufferPtr->Color = color;
-			s_Data.QuadVertexBufferPtr->TexCoord = {
+			drawData.QuadVertexBufferPtr->Position = transformedVerts[i];
+			drawData.QuadVertexBufferPtr->Color = color;
+			drawData.QuadVertexBufferPtr->TexCoord = {
 				offset.x + tiling.x * (float)(i == 1 || i == 2),
 				offset.y + tiling.y * (float)(i > 1),
 				textureIndex
 			};
-			s_Data.QuadVertexBufferPtr++;
+			drawData.QuadVertexBufferPtr++;
 		}
 
-		s_Data.QuadIndexCount += 6;
+		drawData.QuadIndexCount += 6;
 		s_Data.Stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
+	void Renderer2D::SubmitLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color, bool depthTest, const Vector2& cameraRange)
 	{
-		if (s_Data.LineIndexCount >= Renderer2DData::MAX_LINE_INDICIES)
-			FlushAndResetLines();
 
-		s_Data.LineVertexBufferPtr->Position = p0;
-		s_Data.LineVertexBufferPtr->Color = color;
-		s_Data.LineVertexBufferPtr++;
+		Renderer2DData::DrawData& drawData = depthTest ? s_Data.DrawDataDepthTest : s_Data.DrawDataNonDepthTest;
 
-		s_Data.LineVertexBufferPtr->Position = p1;
-		s_Data.LineVertexBufferPtr->Color = color;
-		s_Data.LineVertexBufferPtr++;
+		if (drawData.LineIndexCount >= Renderer2DData::MAX_LINE_INDICIES)
+		{
+			EndScene(false, false, depthTest, !depthTest);
+			//FlushAndReset(false, false, depthTest, !depthTest);
+		}
 
-		s_Data.LineIndexCount += 2;
+		Vector2 cr = { cameraRange.x, cameraRange.y - cameraRange.x };
+
+		drawData.LineVertexBufferPtr->Position = p0;
+		drawData.LineVertexBufferPtr->Color = color;
+		drawData.LineVertexBufferPtr->CamRange = cr;
+		drawData.LineVertexBufferPtr++;
+		
+		drawData.LineVertexBufferPtr->Position = p1;
+		drawData.LineVertexBufferPtr->Color = color;
+		drawData.LineVertexBufferPtr->CamRange = cr;
+		drawData.LineVertexBufferPtr++;
+
+		drawData.LineIndexCount += 2;
 
 		s_Data.Stats.LineCount++;
 	}
+
+	/*
+	
+	#type vertex
+#version 430 core
+
+layout(location = 0) in vec3 a_Position;
+layout(location = 1) in vec4 a_Color;
+layout(location = 2) in vec2 a_CamRange;
+uniform mat4 u_ViewProjection;
+
+out vec4 v_Color;
+out vec2 v_CamRange;
+out vec3 v_WorldPos;
+
+void main()
+{
+	v_Color = a_Color;
+	v_CamRange = a_CamRange;
+	v_WorldPos = a_Position;
+	gl_Position = u_ViewProjection * vec4(a_Position, 1.0);
+}
+
+#type fragment
+#version 430 core
+
+layout(location = 0) out vec4 color;
+
+in vec4 v_Color;
+in vec2 v_CamRange;
+in vec3 v_WorldPos;
+uniform vec3 ares_CamPosition;
+
+void main()
+{
+	color = v_Color;
+
+	float dist = distance(ares_CamPosition - v_WorldPos);
+	// fade out based on camera distance
+	float alphaMultiplier = (dist - v_CamRange.x) / v_CamRange.y;
+
+	color.a *= 1.0 - alphaMultiplier;
+}
+	*/
 }

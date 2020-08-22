@@ -91,10 +91,20 @@ namespace Ares {
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	}
-	void OpenGLRendererAPI::Clear(float r, float g, float b, float a)
+	void OpenGLRendererAPI::Clear(float r, float g, float b, float a, bool clearColor, bool clearDepth, bool clearStencil)
 	{
 		glClearColor(r, g, b, a);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+		auto clearFlags = 0;
+
+		if (clearColor)
+			clearFlags |= GL_COLOR_BUFFER_BIT;
+		if (clearDepth)
+			clearFlags |= GL_DEPTH_BUFFER_BIT;
+		if (clearStencil)
+			clearFlags |= GL_STENCIL_BUFFER_BIT;
+
+		glClear(clearFlags);
 	}
 	
 	// TODO: set blending options here

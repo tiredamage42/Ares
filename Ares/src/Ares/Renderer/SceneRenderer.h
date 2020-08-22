@@ -6,8 +6,13 @@
 namespace Ares {
 	struct SceneRendererOptions
 	{
+		Vector4 AABBColor{ 51.0f /255.0f, 105.0f /255.0f, 173.0f /255.0f, 1.0f };
 		bool ShowGrid = true;
 		bool ShowBoundingBoxes = false;
+		Vector4 GridColor{ .75f, .75f, .75f, 50.0f / 255.0f };
+		int GridResolution = 100;
+		Vector2 GridCameraRange{ 0, 75 };
+
 	};
 
 	struct SceneRendererCamera
@@ -15,8 +20,6 @@ namespace Ares {
 		Ares::Camera Camera;
 		glm::mat4 ViewMatrix;
 	};
-
-
 
 	class SceneRenderer
 	{
@@ -41,6 +44,8 @@ namespace Ares {
 
 		//static Ref<Texture2D> GetFinalColorBuffer();
 		static Ref<RenderPass> GetFinalRenderPass();
+		static Ref<RenderPass> GetGeometryPass();
+
 
 		// TODO: Temp
 		static uint32_t GetFinalColorBufferRendererID();

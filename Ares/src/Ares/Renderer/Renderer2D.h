@@ -12,31 +12,31 @@ namespace Ares {
 
 		//static void BeginScene(const OrthographicCamera& camera);
 		//static void BeginScene(const glm::mat4& projection, const glm::mat4& transform);
-		static void BeginScene(const glm::mat4& viewProj, bool depthTest = true);
+		static void BeginScene(const glm::mat4& viewProj, const Vector3& cameraPosition);// , bool depthTest = true);
 
 		
-		static void EndScene();
+		static void EndScene(bool quadDT = true, bool quadNDT = true, bool linesDT = true, bool linesNDT = true);
 
-		static void DrawQuad(
+		static void SubmitQuad(
 			const glm::vec3& position, float rotation = 0.0f, const glm::vec2& size = glm::vec2(1.0f),
 			const Ref<Texture2D>& texture = nullptr,
 			const glm::vec2& tiling = glm::vec2(1.0f), const glm::vec2& offset = glm::vec2(0.0f),
-			const glm::vec4& color = glm::vec4(1.0f)
+			const glm::vec4& color = glm::vec4(1.0f), bool depthTest = true
 		);
-		static void DrawQuad(
+		static void SubmitQuad(
 			const glm::vec2& position, float rotation = 0.0f, const glm::vec2& size = glm::vec2(1.0f),
 			const Ref<Texture2D>& texture = nullptr,
 			const glm::vec2& tiling = glm::vec2(1.0f), const glm::vec2& offset = glm::vec2(0.0f),
-			const glm::vec4& color = glm::vec4(1.0f)
+			const glm::vec4& color = glm::vec4(1.0f), bool depthTest = true
 		);
-		static void DrawQuad(
+		static void SubmitQuad(
 			const glm::mat4& transform,
 			const Ref<Texture2D>& texture = nullptr,
 			const glm::vec2& tiling = glm::vec2(1.0f), const glm::vec2& offset = glm::vec2(0.0f),
-			const glm::vec4& color = glm::vec4(1.0f)
+			const glm::vec4& color = glm::vec4(1.0f), bool depthTest = true
 		);
 
-		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color = glm::vec4(1.0f));
+		static void SubmitLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color = glm::vec4(1.0f), bool depthTest = true, const Vector2& cameraRange = { 100, 200 });
 
 
 		struct Statistics
@@ -57,7 +57,18 @@ namespace Ares {
 
 		inline static uint32_t s_MaxQuadsPerDraw = 10000;
 
-		static void FlushAndReset();
-		static void FlushAndResetLines();
+		//static void FlushAndReset(bool quadDT, bool quadNDT, bool linesDT, bool linesNDT);
+		//static void FlushAndResetLines();
+
+		static void ResetQuadsDepthTest();
+		static void ResetQuadsNonDepthTest();
+		static void ResetLinesDepthTest();
+		static void ResetLinesNonDepthTest();
+
+		static void EndSceneLinesNonDepthTest();
+		static void EndSceneLinesDepthTest();
+		static void EndSceneQuadsNonDepthTest();
+		static void EndSceneQuadsDepthTest();
+
 	};
 }

@@ -80,6 +80,13 @@ namespace Ares
 		bool m_ViewportPanelFocused = false;
 		bool m_SceneHierarchyFocused = false;
 
+		/*
+		Vector4 m_GridColor{ .75f, .75f, .75f, .25f };
+		int m_GridResolution = 100;
+		Vector2 m_GridCameraRange{ 50, 75 };
+		*/
+
+
 		enum class SceneState
 		{
 			Edit = 0, Play = 1, Pause = 2

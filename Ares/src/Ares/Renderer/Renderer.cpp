@@ -144,7 +144,7 @@ namespace Ares {
 		}, "Set Line Thickness");
 	}
 
-	void Renderer::BeginRenderPass(Ref<RenderPass> renderPass, bool clear)
+	void Renderer::BeginRenderPass(Ref<RenderPass> renderPass, bool clearColor, bool clearDepth, bool clearStencil)
 	{
 		ARES_CORE_ASSERT(renderPass, "Render pass cannot be null!");
 
@@ -152,11 +152,11 @@ namespace Ares {
 		s_Data.m_ActiveRenderPass = renderPass;
 		renderPass->GetSpecs().TargetFrameBuffer->Bind();
 
-		if (clear)
+		if (clearColor || clearDepth || clearStencil)
 		{
-			const glm::vec4& clearColor = renderPass->GetSpecs().TargetFrameBuffer->GetSpecs().ClearColor;
+			const glm::vec4& clearCol = renderPass->GetSpecs().TargetFrameBuffer->GetSpecs().ClearColor;
 			Renderer::Submit([=]() {
-				RenderCommand::Clear(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+				RenderCommand::Clear(clearCol.r, clearCol.g, clearCol.b, clearCol.a, clearColor, clearDepth, clearStencil);
 			}, "Clear Begin Render Pass");
 		}
 	}
@@ -197,9 +197,9 @@ namespace Ares {
 	}
 
 	//void Renderer::SubmitFullscreenQuad(Ref<MaterialInstance> material)
-	void Renderer::SubmitFullscreenQuad(Ref<Material> material)
+	void Renderer::SubmitFullscreenQuad(Ref<Material> material, bool depthTest)
 	{
-		bool depthTest = true;
+		//bool depthTest = true;
 		if (material)
 		{
 			material->Bind();
@@ -351,10 +351,10 @@ namespace Ares {
 			}, "Set Viewport");
 	}
 
-	void Renderer::Clear(float r, float g, float b, float a)
+	void Renderer::Clear(float r, float g, float b, float a, bool clearColor, bool clearDepth, bool clearStencil)
 	{
 		Submit([=]() { 
-			RenderCommand::Clear(r, g, b, a); 
+			RenderCommand::Clear(r, g, b, a, clearColor, clearDepth, clearStencil); 
 			}, "Clear" );
 	}	
 	void Renderer::WaitAndRender()
@@ -363,17 +363,17 @@ namespace Ares {
 		s_Data.m_CommandQueue.Execute();
 	}
 
-	void Renderer::DrawAABB(Ref<Mesh> mesh, const glm::mat4& transform, const glm::vec4& color)
+	void Renderer::DrawAABB(Ref<Mesh> mesh, const glm::mat4& transform, const glm::vec4& color, bool depthTest)
 	{
 		for (Submesh& submesh : mesh->m_Submeshes)
 		{
 			auto& aabb = submesh.BoundingBox;
 			auto aabbTransform = transform * submesh.Transform;
-			DrawAABB(aabb, aabbTransform, color);
+			DrawAABB(aabb, aabbTransform, color, depthTest);
 		}
 	}
 
-	void Renderer::DrawAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color /*= glm::vec4(1.0f)*/)
+	void Renderer::DrawAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color, bool depthTest)
 
 	{
 		glm::vec4 min = { aabb.Min.x, aabb.Min.y, aabb.Min.z, 1.0f };
@@ -399,13 +399,13 @@ namespace Ares {
 			};
 
 			for (uint32_t i = 0; i < 4; i++)
-				Renderer2D::DrawLine(corners[i], corners[(i + 1) % 4], color);
+				Renderer2D::SubmitLine(corners[i], corners[(i + 1) % 4], color, depthTest);
 
 			for (uint32_t i = 0; i < 4; i++)
-				Renderer2D::DrawLine(corners[i + 4], corners[((i + 1) % 4) + 4], color);
+				Renderer2D::SubmitLine(corners[i + 4], corners[((i + 1) % 4) + 4], color, depthTest);
 
 			for (uint32_t i = 0; i < 4; i++)
-				Renderer2D::DrawLine(corners[i], corners[i + 4], color);
+				Renderer2D::SubmitLine(corners[i], corners[i + 4], color, depthTest);
 		//}
 	}
 }
