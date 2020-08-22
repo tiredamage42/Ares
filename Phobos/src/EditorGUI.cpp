@@ -53,6 +53,8 @@ namespace Ares
 	} \
 	return result;
 
+
+	static std::string oldValues;
 	static bool oldValueb;
 	static float oldValuef;
 	static int oldValuei;
@@ -60,6 +62,163 @@ namespace Ares
 	static Vector3 oldValue3;
 	static Vector4 oldValue4;
 	static ImVec4 oldValueim4;
+
+	/*
+	bool EditorGUI::StringField(PARAMS_CUSTOM_UNDO_REDO(std::string))
+	{
+		EDITOR_FIELD_CUSTOM_UNDO_REDO(ImGui::InputText(id.c_str(), &value), std::string, oldValues);
+	}
+	bool EditorGUI::StringField(PARAMS(std::string))
+	{
+		EDITOR_FIELD(ImGui::InputText(id.c_str(), &value), std::string, oldValues);
+	}
+	*/
+
+	/*
+#define FLAGS_FIELD(UNDO_REDO) \
+	ImGui::Text(name.c_str()); \
+	ImGui::NextColumn(); \
+	ImGui::PushItemWidth(-1); \
+	uint32_t count = sizeof(allFlags) / sizeof(allFlags[0]); \
+	std::string preview = ""; \
+	for (uint32_t i = 0; i < count; i++) \
+		if ((uint32_t)allFlags[i] & value) \
+			preview += allFlagNames[i] + ","; \
+	bool edited = false; \
+	if (ImGui::BeginCombo("##" + name.c_str(), preview.c_str())) \
+	{ \
+		for (uint32_t i = 0; i < count; i++) \
+		{ \
+			bool hasFlag = (uint32_t)allFlags[i] & value; \
+			if (ImGui::Selectable(allFlagNames[i], &hasFlag, ImGuiItemFlags_SelectableDontClosePopup)) \
+			{ \
+				edited = true; \
+				uint32_t ov = value; \
+				if (hasFlag) \
+					value |= (uint32_t)allFlags[i]; \
+				else \
+					value &= ~(uint32_t)allFlags[i]; \
+				uint32_t nv = value; \
+				UNDO_REDO \
+			} \
+		} \
+		ImGui::EndCombo(); \
+	} \
+	ImGui::PopItemWidth(); \
+	ImGui::NextColumn(); \
+	return edited;
+
+
+
+	template<typename T>
+	bool EditorGUI::FlagsField(PARAMS(uint32_t), const T allFlags[], const char* allFlagNames[])
+	{
+		FLAGS_FIELD(
+			EditorUtility::AddToUndoStack({
+				[&value, ov]() { value = ov; },
+				[&value, nv]() { value = nv; }
+			});
+		)
+	}
+	template<typename T>
+	bool EditorGUI::FlagsField(PARAMS_CUSTOM_UNDO_REDO(uint32_t), const T allFlags[], const char* allFlagNames[])
+	{
+		FLAGS_FIELD(
+			EditorUtility::AddToUndoStack({
+				[CUSTOM_UNDO, ov]() { CUSTOM_UNDO(ov); }, 
+				[CUSTOM_UNDO, nv]() { CUSTOM_UNDO(nv); } 
+			});
+		)
+	}
+
+#define ENUM_FIELD(UNDO_REDO) \
+	ImGui::Text(name.c_str()); \
+	ImGui::NextColumn(); \
+	ImGui::PushItemWidth(-1); \
+	uint32_t count = sizeof(allEnums) / sizeof(allEnums[0]); \
+	uint32_t preview = 0; \
+	for (uint32_t i = 0; i < count; i++) \
+	{ \
+		if (value == allEnums[i]) \
+		{ \
+			preview = i; \
+			break; \
+		} \
+	} \
+	bool edited = false; \
+	if (ImGui::BeginCombo("##" + name.c_str(), allEnumNames[preview])) \
+	{ \
+		for (uint32_t i = 0; i < count; i++) \
+		{ \
+			bool isSelected = preview == i; \
+			if (ImGui::Selectable(allFlagNames[i], &isSelected, ImGuiItemFlags_SelectableDontClosePopup)) \
+			{ \
+				if (preview != i) \
+				{ \
+					edited = true; \
+					T ov = value; \
+					value = allEnums[i]; \
+					T nv = value; \
+					UNDO_REDO \
+				} \
+			} \
+			if (preview == i) \
+				ImGui::SetItemDefaultFocus(); \
+		} \
+		ImGui::EndCombo(); \
+	} \
+	ImGui::PopItemWidth(); \
+	ImGui::NextColumn(); \
+	return edited;
+
+
+	template<typename T>
+	bool EditorGUI::EnumField(PARAMS_CUSTOM_UNDO_REDO(T), const T allEnums[], const char* allEnumNames[])
+	{
+		ENUM_FIELD(
+			EditorUtility::AddToUndoStack({
+				[&value, ov]() { value = ov; },
+				[&value, nv]() { value = nv; }
+			});
+		)
+	}
+	template<typename T>
+	bool EditorGUI::EnumField(PARAMS(T), const T allEnums[], const char* allEnumNames[])
+	{
+		ENUM_FIELD(
+			EditorUtility::AddToUndoStack({
+				[CUSTOM_UNDO, ov]() { CUSTOM_UNDO(ov); },
+				[CUSTOM_UNDO, nv]() { CUSTOM_UNDO(nv); }
+			});
+		)
+	}
+	*/
+
+
+	/*
+	
+	const char* projTypeStrings[] = { "Perspective", "Orthographic" };
+				const char* currentProj = projTypeStrings[(int)cc->Camera.GetProjectionType()];
+				if (ImGui::BeginCombo("Projection", currentProj))
+				{
+					for (int type = 0; type < 2; type++)
+					{
+						bool is_selected = (currentProj == projTypeStrings[type]);
+						if (ImGui::Selectable(projTypeStrings[type], is_selected, ImGuiItemFlags_SelectableDontClosePopup))
+						{
+							currentProj = projTypeStrings[type];
+							cc->Camera.SetProjectionType((SceneCamera::ProjectionType)type);
+						}
+						if (is_selected)
+							ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+
+	
+	*/
+
+
 
 	bool EditorGUI::ToggleField(PARAMS_CUSTOM_UNDO_REDO(bool))
 	{

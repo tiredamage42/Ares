@@ -6,7 +6,7 @@
 #include "MaterialEditor.h"
 #include "EditorUtility.h"
 #include "SceneHierarchyPanel.h"
-
+#include "InspectorPanel.h"
 #define _2D 0
 
 /*
@@ -1106,28 +1106,10 @@ namespace Ares
             OnEntityDeleted(deletedEntity);
         }*/
 
+        ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
+        InspectorPanel::DrawInspectorForEntity(m_SelectedEntity);
 
-
-        ImGui::Begin("Inspector");
-
-
-
-        ImGui::Separator();
-        uint32_t i = 0;
-        for (auto material : m_MeshMaterials)
-        {
-            ImGuiTreeNodeFlags node_flags = (i == 0 ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-
-            bool opened = ImGui::TreeNodeEx((void*)i, node_flags, material->GetName().c_str());
-            if (opened)
-            {
-                MaterialEditor::DrawMaterial(material);
-                ImGui::TreePop();
-            }
-
-            i++;
-        }
-        ImGui::End();
+       
 
 
 #if _2D
@@ -1431,3 +1413,70 @@ namespace Ares
 
 }
 
+
+
+
+// TODO: MESH SUBMESHES
+
+/*
+
+
+
+    void SceneHierarchyPanel::DrawMeshNode(const Ref<Mesh>& mesh, uint32_t& imguiMeshID)
+    {
+        static char imguiName[128];
+        memset(imguiName, 0, 128);
+        sprintf(imguiName, "Mesh##%d", imguiMeshID++);
+
+        // Mesh Hierarchy
+        if (ImGui::TreeNode(imguiName))
+        {
+            auto rootNode = mesh->m_Scene->mRootNode;
+            MeshNodeHierarchy(mesh, rootNode);
+            ImGui::TreePop();
+        }
+    }
+
+    static std::tuple<glm::vec3, glm::quat, glm::vec3> GetTransformDecomposition(const glm::mat4& transform)
+    {
+        glm::vec3 scale, translation, skew;
+        glm::vec4 perspective;
+        glm::quat orientation;
+        glm::decompose(transform, scale, orientation, translation, skew, perspective);
+
+        return { translation, orientation, scale };
+    }
+
+    void SceneHierarchyPanel::MeshNodeHierarchy(const Ref<Mesh>& mesh, aiNode* node, const glm::mat4& parentTransform, uint32_t level)
+    {
+        glm::mat4 localTransform = Mat4FromAssimpMat4(node->mTransformation);
+        glm::mat4 transform = parentTransform * localTransform;
+        /for (uint32_t i = 0; i < node->mNumMeshes; i++)
+        {
+            uint32_t meshIndex = node->mMeshes[i];
+            mesh->m_Submeshes[meshIndex].Transform = transform;
+        }/
+
+if (ImGui::TreeNode(node->mName.C_Str()))
+{
+    {
+        auto [translation, rotation, scale] = GetTransformDecomposition(transform);
+        ImGui::Text("World Transform");
+        ImGui::Text("  Translation: %.2f, %.2f, %.2f", translation.x, translation.y, translation.z);
+        ImGui::Text("  Scale: %.2f, %.2f, %.2f", scale.x, scale.y, scale.z);
+    }
+    {
+        auto [translation, rotation, scale] = GetTransformDecomposition(localTransform);
+        ImGui::Text("Local Transform");
+        ImGui::Text("  Translation: %.2f, %.2f, %.2f", translation.x, translation.y, translation.z);
+        ImGui::Text("  Scale: %.2f, %.2f, %.2f", scale.x, scale.y, scale.z);
+    }
+
+    for (uint32_t i = 0; i < node->mNumChildren; i++)
+        MeshNodeHierarchy(mesh, node->mChildren[i], transform, level + 1);
+
+    ImGui::TreePop();
+}
+    }
+
+*/

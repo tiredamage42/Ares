@@ -30,5 +30,10 @@ namespace Ares
             //rotation = glm::conjugate(rotation);
             return { translation, rotation, scale };
         }
+
+        static Matrix4 GetTRSMatrix(const Vector3& position, const Quaternion& rotation, const Vector3& scale)
+        {
+            return glm::scale(glm::translate(glm::mat4(1.0f), position) * glm::toMat4(rotation), scale);
+        }
 	};
 }

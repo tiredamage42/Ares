@@ -32,6 +32,21 @@ namespace Ares
 
 	public:
 		enum class ProjectionType { Perspective = 0, Orthographic = 1 };
+
+		static inline const ProjectionType AllProjectionTypes[2] = {
+			ProjectionType::Perspective, 
+			ProjectionType::Orthographic
+		};
+		static inline const char* AllProjectionTypeNames[2] = {
+			"Perspective", "Orthographic"
+		};
+		/*
+		static const ProjectionType AllProjectionTypes[2];
+		static const char* AllProjectionTypeNames[2];
+		*/
+
+
+
 	public:
 		SceneCamera();
 		virtual ~SceneCamera();

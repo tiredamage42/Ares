@@ -5,6 +5,15 @@
 #include "Ares/Math/Math.h"
 namespace Ares
 {
+	/*
+	const SceneCamera::ProjectionType SceneCamera::AllProjectionTypes[2] = {
+			ProjectionType::Perspective,
+			ProjectionType::Orthographic
+	};
+	const char* SceneCamera::AllProjectionTypeNames[2] = {
+		"Perspective", "Orthographic"
+	};
+	*/
 
 	// 2D
 	void SceneCamera::RecalculateProjection()
