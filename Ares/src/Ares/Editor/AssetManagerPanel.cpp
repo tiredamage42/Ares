@@ -112,7 +112,7 @@ namespace Ares
 
 	void AssetManagerPanel::RenderAssetWindow()
 	{
-		nManager.Render();
+		//nManager.Render();
 
 		static bool open = true;
 		ImGui::Begin("Project", &open, ImGuiWindowFlags_MenuBar);

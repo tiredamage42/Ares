@@ -48,6 +48,9 @@ namespace Ares
 		void OnRuntimeStart();
 		void OnRuntimeStop();
 
+		Entity FindEntityByTag(const std::string& tag);
+
+
 		float GetExposure() const { return m_Exposure; }
 		float& GetExposure() { return m_Exposure; }
 

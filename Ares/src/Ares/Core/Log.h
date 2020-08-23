@@ -7,8 +7,22 @@
 namespace Ares {
 	class Log
 	{
+		friend class Console;
 	public:
 		static void Init();
+
+		//static void AddSink(std::shared_ptr<spdlog::sinks::base_sink<Mutex>> sink);
+		/*
+		template <typename Mutex>
+		inline static void AddSink(std::shared_ptr<spdlog::sinks::base_sink<Mutex>> sink)
+		{
+			s_CoreLogger->sinks().push_pack(sink);
+			s_ClientLogger->sinks().push_pack(sink);
+		}
+		*/
+
+
+
 		inline static Ref<spdlog::logger>& GetCoreLogger() { return s_CoreLogger; }
 		inline static Ref<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
 	private:

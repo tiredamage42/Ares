@@ -199,7 +199,7 @@ namespace Ares
         light.Direction = { -0.5f, -0.5f, 0.5f };
         light.Radiance = { 1.0f, 1.0f, 1.0f };
 
-        // SceneSerializer serializer(m_ActiveScene);
+        // SceneSerializer serializer(m_EditorScene);
         // serializer.Deserialize("Scene.yaml");
 #endif
     }
@@ -1167,7 +1167,8 @@ namespace Ares
         //Entity deletedEntity;
         SceneHierarchyPanel::Draw(m_EditorScene, m_SelectedEntity, m_SceneHierarchyFocused);// , deletedEntity);
 
-        
+        ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
+        m_Console.Render();
 
 
         /*if (selectionChanged)

@@ -8,14 +8,28 @@ namespace Ares {
 	Ref<spdlog::logger> Log::s_CoreLogger;
 	Ref<spdlog::logger> Log::s_ClientLogger;
 
+
+	/*template <typename Mutex>
+	void Log::AddSink(std::shared_ptr<spdlog::sinks::base_sink<Mutex>> sink)
+	{
+		s_CoreLogger->sinks().push_pack(sink);
+		s_ClientLogger->sinks().push_pack(sink);
+	}*/
+
 	void Log::Init() {
 
 		std::vector<spdlog::sink_ptr> logSinks;
 		logSinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
 		logSinks.emplace_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("Ares.log", true));
 
-		logSinks[0]->set_pattern("%^[%T] %n: %v%$");
-		logSinks[1]->set_pattern("[%T] [%l] %n: %v");
+
+
+
+
+
+		logSinks[0]->set_pattern("%^[%T] %n: %v%$"); // logs ::  [time stamp] log name: message
+		logSinks[1]->set_pattern("[%T] [%l] %n: %v"); // files :: [time stamp] [log level] logname: message
+
 		//spdlog::set_pattern("%^[%l][%T] %n: %v %g%#%!%$");
 
 		s_CoreLogger = std::make_shared<spdlog::logger>("ARES", begin(logSinks), end(logSinks));

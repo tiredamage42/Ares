@@ -3,7 +3,7 @@
 //#include "Ares/Core/Core.h"
 #include "Ares/Renderer/Texture.h"
 
-#include "Ares/Editor/NotificationManager.h"
+//#include "Ares/Editor/NotificationManager.h"
 #include "Ares/Editor/DirectoryInformation.h"
 //#include "Notification.h"
 //#include "Hazel/Utilities/AssetTypes.h"
@@ -81,7 +81,7 @@ namespace Ares
 		std::vector<DirectoryInformation> m_BaseProjectDirContents;
 
 		//std::map<int, Ref<Texture2D>> assetIconMaps;
-		NotificationManager nManager;
+		//NotificationManager nManager;
 
 		void RenderFileListView(int dirIndex);
 		void RenderFileGridView(int dirIndex);

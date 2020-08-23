@@ -1,7 +1,7 @@
 #pragma once
 
 #include <filesystem>
-#include "AssetTypes.h"
+//#include "AssetTypes.h"
 #include "DirectoryInformation.h"
 
 namespace Ares

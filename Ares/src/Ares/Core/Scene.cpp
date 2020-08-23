@@ -244,6 +244,24 @@ namespace Ares
         return {};
     }
 
+
+    Entity Scene::FindEntityByTag(const std::string& tag)
+    {
+        // TODO: If this becomes used often, consider indexing by tag
+        auto view = m_Registry.view<TagComponent>();
+        for (auto entity : view)
+        {
+            const auto& canditate = view.get<TagComponent>(entity).Tag;
+            if (canditate == tag)
+                return Entity(entity, this);
+        }
+
+        return Entity{};
+    }
+
+
+
+
     template<typename T>
     static void CopyComponent(entt::registry& dstRegistry, entt::registry& srcRegistry, const std::unordered_map<UUID, entt::entity>& enttMap)
     {

@@ -1,14 +1,15 @@
 #pragma once
 
-#include "Ares/Editor/Notification.h"
+//#include "Ares/Editor/Notification.h"
 #include <vector>
+#include <string>
 //#include <imgui.h>
 namespace Ares
 {
 
 	enum class NotificationType : uint8_t
 	{
-		Log = 2, Warn = 0, Error = 1
+		Log = 3, Info = 0, Warn = 1, Error = 2
 	};
 
 
@@ -30,11 +31,11 @@ namespace Ares
 		std::string m_message;
 	};
 
-	class NotificationManager
+	class Console
 	{
 	public:
-		NotificationManager() {};
-		~NotificationManager() {};
+		Console();
+		~Console() {};
 		void Dispatch(const std::string& message, NotificationType type);
 		//void Dispatch(Notification n);
 		void Render();

@@ -5,6 +5,8 @@
 #include "EditorCamera.h"
 //#include "Ares/Editor/SceneHierarchyPanel.h"
 #include "StatsWindow.h"
+#include "Console.h"
+
 namespace Ares
 {
 	class EditorLayer : public Layer
@@ -37,6 +39,8 @@ namespace Ares
 	private:
 		std::string m_SceneFilePath;
 
+
+		Console m_Console;
 		StatsWindow m_StatsWindow;
 
 		std::pair<float, float> GetMouseViewportSpace();

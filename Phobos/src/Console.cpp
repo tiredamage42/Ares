@@ -1,18 +1,86 @@
-#include "AresPCH.h"
-#include "NotificationManager.h"
-#include <imgui.h>
+#include "PhobosPCH.h"
+#include "Console.h"
+#include <Ares.h>
+#include <mutex>
+#include "spdlog/sinks/base_sink.h"
+
+//#include <imgui.h>
 namespace Ares
 {
 
+	template<typename Mutex>
+	class my_sink : public spdlog::sinks::base_sink<Mutex>
+	{
+	public:
+		my_sink(const std::function<void(const std::string&, NotificationType)>& dispatchConsole)
+			//: spdlog::sinks::base_sink()
+
+		{
+			m_DispatchConsole = dispatchConsole;
+		}
+	protected:
+		std::function<void(const std::string&, NotificationType)> m_DispatchConsole;
+
+		void sink_it_(const spdlog::details::log_msg& msg) override
+		{
+
+			// log_msg is a struct containing the log entry info like level, timestamp, thread id etc.
+			// msg.raw contains pre formatted log
+
+			// If needed (very likely but not mandatory), the sink formats the message before sending it to its final destination:
+			spdlog::memory_buf_t formatted;
+			base_sink<Mutex>::formatter_->format(msg, formatted);
+			//std::cout << fmt::to_string(formatted);
+			
+			NotificationType type = NotificationType::Log;
+			switch (msg.level)
+			{
+			case spdlog::level::critical:
+				type = NotificationType::Error;
+				break;
+			case spdlog::level::err:
+				type = NotificationType::Error;
+				break;
+			case spdlog::level::warn:
+				type = NotificationType::Warn;
+				break;
+			case spdlog::level::info:
+				type = NotificationType::Info;
+				break;
+			}
+			m_DispatchConsole(fmt::to_string(formatted), type);
+		}
+
+		void flush_() override
+		{
+			std::cout << std::flush;
+		}
+	};
+
+	using my_sink_mt = my_sink<std::mutex>;
 
 
 	static const ImVec4 s_notificationColors[] = {
+		ImVec4(0.2f, 0.9f, 0.2f, 1.0f),
 		ImVec4(0.9f, 0.75f, 0.2f, 1.0f),
 		ImVec4(0.9f, 0.2f, 0.2f, 1.0f), 
 	};
 
 
+	Console::Console()
+	{
+		auto s = std::make_shared<my_sink_mt>(
+			[=](const std::string& msg, NotificationType type) { Dispatch(msg, type); }
+		);
 
+		s->set_pattern("%^[%T] %n: %v%$");
+
+		//my_sink s;
+		//Log::AddSink(s);
+
+		Log::s_CoreLogger->sinks().push_back(s);
+		Log::s_ClientLogger->sinks().push_back(s);
+	}
 
 
 	//Notification::Notification(std::string type, std::string message, Ref<Texture2D> icon, int duration)
@@ -103,7 +171,7 @@ namespace Ares
 
 
 
-	void NotificationManager::Dispatch(
+	void Console::Dispatch(
 		const std::string& message, NotificationType type
 		//Notification n
 	)
@@ -114,7 +182,7 @@ namespace Ares
 		//m_count = notifications.size();
 	}
 
-	void NotificationManager::Render()
+	void Console::Render()
 	{
 		ImGui::Begin("Notifications");
 		{
