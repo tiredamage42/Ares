@@ -66,6 +66,38 @@ namespace Ares {
 			m_Textures[slot] = texture;
 		}
 
+
+
+		template<typename T>
+		T& Get(const std::string& name, const T& defaultValue)
+		{
+			auto decl = FindUniformDeclaration(name);
+			if (!decl)
+			{
+				ARES_CORE_WARN("Could not find uniform with name '{0}'", name);
+				return defaultValue;
+			}
+			return m_PSUniformStorageBuffer.Read<T>(decl->GetOffset());
+		}
+
+		template<typename T>
+		Ref<T> GetTexture(const std::string& name)
+		{
+			auto decl = m_Material->FindResourceDeclaration(name);
+			if (!decl)
+			{
+				ARES_CORE_WARN("Could not find sampler2D uniform with name '{0}'", name);
+				return nullptr;
+			}
+
+			return m_Textures[decl->GetRegister()];
+		}
+
+
+
+
+
+
 		const std::string& GetName() const { return m_Name; }
 
 	private:
