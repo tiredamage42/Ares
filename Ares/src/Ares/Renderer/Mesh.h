@@ -86,7 +86,7 @@ namespace Ares {
 
 	class Mesh
 	{
-		friend class InspectorPanel;
+		friend class MeshRendererComponent;
 	public:
 		Mesh(const std::string& filename, std::vector<Ref<Material>>& m_Materials);
 		Mesh(PrimitiveMeshType primitiveType);

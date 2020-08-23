@@ -17,6 +17,36 @@ namespace Ares
 		}
 	}
 
+
+
+	static int s_UIContextID = 0;
+	static uint32_t s_Counter = 0;
+	
+	static void PushID()
+	{
+		ImGui::PushID(s_UIContextID++);
+		s_Counter = 0;
+	}
+
+	static void PopID()
+	{
+		ImGui::PopID();
+		s_UIContextID--;
+	}
+
+	void EditorGUI::BeginPropertyGrid()
+	{
+		PushID();
+		ImGui::Columns(2);
+	}
+
+	void EditorGUI::EndPropertyGrid()
+	{
+		ImGui::Columns(1);
+		PopID();
+	}
+
+
 #define _START_FIELD(DRAWMETHOD, VALTYPE, OLDVAL) \
 	VALTYPE v = value; \
 	ImGui::Text(name.c_str()); \

@@ -9,6 +9,11 @@
 namespace Ares
 {
 
+    struct Component
+    {
+        virtual void OnDrawImGui();
+    };
+
     struct IDComponent
     {
         UUID ID = 0;
@@ -36,7 +41,7 @@ namespace Ares
         operator const glm::mat4& () const { return Transform; }
     };
 
-    struct SpriteRendererComponent
+    struct SpriteRendererComponent : Component
     {
         glm::vec4 Color{ 1.0f,1.0f,1.0f,1.0f };
         glm::vec2 Tiling{ 1.0f };
@@ -55,18 +60,22 @@ namespace Ares
 
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
+
+        //virtual void OnDrawImGui() override;
     };
 
-    struct MeshRendererComponent
+    struct MeshRendererComponent : Component
     {
         Ref<Mesh> Mesh = nullptr;
         std::vector<Ref<Material>> Materials;
 
         MeshRendererComponent() = default;
         MeshRendererComponent(const MeshRendererComponent&) = default;
+
+        virtual void OnDrawImGui() override;
     };
 
-    struct CameraComponent
+    struct CameraComponent : Component
     {
         SceneCamera Camera;
         bool Primary = true;
@@ -77,6 +86,8 @@ namespace Ares
 
         operator SceneCamera& () { return Camera; }
         operator const SceneCamera& () const { return Camera; }
+
+        virtual void OnDrawImGui() override;
     };
         
 }

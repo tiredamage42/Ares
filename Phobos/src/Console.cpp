@@ -70,7 +70,13 @@ namespace Ares
 	Console::Console()
 	{
 		auto s = std::make_shared<my_sink_mt>(
-			[=](const std::string& msg, NotificationType type) { Dispatch(msg, type); }
+			[=](const std::string& msg, NotificationType type) { 
+
+				if (!m_Shutdown)
+				{
+					Dispatch(msg, type); 
+				}
+			}
 		);
 
 		s->set_pattern("%^[%T] %n: %v%$");
@@ -80,6 +86,10 @@ namespace Ares
 
 		Log::s_CoreLogger->sinks().push_back(s);
 		Log::s_ClientLogger->sinks().push_back(s);
+	}
+	Console::~Console()
+	{
+		m_Shutdown = true;
 	}
 
 

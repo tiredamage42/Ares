@@ -60,7 +60,8 @@ namespace Ares
 		static bool Color4Field(PARAMS(ImVec4));
 
 
-
+		static void BeginPropertyGrid();
+		static void EndPropertyGrid();
 
 
 

@@ -35,12 +35,13 @@ namespace Ares
 	{
 	public:
 		Console();
-		~Console() {};
+		~Console();
 		void Dispatch(const std::string& message, NotificationType type);
 		//void Dispatch(Notification n);
 		void Render();
 		//void Expire();
 	private:
+		bool m_Shutdown = false;
 		std::vector<Notification> notifications;
 		//int m_count = 0;
 		//int m_offset = 100;

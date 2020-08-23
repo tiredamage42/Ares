@@ -11,10 +11,10 @@ namespace Ares
 
 
 
-
+	static char s_IDBuffer[16];
+	/*
 	static int s_UIContextID = 0;
 	static uint32_t s_Counter = 0;
-	static char s_IDBuffer[16];
 
 	static void PushID()
 	{
@@ -33,6 +33,7 @@ namespace Ares
 		PushID();
 		ImGui::Columns(2);
 	}
+	*/
 
 	/*
 
@@ -117,15 +118,49 @@ namespace Ares
 	}
 	*/
 
+	/*
 	static void EndPropertyGrid()
 	{
 		ImGui::Columns(1);
 		PopID();
 	}
+	*/
+	
+	
+	/*
+	template <typename T>
+	class HasRenderMethod
+	{
+	private:
+		typedef char YesType[1];
+		typedef char NoType[2];
+		template <typename C> static YesType& test(decltype(&C::OnDrawImGui));
+		template <typename C> static NoType& test(...);
+
+	public:
+		enum { value = sizeof(test<T>(0)) == sizeof(YesType) };
+	};
+
+	template<typename T>
+	struct HasRenderMethod
+	{
+	private:
+		typedef std::true_type yes;
+		typedef std::false_type no;
+
+		template<typename U> static auto test(int) -> decltype(std::declval<U>().size() == 1, yes());
+
+		template<typename> static no test(...);
+
+	public:
+
+		static constexpr bool value = std::is_same<decltype(test<T>(0)), yes>::value;
+	};
 
 
-	template<typename T, typename UIFunction>
-	static void InspectorPanel::DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
+	*/
+	template<typename T>//, typename UIFunction>
+	static void InspectorPanel::DrawComponent(const std::string& name, Entity entity)//, UIFunction uiFunction)
 	{
 		if (entity.HasComponent<T>())
 		{
@@ -154,7 +189,37 @@ namespace Ares
 
 			if (open)
 			{
-				uiFunction(component);
+				Component* asC = (Component*)component;
+				if (asC)
+				{
+					asC->OnDrawImGui();
+				}
+				else
+				{
+					ARES_CORE_WARN("Component '{0}' does not inherit from Ares::Component, can't draw in ImGui", name);
+					ImGui::Text("================");
+					ImGui::TextWrapped("Component does not inherit from Ares::Component, can't draw in ImGui");
+					ImGui::Text("================");
+				}
+				//typename std::enable_if<HasRenderMethod<T>::value, std::string>::type
+
+				/*
+				*/
+				//T::OnDrawImGui(component);
+				
+				/*
+				if (HasRenderMethod<T>::value)
+				{
+				}
+				else
+				{
+					ImGui::Text("================");
+					ImGui::TextWrapped("No 'OnDrawImGui' implemented for this component!");
+					ImGui::Text("================");
+				}
+				*/
+				//uiFunction(component);
+				
 				ImGui::NextColumn();
 				ImGui::Columns(1);
 				ImGui::TreePop();
@@ -296,12 +361,12 @@ namespace Ares
 			ImGui::Separator();
 		}
 
-		DrawComponent<MeshRendererComponent>("Mesh", entity, [](MeshRendererComponent* mc)
+		DrawComponent<MeshRendererComponent>("Mesh", entity);/* , [](MeshRendererComponent* mc)
 
 			//if (entity.HasComponent<MeshRendererComponent>())
 			//{
-				/*auto& mc = entity.GetComponent<MeshRendererComponent>();
-				if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(MeshRendererComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Mesh"))*/
+				/auto& mc = entity.GetComponent<MeshRendererComponent>();
+				if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(MeshRendererComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Mesh"))/
 			{
 				ImGui::Columns(3);
 				ImGui::SetColumnWidth(0, 100);
@@ -330,7 +395,7 @@ namespace Ares
 				ImGui::NextColumn();
 				ImGui::Columns(1);
 
-
+				/
 				if (mc->Mesh->m_IsAnimated)
 				{
 					if (ImGui::CollapsingHeader("Animation"))
@@ -342,14 +407,13 @@ namespace Ares
 						ImGui::DragFloat("Time Scale", &mc->Mesh->m_TimeMultiplier, 0.05f, 0.0f, 10.0f);
 					}
 				}
+				/
 				
-				/*
-				*/
-
-				/*if (mc.Mesh)
+				
+				/if (mc.Mesh)
 					ImGui::InputText("File Path", (char*)mc.Mesh->GetFilePath().c_str(), 256, ImGuiInputTextFlags_ReadOnly);
 				else
-					ImGui::InputText("File Path", (char*)"Null", 256, ImGuiInputTextFlags_ReadOnly);*/
+					ImGui::InputText("File Path", (char*)"Null", 256, ImGuiInputTextFlags_ReadOnly);/
 					//ImGui::TreePop();
 				//}
 				//ImGui::Separator();
@@ -377,94 +441,94 @@ namespace Ares
 					i++;
 				}
 			});
+			*/
+		
+		DrawComponent<CameraComponent>("Camera", entity);/*, [](CameraComponent* cc)
+
+	/if (entity.HasComponent<CameraComponent>())
+	{
+		auto& cc = entity.GetComponent<CameraComponent>();
+		if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(CameraComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Camera"))/
+	{
+		// Projection Type
+
+		SceneCamera::ProjectionType projection = cc->Camera.GetProjectionType();
+
+		std::function<void(SceneCamera::ProjectionType)> undo = [cc](SceneCamera::ProjectionType v) { cc->Camera.SetProjectionType(v); };
+		if (EditorGUI::EnumField("Projection", projection, undo, SceneCamera::AllProjectionTypes, SceneCamera::AllProjectionTypeNames))
+			cc->Camera.SetProjectionType(projection);
 
 
-		DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent* cc)
 
-			/*if (entity.HasComponent<CameraComponent>())
+
+
+		/
+		const char* projTypeStrings[] = { "Perspective", "Orthographic" };
+		const char* currentProj = projTypeStrings[(int)cc->Camera.GetProjectionType()];
+		if (ImGui::BeginCombo("Projection", currentProj))
+		{
+			for (int type = 0; type < 2; type++)
 			{
-				auto& cc = entity.GetComponent<CameraComponent>();
-				if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(CameraComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Camera"))*/
-			{
-				// Projection Type
-
-				SceneCamera::ProjectionType projection = cc->Camera.GetProjectionType();
-
-				std::function<void(SceneCamera::ProjectionType)> undo = [cc](SceneCamera::ProjectionType v) { cc->Camera.SetProjectionType(v); };
-				if (EditorGUI::EnumField("Projection", projection, undo, SceneCamera::AllProjectionTypes, SceneCamera::AllProjectionTypeNames))
-					cc->Camera.SetProjectionType(projection);
-
-
-
-
-
-				/*
-				const char* projTypeStrings[] = { "Perspective", "Orthographic" };
-				const char* currentProj = projTypeStrings[(int)cc->Camera.GetProjectionType()];
-				if (ImGui::BeginCombo("Projection", currentProj))
+				bool is_selected = (currentProj == projTypeStrings[type]);
+				if (ImGui::Selectable(projTypeStrings[type], is_selected, ImGuiItemFlags_SelectableDontClosePopup))
 				{
-					for (int type = 0; type < 2; type++)
-					{
-						bool is_selected = (currentProj == projTypeStrings[type]);
-						if (ImGui::Selectable(projTypeStrings[type], is_selected, ImGuiItemFlags_SelectableDontClosePopup))
-						{
-							currentProj = projTypeStrings[type];
-							cc->Camera.SetProjectionType((SceneCamera::ProjectionType)type);
-						}
-						if (is_selected)
-							ImGui::SetItemDefaultFocus();
-					}
-					ImGui::EndCombo();
+					currentProj = projTypeStrings[type];
+					cc->Camera.SetProjectionType((SceneCamera::ProjectionType)type);
 				}
-				*/
-
-				BeginPropertyGrid();
-				// Perspective parameters
-				if (cc->Camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
-				{
-					float verticalFOV = cc->Camera.GetPerspectiveVerticalFOV();
-					if (EditorGUI::FloatField("Vertical FOV", verticalFOV, [cc](float v) { cc->Camera.SetPerspectiveVerticalFOV(v); }))
-						cc->Camera.SetPerspectiveVerticalFOV(verticalFOV);
-
-					float nearClip = cc->Camera.GetPerspectiveNearClip();
-					if (EditorGUI::FloatField("Near Clip", nearClip, [cc](float v) { cc->Camera.SetPerspectiveNearClip(v); }))
-						cc->Camera.SetPerspectiveNearClip(nearClip);
-
-					float farClip = cc->Camera.GetPerspectiveFarClip();
-					if (EditorGUI::FloatField("Far Clip", farClip, [cc](float v) { cc->Camera.SetPerspectiveFarClip(v); }))
-						cc->Camera.SetPerspectiveFarClip(farClip);
-				}
-
-				// Orthographic parameters
-				else if (cc->Camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic)
-				{
-
-					float orthoSize = cc->Camera.GetOrthographicSize();
-					if (EditorGUI::FloatField("Size", orthoSize, [cc](float v) { cc->Camera.SetOrthographicSize(v); }))
-						cc->Camera.SetOrthographicSize(orthoSize);
-
-					float nearClip = cc->Camera.GetOrthographicNearClip();
-					if (EditorGUI::FloatField("Near Clip", nearClip, [cc](float v) { cc->Camera.SetOrthographicNearClip(v); }))
-						cc->Camera.SetOrthographicNearClip(nearClip);
-
-					float farClip = cc->Camera.GetOrthographicFarClip();
-					if (EditorGUI::FloatField("Far Clip", farClip, [cc](float v) { cc->Camera.SetOrthographicFarClip(v); }))
-						cc->Camera.SetOrthographicFarClip(farClip);
-
-				}
-
-				EndPropertyGrid();
-
-				/*ImGui::TreePop();
+				if (is_selected)
+					ImGui::SetItemDefaultFocus();
 			}
-			ImGui::Separator();*/
-			});
+			ImGui::EndCombo();
+		}
+		/
+
+		BeginPropertyGrid();
+		// Perspective parameters
+		if (cc->Camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
+		{
+			float verticalFOV = cc->Camera.GetPerspectiveVerticalFOV();
+			if (EditorGUI::FloatField("Vertical FOV", verticalFOV, [cc](float v) { cc->Camera.SetPerspectiveVerticalFOV(v); }))
+				cc->Camera.SetPerspectiveVerticalFOV(verticalFOV);
+
+			float nearClip = cc->Camera.GetPerspectiveNearClip();
+			if (EditorGUI::FloatField("Near Clip", nearClip, [cc](float v) { cc->Camera.SetPerspectiveNearClip(v); }))
+				cc->Camera.SetPerspectiveNearClip(nearClip);
+
+			float farClip = cc->Camera.GetPerspectiveFarClip();
+			if (EditorGUI::FloatField("Far Clip", farClip, [cc](float v) { cc->Camera.SetPerspectiveFarClip(v); }))
+				cc->Camera.SetPerspectiveFarClip(farClip);
+		}
+
+		// Orthographic parameters
+		else if (cc->Camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic)
+		{
+
+			float orthoSize = cc->Camera.GetOrthographicSize();
+			if (EditorGUI::FloatField("Size", orthoSize, [cc](float v) { cc->Camera.SetOrthographicSize(v); }))
+				cc->Camera.SetOrthographicSize(orthoSize);
+
+			float nearClip = cc->Camera.GetOrthographicNearClip();
+			if (EditorGUI::FloatField("Near Clip", nearClip, [cc](float v) { cc->Camera.SetOrthographicNearClip(v); }))
+				cc->Camera.SetOrthographicNearClip(nearClip);
+
+			float farClip = cc->Camera.GetOrthographicFarClip();
+			if (EditorGUI::FloatField("Far Clip", farClip, [cc](float v) { cc->Camera.SetOrthographicFarClip(v); }))
+				cc->Camera.SetOrthographicFarClip(farClip);
+
+		}
+
+		EndPropertyGrid();
+
+		/ImGui::TreePop();
+	}
+	ImGui::Separator();/
+	});
+*/
 
 
-
-		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](SpriteRendererComponent* sr)
+DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity);/*, [](SpriteRendererComponent* sr)
 			{
-			});
+			});*/
 
 		/*if (entity.HasComponent<SpriteRendererComponent>())
 		{
@@ -491,8 +555,7 @@ namespace Ares
 		if (entity)
 		{
 			DrawComponents(entity);
-		}
-		ImGui::End();
+		
 
 		/*auto mesh = m_SelectionContext;
 
@@ -559,6 +622,9 @@ namespace Ares
 			}
 			ImGui::EndPopup();
 		}
+		}
+		ImGui::End();
+
 	}
 
 	//glm::mat4 Mat4FromAssimpMat4(const aiMatrix4x4& matrix);
