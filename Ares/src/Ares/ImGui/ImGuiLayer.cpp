@@ -26,10 +26,10 @@ namespace Ares {
 		ImGui::CreateContext();
 
 		ImGuiIO& io = ImGui::GetIO();
-		(void)io;
+		//(void)io;
 
 
-		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		//io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
 		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 

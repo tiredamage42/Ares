@@ -15,12 +15,13 @@
 #include <iostream>
 #include <fstream>
 
+// TODO: save parents / children
 namespace YAML {
 
 	template<>
-	struct convert<glm::vec2>
+	struct convert<Ares::Vector2>
 	{
-		static Node encode(const glm::vec2& rhs)
+		static Node encode(const Ares::Vector2& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -28,7 +29,7 @@ namespace YAML {
 			return node;
 		}
 
-		static bool decode(const Node& node, glm::vec2& rhs)
+		static bool decode(const Node& node, Ares::Vector2& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 2)
 				return false;
@@ -40,9 +41,9 @@ namespace YAML {
 	};
 
 	template<>
-	struct convert<glm::vec3>
+	struct convert<Ares::Vector3>
 	{
-		static Node encode(const glm::vec3& rhs)
+		static Node encode(const Ares::Vector3& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -51,7 +52,7 @@ namespace YAML {
 			return node;
 		}
 
-		static bool decode(const Node& node, glm::vec3& rhs)
+		static bool decode(const Node& node, Ares::Vector3& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 3)
 				return false;
@@ -64,9 +65,9 @@ namespace YAML {
 	};
 
 	template<>
-	struct convert<glm::vec4>
+	struct convert<Ares::Vector4>
 	{
-		static Node encode(const glm::vec4& rhs)
+		static Node encode(const Ares::Vector4& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -76,7 +77,7 @@ namespace YAML {
 			return node;
 		}
 
-		static bool decode(const Node& node, glm::vec4& rhs)
+		static bool decode(const Node& node, Ares::Vector4& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 4)
 				return false;
@@ -90,9 +91,9 @@ namespace YAML {
 	};
 
 	template<>
-	struct convert<glm::quat>
+	struct convert<Ares::Quaternion>
 	{
-		static Node encode(const glm::quat& rhs)
+		static Node encode(const Ares::Quaternion& rhs)
 		{
 			Node node;
 			node.push_back(rhs.w);
@@ -102,7 +103,7 @@ namespace YAML {
 			return node;
 		}
 
-		static bool decode(const Node& node, glm::quat& rhs)
+		static bool decode(const Node& node, Ares::Quaternion& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 4)
 				return false;
@@ -118,14 +119,14 @@ namespace YAML {
 
 namespace Ares {
 
-	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& v)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const Vector2& v)
 	{
 		out << YAML::Flow;
 		out << YAML::BeginSeq << v.x << v.y << YAML::EndSeq;
 		return out;
 	}
 
-	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const Vector3& v)
 	{
 		out << YAML::Flow;
 		out << YAML::BeginSeq << v.x << v.y << v.z << YAML::EndSeq;
@@ -133,14 +134,14 @@ namespace Ares {
 	}
 
 
-	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& v)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const Vector4& v)
 	{
 		out << YAML::Flow;
 		out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
 		return out;
 	}
 
-	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::quat& v)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const Quaternion& v)
 	{
 		out << YAML::Flow;
 		out << YAML::BeginSeq << v.w << v.x << v.y << v.z << YAML::EndSeq;
@@ -152,7 +153,7 @@ namespace Ares {
 	{
 	}
 
-	static std::tuple<glm::vec3, glm::quat, glm::vec3> GetTransformDecomposition(const glm::mat4& transform)
+	/*static std::tuple<glm::vec3, glm::quat, glm::vec3> GetTransformDecomposition(const glm::mat4& transform)
 	{
 		glm::vec3 scale, translation, skew;
 		glm::vec4 perspective;
@@ -160,62 +161,66 @@ namespace Ares {
 		glm::decompose(transform, scale, orientation, translation, skew, perspective);
 
 		return { translation, orientation, scale };
+	}*/
+
+	typedef YAML::Emitter SerializedScene;
+
+	static void StartObject(SerializedScene& serializedScene, const std::string& key)
+	{
+		serializedScene << YAML::Key << key;
+		serializedScene << YAML::BeginMap; // TagComponent
+	}
+	static void EndObject(SerializedScene& serializedScene)
+	{
+		serializedScene << YAML::EndMap;
 	}
 
-	static void SerializeEntity(YAML::Emitter& out, Entity entity)
+	template <typename T>
+	static void SetKeyValue(SerializedScene& serializedScene, const std::string& key, const T& value)
 	{
-		UUID uuid = entity.GetComponent<IDComponent>()->ID;
+		serializedScene << YAML::Key << key << YAML::Value << value;
+	}
+
+
+	static void SerializeEntity(SerializedScene& out, Entity entity)
+	{
+		EntityComponent* c = entity.GetComponent<EntityComponent>();
+		
 		out << YAML::BeginMap; // Entity
-		out << YAML::Key << "Entity";
-		out << YAML::Value << uuid;
 
-		if (entity.HasComponent<TagComponent>())
-		{
-			out << YAML::Key << "TagComponent";
-			out << YAML::BeginMap; // TagComponent
+		SetKeyValue(out, "Entity", c->ID);
+		SetKeyValue(out, "Tag", c->Tag);
+		SetKeyValue(out, "Name", c->Name);
 
-			auto& tag = entity.GetComponent<TagComponent>()->Tag;
-			out << YAML::Key << "Tag" << YAML::Value << tag;
-
-			out << YAML::EndMap; // TagComponent
-		}
-
+		
 		if (entity.HasComponent<TransformComponent>())
 		{
-			out << YAML::Key << "TransformComponent";
-			out << YAML::BeginMap; // TransformComponent
+			StartObject(out, "TransformComponent");
 
-			auto& transform = entity.GetComponent<TransformComponent>()->Transform;
-			auto [pos, rot, scale] = GetTransformDecomposition(transform);
-			out << YAML::Key << "Position" << YAML::Value << pos;
-			out << YAML::Key << "Rotation" << YAML::Value << rot;
-			out << YAML::Key << "Scale" << YAML::Value << scale;
-
-			out << YAML::EndMap; // TransformComponent
+			auto& transform = entity.GetComponent<TransformComponent>()->LocalTransform;
+			auto [pos, rot, scale] = Math::GetTransformDecomposition(transform);
+			SetKeyValue(out, "Position", pos);
+			SetKeyValue(out, "Rotation", rot);
+			SetKeyValue(out, "Scale", scale);
+			EndObject(out);
 		}
 
 		
 		if (entity.HasComponent<MeshRendererComponent>())
 		{
-			out << YAML::Key << "MeshComponent";
-			out << YAML::BeginMap; // MeshComponent
-
+			StartObject(out, "MeshComponent");
 			auto mesh = entity.GetComponent<MeshRendererComponent>()->Mesh;
-			out << YAML::Key << "AssetPath" << YAML::Value << mesh->GetFilePath();
-
-			out << YAML::EndMap; // MeshComponent
+			SetKeyValue(out, "AssetPath", mesh->GetFilePath());
+			EndObject(out);
 		}
 
 		if (entity.HasComponent<CameraComponent>())
 		{
-			out << YAML::Key << "CameraComponent";
-			out << YAML::BeginMap; // CameraComponent
-
+			StartObject(out, "CameraComponent");
 			auto* cameraComponent = entity.GetComponent<CameraComponent>();
-			out << YAML::Key << "Camera" << YAML::Value << "some camera data...";
-			out << YAML::Key << "Primary" << YAML::Value << cameraComponent->Primary;
-
-			out << YAML::EndMap; // CameraComponent
+			SetKeyValue(out, "Camera", "some camera data...");
+			SetKeyValue(out, "Primary", cameraComponent->Primary);
+			EndObject(out);
 		}
 
 		//if (entity.HasComponent<SpriteRendererComponent>())
@@ -235,25 +240,28 @@ namespace Ares {
 		out << YAML::EndMap; // Entity
 	}
 
-	static void SerializeEnvironment(YAML::Emitter& out, const Ref<Scene>& scene)
+	static void SerializeEnvironment(SerializedScene& out, const Ref<Scene>& scene)
 	{
 		out << YAML::Key << "Environment";
 		out << YAML::Value;
 		out << YAML::BeginMap; // Environment
-		out << YAML::Key << "AssetPath" << YAML::Value << scene->GetEnvironment().FilePath;
+		SetKeyValue(out, "AssetPath", scene->GetEnvironment().FilePath);
+
 		const auto& light = scene->GetLight();
 		out << YAML::Key << "Light" << YAML::Value;
 		out << YAML::BeginMap; // Light
-		out << YAML::Key << "Direction" << YAML::Value << light.Direction;
-		out << YAML::Key << "Radiance" << YAML::Value << light.Radiance;
-		out << YAML::Key << "Multiplier" << YAML::Value << light.Multiplier;
+
+		SetKeyValue(out, "Direction", light.Direction);
+		SetKeyValue(out, "Radiance", light.Radiance);
+		SetKeyValue(out, "Multiplier", light.Multiplier);
+
 		out << YAML::EndMap; // Light
 		out << YAML::EndMap; // Environment
 	}
 
 	void SceneSerializer::Serialize(const std::string& filepath)
 	{
-		YAML::Emitter out;
+		SerializedScene  out;
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene";
 		out << YAML::Value << "Scene Name";
@@ -263,7 +271,8 @@ namespace Ares {
 		m_Scene->m_Registry.each([&](auto entityID)
 			{
 				Entity entity = { entityID, m_Scene.get() };
-				if (!entity || !entity.HasComponent<IDComponent>())
+
+				if (!entity)
 					return;
 
 				SerializeEntity(out, entity);
@@ -274,12 +283,6 @@ namespace Ares {
 
 		std::ofstream fout(filepath);
 		fout << out.c_str();
-	}
-
-	void SceneSerializer::SerializeRuntime(const std::string& filepath)
-	{
-		// Not implemented
-		ARES_CORE_ASSERT(false, "");
 	}
 
 	bool SceneSerializer::Deserialize(const std::string& filepath)
@@ -317,11 +320,13 @@ namespace Ares {
 			for (auto entity : entities)
 			{
 				uint64_t uuid = entity["Entity"].as<uint64_t>();
+				std::string name = entity["Name"].as<std::string>();
 
-				std::string name;
+				/*
 				auto tagComponent = entity["TagComponent"];
 				if (tagComponent)
 					name = tagComponent["Tag"].as<std::string>();
+				*/
 
 				ARES_CORE_INFO("Deserialized entity with ID = {0}, name = {1}", uuid, name);
 
@@ -331,7 +336,7 @@ namespace Ares {
 				if (transformComponent)
 				{
 					// Entities always have transforms
-					auto& transform = deserializedEntity.GetComponent<TransformComponent>()->Transform;
+					auto& transform = deserializedEntity.GetComponent<TransformComponent>()->LocalTransform;
 					glm::vec3 translation = transformComponent["Position"].as<glm::vec3>();
 					glm::quat rotation = transformComponent["Rotation"].as<glm::quat>();
 					glm::vec3 scale = transformComponent["Scale"].as<glm::vec3>();
@@ -385,13 +390,6 @@ namespace Ares {
 			}
 		}
 		return true;
-	}
-
-	bool SceneSerializer::DeserializeRuntime(const std::string& filepath)
-	{
-		// Not implemented
-		ARES_CORE_ASSERT(false, "");
-		return false;
 	}
 
 }

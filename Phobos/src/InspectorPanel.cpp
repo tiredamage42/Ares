@@ -244,11 +244,12 @@ namespace Ares
 	{
 		ImGui::AlignTextToFramePadding();
 
-		auto id = entity.GetComponent<IDComponent>()->ID;
+		EntityComponent* ec = entity.GetComponent<EntityComponent>();
+		auto id = ec->ID;// entity.GetComponent<IDComponent>()->ID;
 
-		if (entity.HasComponent<TagComponent>())
+		//if (entity.HasComponent<TagComponent>())
 		{
-			auto& tag = entity.GetComponent<TagComponent>()->Tag;
+			auto& tag = ec->Tag;// entity.GetComponent<TagComponent>()->Tag;
 			char buffer[256];
 			memset(buffer, 0, 256);
 			memcpy(buffer, tag.c_str(), tag.length());
@@ -268,7 +269,7 @@ namespace Ares
 			auto* tc = entity.GetComponent<TransformComponent>();
 			if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(TransformComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Transform"))
 			{
-				auto [translation, rotationQuat, tScale] = Math::GetTransformDecomposition(tc->Transform);
+				auto [translation, rotationQuat, tScale] = Math::GetTransformDecomposition(tc->LocalTransform);
 				glm::vec3 pos = translation;
 				glm::vec3 scale = tScale;
 				glm::quat rot = rotationQuat;
@@ -280,7 +281,7 @@ namespace Ares
 				ImGui::Columns(2);
 
 				if (EditorGUI::Vec3Field("Position", pos, [tc, rot, scale](Vector3 v) {
-					tc->Transform = Math::GetTRSMatrix(v, rot, scale);
+					tc->LocalTransform = Math::GetTRSMatrix(v, rot, scale);
 					}))
 				{
 					updateTransform = true;
@@ -288,14 +289,14 @@ namespace Ares
 
 					glm::vec3 rotation = glm::degrees(glm::eulerAngles(rotationQuat));
 					if (EditorGUI::Vec3Field("Rotation", rotation, [tc, pos, scale](Vector3 v) {
-						tc->Transform = Math::GetTRSMatrix(pos, glm::quat(glm::radians(v)), scale);
+						tc->LocalTransform = Math::GetTRSMatrix(pos, glm::quat(glm::radians(v)), scale);
 						}))
 					{
 						updateTransform = true;
 					}
 
 						if (EditorGUI::Vec3Field("Scale", scale, [tc, rot, pos](Vector3 v) {
-							tc->Transform = Math::GetTRSMatrix(pos, rot, v);
+							tc->LocalTransform = Math::GetTRSMatrix(pos, rot, v);
 							}))
 						{
 							updateTransform = true;
@@ -349,7 +350,7 @@ namespace Ares
 
 							if (updateTransform)
 							{
-								tc->Transform = glm::translate(glm::mat4(1.0f), pos) *
+								tc->LocalTransform = glm::translate(glm::mat4(1.0f), pos) *
 									glm::toMat4(glm::quat(glm::radians(rotation))) *
 									glm::scale(glm::mat4(1.0f), scale);
 							}

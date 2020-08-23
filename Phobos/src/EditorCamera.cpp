@@ -212,11 +212,13 @@ namespace Ares
 		}
 		else
 		{
-			const glm::vec2& mouse = Input::GetMousePosition();// { Input::GetMouseX(), Input::GetMouseY() };
-			glm::vec2 delta = mouse - m_LastMousePos;
-			m_LastMousePos = mouse;
+			//const glm::vec2& mouse = Input::GetMousePosition();// { Input::GetMouseX(), Input::GetMouseY() };
+			//glm::vec2 delta = mouse - m_LastMousePos;
+			//m_LastMousePos = mouse;
+
+			glm::vec2 delta = Input::GetMouseDelta();
 			
-			if (Input::GetKey(KeyCode::LeftAlt))
+			if (Input::GetKey(KeyCode::LeftControl))
 			{
 				//if (Input::GetMouseButton(MouseButtonCode::ButtonLeft) || Input::GetMouseButton(MouseButtonCode::ButtonRight))
 				{

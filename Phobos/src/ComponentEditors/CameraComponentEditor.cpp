@@ -9,6 +9,8 @@ namespace Ares
 	{
 		// Projection Type
 
+		EditorGUI::BeginPropertyGrid();
+
 		SceneCamera::ProjectionType projection = Camera.GetProjectionType();
 
 		std::function<void(SceneCamera::ProjectionType)> undo = [=](SceneCamera::ProjectionType v) { this->Camera.SetProjectionType(v); };
@@ -39,7 +41,6 @@ namespace Ares
 		}
 		*/
 
-		EditorGUI::BeginPropertyGrid();
 		// Perspective parameters
 		if (Camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
 		{

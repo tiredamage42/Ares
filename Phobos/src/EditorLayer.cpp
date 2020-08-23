@@ -9,6 +9,12 @@
 #include "InspectorPanel.h"
 #define _2D 0
 
+
+// w = p * l;
+// w * inv(p);
+
+
+
 /*
     TODO:
     display grid as lines2D
@@ -74,6 +80,9 @@ namespace Ares
         colors[ImGuiCol_DragDropTarget] = ImVec4(1.0f, 1.0f, 0.0f, 0.9f);
         colors[ImGuiCol_NavHighlight] = ImVec4(0.60f, 0.6f, 0.6f, 1.0f);
         colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.0f, 1.0f, 1.0f, 0.7f);
+
+        colors[ImGuiCol_Tab] = ImColor(100, 100, 100, 255);
+
     }
 
     void EditorLayer::OnAttach()
@@ -162,10 +171,10 @@ namespace Ares
             m_MeshMaterials = mr->Materials;
         }
 
-        gunEntity.Transform() = glm::scale(
+        gunEntity.GetComponent<TransformComponent>()->SetWorldTransform( glm::scale(
             glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2)),
             glm::vec3(15.0f)
-        );
+        ));
         
         auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Cube);
 
@@ -188,10 +197,10 @@ namespace Ares
                 m->SetValue("u_Metalness", metalness);
                 m->SetValue("u_Roughness", roughness);
 
-                sphereEntity.Transform() = glm::translate(
+                sphereEntity.GetComponent<TransformComponent>()->SetWorldTransform( glm::translate(
                     glm::mat4(1.0f), 
                     glm::vec3(x * spread, y * spread, 0)
-                );
+                ));
             }
         }
 
@@ -317,7 +326,7 @@ namespace Ares
             {
                 if (Input::GetKeyDown(KeyCode::F))
                 {
-                    m_EditorCamera.Focus(m_SelectedEntity.GetComponent<TransformComponent>()->Transform[3], 5);
+                    m_EditorCamera.Focus(m_SelectedEntity.GetComponent<TransformComponent>()->GetWorldTransform()[3], 5);
                 }
             }
 
@@ -356,7 +365,7 @@ namespace Ares
         {
         case SceneState::Edit:
         {
-            //if (m_ViewportPanelFocused)
+            if (m_ViewportPanelFocused)
                 m_EditorCamera.Update();
 
             m_EditorScene->OnRenderEditor(m_EditorCamera, m_EditorCamera.m_ViewMatrix, m_SelectedEntity);
@@ -780,6 +789,8 @@ namespace Ares
     {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
+        ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
+
         ImGui::Begin("Viewport", 0);//, ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoNavFocus);
         {
             ImVec2 viewportOffset = ImGui::GetCursorPos(); // includes tab bar
@@ -910,7 +921,7 @@ namespace Ares
                 //    snap ? &m_SnapValue : nullptr
                 //);
 
-                auto& entityTransform = m_SelectedEntity.Transform();
+                auto& entityTransform = m_SelectedEntity.GetComponent<TransformComponent>()->GetWorldTransform();
                 float snapValue = GetSnapValue();
                 float snapValues[3] = { snapValue, snapValue, snapValue };
 
@@ -929,6 +940,8 @@ namespace Ares
                         nullptr,
                         snap ? snapValues : nullptr);
                 }
+
+                m_SelectedEntity.GetComponent<TransformComponent>()->SetWorldTransform(entityTransform);
 
 
 
@@ -967,6 +980,8 @@ namespace Ares
 
             ImGui::End();
         }
+
+        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         ImGui::PopStyleVar();
     }
 
@@ -1165,7 +1180,13 @@ namespace Ares
 
         //bool selectionChanged;
         //Entity deletedEntity;
-        SceneHierarchyPanel::Draw(m_EditorScene, m_SelectedEntity, m_SceneHierarchyFocused);// , deletedEntity);
+
+        Entity doubleClickedEntity;
+        SceneHierarchyPanel::Draw(m_EditorScene, m_SelectedEntity, doubleClickedEntity, m_SceneHierarchyFocused);// , deletedEntity);
+        if (doubleClickedEntity)
+        {
+            m_EditorCamera.Focus(doubleClickedEntity.GetComponent<TransformComponent>()->GetWorldTransform()[3], 5);
+        }
 
         ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
         m_Console.Render();
@@ -1375,9 +1396,9 @@ namespace Ares
                         auto& submesh = submeshes[i];
                         Ray ray = {
                             glm::inverse(
-                                entity.GetComponent<TransformComponent>()->Transform * submesh.Transform
+                                entity.GetComponent<TransformComponent>()->GetWorldTransform() * submesh.Transform
                             ) * glm::vec4(origin, 1.0f),
-                            glm::inverse(glm::mat3(entity.GetComponent<TransformComponent>()->Transform) * glm::mat3(submesh.Transform)) * direction
+                            glm::inverse(glm::mat3(entity.GetComponent<TransformComponent>()->GetWorldTransform()) * glm::mat3(submesh.Transform)) * direction
                         };
 
                         float t;

@@ -20,6 +20,13 @@ namespace Ares {
 			s_MousePressed[curFrame][i] = state == GLFW_PRESS;
 		}
 		curFrame = (curFrame + 1) % 2;
+
+		double xpos, ypos;
+		glfwGetCursorPos(window, &xpos, &ypos);
+		const glm::vec2& mouse = { (float)xpos, (float)ypos };
+
+		s_MouseDelta = mouse - s_LastMousePos;
+		s_LastMousePos = mouse;
 	}
 
 	Vector2 Input::GetMousePosition()

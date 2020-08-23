@@ -53,9 +53,11 @@ namespace Ares
 			return m_Scene->m_Registry.remove_if_exists<T>(m_EntityHandle);
 		}
 		
-		glm::mat4& Transform() { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
-		const glm::mat4& Transform() const { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
-		const std::string& GetName() const { return m_Scene->m_Registry.get<TagComponent>(m_EntityHandle).Tag; }
+		//glm::mat4& Transform() { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
+		//const glm::mat4& Transform() const { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
+		
+		//const std::string& GetName() const { return m_Scene->m_Registry.get<EntityComponent>(m_EntityHandle).Name; }
+		//const std::string& GetName() const { return m_Scene->m_Registry.get<TagComponent>(m_EntityHandle).Tag; }
 
 		operator uint32_t () const { return (uint32_t)m_EntityHandle; }
 		operator entt::entity() const { return m_EntityHandle; }
@@ -71,7 +73,7 @@ namespace Ares
 			return !(*this == other);
 		}
 
-		UUID GetUUID() { return m_Scene->m_Registry.get<IDComponent>(m_EntityHandle).ID; }
+		//UUID GetUUID() { return m_Scene->m_Registry.get<IDComponent>(m_EntityHandle).ID; }
 		UUID GetSceneUUID() { return m_Scene->GetUUID(); }
 	private:
 

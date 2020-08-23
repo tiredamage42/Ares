@@ -6,19 +6,36 @@
 #include "Ares/Renderer/Mesh.h"
 //#include <glm/glm.hpp>
 #include "Ares/Math/Math.h"
+//#include "Ares/Core/Entity.h"
+
 namespace Ares
 {
+    //class Entity;
 
     struct Component
     {
         virtual void OnDrawImGui();
     };
-
+    /*
     struct IDComponent
     {
         UUID ID = 0;
     };
 
+    */
+
+    // basic entity information
+    struct EntityComponent
+    {
+        bool Enabled;
+        UUID ID = 0;
+        std::string Name;
+        std::string Tag;
+        EntityComponent() = default;
+        EntityComponent(const EntityComponent&) = default;
+    };
+
+    /*
     struct TagComponent
     {
         std::string Tag;
@@ -29,16 +46,79 @@ namespace Ares
         operator std::string& () { return Tag; }
         operator const std::string& () const { return Tag; }
     };
+    */
 
     struct TransformComponent
     {
-        glm::mat4 Transform{ 1.0f };
+        TransformComponent* Parent = nullptr;
+        std::vector<TransformComponent*> Children;
+        UUID Entity;
+        glm::mat4 LocalTransform{ 1.0f };
+
+
+        void SetParent(TransformComponent* parent)
+        {
+             
+            if (Parent != parent && parent != this)
+            {
+                if (Parent)
+                {
+                    for (uint32_t i = 0; i < Parent->Children.size(); i++)
+                    {
+                        if (Parent->Children[i] == this)
+                        {
+                            Parent->Children.erase(Parent->Children.begin() + i);
+                            break;
+                        }
+                    }
+                }
+
+                // make sure the transform is the same in world space
+                // regardless of parent
+                glm::mat4 worldTransform = GetWorldTransform();
+
+                Parent = parent;
+                Parent->Children.push_back(this);
+
+                SetWorldTransform(worldTransform);
+            }
+        }
+
+        const glm::mat4& GetLocalTransform() const { return LocalTransform; }
+        glm::mat4 GetWorldTransform() const 
+        {
+            if (Parent)
+            {
+                return Parent->GetWorldTransform() * LocalTransform;
+            }
+            else
+            {
+                return LocalTransform;
+            }
+        };
+
+        void SetLocalTransform(const glm::mat4& localTransform) { LocalTransform = localTransform; }
+        void SetWorldTransform(const glm::mat4& worldTransform)
+        {
+            if (Parent)
+            {
+                // w = p * l;
+                // l = w * inv(p);  
+                LocalTransform = glm::inverse(Parent->GetWorldTransform()) * worldTransform;
+            }
+            else
+            {
+                LocalTransform = worldTransform;
+            }
+        }
+
+
 
         TransformComponent() = default;
         TransformComponent(const TransformComponent&) = default;
         
-        operator glm::mat4& () { return Transform; }
-        operator const glm::mat4& () const { return Transform; }
+        //operator glm::mat4& () { return Transform; }
+        //operator const glm::mat4& () const { return Transform; }
     };
 
     struct SpriteRendererComponent : Component

@@ -72,7 +72,7 @@ namespace Ares
 		glm::vec3 m_FocalPoint{ 0 };
 
 		//bool m_Panning, m_Rotating;
-		glm::vec2 m_LastMousePos{ 0 };
+		//glm::vec2 m_LastMousePos{ 0 };
 		//glm::vec3 m_InitialFocalPoint, m_InitialRotation;
 
 		float m_Distance;

@@ -184,10 +184,12 @@ namespace Ares {
 			}
 		}
 		static void UpdateInputPolls();
-
-	public:
-		static Vector2 GetMousePosition();
+		inline static Vector2 s_LastMousePos;
+		inline static Vector2 s_MouseDelta;
 		inline static std::unordered_map<std::string, InputKey> s_Mapping;
+	public:
+		inline static const Vector2& GetMouseDelta() { return s_MouseDelta; }
+		static Vector2 GetMousePosition();
 		/* Map a Key/Mouse Button to an InputKey, and overwrite the old value if existed. */
 		inline static void Remap(const std::string& name, InputKey inputKey) { s_Mapping[name] = inputKey; }
 		inline static void Remap(const std::string& name, KeyCode key) { s_Mapping[name] = { key }; }

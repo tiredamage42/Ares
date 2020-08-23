@@ -1,7 +1,7 @@
 
 #include "AresPCH.h"
-#include "Ares/Core/Scene.h"
 #include "Ares/Core/Components.h"
+#include "Ares/Core/Scene.h"
 #include "Ares/Renderer/Renderer2D.h"
 #include "Ares/Renderer/SceneRenderer.h"
 #include "Ares/Core/Entity.h"
@@ -55,13 +55,18 @@ namespace Ares
         // entt::entity = uint32_t
         Entity entity = { m_Registry.create(), this };
 
-        auto* idComponent = entity.AddComponent<IDComponent>();
-        idComponent->ID = {};
-        entity.AddComponent<TagComponent>(name.empty() ? "Entity" : name);
+        auto* entityComponent = entity.AddComponent<EntityComponent>();
+        entityComponent->ID = {};
+        entityComponent->Name = name.empty() ? "Entity" : name;
 
-        entity.AddComponent<TransformComponent>(glm::mat4(1.0f));
-        
-        m_EntityIDMap[idComponent->ID] = entity;
+        //auto* idComponent = entity.AddComponent<IDComponent>();
+        //idComponent->ID = {};
+        //entity.AddComponent<TagComponent>(name.empty() ? "Entity" : name);
+
+        TransformComponent* transform = entity.AddComponent<TransformComponent>();// glm::mat4(1.0f));
+        transform->Entity = entityComponent->ID;
+
+        m_EntityIDMap[entityComponent->ID] = entity;
 
         return entity;
     }
@@ -70,11 +75,19 @@ namespace Ares
         ARES_CORE_ASSERT(m_EntityIDMap.find(uuid) == m_EntityIDMap.end(), "");
         
         auto entity = Entity{ m_Registry.create(), this };
+
+        auto* entityComponent = entity.AddComponent<EntityComponent>();
+        entityComponent->ID = uuid;
+        entityComponent->Name = name.empty() ? "Entity" : name;
+
+        /*
         auto* idComponent = entity.AddComponent<IDComponent>();
         idComponent->ID = uuid;
 
         entity.AddComponent<TagComponent>(name.empty() ? "Entity" : name);
-        entity.AddComponent<TransformComponent>(glm::mat4(1.0f));
+        */
+        TransformComponent* transform = entity.AddComponent<TransformComponent>();// glm::mat4(1.0f));
+        transform->Entity = uuid;
         
         m_EntityIDMap[uuid] = entity;
         return entity;
@@ -82,6 +95,8 @@ namespace Ares
     void Scene::DestroyEntity(Entity entity)
     {
         m_Registry.destroy(entity.m_EntityHandle);
+
+        // TODO: Parents destroy children? or jsut unparent?
     }
 
     void Scene::OnViewportResize(uint32_t width, uint32_t height)
@@ -134,7 +149,7 @@ namespace Ares
                     if (camera.Primary)
                     {
                         mainCamera = &camera.Camera;
-                        cameraTransform = &transform.Transform;
+                        cameraTransform = &transform.GetWorldTransform();
                         break;
                     }
                 }
@@ -156,7 +171,7 @@ namespace Ares
 
                     auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
             
-                    Renderer2D::SubmitQuad(transform, sprite.Texture, sprite.Tiling, sprite.Offset, sprite.Color, true);
+                    Renderer2D::SubmitQuad(transform.GetWorldTransform(), sprite.Texture, sprite.Tiling, sprite.Offset, sprite.Color, true);
                 }
 
                 Renderer2D::EndScene();
@@ -171,7 +186,7 @@ namespace Ares
         if (!cameraEntity)
             return;
 
-        glm::mat4 cameraViewMatrix = glm::inverse(cameraEntity.GetComponent<TransformComponent>()->Transform);
+        glm::mat4 cameraViewMatrix = glm::inverse(cameraEntity.GetComponent<TransformComponent>()->GetWorldTransform());
         SceneCamera& camera = cameraEntity.GetComponent<CameraComponent>()->Camera;
         
         // needs to happen every render???
@@ -187,7 +202,7 @@ namespace Ares
                 meshComponent.Mesh->OnUpdate();
 
                 // TODO: Should we render (logically)
-                SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent, meshComponent.Materials, false);
+                SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent.GetWorldTransform(), meshComponent.Materials, false);
             }
         }
         SceneRenderer::EndScene();
@@ -209,7 +224,7 @@ namespace Ares
                 meshComponent.Mesh->OnUpdate();
 
                 // TODO: Should we render (logically)
-                SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent, meshComponent.Materials, selectedEntity == entity);
+                SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent.GetWorldTransform(), meshComponent.Materials, selectedEntity == entity);
             }
         }
         SceneRenderer::EndScene();
@@ -248,10 +263,10 @@ namespace Ares
     Entity Scene::FindEntityByTag(const std::string& tag)
     {
         // TODO: If this becomes used often, consider indexing by tag
-        auto view = m_Registry.view<TagComponent>();
+        auto view = m_Registry.view<EntityComponent>();
         for (auto entity : view)
         {
-            const auto& canditate = view.get<TagComponent>(entity).Tag;
+            const auto& canditate = view.get<EntityComponent>(entity).Tag;
             if (canditate == tag)
                 return Entity(entity, this);
         }
@@ -268,7 +283,9 @@ namespace Ares
         auto components = srcRegistry.view<T>();
         for (auto srcEntity : components)
         {
-            entt::entity destEntity = enttMap.at(srcRegistry.get<IDComponent>(srcEntity).ID);
+
+            //entt::entity destEntity = enttMap.at(srcRegistry.get<IDComponent>(srcEntity).ID);
+            entt::entity destEntity = enttMap.at(srcRegistry.get<EntityComponent>(srcEntity).ID);
 
             auto& srcComponent = srcRegistry.get<T>(srcEntity);
             auto& destComponent = dstRegistry.emplace_or_replace<T>(destEntity, srcComponent);
@@ -287,16 +304,15 @@ namespace Ares
 
     void Scene::DuplicateEntity(Entity entity)
     {
-        Entity newEntity;
-        if (entity.HasComponent<TagComponent>())
-            newEntity = CreateEntity(entity.GetComponent<TagComponent>()->Tag);
-        else
-            newEntity = CreateEntity();
-
+        Entity newEntity = CreateEntity(entity.GetComponent<EntityComponent>()->Name);
+        
         CopyComponentIfExists<TransformComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
         CopyComponentIfExists<MeshRendererComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
         CopyComponentIfExists<CameraComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
         CopyComponentIfExists<SpriteRendererComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
+
+
+        newEntity.GetComponent<TransformComponent>()->Entity = newEntity.GetComponent<EntityComponent>()->ID;
     }
 
     // Copy to runtime
@@ -309,15 +325,15 @@ namespace Ares
         target->m_Exposure = m_Exposure;
 
         std::unordered_map<UUID, entt::entity> enttMap;
-        auto idComponents = m_Registry.view<IDComponent>();
+        auto idComponents = m_Registry.view<EntityComponent>();
         for (auto entity : idComponents)
         {
-            auto uuid = m_Registry.get<IDComponent>(entity).ID;
+            auto uuid = m_Registry.get<EntityComponent>(entity).ID;
             Entity e = target->CreateEntityWithID(uuid, "", true);
             enttMap[uuid] = e.m_EntityHandle;
         }
 
-        CopyComponent<TagComponent>(target->m_Registry, m_Registry, enttMap);
+        CopyComponent<EntityComponent>(target->m_Registry, m_Registry, enttMap);
         CopyComponent<TransformComponent>(target->m_Registry, m_Registry, enttMap);
         CopyComponent<MeshRendererComponent>(target->m_Registry, m_Registry, enttMap);
         CopyComponent<CameraComponent>(target->m_Registry, m_Registry, enttMap);

@@ -5,9 +5,9 @@ namespace Ares {
 	class SceneHierarchyPanel
 	{
 	public:
-		static void Draw(Ref<Scene> scene, Entity& selectedEntity, bool& windowFocused);// , Entity& deletedEntity);
+		static void Draw(Ref<Scene> scene, Entity& selectedEntity, Entity& doubleClickedEntity, bool& windowFocused);// , Entity& deletedEntity);
 	private:
-		static void DrawEntityNode(const Entity& entity, const Entity& selectedEntity, bool& clicked, bool& deleted);
+		static void DrawEntityNode(const Entity& entity, Entity& selectedEntity, Entity& doubleClickedEntity, Ref<Scene> scene);
 	};
 
 }
