@@ -13,6 +13,7 @@
     TODO:
     display grid as lines2D
 
+    save open save as scene key shortcuts
 */
 namespace Ares
 {
@@ -234,6 +235,8 @@ namespace Ares
         m_FrameBuffer->Unbind();
     }
 #else
+
+
 
 
     void EditorLayer::OnScenePlay()
@@ -635,6 +638,52 @@ namespace Ares
     static bool dockspaceOpen = true;
 
 
+
+    void EditorLayer::OpenScene()
+    {
+        auto& app = Application::Get();
+        std::string filepath = app.OpenFile("Hazel Scene (*.hsc)\0*.hsc\0");
+        if (!filepath.empty())
+        {
+            Ref<Scene> newScene = CreateRef<Scene>();
+            SceneSerializer serializer(newScene);
+            serializer.Deserialize(filepath);
+            m_EditorScene = newScene;
+            std::filesystem::path path = filepath;
+            UpdateWindowTitle(path.filename().string());
+            //m_SceneHierarchyPanel->SetContext(m_EditorScene);
+
+            m_SelectedEntity = {};
+            //m_EditorScene->SetSelectedEntity({});
+            //m_SelectionContext.clear();
+            m_SceneFilePath = filepath;
+        }
+
+    }
+
+    void EditorLayer::SaveScene()
+    {
+        SceneSerializer serializer(m_EditorScene);
+        serializer.Serialize(m_SceneFilePath);
+    }
+
+    void EditorLayer::SaveSceneAs()
+    {
+        auto& app = Application::Get();
+        std::string filepath = app.SaveFile("Hazel Scene (*.hsc)\0*.hsc\0");
+        if (!filepath.empty())
+        {
+            SceneSerializer serializer(m_EditorScene);
+            serializer.Serialize(filepath);
+
+            std::filesystem::path path = filepath;
+            UpdateWindowTitle(path.filename().string());
+            m_SceneFilePath = filepath;
+        }
+    }
+
+
+
     // to do: add edit
     void EditorLayer::DrawMenu()
     {
@@ -647,8 +696,10 @@ namespace Ares
                 {
 
                 }
-                if (ImGui::MenuItem("Open Scene"))
+                if (ImGui::MenuItem("Open Scene", "Ctrl/Cmd + O"))
                 {
+                    OpenScene();
+                    /*
                     auto& app = Application::Get();
                     std::string filepath = app.OpenFile("Hazel Scene (*.hsc)\0*.hsc\0");
                     if (!filepath.empty())
@@ -665,7 +716,15 @@ namespace Ares
                         //m_EditorScene->SetSelectedEntity({});
                         //m_SelectionContext.clear();
                     }
+                    */
                 }
+
+                ImGui::Separator();
+                if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
+                    SaveScene();
+                if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S"))
+                    SaveSceneAs();
+/*
                 if (ImGui::MenuItem("Save Scene", "Ctrl/Cmd + S"))
                 {
                     auto& app = Application::Get();
@@ -676,6 +735,7 @@ namespace Ares
                     std::filesystem::path path = filepath;
                     UpdateWindowTitle(path.filename().string());
                 }
+*/
                 ImGui::Separator();
 
                 if (ImGui::MenuItem("Exit"))
@@ -704,6 +764,17 @@ namespace Ares
         }
     }
 
+
+    float EditorLayer::GetSnapValue()
+    {
+        switch (m_GizmoType)
+        {
+        case  ImGuizmo::OPERATION::TRANSLATE: return 0.5f;
+        case  ImGuizmo::OPERATION::ROTATE: return 45.0f;
+        case  ImGuizmo::OPERATION::SCALE: return 0.5f;
+        }
+        return 0.0f;
+    }
 
     void EditorLayer::DrawSceneViewport()
     {
@@ -840,8 +911,10 @@ namespace Ares
                 //);
 
                 auto& entityTransform = m_SelectedEntity.Transform();
-                float snapValue[3] = { m_SnapValue, m_SnapValue, m_SnapValue };
-                
+                float snapValue = GetSnapValue();
+                float snapValues[3] = { snapValue, snapValue, snapValue };
+
+
                 //if (m_SelectionMode == SelectionMode::Entity)
                 {
                     ImGuizmo::Manipulate(
@@ -854,7 +927,7 @@ namespace Ares
                         ImGuizmo::LOCAL,
                         glm::value_ptr(entityTransform),
                         nullptr,
-                        snap ? snapValue : nullptr);
+                        snap ? snapValues : nullptr);
                 }
 
 

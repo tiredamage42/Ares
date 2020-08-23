@@ -125,7 +125,7 @@ namespace Ares
 
 
 	template<typename T, typename UIFunction>
-	static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
+	static void InspectorPanel::DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
 	{
 		if (entity.HasComponent<T>())
 		{
@@ -175,7 +175,7 @@ namespace Ares
 
 
 
-	static void DrawComponents(const Entity& entity)
+	void InspectorPanel::DrawComponents(const Entity& entity)
 	{
 		ImGui::AlignTextToFramePadding();
 
@@ -329,6 +329,20 @@ namespace Ares
 				}
 				ImGui::NextColumn();
 				ImGui::Columns(1);
+
+
+				if (mc->Mesh->m_IsAnimated)
+				{
+					if (ImGui::CollapsingHeader("Animation"))
+					{
+						if (ImGui::Button(mc->Mesh->m_AnimationPlaying ? "Pause" : "Play"))
+							mc->Mesh->m_AnimationPlaying = !mc->Mesh->m_AnimationPlaying;
+
+						ImGui::SliderFloat("##AnimationTime", &mc->Mesh->m_AnimationTime, 0.0f, (float)(mc->Mesh->GetAnimationDuration()));
+						ImGui::DragFloat("Time Scale", &mc->Mesh->m_TimeMultiplier, 0.05f, 0.0f, 10.0f);
+					}
+				}
+				
 				/*
 				*/
 

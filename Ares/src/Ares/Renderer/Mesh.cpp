@@ -959,6 +959,8 @@ namespace Ares {
 		m_BoneMatrixTexture->SetData(m_BoneMatrixData);
 	}
 
+	const float Mesh::GetAnimationDuration() const { return m_Scene->mAnimations[0]->mDuration; }
+
 	void Mesh::OnUpdate()
 	{
 		if (m_IsAnimated)

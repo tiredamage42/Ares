@@ -86,6 +86,7 @@ namespace Ares {
 
 	class Mesh
 	{
+		friend class InspectorPanel;
 	public:
 		Mesh(const std::string& filename, std::vector<Ref<Material>>& m_Materials);
 		Mesh(PrimitiveMeshType primitiveType);
@@ -110,6 +111,9 @@ namespace Ares {
 		glm::vec3 InterpolateTranslation(float animationTime, const aiNodeAnim* nodeAnim);
 		glm::quat InterpolateRotation(float animationTime, const aiNodeAnim* nodeAnim);
 		glm::vec3 InterpolateScale(float animationTime, const aiNodeAnim* nodeAnim);
+
+		const float GetAnimationDuration() const;
+
 
 		std::vector<Submesh> m_Submeshes;
 		std::unique_ptr<Assimp::Importer> m_Importer;

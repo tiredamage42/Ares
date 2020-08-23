@@ -26,7 +26,16 @@ namespace Ares
 		void DrawMenu();
 		void ToolbarUI();
 		void DrawEditorPreferencesWindow();
+
+		void OpenScene();
+		void SaveScene();
+		void SaveSceneAs();
+
+		float GetSnapValue();
+
+
 	private:
+		std::string m_SceneFilePath;
 
 		StatsWindow m_StatsWindow;
 
