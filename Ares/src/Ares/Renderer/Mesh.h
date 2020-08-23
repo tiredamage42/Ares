@@ -7,6 +7,8 @@
 #include "Ares/Renderer/VertexArray.h"
 #include "Ares/Renderer/Material.h"
 #include "Ares/Math/AABB.h"
+#include "Ares/Renderer/Animation.h"
+
 
 struct aiNode;
 struct aiAnimation;
@@ -63,6 +65,8 @@ namespace Ares {
 		glm::mat4 BoneOffset;
 		glm::mat4 FinalTransformation;
 	};
+	/*
+	*/
 
 	struct Triangle
 	{
@@ -104,13 +108,31 @@ namespace Ares {
 		void ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const glm::mat4& ParentTransform);
 		void TraverseNodes(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.0f), uint32_t level = 0);
 
-		const aiNodeAnim* FindNodeAnim(const aiAnimation* animation, const std::string& nodeName);
+
+
+
+
+
+
+		//const aiNodeAnim* FindNodeAnim(const aiAnimation* animation, const std::string& nodeName);
+		/*
 		uint32_t FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim);
 		uint32_t FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim);
 		uint32_t FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim);
 		glm::vec3 InterpolateTranslation(float animationTime, const aiNodeAnim* nodeAnim);
 		glm::quat InterpolateRotation(float animationTime, const aiNodeAnim* nodeAnim);
 		glm::vec3 InterpolateScale(float animationTime, const aiNodeAnim* nodeAnim);
+		*/
+
+		//uint32_t FindPosition(float AnimationTime, const AnimationNode& pNodeAnim);
+		//uint32_t FindRotation(float AnimationTime, const AnimationNode& pNodeAnim);
+		//uint32_t FindScaling(float AnimationTime, const AnimationNode& pNodeAnim);
+		glm::vec3 InterpolateTranslation(float animationTime, const AnimationNode& nodeAnim);
+		glm::quat InterpolateRotation(float animationTime, const AnimationNode& nodeAnim);
+		glm::vec3 InterpolateScale(float animationTime, const AnimationNode& nodeAnim);
+
+		static void BuildAnimation(const aiNode* pNode, const aiAnimation* loadedAnim, Ref<Animation> animation);
+
 
 		const float GetAnimationDuration() const;
 
@@ -130,7 +152,15 @@ namespace Ares {
 		
 		const aiScene* m_Scene = nullptr;
 
+
+
+
 		// Animation
+		std::vector<Ref<Animation>> m_Animations;
+
+		
+
+
 		bool m_IsAnimated = false;
 		float m_AnimationTime = 0.0f;
 		float m_WorldTime = 0.0f;

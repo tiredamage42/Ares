@@ -1,6 +1,7 @@
 #include "AresPCH.h" 
 #include "Mesh.h"
-
+#include "Ares/Core/Scene.h"
+#include "Ares/Core/Entity.h"
 #include "Ares/Math/Math.h"
 //#include <glm/gtc/type_ptr.hpp>
 //#include <glm/ext/matrix_transform.hpp>
@@ -26,6 +27,8 @@
 #include <iostream>
 
 #include "Ares/Core/StringUtils.h"
+#include "Ares/Renderer/Mesh/ModelLoadingUtils.h"
+#include "Ares/Renderer/Animator.h"
 
 #include <fbxsdk.h>
 //#include <fbxfilesdk/fbxio/fbxiosettings.h>
@@ -216,11 +219,11 @@ namespace Ares {
 
 	static void CalcTangents(std::vector<Vertex>& m_Vertices, std::vector<uint32_t>& m_Indices)
 	{
-		for (uint32_t i = 0; i < m_Indices.size(); i += 3) {
+		for (size_t i = 0; i < m_Indices.size(); i += 3) {
 			
-			Vertex& v0 = m_Vertices[m_Indices[i + static_cast<uint32_t>(0)]];
-			Vertex& v1 = m_Vertices[m_Indices[i + static_cast<uint32_t>(1)]];
-			Vertex& v2 = m_Vertices[m_Indices[i + static_cast<uint32_t>(2)]];
+			Vertex& v0 = m_Vertices[m_Indices[i + 0]];
+			Vertex& v1 = m_Vertices[m_Indices[i + 1]];
+			Vertex& v2 = m_Vertices[m_Indices[i + 2]];
 
 			glm::vec3 edge1 = v1.Position - v0.Position;
 			glm::vec3 edge2 = v2.Position - v0.Position;
@@ -257,11 +260,11 @@ namespace Ares {
 
 	void CalcNormals(std::vector<Vertex>& m_Vertices, std::vector<uint32_t>& m_Indices)
 	{
-		for (uint32_t i = 0; i < m_Indices.size(); i += 3)
+		for (size_t i = 0; i < m_Indices.size(); i += 3)
 		{
-			Vertex& v0 = m_Vertices[m_Indices[i + static_cast<uint32_t>(0)]];
-			Vertex& v1 = m_Vertices[m_Indices[i + static_cast<uint32_t>(1)]];
-			Vertex& v2 = m_Vertices[m_Indices[i + static_cast<uint32_t>(2)]];
+			Vertex& v0 = m_Vertices[m_Indices[i + 0]];
+			Vertex& v1 = m_Vertices[m_Indices[i + 1]];
+			Vertex& v2 = m_Vertices[m_Indices[i + 2]];
 
 			glm::vec3 norm = glm::normalize(glm::cross(
 				v1.Position - v0.Position, 
@@ -272,7 +275,7 @@ namespace Ares {
 			v1.Normal += norm;
 			v2.Normal += norm;
 		}
-		for (uint32_t i = 0; i < m_Vertices.size(); i++)
+		for (size_t i = 0; i < m_Vertices.size(); i++)
 		{
 			Vertex& v = m_Vertices[i];
 			v.Normal = glm::normalize(v.Normal);
@@ -340,13 +343,13 @@ namespace Ares {
 			aabb.Max.z = glm::max(m_StaticVertices[i].Position.z, aabb.Max.z);
 		}
 
-		for (uint32_t i = 0; i < m_Indices.size(); i += 3)
+		for (size_t i = 0; i < m_Indices.size(); i += 3)
 		{
 
 			m_TriangleCache[0].emplace_back(
-				m_StaticVertices[m_Indices[i + static_cast<uint32_t>(0)]],
-				m_StaticVertices[m_Indices[i + static_cast<uint32_t>(1)]],
-				m_StaticVertices[m_Indices[i + static_cast<uint32_t>(2)]]
+				m_StaticVertices[m_Indices[i + 0]],
+				m_StaticVertices[m_Indices[i + 1]],
+				m_StaticVertices[m_Indices[i + 2]]
 			);
 		}
 
@@ -465,6 +468,12 @@ namespace Ares {
 		
 		m_IsAnimated = scene->mAnimations != nullptr;
 
+		for (uint32_t i = 0; i < m_Scene->mNumAnimations; i++)
+		{
+			m_Animations.push_back(ModelLoadingUtils::AssimpAnimation2AresAnimation(m_Scene, m_Scene->mAnimations[i]));
+		}
+
+
 		Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/Standard.glsl");
 
 		m_InverseTransform = glm::inverse(Mat4FromAssimpMat4(scene->mRootNode->mTransformation));
@@ -561,9 +570,9 @@ namespace Ares {
 				if (!m_IsAnimated)
 				{
 					m_TriangleCache[m].emplace_back(
-						m_StaticVertices[mesh->mFaces[i].mIndices[0] + static_cast<uint32_t>(submesh.BaseVertex)],
-						m_StaticVertices[mesh->mFaces[i].mIndices[1] + static_cast<uint32_t>(submesh.BaseVertex)],
-						m_StaticVertices[mesh->mFaces[i].mIndices[2] + static_cast<uint32_t>(submesh.BaseVertex)]
+						m_StaticVertices[mesh->mFaces[i].mIndices[0] + (size_t)submesh.BaseVertex],
+						m_StaticVertices[mesh->mFaces[i].mIndices[1] + (size_t)submesh.BaseVertex],
+						m_StaticVertices[mesh->mFaces[i].mIndices[2] + (size_t)submesh.BaseVertex]
 					);
 
 				}
@@ -623,7 +632,7 @@ namespace Ares {
 			}
 
 			m_BoneMatrixTexture = Texture2D::Create(TextureFormat::Float16, 4, m_BoneCount, TextureWrap::Clamp, FilterType::Point, false);
-			m_BoneMatrixData = new float[16 * static_cast<uint32_t>(m_BoneCount)];
+			m_BoneMatrixData = new float[16 * (size_t)m_BoneCount];
 		}
 
 		// materials
@@ -794,159 +803,110 @@ namespace Ares {
 			TraverseNodes(node->mChildren[i], transform, level + 1);
 		}
 	}
-
-
-	static uint32_t FindKey(float animTime, const aiVectorKey* keys, const unsigned int& numKeys)
+	
+	/*
+	template<typename K>
+	static const uint32_t FindKeyIDX(float animTime, const std::vector<K>& keys)
 	{
-		ARES_CORE_ASSERT(numKeys > 0, "");
-		for (uint32_t i = 0; i < numKeys - 1; i++)
-			if (animTime < (float)keys[i + 1].mTime)
+		for (size_t i = 0; i < keys.size() - 1; i++)
+			if (animTime < keys[i + 1].Time)
 				return i;
 		return 0;
 	}
 
-	uint32_t Mesh::FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim)
+	template <typename T, typename K>
+	static std::tuple<T, T, float> GetInterpolationBounds(float time, const std::vector<K>& keys)
 	{
-		return FindKey(AnimationTime, pNodeAnim->mPositionKeys, pNodeAnim->mNumPositionKeys);
-	}
-	uint32_t Mesh::FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		return FindKey(AnimationTime, pNodeAnim->mScalingKeys, pNodeAnim->mNumScalingKeys);
-	}
-	uint32_t Mesh::FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		ARES_CORE_ASSERT(pNodeAnim->mNumRotationKeys > 0, "");
-		for (uint32_t i = 0; i < pNodeAnim->mNumRotationKeys - 1; i++)
-			if (AnimationTime < (float)pNodeAnim->mRotationKeys[i + 1].mTime)
-				return i;
-		return 0;
-	}
-
-
-	glm::vec3 Mesh::InterpolateTranslation(float animationTime, const aiNodeAnim* nodeAnim)
-	{
-		if (nodeAnim->mNumPositionKeys == 1)
+		uint32_t size = keys.size();
+		if (size == 1)
 		{
 			// No interpolation necessary for single value
-			auto v = nodeAnim->mPositionKeys[0].mValue;
-			return { v.x, v.y, v.z };
+			T v = keys[0].Value;
+			return { v, v, 0 };
 		}
 
-		uint32_t PositionIndex = FindPosition(animationTime, nodeAnim);
-		uint32_t NextPositionIndex = (PositionIndex + 1);
-		ARES_CORE_ASSERT(NextPositionIndex < nodeAnim->mNumPositionKeys, "");
-		float DeltaTime = (float)(nodeAnim->mPositionKeys[NextPositionIndex].mTime - nodeAnim->mPositionKeys[PositionIndex].mTime);
-		float Factor = (animationTime - (float)nodeAnim->mPositionKeys[PositionIndex].mTime) / DeltaTime;
-		/*if (Factor < 0.0f)
-			Factor = 0.0f;*/
-		ARES_CORE_ASSERT(Factor <= 1.0f, "Factor must be below 1.0f");
-		Factor = glm::clamp(Factor, 0.0f, 1.0f);
-
-		const aiVector3D& Start = nodeAnim->mPositionKeys[PositionIndex].mValue;
-		const aiVector3D& End = nodeAnim->mPositionKeys[NextPositionIndex].mValue;
-		aiVector3D Delta = End - Start;
-		auto aiVec = Start + Factor * Delta;
-		return { aiVec.x, aiVec.y, aiVec.z };
+		uint32_t idx0 = FindKeyIDX<K>(time, keys);
+		uint32_t idx1 = idx0 + 1;
+		ARES_CORE_ASSERT(idx1 < size, "");
+		float DeltaTime = keys[idx1].Time - keys[idx0].Time;
+		float Factor = glm::clamp((time - keys[idx0].Time) / DeltaTime, 0.0f, 1.0f);
+		return { keys[idx0].Value, keys[idx1].Value, Factor };
 	}
 
-
-	glm::quat Mesh::InterpolateRotation(float animationTime, const aiNodeAnim* nodeAnim)
+	glm::vec3 Mesh::InterpolateTranslation(float animationTime, const AnimationNode& pNodeAnim)
 	{
-		if (nodeAnim->mNumRotationKeys == 1)
-		{
-			// No interpolation necessary for single value
-			auto v = nodeAnim->mRotationKeys[0].mValue;
-			return glm::quat(v.w, v.x, v.y, v.z);
-		}
-
-		uint32_t RotationIndex = FindRotation(animationTime, nodeAnim);
-		uint32_t NextRotationIndex = (RotationIndex + 1);
-		ARES_CORE_ASSERT(NextRotationIndex < nodeAnim->mNumRotationKeys, "");
-		float DeltaTime = (float)(nodeAnim->mRotationKeys[NextRotationIndex].mTime - nodeAnim->mRotationKeys[RotationIndex].mTime);
-		float Factor = (animationTime - (float)nodeAnim->mRotationKeys[RotationIndex].mTime) / DeltaTime;
-		/*if (Factor < 0.0f)
-			Factor = 0.0f;*/
-		ARES_CORE_ASSERT(Factor <= 1.0f, "Factor must be below 1.0f");
-		Factor = glm::clamp(Factor, 0.0f, 1.0f);
-
-		const aiQuaternion& StartRotationQ = nodeAnim->mRotationKeys[RotationIndex].mValue;
-		const aiQuaternion& EndRotationQ = nodeAnim->mRotationKeys[NextRotationIndex].mValue;
-		auto q = aiQuaternion();
-		aiQuaternion::Interpolate(q, StartRotationQ, EndRotationQ, Factor);
-		q = q.Normalize();
-		return glm::quat(q.w, q.x, q.y, q.z);
+		auto [Start, End, Factor] = GetInterpolationBounds<Vector3, PositionKey>(animationTime, pNodeAnim.Positions);
+		return Start + Factor * (End - Start);
 	}
 
-
-	glm::vec3 Mesh::InterpolateScale(float animationTime, const aiNodeAnim* nodeAnim)
+	glm::quat Mesh::InterpolateRotation(float animationTime, const AnimationNode& pNodeAnim)
 	{
-		if (nodeAnim->mNumScalingKeys == 1)
-		{
-			// No interpolation necessary for single value
-			auto v = nodeAnim->mScalingKeys[0].mValue;
-			return { v.x, v.y, v.z };
-		}
-
-		uint32_t index = FindScaling(animationTime, nodeAnim);
-		uint32_t nextIndex = (index + 1);
-		ARES_CORE_ASSERT(nextIndex < nodeAnim->mNumScalingKeys, "");
-		float deltaTime = (float)(nodeAnim->mScalingKeys[nextIndex].mTime - nodeAnim->mScalingKeys[index].mTime);
-		float Factor = (animationTime - (float)nodeAnim->mScalingKeys[index].mTime) / deltaTime;
-		/*if (factor < 0.0f)
-			factor = 0.0f;*/
-		ARES_CORE_ASSERT(Factor <= 1.0f, "Factor must be below 1.0f");
-		Factor = glm::clamp(Factor, 0.0f, 1.0f);
-
-		const auto& start = nodeAnim->mScalingKeys[index].mValue;
-		const auto& end = nodeAnim->mScalingKeys[nextIndex].mValue;
-		auto delta = end - start;
-		auto aiVec = start + Factor * delta;
-		return { aiVec.x, aiVec.y, aiVec.z };
+		auto [Start, End, Factor] = GetInterpolationBounds<Quaternion, RotationKey>(animationTime, pNodeAnim.Rotations);
+		return glm::normalize(glm::slerp(Start, End, Factor));
 	}
 
-	void Mesh::ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const glm::mat4& parentTransform)
+	glm::vec3 Mesh::InterpolateScale(float animationTime, const AnimationNode& pNodeAnim)
 	{
-		std::string name(pNode->mName.data);
-		const aiAnimation* animation = m_Scene->mAnimations[0];
-		glm::mat4 nodeTransform(Mat4FromAssimpMat4(pNode->mTransformation));
-		const aiNodeAnim* nodeAnim = FindNodeAnim(animation, name);
+		auto [Start, End, Factor] = GetInterpolationBounds<Vector3, ScaleKey>(animationTime, pNodeAnim.Scales);
+		return Start + Factor * (End - Start);
+	}
+	*/
 
-		if (nodeAnim)
+	void Mesh::ReadNodeHierarchy(float AnimationTime, const aiNode* bone, const glm::mat4& parentTransform)
+	{
+		std::string name(bone->mName.data);
+		Ref<Animation> animation = m_Animations[0];
+		glm::mat4 nodeTransform(Mat4FromAssimpMat4(bone->mTransformation));
+
+		bool success;
+		const AnimationNode& node = animation->FindNode(name, success);
+		if (success)
 		{
-			glm::vec3 translation = InterpolateTranslation(AnimationTime, nodeAnim);
-			glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(translation.x, translation.y, translation.z));
-
-			glm::quat rotation = InterpolateRotation(AnimationTime, nodeAnim);
-			glm::mat4 rotationMatrix = glm::toMat4(rotation);
-
-			glm::vec3 scale = InterpolateScale(AnimationTime, nodeAnim);
-			glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scale.x, scale.y, scale.z));
-
-			nodeTransform = translationMatrix * rotationMatrix * scaleMatrix;
+			glm::vec3 translation = Animator::InterpolateTranslation(AnimationTime, node);
+			glm::quat rotation = Animator::InterpolateRotation(AnimationTime, node);
+			glm::vec3 scale = Animator::InterpolateScale(AnimationTime, node);
+			nodeTransform = Math::GetTRSMatrix(translation, rotation, scale);
 		}
 
-		glm::mat4 transform = parentTransform * nodeTransform;
+		glm::mat4 globalTransform = parentTransform * nodeTransform;
 
 		if (m_BoneMapping.find(name) != m_BoneMapping.end())
 		{
 			uint32_t BoneIndex = m_BoneMapping[name];
-			m_BoneInfo[BoneIndex].FinalTransformation = m_InverseTransform * transform * m_BoneInfo[BoneIndex].BoneOffset;
+			// m_InverseTransform * globalTransform turns into object space
+			
+			//m_BoneInfo[BoneIndex].FinalTransformation = m_InverseTransform * globalTransform * m_BoneInfo[BoneIndex].BoneOffset;
+			m_BoneInfo[BoneIndex].FinalTransformation = globalTransform * m_BoneInfo[BoneIndex].BoneOffset;
+
+			//globalTransform = globalTransform * m_BoneInfo[BoneIndex].BoneOffset;
 		}
 
-		for (uint32_t i = 0; i < pNode->mNumChildren; i++)
-			ReadNodeHierarchy(AnimationTime, pNode->mChildren[i], transform);
+		for (uint32_t i = 0; i < bone->mNumChildren; i++)
+			ReadNodeHierarchy(AnimationTime, bone->mChildren[i], globalTransform);
 	}
 
-	const aiNodeAnim* Mesh::FindNodeAnim(const aiAnimation* animation, const std::string& nodeName)
+
+
+
+	static Entity BuildTransformHierarchy(Ref<Scene> scene, const aiNode* node, TransformComponent* parent = nullptr, bool isBase = true)
 	{
-		for (uint32_t i = 0; i < animation->mNumChannels; i++)
+		Entity entity = scene->CreateEntity(node->mName.data);
+		TransformComponent* transform = entity.GetComponent<TransformComponent>();
+		transform->SetParent(parent);
+		transform->SetLocalTransform(Mat4FromAssimpMat4(node->mTransformation));
+
+		for (uint32_t i = 0; i < node->mNumChildren; i++)
 		{
-			const aiNodeAnim* nodeAnim = animation->mChannels[i];
-			if (std::string(nodeAnim->mNodeName.data) == nodeName)
-				return nodeAnim;
+			BuildTransformHierarchy(scene, node->mChildren[i], transform, false);
 		}
-		return nullptr;
+
+		if (isBase)
+		{
+			return entity;
+		}
+		return {};
 	}
+
 
 	void Mesh::BoneTransform(float time)
 	{
