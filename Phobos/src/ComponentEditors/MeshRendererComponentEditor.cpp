@@ -28,7 +28,8 @@ namespace Ares
 			if (!file.empty())
 			{
 				std::vector<Ref<Material>> materials;
-				this->Mesh = CreateRef<Ares::Mesh>(file, materials);
+				std::vector<Ref<Animation>> animations;
+				this->Mesh = CreateRef<Ares::Mesh>(file, materials, animations);
 				this->Materials = materials;
 			}
 		}
@@ -36,6 +37,7 @@ namespace Ares
 		ImGui::Columns(1);
 
 
+		/*
 		if (this->Mesh->m_IsAnimated)
 		{
 			if (ImGui::CollapsingHeader("Animation"))
@@ -48,7 +50,6 @@ namespace Ares
 			}
 		}
 
-		/*
 		*/
 
 		/*if (mc.Mesh)

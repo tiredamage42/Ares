@@ -3,6 +3,7 @@
 #include "Ares/Core/UUID.h"
 #include "Ares/Renderer/Texture.h"
 #include "Ares/Renderer/SceneCamera.h"
+#include "Ares/Renderer/Animator.h"
 #include "Ares/Renderer/Mesh.h"
 //#include <glm/glm.hpp>
 #include "Ares/Math/Math.h"
@@ -152,6 +153,15 @@ namespace Ares
         MeshRendererComponent() = default;
         MeshRendererComponent(const MeshRendererComponent&) = default;
 
+        virtual void OnDrawImGui() override;
+    };
+
+    struct AnimatorComponent : Component
+    {
+        //std::string Name;
+        Animator Animator;
+        AnimatorComponent() = default;
+        AnimatorComponent(const AnimatorComponent&) = default;
         virtual void OnDrawImGui() override;
     };
 

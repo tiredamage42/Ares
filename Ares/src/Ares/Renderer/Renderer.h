@@ -84,8 +84,8 @@ namespace Ares {
 		//static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Shader>& overrideMaterial = nullptr);
 		
 
-		static void SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, const size_t& submeshIndex, const bool& depthTest);
-		static void SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, const bool& depthTest);
+		static void SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, const size_t& submeshIndex, Ref<Texture2D> boneMatrixTexture, const bool& depthTest);
+		static void SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, Ref<Texture2D> boneMatrixTexture, const bool& depthTest);
 
 
 		//static void DrawAABB(const Ref<Mesh>& mesh, const glm::vec4& color = glm::vec4(1.0f));

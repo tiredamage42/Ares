@@ -8,7 +8,7 @@
 #include "Ares/Renderer/Material.h"
 #include "Ares/Math/AABB.h"
 #include "Ares/Renderer/Animation.h"
-
+#include "Ares/Renderer/Mesh/ModelLoadingUtils.h"
 
 struct aiNode;
 struct aiAnimation;
@@ -20,6 +20,11 @@ namespace Assimp {
 }
 
 namespace Ares {
+
+
+	
+
+
 
 	enum class PrimitiveMeshType
 	{
@@ -60,12 +65,12 @@ namespace Ares {
 		}
 	};
 
+	/*
 	struct BoneInfo
 	{
 		glm::mat4 BoneOffset;
 		glm::mat4 FinalTransformation;
 	};
-	/*
 	*/
 
 	struct Triangle
@@ -92,26 +97,27 @@ namespace Ares {
 	{
 		friend class MeshRendererComponent;
 	public:
-		Mesh(const std::string& filename, std::vector<Ref<Material>>& m_Materials);
+		Mesh(const std::string& filename, std::vector<Ref<Material>>& m_Materials, std::vector<Ref<Animation>>& m_Animations);
 		Mesh(PrimitiveMeshType primitiveType);
 		~Mesh();
-		inline const bool IsAnimated() const { return m_IsAnimated; }
-		void OnUpdate();
-		void DumpVertexBuffer();
+		//inline const bool IsAnimated() const { return m_IsAnimated; }
+		//void OnUpdate();
+		//void DumpVertexBuffer();
 		std::vector<Submesh>& GetSubmeshes() { return m_Submeshes; }
 		const std::vector<Submesh>& GetSubmeshes() const { return m_Submeshes; }
 		inline const std::string& GetFilePath() const { return m_FilePath; }
 
 		const std::vector<Triangle> GetTriangleCache(uint32_t index) const { return m_TriangleCache.at(index); }
+
+		inline const uint32_t GetBoneCount() const { return m_BoneCount; }
+		inline Ref<ModelNode> GetRootNode() { return m_RootNode; }
+
 	private:
-		void BoneTransform(float time);
-		void ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const glm::mat4& ParentTransform);
+		//void BoneTransform(float time);
+		//void ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const glm::mat4& ParentTransform);
 		void TraverseNodes(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.0f), uint32_t level = 0);
 
-
-
-
-
+		Ref<ModelNode> m_RootNode;
 
 
 		//const aiNodeAnim* FindNodeAnim(const aiAnimation* animation, const std::string& nodeName);
@@ -127,45 +133,49 @@ namespace Ares {
 		//uint32_t FindPosition(float AnimationTime, const AnimationNode& pNodeAnim);
 		//uint32_t FindRotation(float AnimationTime, const AnimationNode& pNodeAnim);
 		//uint32_t FindScaling(float AnimationTime, const AnimationNode& pNodeAnim);
+
+		/*
 		glm::vec3 InterpolateTranslation(float animationTime, const AnimationNode& nodeAnim);
 		glm::quat InterpolateRotation(float animationTime, const AnimationNode& nodeAnim);
 		glm::vec3 InterpolateScale(float animationTime, const AnimationNode& nodeAnim);
 
 		static void BuildAnimation(const aiNode* pNode, const aiAnimation* loadedAnim, Ref<Animation> animation);
+		*/
 
-
-		const float GetAnimationDuration() const;
+		//const float GetAnimationDuration() const;
 
 
 		std::vector<Submesh> m_Submeshes;
-		std::unique_ptr<Assimp::Importer> m_Importer;
+		//std::unique_ptr<Assimp::Importer> m_Importer;
 
-		glm::mat4 m_InverseTransform;
+		//glm::mat4 m_InverseTransform;
 
+		
 		uint32_t m_BoneCount = 0;
-		std::vector<BoneInfo> m_BoneInfo;
+		//std::vector<BoneInfo> m_BoneInfo;
+		//std::vector<Matrix4> m_BoneInfo;
+		//std::unordered_map<std::string, uint32_t> m_BoneMapping;
 		
-		Ref<Texture2D> m_BoneMatrixTexture = nullptr;
-		float* m_BoneMatrixData = nullptr;
+		//Ref<Texture2D> m_BoneMatrixTexture = nullptr;
+		//float* m_BoneMatrixData = nullptr;
 
-		std::unordered_map<std::string, uint32_t> m_BoneMapping;
 		
-		const aiScene* m_Scene = nullptr;
+		//const aiScene* m_Scene = nullptr;
 
 
 
 
 		// Animation
-		std::vector<Ref<Animation>> m_Animations;
+		//std::vector<Ref<Animation>> m_Animations;
 
 		
 
 
-		bool m_IsAnimated = false;
-		float m_AnimationTime = 0.0f;
-		float m_WorldTime = 0.0f;
-		float m_TimeMultiplier = 1.0f;
-		bool m_AnimationPlaying = true;
+		//bool m_IsAnimated = false;
+		//float m_AnimationTime = 0.0f;
+		//float m_WorldTime = 0.0f;
+		//float m_TimeMultiplier = 1.0f;
+		//bool m_AnimationPlaying = true;
 
 		std::vector<Vertex> m_StaticVertices;
 		std::vector<AnimatedVertex> m_AnimatedVertices;

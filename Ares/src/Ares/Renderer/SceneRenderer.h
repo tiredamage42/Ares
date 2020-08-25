@@ -38,7 +38,7 @@ namespace Ares {
 		static void SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> materialOverride);*/
 		
 
-		static void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, std::vector<Ref<Material>> materials, bool isSelected);
+		static void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<Texture2D> boneTransforms, std::vector<Ref<Material>> materials, bool isSelected);
 
 		//static void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, std::vector<Ref<Material>> materials, const std::string& name);
 		//static void SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform, std::vector<Ref<Material>> materials);

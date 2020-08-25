@@ -66,6 +66,7 @@ namespace Ares {
 		size_t SubmeshIndex;
 		glm::mat4 Transform;
 		bool Outlined;
+		Ref<Texture2D> BoneTransforms;
 	};
 
 	typedef std::vector<MeshDrawCall> MeshDrawCalls;
@@ -106,6 +107,7 @@ namespace Ares {
 			//std::vector<Ref<Material>> Materials;
 			glm::mat4 Transform;
 			//std::string name;
+			Ref<Texture2D> BoneTransforms;
 		};
 
 		RenderMap UnlitDrawMap;
@@ -239,7 +241,7 @@ namespace Ares {
 						//if (drawOutlined == dc.Outlined)
 						{
 
-						Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, depthTest);
+						Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, dc.BoneTransforms, depthTest);
 						}
 
 						if (dc.Outlined)
@@ -350,7 +352,7 @@ namespace Ares {
 							//if (drawOutlined == dc.Outlined)
 							{
 
-							Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, depthTest);
+							Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, dc.BoneTransforms, depthTest);
 							}
 
 							if (dc.Outlined)
@@ -437,7 +439,7 @@ namespace Ares {
 						ARES_PROFILE_SCOPE("Draw Mesh");
 						for (auto& dc : draws)
 						{
-							Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, depthTest);
+							Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, dc.BoneTransforms, depthTest);
 						}
 					}
 				}
@@ -589,7 +591,7 @@ namespace Ares {
 		s_Data.SceneData = {};
 	}
 
-	static void AddToDrawMap(RenderMap& drawMap, Ref<Shader> shader, ShaderVariations shaderVariant, Ref<Material> material, Ref<Mesh> mesh, uint32_t submeshIndex, const glm::mat4& transform, bool outlined)
+	static void AddToDrawMap(RenderMap& drawMap, Ref<Shader> shader, ShaderVariations shaderVariant, Ref<Material> material, Ref<Mesh> mesh, uint32_t submeshIndex, const glm::mat4& transform, Ref<Texture2D> boneTransforms, bool outlined)
 	{
 		ShaderVariationPair shaderVarPair = { shader, shaderVariant };
 
@@ -602,19 +604,23 @@ namespace Ares {
 			materialsMap[material] = MeshDrawCalls();
 
 		MeshDrawCalls& drawCalls = materialsMap.at(material);
-		drawCalls.push_back({ mesh, submeshIndex, transform, outlined });
+		drawCalls.push_back({ mesh, submeshIndex, transform, outlined, boneTransforms });
 	}
 
-	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, std::vector<Ref<Material>> materials, bool isSelected)
+	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<Texture2D> boneTransforms, std::vector<Ref<Material>> materials, bool isSelected)
 	{
+
+
+
 		if (isSelected)
 		{
-			s_Data.SelectedMeshDrawList.push_back({ mesh, transform });
+			s_Data.SelectedMeshDrawList.push_back({ mesh, transform, boneTransforms });
 		}
-		s_Data.DrawList.push_back({ mesh, transform });
+		s_Data.DrawList.push_back({ mesh, transform, boneTransforms });
 
 
-
+		//bool useSkinning = mesh->IsAnimated();
+		bool useSkinning = boneTransforms != nullptr;
 
 		
 		//ShaderVariations shaderVariant = mesh->IsAnimated() ? ShaderVariations::DefaultSkinned : ShaderVariations::Default;
@@ -639,13 +645,13 @@ namespace Ares {
 				if (!shader->HasVariation(ShaderVariations::ForwardBase))
 				{
 					ARES_CORE_WARN("ForwardBase Pass: Shader '{0}' is Flagged as lit but has no Forward Base Pass", shader->GetName());
-					AddToDrawMap(s_Data.UnlitDrawMap, s_Data.ErrorShader, mesh->IsAnimated() ? ShaderVariations::DefaultSkinned : ShaderVariations::Default, material, mesh, i, transform, isSelected);
+					AddToDrawMap(s_Data.UnlitDrawMap, s_Data.ErrorShader, useSkinning ? ShaderVariations::DefaultSkinned : ShaderVariations::Default, material, mesh, i, transform, boneTransforms, isSelected);
 					continue;
 				}
 				else
 				{
-					ShaderVariations shaderVariant = mesh->IsAnimated() ? ShaderVariations::ForwardBaseSkinned : ShaderVariations::ForwardBase;
-					AddToDrawMap(s_Data.FwdBaseDrawMap, shader, shaderVariant, material, mesh, i, transform, isSelected);
+					ShaderVariations shaderVariant = useSkinning ? ShaderVariations::ForwardBaseSkinned : ShaderVariations::ForwardBase;
+					AddToDrawMap(s_Data.FwdBaseDrawMap, shader, shaderVariant, material, mesh, i, transform, boneTransforms, isSelected);
 				}
 
 				// TODO: only do this if we have more than one light
@@ -655,8 +661,8 @@ namespace Ares {
 				}
 				else
 				{
-					ShaderVariations shaderVariant = mesh->IsAnimated() ? ShaderVariations::ForwardAddSkinned : ShaderVariations::ForwardAdd;
-					AddToDrawMap(s_Data.FwdAddDrawMap, shader, shaderVariant, material, mesh, i, transform, isSelected);
+					ShaderVariations shaderVariant = useSkinning ? ShaderVariations::ForwardAddSkinned : ShaderVariations::ForwardAdd;
+					AddToDrawMap(s_Data.FwdAddDrawMap, shader, shaderVariant, material, mesh, i, transform, boneTransforms, isSelected);
 				}
 			}
 			else
@@ -667,7 +673,7 @@ namespace Ares {
 					shader = s_Data.ErrorShader;
 				}
 
-				AddToDrawMap(s_Data.UnlitDrawMap, shader, mesh->IsAnimated() ? ShaderVariations::DefaultSkinned : ShaderVariations::Default, material, mesh, i, transform, isSelected);
+				AddToDrawMap(s_Data.UnlitDrawMap, shader, useSkinning ? ShaderVariations::DefaultSkinned : ShaderVariations::Default, material, mesh, i, transform, boneTransforms, isSelected);
 			}
 		}
 		
@@ -1343,7 +1349,8 @@ namespace Ares {
 			size_t y = outlineDrawCount - 1;
 			for (auto& dc : s_Data.SelectedMeshDrawList)
 			{
-				if (dc.Mesh->IsAnimated())
+				//if (dc.Mesh->IsAnimated())
+				if (dc.BoneTransforms)
 					outlineDraws[y--] = dc;
 				/*{
 				}*/
@@ -1367,7 +1374,7 @@ namespace Ares {
 					s_Data.OutlineShader->SetFloat4("u_Color", GetOptions().MeshTrianglesColor);
 				}
 
-				Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, true);
+				Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, outlineDraws[i].BoneTransforms, true);
 			}
 
 
@@ -1451,7 +1458,8 @@ namespace Ares {
 					y = outlineDrawCount - 1;
 				for (auto& dc : s_Data.SelectedMeshDrawList)
 				{
-					if (dc.Mesh->IsAnimated())
+					//if (dc.Mesh->IsAnimated())
+					if (dc.BoneTransforms)
 						outlineDraws[y--] = dc;
 					/*{
 					}*/
@@ -1476,7 +1484,7 @@ namespace Ares {
 						s_Data.OutlineShader->SetFloat4("u_Color", GetOptions().OutlineColor);
 					}
 
-					Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, false);
+					Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, outlineDraws[i].BoneTransforms, false);
 				}
 
 
@@ -1519,7 +1527,7 @@ namespace Ares {
 					s_Data.OutlineShader->Bind(ShaderVariations::DefaultSkinned);
 				}
 
-				Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, false);
+				Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, outlineDraws[i].BoneTransforms, false);
 			}
 
 			//for (auto& dc : s_Data.SelectedMeshDrawList)
@@ -1588,7 +1596,8 @@ namespace Ares {
 			size_t y = outlineDrawCount - 1;
 			for (auto& dc : s_Data.SelectedMeshDrawList)
 			{
-				if (dc.Mesh->IsAnimated())
+				//if (dc.Mesh->IsAnimated())
+				if (dc.BoneTransforms)
 					outlineDraws[y--] = dc;
 				/*{
 				}*/

@@ -1,6 +1,9 @@
 
 #include "AresPCH.h"
 #include "Ares/Core/Components.h"
+#include "Ares/Renderer/Animator.h"
+
+
 #include "Ares/Core/Scene.h"
 #include "Ares/Renderer/Renderer2D.h"
 #include "Ares/Renderer/SceneRenderer.h"
@@ -197,12 +200,24 @@ namespace Ares
         for (auto entity : group)
         {
             auto [transformComponent, meshComponent] = group.get<TransformComponent, MeshRendererComponent>(entity);
+
+            AnimatorComponent* animator = m_Registry.try_get<AnimatorComponent>(entity);
+
+            if (animator)
+            {
+                animator->Animator.OnUpdate();
+            }
+
+
             if (meshComponent.Mesh)
             {
-                meshComponent.Mesh->OnUpdate();
+                //meshComponent.Mesh->OnUpdate();
+                
+                //Ref<Texture2D> boneTransforms = nullptr;
+                Ref<Texture2D> boneTransforms = animator ? animator->Animator.GetBoneTransformsTexture() : nullptr;
 
                 // TODO: Should we render (logically)
-                SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent.GetWorldTransform(), meshComponent.Materials, false);
+                SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent.GetWorldTransform(), boneTransforms, meshComponent.Materials, false);
             }
         }
         SceneRenderer::EndScene();
@@ -219,12 +234,24 @@ namespace Ares
         for (auto entity : group)
         {
             auto [transformComponent, meshComponent] = group.get<TransformComponent, MeshRendererComponent>(entity);
+
+            AnimatorComponent* animator = m_Registry.try_get<AnimatorComponent>(entity);
+
+            if (animator)
+            {
+                animator->Animator.OnUpdate();
+            }
+
             if (meshComponent.Mesh)
             {
-                meshComponent.Mesh->OnUpdate();
+                //meshComponent.Mesh->OnUpdate();
+
+                //Ref<Texture2D> boneTransforms = nullptr;
+                Ref<Texture2D> boneTransforms = animator ? animator->Animator.GetBoneTransformsTexture() : nullptr;
+
 
                 // TODO: Should we render (logically)
-                SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent.GetWorldTransform(), meshComponent.Materials, selectedEntity == entity);
+                SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent.GetWorldTransform(), boneTransforms, meshComponent.Materials, selectedEntity == entity);
             }
         }
         SceneRenderer::EndScene();

@@ -360,7 +360,8 @@ namespace Ares {
 					{
 						MeshRendererComponent* mrComponent = deserializedEntity.AddComponent<MeshRendererComponent>();
 						std::vector<Ref<Material>> materials;
-						mrComponent->Mesh = CreateRef<Mesh>(meshPath, materials);
+						std::vector<Ref<Animation>> animations;
+						mrComponent->Mesh = CreateRef<Mesh>(meshPath, materials, animations);
 						mrComponent->Materials = materials;
 
 					}

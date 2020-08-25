@@ -444,6 +444,8 @@ namespace Ares
 			});
 			*/
 		
+		DrawComponent<AnimatorComponent>("Animator", entity);
+
 		DrawComponent<CameraComponent>("Camera", entity);/*, [](CameraComponent* cc)
 
 	/if (entity.HasComponent<CameraComponent>())

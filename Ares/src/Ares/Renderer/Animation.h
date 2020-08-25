@@ -24,6 +24,9 @@ namespace Ares
 	class Animation
 	{
 		//friend class Mesh;
+		friend class Animator;
+		friend class ModelLoadingUtils;
+		friend class AnimatorComponent;
 	public:
 		void AddNode(const std::string& key, const AnimationNode& node)
 		{
@@ -41,6 +44,10 @@ namespace Ares
 			return {};
 		}
 	private:
+		std::string m_Name;
+		float m_TicksPerSecond;
+		float m_Duration;
+
 		std::unordered_map<std::string, AnimationNode> m_Name2Node;
 	};
 }

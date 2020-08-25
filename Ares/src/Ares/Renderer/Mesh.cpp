@@ -27,7 +27,7 @@
 #include <iostream>
 
 #include "Ares/Core/StringUtils.h"
-#include "Ares/Renderer/Mesh/ModelLoadingUtils.h"
+//#include "Ares/Renderer/Mesh/ModelLoadingUtils.h"
 #include "Ares/Renderer/Animator.h"
 
 #include <fbxsdk.h>
@@ -61,6 +61,8 @@ namespace Ares {
 		result[0][3] = matrix.d1; result[1][3] = matrix.d2; result[2][3] = matrix.d3; result[3][3] = matrix.d4;
 		return result;
 	}
+	/*
+	*/
 	struct LogStream : public Assimp::LogStream
 	{
 		static void Initialize()
@@ -444,13 +446,14 @@ namespace Ares {
 
 	}
 	
-	Mesh::Mesh(const std::string& filepath, std::vector<Ref<Material>>& m_Materials)
+	Mesh::Mesh(const std::string& filepath, std::vector<Ref<Material>>& m_Materials, std::vector<Ref<Animation>>& m_Animations)
 		: m_FilePath(filepath)
 	{
 		LogStream::Initialize();
 
 		ARES_CORE_INFO("Loading mesh: {0}", filepath.c_str());
 
+		std::unique_ptr<Assimp::Importer>
 		m_Importer = std::make_unique<Assimp::Importer>();
 		
 		const aiScene* scene = m_Importer->ReadFile(filepath, s_MeshImportFlags);
@@ -464,19 +467,29 @@ namespace Ares {
 		//scene->mMetaData->Get("UnitScaleFactor", factor);
 		//ARES_CORE_INFO("FBX Scene Scale: {0}", factor);
 
-		m_Scene = scene;
+		//m_Scene = scene;
 		
-		m_IsAnimated = scene->mAnimations != nullptr;
-
-		for (uint32_t i = 0; i < m_Scene->mNumAnimations; i++)
+		//m_IsAnimated = scene->mAnimations != nullptr;
+		bool m_IsAnimated = false;
+		for (size_t m = 0; m < scene->mNumMeshes; m++)
 		{
-			m_Animations.push_back(ModelLoadingUtils::AssimpAnimation2AresAnimation(m_Scene, m_Scene->mAnimations[i]));
+			if (scene->mMeshes[m]->mNumBones)
+			{
+				m_IsAnimated = true;
+				break;
+			}
+		}
+
+
+		for (uint32_t i = 0; i < scene->mNumAnimations; i++)
+		{
+			m_Animations.push_back(ModelLoadingUtils::AssimpAnimation2AresAnimation(scene, scene->mAnimations[i]));
 		}
 
 
 		Ref<Shader> m_MeshShader = Shader::Find("Assets/Shaders/Standard.glsl");
 
-		m_InverseTransform = glm::inverse(Mat4FromAssimpMat4(scene->mRootNode->mTransformation));
+		//m_InverseTransform = glm::inverse(Mat4FromAssimpMat4(scene->mRootNode->mTransformation));
 
 		uint32_t vertexCount = 0;
 		uint32_t indexCount = 0;
@@ -501,6 +514,7 @@ namespace Ares {
 			ARES_CORE_ASSERT(mesh->HasPositions(), "Meshes require positions.");
 			ARES_CORE_ASSERT(mesh->HasNormals(), "Meshes require normals.");
 
+			
 			if (m_IsAnimated)
 			{
 				for (size_t i = 0; i < mesh->mNumVertices; i++)
@@ -581,9 +595,14 @@ namespace Ares {
 
 		TraverseNodes(scene->mRootNode);
 		
+
+		
 		// Bones
-		if (m_IsAnimated)
+		//if (m_IsAnimated)
 		{
+
+			std::vector<Matrix4> boneInfo;
+			std::unordered_map<std::string, uint32_t> boneMapping;
 
 			for (size_t m = 0; m < scene->mNumMeshes; m++)
 			{
@@ -596,20 +615,26 @@ namespace Ares {
 					std::string boneName(bone->mName.data);
 					int boneIndex = 0;
 
-					if (m_BoneMapping.find(boneName) == m_BoneMapping.end())
+					if (boneMapping.find(boneName) == boneMapping.end())
 					{
 						// Allocate an index for a new bone
 						boneIndex = m_BoneCount;
 						m_BoneCount++;
+
+						boneInfo.push_back(Mat4FromAssimpMat4(bone->mOffsetMatrix));
+						boneMapping[boneName] = boneIndex;
+
+						/*
 						BoneInfo bi;
 						m_BoneInfo.push_back(bi);
 						m_BoneInfo[boneIndex].BoneOffset = Mat4FromAssimpMat4(bone->mOffsetMatrix);
 						m_BoneMapping[boneName] = boneIndex;
+						*/
 					}
 					else
 					{
 						ARES_CORE_LOG("Found existing bone in map");
-						boneIndex = m_BoneMapping[boneName];
+						boneIndex = boneMapping[boneName];
 					}
 
 					for (size_t j = 0; j < bone->mNumWeights; j++)
@@ -631,9 +656,14 @@ namespace Ares {
 				}
 			}
 
-			m_BoneMatrixTexture = Texture2D::Create(TextureFormat::Float16, 4, m_BoneCount, TextureWrap::Clamp, FilterType::Point, false);
-			m_BoneMatrixData = new float[16 * (size_t)m_BoneCount];
+			//m_BoneMatrixTexture = Texture2D::Create(TextureFormat::Float16, 4, m_BoneCount, TextureWrap::Clamp, FilterType::Point, false);
+			//m_BoneMatrixData = new float[16 * (size_t)m_BoneCount];
+		m_RootNode = ModelLoadingUtils::CreateModelNodes(scene->mRootNode, boneInfo, boneMapping);
 		}
+
+
+
+
 
 		// materials
 		if (scene->HasMaterials())
@@ -786,6 +816,10 @@ namespace Ares {
 		return result;
 	}
 
+
+	
+
+
 	void Mesh::TraverseNodes(aiNode* node, const glm::mat4& parentTransform, uint32_t level)
 	{
 		glm::mat4 transform = parentTransform * Mat4FromAssimpMat4(node->mTransformation);
@@ -852,6 +886,13 @@ namespace Ares {
 	}
 	*/
 
+
+
+
+
+
+	/*
+
 	void Mesh::ReadNodeHierarchy(float AnimationTime, const aiNode* bone, const glm::mat4& parentTransform)
 	{
 		std::string name(bone->mName.data);
@@ -884,9 +925,9 @@ namespace Ares {
 		for (uint32_t i = 0; i < bone->mNumChildren; i++)
 			ReadNodeHierarchy(AnimationTime, bone->mChildren[i], globalTransform);
 	}
+	*/
 
-
-
+#if 0
 
 	static Entity BuildTransformHierarchy(Ref<Scene> scene, const aiNode* node, TransformComponent* parent = nullptr, bool isBase = true)
 	{
@@ -906,7 +947,14 @@ namespace Ares {
 		}
 		return {};
 	}
+	static Entity GetRootAndChildrenEntitiesOnLoad(Ref<Scene> scene, const aiScene* aiScene)
+	{
+		Entity rootNode = BuildTransformHierarchy(scene, aiScene->mRootNode);
+		return rootNode;
+	}
+#endif
 
+	/*
 
 	void Mesh::BoneTransform(float time)
 	{
@@ -940,7 +988,9 @@ namespace Ares {
 
 	}
 
+	*/
 
+	/*
 	void Mesh::DumpVertexBuffer()
 	{
 		// TODO: Convert to ImGui
@@ -975,6 +1025,7 @@ namespace Ares {
 		}
 		ARES_CORE_LOG("------------------------------------------------------");
 	}
+	*/
 
 	
 

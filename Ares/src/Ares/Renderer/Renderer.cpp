@@ -212,15 +212,19 @@ namespace Ares {
 
 
 
-	void Renderer::SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, const size_t& submeshIndex, const bool& depthTest)
+	void Renderer::SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, const size_t& submeshIndex, Ref<Texture2D> boneMatrixTexture, const bool& depthTest)
 	{
 
 		// TODO: check shader bound
 		mesh->m_VertexArray->Bind();
 		
-		if (mesh->m_IsAnimated)
-		{
-			mesh->m_BoneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
+		if (boneMatrixTexture)
+		//if (mesh->m_IsAnimated)
+		{ 
+			boneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
+			//mesh->m_BoneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
+			
+			
 			//mesh->m_BoneMatrixTexture->Bind(30);
 			//boundShader->SetInt("_ares_internal_BoneSampler", 30, variant);
 		}
@@ -236,14 +240,17 @@ namespace Ares {
 			glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
 		}, "Draw SubMesh");
 	}
-	void Renderer::SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, const bool& depthTest)
+	void Renderer::SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, Ref<Texture2D> boneMatrixTexture, const bool& depthTest)
 	{
 		// TODO: Sort this out
 		mesh->m_VertexArray->Bind();
 		
-		if (mesh->m_IsAnimated)
+		if (boneMatrixTexture)
+		//if (mesh->m_IsAnimated)
 		{
-			mesh->m_BoneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
+			boneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
+			//mesh->m_BoneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
+
 			//boundShader->SetInt("_ares_internal_BoneSampler", 30, variant);
 		}
 

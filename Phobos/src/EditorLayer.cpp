@@ -147,34 +147,64 @@ namespace Ares
         //m_SceneHierarchyPanel->SetEntityDeletedCallback(std::bind(&EditorLayer::OnEntityDeleted, this, std::placeholders::_1));
         
 
-        
-
-        Ref<Material> m_MeshBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/Standard.glsl"));
-
-        Entity gunEntity = m_EditorScene->CreateEntity("Gun");
-        MeshRendererComponent* mr = gunEntity.AddComponent<MeshRendererComponent>();
-
         std::vector<Ref<Material>> loadedMaterials;
-        mr->Mesh = CreateRef<Mesh>(
+        std::vector<Ref<Animation>> loadedAnimations;
+        Ref<Mesh> loadedMesh = CreateRef<Mesh>(
             "C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\models\\m1911\\M1911Materials.fbx",
-            loadedMaterials
+            loadedMaterials, loadedAnimations
         );
-        mr->Materials = loadedMaterials;
         
-        m_MeshMaterials = loadedMaterials;
-
         if (!loadedMaterials.size())
         {
+            Ref<Material> m_MeshBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/Standard.glsl"));
             ARES_WARN("Couldnt Find Materials... setting custom");
-            mr->Materials = { m_MeshBaseMaterial };
+            loadedMaterials = { m_MeshBaseMaterial };
             
-            m_MeshMaterials = mr->Materials;
+            //m_MeshMaterials = mr->Materials;
         }
 
-        gunEntity.GetComponent<TransformComponent>()->SetWorldTransform( glm::scale(
-            glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2)),
-            glm::vec3(15.0f)
-        ));
+        {
+            Entity gunEntity = m_EditorScene->CreateEntity("Gun");
+            MeshRendererComponent* mr = gunEntity.AddComponent<MeshRendererComponent>();
+
+            mr->Mesh = loadedMesh;
+            mr->Materials = loadedMaterials;
+            //m_MeshMaterials = loadedMaterials;
+
+            AnimatorComponent* animator = gunEntity.AddComponent<AnimatorComponent>();
+            animator->Animator.SetAnimationNodeInformation(loadedMesh->GetRootNode(), loadedMesh->GetBoneCount());
+            animator->Animator.SetAnimations(loadedAnimations);
+
+            gunEntity.GetComponent<TransformComponent>()->SetWorldTransform( glm::scale(
+                glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2)),
+                glm::vec3(15.0f)
+            ));
+
+        }
+
+        {
+            Entity gunEntity = m_EditorScene->CreateEntity("Gun");
+            MeshRendererComponent* mr = gunEntity.AddComponent<MeshRendererComponent>();
+
+            mr->Mesh = loadedMesh;
+            mr->Materials = loadedMaterials;
+            //m_MeshMaterials = loadedMaterials;
+
+            AnimatorComponent* animator = gunEntity.AddComponent<AnimatorComponent>();
+            animator->Animator.SetAnimationNodeInformation(loadedMesh->GetRootNode(), loadedMesh->GetBoneCount());
+            animator->Animator.SetAnimations(loadedAnimations);
+
+            gunEntity.GetComponent<TransformComponent>()->SetWorldTransform(glm::scale(
+                glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, -2)),
+                glm::vec3(15.0f)
+            ));
+
+        }
+
+
+
+
+
         
         auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Cube);
 

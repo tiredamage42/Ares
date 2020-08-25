@@ -73,7 +73,7 @@ namespace Ares
 
 		EditorCamera m_EditorCamera;
 
-		std::vector<Ref<Material>> m_MeshMaterials;
+		//std::vector<Ref<Material>> m_MeshMaterials;
 
 		// Editor resources
 		//Ref<Texture2D> m_PlayButtonTex;
