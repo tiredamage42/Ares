@@ -480,6 +480,8 @@ namespace Ares {
 			}
 		}
 
+		std::vector<AnimatedVertex> m_AnimatedVertices;
+
 
 		for (uint32_t i = 0; i < scene->mNumAnimations; i++)
 		{
@@ -515,27 +517,7 @@ namespace Ares {
 			ARES_CORE_ASSERT(mesh->HasNormals(), "Meshes require normals.");
 
 			
-			if (m_IsAnimated)
-			{
-				for (size_t i = 0; i < mesh->mNumVertices; i++)
-				{
-					AnimatedVertex vertex;
-					vertex.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
-					vertex.Normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
 
-					if (mesh->HasTangentsAndBitangents())
-					{
-						vertex.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
-						//vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
-					}
-
-					if (mesh->HasTextureCoords(0))
-						vertex.Texcoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
-
-					m_AnimatedVertices.push_back(vertex);
-				}
-			}
-			else
 			{
 				auto& aabb = submesh.BoundingBox;
 				aabb.Min = { FLT_MAX, FLT_MAX, FLT_MAX };
@@ -564,8 +546,66 @@ namespace Ares {
 						vertex.Texcoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
 
 					m_StaticVertices.push_back(vertex);
+
+					if (m_IsAnimated)
+					{
+						m_AnimatedVertices.push_back({});
+					}
 				}
 			}
+
+
+			//if (m_IsAnimated)
+			//{
+			//	for (size_t i = 0; i < mesh->mNumVertices; i++)
+			//	{
+			//		AnimatedVertex vertex;
+			//		vertex.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
+			//		vertex.Normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
+
+			//		if (mesh->HasTangentsAndBitangents())
+			//		{
+			//			vertex.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
+			//			//vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+			//		}
+
+			//		if (mesh->HasTextureCoords(0))
+			//			vertex.Texcoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
+
+			//		m_AnimatedVertices.push_back(vertex);
+			//	}
+			//}
+			//else
+			//{
+			//	auto& aabb = submesh.BoundingBox;
+			//	aabb.Min = { FLT_MAX, FLT_MAX, FLT_MAX };
+			//	aabb.Max = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
+
+			//	for (size_t i = 0; i < mesh->mNumVertices; i++)
+			//	{
+			//		Vertex vertex;
+			//		vertex.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
+			//		vertex.Normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
+
+			//		aabb.Min.x = glm::min(vertex.Position.x, aabb.Min.x);
+			//		aabb.Min.y = glm::min(vertex.Position.y, aabb.Min.y);
+			//		aabb.Min.z = glm::min(vertex.Position.z, aabb.Min.z);
+			//		aabb.Max.x = glm::max(vertex.Position.x, aabb.Max.x);
+			//		aabb.Max.y = glm::max(vertex.Position.y, aabb.Max.y);
+			//		aabb.Max.z = glm::max(vertex.Position.z, aabb.Max.z);
+
+			//		if (mesh->HasTangentsAndBitangents())
+			//		{
+			//			vertex.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
+			//			//vertex.Binormal = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+			//		}
+
+			//		if (mesh->HasTextureCoords(0))
+			//			vertex.Texcoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
+
+			//		m_StaticVertices.push_back(vertex);
+			//	}
+			//}
 
 			for (uint32_t i = 0; i < mesh->mNumFaces; i++)
 			{
@@ -581,7 +621,7 @@ namespace Ares {
 				m_Indices.push_back(mesh->mFaces[i].mIndices[2]);
 
 
-				if (!m_IsAnimated)
+				//if (!m_IsAnimated)
 				{
 					m_TriangleCache[m].emplace_back(
 						m_StaticVertices[mesh->mFaces[i].mIndices[0] + (size_t)submesh.BaseVertex],
@@ -772,7 +812,7 @@ namespace Ares {
 
 		Ref<VertexBuffer> vertBuffer = nullptr;
 		
-		if (m_IsAnimated)
+		/*if (m_IsAnimated)
 		{
 			vertBuffer = VertexBuffer::Create(m_AnimatedVertices.data(), (uint32_t)(m_AnimatedVertices.size() * sizeof(AnimatedVertex)));
 			vertBuffer->SetLayout({
@@ -784,7 +824,7 @@ namespace Ares {
 				{ ShaderDataType::Float4, "a_BoneWeights" },
 			});
 		}
-		else
+		else*/
 		{
 			vertBuffer = VertexBuffer::Create(m_StaticVertices.data(), (uint32_t)(m_StaticVertices.size() * sizeof(Vertex)));
 			vertBuffer->SetLayout({
@@ -796,6 +836,18 @@ namespace Ares {
 		}
 
 		m_VertexArray->AddVertexBuffer(vertBuffer);
+
+		if (m_IsAnimated)
+		{
+			Ref<VertexBuffer> vertBufferBones = VertexBuffer::Create(m_AnimatedVertices.data(), (uint32_t)(m_AnimatedVertices.size() * sizeof(AnimatedVertex)));
+			vertBufferBones->SetLayout({
+				{ ShaderDataType::Float4, "a_BoneIDs" },
+				{ ShaderDataType::Float4, "a_BoneWeights" },
+			});
+			m_VertexArray->AddVertexBuffer(vertBufferBones);
+		}
+
+
 	
 		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), (uint32_t)m_Indices.capacity());
 		m_VertexArray->SetIndexBuffer(indexBuffer);

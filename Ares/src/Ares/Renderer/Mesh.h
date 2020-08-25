@@ -40,10 +40,12 @@ namespace Ares {
 	};
 	struct AnimatedVertex
 	{
+		/*
 		glm::vec3 Position;
 		glm::vec2 Texcoord;
 		glm::vec3 Normal{ 0 };
 		glm::vec3 Tangent{ 0 };
+		*/
 		
 		float IDs[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 		float Weights[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -178,7 +180,11 @@ namespace Ares {
 		//bool m_AnimationPlaying = true;
 
 		std::vector<Vertex> m_StaticVertices;
-		std::vector<AnimatedVertex> m_AnimatedVertices;
+
+		//std::vector<AnimatedVertex> m_AnimatedVertices;
+		
+		
+		
 		std::vector<uint32_t> m_Indices;
 
 		Ref<VertexArray> m_VertexArray;
