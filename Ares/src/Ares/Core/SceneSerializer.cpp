@@ -245,7 +245,7 @@ namespace Ares {
 		out << YAML::Key << "Environment";
 		out << YAML::Value;
 		out << YAML::BeginMap; // Environment
-		SetKeyValue(out, "AssetPath", scene->GetEnvironment().FilePath);
+		//SetKeyValue(out, "AssetPath", scene->GetEnvironment().FilePath);
 
 		const auto& light = scene->GetLight();
 		out << YAML::Key << "Light" << YAML::Value;
@@ -302,7 +302,7 @@ namespace Ares {
 		if (environment)
 		{
 			std::string envPath = environment["AssetPath"].as<std::string>();
-			m_Scene->SetEnvironment(Environment::Load(envPath));
+			//m_Scene->SetEnvironment(Environment::Load(envPath));
 
 			auto lightNode = environment["Light"];
 			if (lightNode)

@@ -21,11 +21,6 @@ namespace Ares {
 		inline static const uint32_t ENVIRONMENT_CUBE_TEX_SLOT = 29;
 		inline static const uint32_t ENVIRONMENT_IRRADIANCE_TEX_SLOT = 28;
 
-
-		//inline static const uint32_t WHITE_TEX_SLOT = 30;
-		//inline static const uint32_t DEF_BUMP_TEX_SLOT = 29;
-
-
 		static void Init();
 		static void Shutdown();
 
@@ -69,43 +64,33 @@ namespace Ares {
 		static void BeginRenderPass(Ref<RenderPass> renderPass, bool clearColor, bool clearDepth, bool clearStencil);
 		static void EndRenderPass();
 
-
-		
-		//static void SubmitQuad(Ref<MaterialInstance> material, const glm::mat4& transform = glm::mat4(1.0f));
 		static void SubmitQuad(Ref<Material> material, const glm::mat4& transform = glm::mat4(1.0f));
-		static void SubmitQuad(Ref<Shader> shader, const glm::mat4& transform = glm::mat4(1.0f), bool depthTest = true);
-		
-		//static void SubmitFullscreenQuad(Ref<MaterialInstance> material);
+		static void SubmitQuad(Ref<Shader> shader, const glm::mat4& transform = glm::mat4(1.0f), bool depthTest = true);		
 		static void SubmitFullscreenQuad(Ref<Material> material, bool depthTest);
-
-		//static void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> overrideMaterial);
-		//static void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, const std::vector<Ref<Material>>& materials);
-
-		//static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<Shader>& overrideMaterial = nullptr);
-		
 
 		static void SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, const size_t& submeshIndex, Ref<Texture2D> boneMatrixTexture, const bool& depthTest);
 		static void SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, Ref<Texture2D> boneMatrixTexture, const bool& depthTest);
 
-
-		//static void DrawAABB(const Ref<Mesh>& mesh, const glm::vec4& color = glm::vec4(1.0f));
 		static void DrawAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color, bool depthTest);
 		static void DrawAABB(Ref<Mesh> mesh, const glm::mat4& transform, const glm::vec4& color, bool depthTest);
-
 
 		static RenderCommandQueue& GetRenderCommandQueue();
 
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
-	private:
-		struct SceneData
+
+
+		struct RendererData
 		{
-			glm::mat4 ViewProjectionMatrix;
+			Ref<RenderPass> m_ActiveRenderPass;
+			RenderCommandQueue m_CommandQueue;
+			Ref<VertexArray> m_FullscreenQuadVertexArray;
+			Ref<VertexArray> m_QuadVertexArray;
+
+			Ref<Texture2D> m_WhiteTexture;
+			Ref<Texture2D> m_DefaultBump;
 		};
 
-		static Scope<SceneData> s_SceneData;
-		//static RenderCommandQueue s_CommandQueue;
-		//static Ref<RenderPass> s_ActiveRenderPass;
-
-
+		static RendererData& GetRendererData();
+	
 	};
 }

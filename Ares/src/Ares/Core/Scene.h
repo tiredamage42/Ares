@@ -7,7 +7,6 @@
 #include "Ares/Renderer/Camera.h"
 #include "Ares/Renderer/Material.h"
 #include "Ares/Renderer/Renderer.h"
-
 #include "Ares/Renderer/SceneCamera.h"
 //#include "Ares/Editor/EditorCamera.h"
 
@@ -18,11 +17,11 @@ namespace Ares
 
 	struct Environment
 	{
-		std::string FilePath = "";
+		//std::string FilePath = "";
 		Ref<TextureCube> RadianceMap = nullptr;
 		Ref<TextureCube> IrradianceMap = nullptr;
 
-		static Environment Load(const std::string& filepath);
+		//static Environment Load(const std::string& filepath);
 	};
 	struct Light
 	{
@@ -54,8 +53,13 @@ namespace Ares
 		float GetExposure() const { return m_Exposure; }
 		float& GetExposure() { return m_Exposure; }
 
-		void SetSkyboxMaterial(const Ref<Material>& skybox) { m_SkyboxMaterial = skybox; }
-
+		void SetSkyboxMaterial(Ref<Material> skybox) { 
+			m_SkyboxMaterial = skybox; 
+			UpdateGI();
+		}
+		void UpdateGI();
+		
+		/*
 		void SetEnvironment(const Environment& environment) { 
 
 			m_Environment = environment; 
@@ -63,6 +67,7 @@ namespace Ares
 			environment.RadianceMap->Bind(Renderer::ENVIRONMENT_CUBE_TEX_SLOT);
 			environment.IrradianceMap->Bind(Renderer::ENVIRONMENT_IRRADIANCE_TEX_SLOT);
 		}
+		*/
 
 		const Environment& GetEnvironment() const { return m_Environment; }
 

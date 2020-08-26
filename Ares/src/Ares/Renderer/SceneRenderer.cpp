@@ -2,14 +2,12 @@
 #include "SceneRenderer.h"
 
 #include "Renderer.h"
+#include "Ares/Core/Scene.h"
 #include "Ares/Core/Entity.h"
 #include "Ares/Core/Components.h"
 #include "Ares/Core/Application.h"
 #include "Ares/Renderer/Renderer2D.h"
-//#include <glm/gtc/matrix_transform.hpp>
 #include "Ares/Math/Math.h"
-
-//#include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
 /*
@@ -23,9 +21,9 @@
 
 	TODO:
 	remove editor specific stuff
-
-
 */
+
+
 namespace Ares {
 
 	struct ShaderVariationPair
@@ -52,13 +50,7 @@ namespace std {
 	};
 }
 
-
-
-
 namespace Ares {
-//#define GRID_RESOLUTION 2147483646
-//#define GRID_RESOLUTION 100
-//#define GRID_WIDTH .05f
 
 	struct MeshDrawCall
 	{
@@ -76,18 +68,13 @@ namespace Ares {
 	struct SceneRendererData
 	{ 
 		const Scene* ActiveScene = nullptr;
+		
 		struct SceneInfo
 		{
 			SceneRendererCamera SceneCamera;
-
-			// Resources
-			//float SkyboxLod, Exposure;
 			float Exposure;
-			//Ref<MaterialInstance> SkyboxMaterial;
 			Ref<Material> SkyboxMaterial;
-
 			Ref<TextureCube> EnvironmentCube, EnvironmentIrradiance;
-
 			Environment SceneEnvironment;
 			Light ActiveLight;
 		} SceneData;
@@ -98,91 +85,37 @@ namespace Ares {
 		Ref<RenderPass> GeoPass;
 		Ref<RenderPass> CompositePass;
 
-		/*
-		*/
 		struct DrawCommand
 		{
 			Ref<Mesh> Mesh;
-			//Ref<MaterialInstance> MaterialOverride;
-			//std::vector<Ref<Material>> Materials;
 			glm::mat4 Transform;
-			//std::string name;
 			Ref<Texture2D> BoneTransforms;
 		};
 
 		RenderMap UnlitDrawMap;
-		//std::vector<DrawCommand> UnlitDrawList;
-
 		RenderMap FwdBaseDrawMap;
-		//std::vector<DrawCommand> FwdBaseDrawList;
-
 		RenderMap FwdAddDrawMap;
-		//std::vector<DrawCommand> FwdAddDrawList;
-
-		//RenderMap SelectedDrawMap;
 		std::vector<DrawCommand> SelectedMeshDrawList;
 		std::vector<DrawCommand> DrawList;
 
-		// Grid
-		//Ref<MaterialInstance> GridMaterial;
-		//Ref<MaterialInstance> OutlineMaterial;
-		//Ref<Material> GridMaterial;
-		Ref<Shader> GridShader;
 		Ref<Shader> ErrorShader;
-
-
-		//Ref<Material> OutlineMaterial;
 		Ref<Shader> OutlineShader;
 
 		SceneRendererOptions Options;
+
+
+
+
+		Ref<TextureCube> SkyboxCapturedCube;
+		uint32_t SkyboxCaptureRBO;
+		uint32_t SkyboxCaptureFBO;
+
 	};
 
 	static SceneRendererData s_Data;
 
 
-	
-	/*
-	static void SortRenderMap(const std::vector<SceneRendererData::DrawCommand>& drawList, RenderMap& drawMap)
-	{
-		ARES_PROFILE_FUNCTION();
-
-		for (auto& dc : drawList)
-		{
-			Ref<Mesh> mesh = dc.Mesh;
-			std::vector<Ref<Material>> materials = dc.Materials;
-
-			ShaderVariant shaderVariant = mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
-
-			auto& submeshes = mesh->GetSubmeshes();
-			for (size_t i = 0; i < submeshes.size(); i++)
-			{
-				Ref<Material> material = materials[submeshes[i].MaterialIndex];
-
-				ShaderVariationPair shaderVarPair = { material->GetShader(), shaderVariant };
-
-				if (drawMap.find(shaderVarPair) == drawMap.end())
-					drawMap[shaderVarPair] = MaterialsMap();
-
-				MaterialsMap& materialsMap = drawMap.at(shaderVarPair);
-
-				if (materialsMap.find(material) == materialsMap.end())
-					materialsMap[material] = MeshDrawCalls();
-
-				MeshDrawCalls& drawCalls = materialsMap.at(material);
-
-				drawCalls.push_back({ mesh, i, dc.Transform });
-			}
-		}
-	}
-	*/
-
-	/*
-	static const size_t u_EnvRadianceTex = StringUtils::String2Hash("u_EnvRadianceTex");
-	static const size_t u_EnvIrradianceTex = StringUtils::String2Hash("u_EnvIrradianceTex");
-	static const size_t u_BRDFLUTTexture = StringUtils::String2Hash("u_BRDFLUTTexture");
-	*/
-
-	static void DrawRenderMapUnlit(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view, bool drawOutlined)
+	static void DrawRenderMapUnlit(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view)
 	{
 		ARES_PROFILE_FUNCTION();
 
@@ -193,190 +126,40 @@ namespace Ares {
 			Ref<Shader> shader = shaderVarPair.Shader;
 			ShaderVariations variant = shaderVarPair.Variant;
 
-			ARES_PROFILE_SCOPE("per shader");
-
-			{
-				ARES_PROFILE_SCOPE("bind shader set matrices");
-				shader->Bind(variant);
-				shader->SetMat4("ares_VPMatrix", viewProjection);
-				shader->SetMat4("ares_VMatrix", view);
-			}
-
-			const MaterialsMap& materials = shader_materials.second;
-			for (auto& materials_draws : materials)
-			{
-				ARES_PROFILE_SCOPE("Per material");
-				Ref<Material> material = materials_draws.first;
-				const MeshDrawCalls& draws = materials_draws.second;
-
-				{
-					ARES_PROFILE_SCOPE("biind material");
-					material->Bind();
-				}
-
-				{
-					ARES_PROFILE_SCOPE("Draw Mesh");
-					bool depthTest = material->GetFlag(MaterialFlag::DepthTest);
-					for (auto& dc : draws)
-					{
-
-						if (dc.Outlined)
-						{
-							/*
-							Renderer::Submit([]() {
-							glStencilFunc(GL_ALWAYS, 1, 0xff);
-							glStencilMask(0xff);
-								}, "outline other stuff");
-							*/
-							Renderer::Submit([]() {
-
-								// enable writing to the stencil buffer
-								// We clear the stencil buffer to 0s at the start of the frame and for the outlined object 
-								// we update the stencil buffer to 1 for each fragment drawn:
-								glStencilMask(0xff);
-								}, "outline other stuff");
-						}
-							
-							
-						//if (drawOutlined == dc.Outlined)
-						{
-
-						Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, dc.BoneTransforms, depthTest);
-						}
-
-						if (dc.Outlined)
-						{
-							// make sure we don't update the stencil buffer while drawing the floor
-							Renderer::Submit([]() {
-								glStencilMask(0x00);
-								}, "Outline Stencil mask");
-
-							/*
-								Renderer::Submit([]() {
-								glStencilMask(0);
-									}, "Outline Stencil mask");
-							*/
-						}
-					}
-				}
-				
-			}
-		}
-	}
-
-
-	static void DrawRenderMapForwardBase(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view, bool drawOutlined)//, const glm::vec3& cameraPosition)
-	{
-		ARES_PROFILE_FUNCTION();
-
-		// Read our shaders into the appropriate buffers
-		for (auto& shader_materials : renderMap)
-		{
-			const ShaderVariationPair& shaderVarPair = shader_materials.first;
-			Ref<Shader> shader = shaderVarPair.Shader;
-			ShaderVariations variant = shaderVarPair.Variant;
-
-			ARES_PROFILE_SCOPE("per shader");
-
-			{
-				ARES_PROFILE_SCOPE("bind shader set matrices");
 			shader->Bind(variant);
 			shader->SetMat4("ares_VPMatrix", viewProjection);
 			shader->SetMat4("ares_VMatrix", view);
-			}
 			
-
 			const MaterialsMap& materials = shader_materials.second;
 			for (auto& materials_draws : materials)
 			{
-				ARES_PROFILE_SCOPE("Per material");
 				Ref<Material> material = materials_draws.first;
 				const MeshDrawCalls& draws = materials_draws.second;
-
-				//material->Set("u_CameraPosition", cameraPosition);
-
-				/*
+				material->Bind();
+				for (auto& dc : draws)
 				{
-					ARES_PROFILE_SCOPE("Set MAterial things");
-				material->SetTexture("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
-				
-				// pbr specific...
-				material->SetTexture("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
-				material->SetTexture("u_BRDFLUTTexture", s_Data.BRDFLUT);
-				}
-				*/
-
-				{
-					ARES_PROFILE_SCOPE("biind material");
-					material->Bind();
-				}
-
-				bool depthTest = material->GetFlag(MaterialFlag::DepthTest);
-				// foreach light (if shader is lit)
-				{
+					if (dc.Outlined)
 					{
-						ARES_PROFILE_SCOPE("set shader light vars");
-					shader->SetFloat3("ares_Light.Direction", s_Data.SceneData.ActiveLight.Direction);
-					shader->SetFloat3("ares_Light.Color", s_Data.SceneData.ActiveLight.Radiance * s_Data.SceneData.ActiveLight.Multiplier);
+						// enable writing to the stencil buffer
+						// We clear the stencil buffer to 0s at the start of the frame and for the outlined object 
+						// we update the stencil buffer to 1 for each fragment drawn:
+						Renderer::Submit([]() { glStencilMask(0xff); }, "outline other stuff");
 					}
-					
-					
-					// do shader set light light
-					//material->Set("lights", s_Data.SceneData.ActiveLight);
+						
+					Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, dc.BoneTransforms, material->GetFlag(MaterialFlag::DepthTest));
 
+					if (dc.Outlined)
 					{
-						ARES_PROFILE_SCOPE("Draw Mesh");
-						for (auto& dc : draws)
-						{
-							if (dc.Outlined)
-							{
-								/*
-								Renderer::Submit([]() {
-									glStencilFunc(GL_ALWAYS, 1, 0xff);
-									glStencilMask(0xff);
-									}, "outline other stuff");
-								*/
-								Renderer::Submit([]() {
-
-									// enable writing to the stencil buffer
-									// We clear the stencil buffer to 0s at the start of the frame and for the outlined object 
-									// we update the stencil buffer to 1 for each fragment drawn:
-									glStencilMask(0xff);
-									}, "outline other stuff");
-							}
-							else
-							{
-
-							}
-
-							//if (drawOutlined == dc.Outlined)
-							{
-
-							Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, dc.BoneTransforms, depthTest);
-							}
-
-							if (dc.Outlined)
-							{
-
-								// make sure we don't update the stencil buffer while drawing the floor
-								Renderer::Submit([]() {
-									glStencilMask(0x00);
-								}, "Outline Stencil mask");
-
-								/*
-								Renderer::Submit([]() {
-									glStencilMask(0);
-									}, "Outline Stencil mask");
-								*/
-							}
-						}
+						// make sure we don't update the stencil buffer while drawing the floor
+						Renderer::Submit([]() { glStencilMask(0x00); }, "Outline Stencil mask");
 					}
 				}
 			}
 		}
 	}
 
-	static void DrawRenderMapForwardAdd(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view)//, const glm::vec3& cameraPosition)
+
+	static void DrawRenderMapForwardBase(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view)
 	{
 		ARES_PROFILE_FUNCTION();
 
@@ -387,59 +170,39 @@ namespace Ares {
 			Ref<Shader> shader = shaderVarPair.Shader;
 			ShaderVariations variant = shaderVarPair.Variant;
 
-			ARES_PROFILE_SCOPE("per shader");
-
-			{
-				ARES_PROFILE_SCOPE("bind shader set matrices");
-				shader->Bind(variant);
-				shader->SetMat4("ares_VPMatrix", viewProjection);
-				shader->SetMat4("ares_VMatrix", view);
-			}
-
-
+			shader->Bind(variant);
+			shader->SetMat4("ares_VPMatrix", viewProjection);
+			shader->SetMat4("ares_VMatrix", view);
+			
 			const MaterialsMap& materials = shader_materials.second;
 			for (auto& materials_draws : materials)
 			{
-				ARES_PROFILE_SCOPE("Per material");
 				Ref<Material> material = materials_draws.first;
 				const MeshDrawCalls& draws = materials_draws.second;
-
-				//material->Set("u_CameraPosition", cameraPosition);
-
-				/*
-				{
-					ARES_PROFILE_SCOPE("Set MAterial things");
-				material->SetTexture("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
-
-				// pbr specific...
-				material->SetTexture("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
-				material->SetTexture("u_BRDFLUTTexture", s_Data.BRDFLUT);
-				}
-				*/
-
-				{
-					ARES_PROFILE_SCOPE("biind material");
-					material->Bind();
-				}
+				material->Bind();
 
 				bool depthTest = material->GetFlag(MaterialFlag::DepthTest);
 				// foreach light (if shader is lit)
 				{
+					shader->SetFloat3("ares_Light.Direction", s_Data.SceneData.ActiveLight.Direction);
+					shader->SetFloat3("ares_Light.Color", s_Data.SceneData.ActiveLight.Radiance * s_Data.SceneData.ActiveLight.Multiplier);
+					
+					for (auto& dc : draws)
 					{
-						ARES_PROFILE_SCOPE("set shader light vars");
-						shader->SetFloat3("ares_Light.Direction", s_Data.SceneData.ActiveLight.Direction);
-						shader->SetFloat3("ares_Light.Color", s_Data.SceneData.ActiveLight.Radiance * s_Data.SceneData.ActiveLight.Multiplier);
-					}
-
-
-					// do shader set light light
-					//material->Set("lights", s_Data.SceneData.ActiveLight);
-
-					{
-						ARES_PROFILE_SCOPE("Draw Mesh");
-						for (auto& dc : draws)
+						if (dc.Outlined)
 						{
-							Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, dc.BoneTransforms, depthTest);
+							// enable writing to the stencil buffer
+							// We clear the stencil buffer to 0s at the start of the frame and for the outlined object 
+							// we update the stencil buffer to 1 for each fragment drawn:
+							Renderer::Submit([]() { glStencilMask(0xff); }, "outline other stuff");
+						}
+							
+						Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, dc.BoneTransforms, depthTest);
+							
+						if (dc.Outlined)
+						{
+							// make sure we don't update the stencil buffer while drawing the floor
+							Renderer::Submit([]() { glStencilMask(0x00); }, "Outline Stencil mask");
 						}
 					}
 				}
@@ -447,7 +210,62 @@ namespace Ares {
 		}
 	}
 
-	
+	static void DrawRenderMapForwardAdd(const RenderMap& renderMap, const glm::mat4& viewProjection, const glm::mat4& view)
+	{
+		ARES_PROFILE_FUNCTION();
+
+		// Read our shaders into the appropriate buffers
+		for (auto& shader_materials : renderMap)
+		{
+			const ShaderVariationPair& shaderVarPair = shader_materials.first;
+			Ref<Shader> shader = shaderVarPair.Shader;
+			ShaderVariations variant = shaderVarPair.Variant;
+
+			shader->Bind(variant);
+			shader->SetMat4("ares_VPMatrix", viewProjection);
+			shader->SetMat4("ares_VMatrix", view);
+			
+			const MaterialsMap& materials = shader_materials.second;
+			for (auto& materials_draws : materials)
+			{
+				Ref<Material> material = materials_draws.first;
+				const MeshDrawCalls& draws = materials_draws.second;
+				material->Bind();
+
+				bool depthTest = material->GetFlag(MaterialFlag::DepthTest);
+				// foreach light (if shader is lit)
+				{
+					
+					shader->SetFloat3("ares_Light.Direction", s_Data.SceneData.ActiveLight.Direction);
+					shader->SetFloat3("ares_Light.Color", s_Data.SceneData.ActiveLight.Radiance * s_Data.SceneData.ActiveLight.Multiplier);
+
+					for (auto& dc : draws)
+					{
+						Renderer::SubmitMesh(shader, dc.Mesh, dc.Transform, dc.SubmeshIndex, dc.BoneTransforms, depthTest);
+					}
+				}
+			}
+		}
+	}
+
+	const uint32_t CAPTURE_SKYBOX_SIZE = 2048;
+	/*
+		Then what's left to do is capture the current skybox onto the cubemap faces.
+		it effectively boils down to setting up 6 different view matrices (facing each side of the cube),
+		set up a projection matrix with a fov of 90 degrees to capture the entire face,
+		and render the skybox 6 times storing the results in a floating point framebuffer:
+	*/
+	const Matrix4 CAPTURE_SKYBOX_PROJECTION = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+	const Matrix4 CAPTURE_SKYBOX_VIEWS[] =
+	{
+	   glm::lookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(1.0f,  0.0f,  0.0f), Vector3(0.0f, -1.0f,  0.0f)),
+	   glm::lookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(-1.0f,  0.0f,  0.0f), Vector3(0.0f, -1.0f,  0.0f)),
+	   glm::lookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f,  1.0f,  0.0f), Vector3(0.0f,  0.0f,  1.0f)),
+	   glm::lookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, -1.0f,  0.0f), Vector3(0.0f,  0.0f, -1.0f)),
+	   glm::lookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f,  0.0f,  1.0f), Vector3(0.0f, -1.0f,  0.0f)),
+	   glm::lookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f,  0.0f, -1.0f), Vector3(0.0f, -1.0f,  0.0f))
+	};
+
 
 	
 	void SceneRenderer::Init()
@@ -473,13 +291,8 @@ namespace Ares {
 		RenderPassSpecs compRenderPassSpec;
 		compRenderPassSpec.TargetFrameBuffer = FrameBuffer::Create(compFramebufferSpec);
 		s_Data.CompositePass = CreateRef<RenderPass>(compRenderPassSpec);
-
 		s_Data.CompositeShader = Shader::Find("Assets/Shaders/HDRTonemapping.glsl");
 		
-		
-		
-		
-		//s_Data.BRDFLUT = Texture2D::Create("Assets/Textures/BRDF_LUT.tga", FilterType::Point, false);
 		const uint32_t BRDF_SIZE = 512;
 		s_Data.BRDFLUT = Texture2D::Create(TextureFormat::RG16, BRDF_SIZE, BRDF_SIZE, TextureWrap::Clamp, FilterType::Bilinear, false);
 
@@ -492,42 +305,28 @@ namespace Ares {
 			glDispatchCompute(BRDF_SIZE / 32, BRDF_SIZE / 32, 1);
 		}, "EnvMap 0");
 
-
-
-		
-		// Grid
-		//auto gridShader 
-		s_Data.GridShader = Shader::Find("Assets/Shaders/SceneGrid.glsl");
-
-		//s_Data.GridMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(gridShader));
-		//s_Data.GridMaterial = CreateRef<Material>(gridShader);
-
-		// TODO: SET SCENE VALUES
-		/*float gridScale = 16.025f, gridSize = 0.025f;
-		s_Data.GridMaterial->Set("u_Scale", gridScale);
-		s_Data.GridMaterial->Set("u_Res", gridSize);*/
-
-		//s_Data.GridMaterial->Set("u_MVP", viewProjection * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
-		
-
-
-		//s_Data.GridMaterial->SetValue("u_ResAndWidth", glm::vec2(GRID_RESOLUTION, GRID_WIDTH));
-
-		//s_Data.GridMaterial->SetValue("u_Scale", (float)GRID_RESOLUTION);
-		//s_Data.GridMaterial->SetValue("u_Res", GRID_WIDTH);
-
-
-		// Outline
-		auto outlineShader = Shader::Find("Assets/Shaders/UnlitColor.glsl");
-		s_Data.OutlineShader = outlineShader;
-
-		//s_Data.OutlineMaterial = CreateRef<MaterialInstance>(CreateRef<Material>(outlineShader));
-		//s_Data.OutlineMaterial = CreateRef<Material>(outlineShader);
-		//s_Data.OutlineMaterial->SetFlag(MaterialFlag::DepthTest, false);
-
+		s_Data.OutlineShader = Shader::Find("Assets/Shaders/UnlitColor.glsl");
 		s_Data.ErrorShader = Shader::Find("Assets/Shaders/ErrorShader.glsl");
-		
 
+
+		Renderer::Submit([]() {
+			glGenFramebuffers(1, &s_Data.SkyboxCaptureFBO);
+			glGenRenderbuffers(1, &s_Data.SkyboxCaptureRBO);
+			glBindFramebuffer(GL_FRAMEBUFFER, s_Data.SkyboxCaptureFBO);
+			glBindRenderbuffer(GL_RENDERBUFFER, s_Data.SkyboxCaptureRBO);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, CAPTURE_SKYBOX_SIZE, CAPTURE_SKYBOX_SIZE);
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, s_Data.SkyboxCaptureRBO);
+		}, "");
+
+		s_Data.SkyboxCapturedCube = TextureCube::Create(TextureFormat::Float16, CAPTURE_SKYBOX_SIZE, CAPTURE_SKYBOX_SIZE, FilterType::Trilinear, true);
+	}
+
+	void SceneRenderer::Shutdown()
+	{
+		Renderer::Submit([]() {
+			glDeleteRenderbuffers(1, &s_Data.SkyboxCaptureRBO);
+			glDeleteFramebuffers(1, &s_Data.SkyboxCaptureFBO);
+		}, "");
 	}
 
 	void SceneRenderer::SetViewportSize(uint32_t width, uint32_t height)
@@ -551,10 +350,7 @@ namespace Ares {
 		s_Data.SceneData.SceneEnvironment = scene->m_Environment;
 		s_Data.SceneData.ActiveLight = scene->m_Light;
 
-		s_Data.SceneData.Exposure = scene->m_Exposure;
-		//s_Data.SceneData.SkyboxLod = scene->m_SkyboxLod;
-
-		
+		s_Data.SceneData.Exposure = scene->m_Exposure;		
 	}
 
 	void SceneRenderer::EndScene()
@@ -570,20 +366,13 @@ namespace Ares {
 	{
 		ARES_PROFILE_FUNCTION();
 
-
 		ARES_CORE_ASSERT(!s_Data.ActiveScene, "");
 		GeometryPass();
 		CompositePass();
 
-
 		s_Data.UnlitDrawMap.clear();
 		s_Data.FwdBaseDrawMap.clear();
 		s_Data.FwdAddDrawMap.clear();
-
-		/*
-		s_Data.DrawMap.clear();
-		s_Data.SelectedDrawMap.clear();
-		*/
 
 		s_Data.DrawList.clear();
 		s_Data.SelectedMeshDrawList.clear();
@@ -610,27 +399,13 @@ namespace Ares {
 	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<Texture2D> boneTransforms, std::vector<Ref<Material>> materials, bool isSelected)
 	{
 
-
-
 		if (isSelected)
 		{
 			s_Data.SelectedMeshDrawList.push_back({ mesh, transform, boneTransforms });
 		}
 		s_Data.DrawList.push_back({ mesh, transform, boneTransforms });
 
-
-		//bool useSkinning = mesh->IsAnimated();
 		bool useSkinning = boneTransforms != nullptr;
-
-		
-		//ShaderVariations shaderVariant = mesh->IsAnimated() ? ShaderVariations::DefaultSkinned : ShaderVariations::Default;
-
-		//RenderMap& drawMap = isSelected ? s_Data.SelectedDrawMap : s_Data.DrawMap;
-
-		//std::vector<SceneRendererData::DrawCommand> drawList = isSelected ? s_Data.SelectedMeshDrawList : s_Data.DrawList;
-		//drawList.push_back({ mesh, transform });
-
-
 
 		auto& submeshes = mesh->GetSubmeshes();
 		for (uint32_t i = 0; i < submeshes.size(); i++)
@@ -675,532 +450,270 @@ namespace Ares {
 
 				AddToDrawMap(s_Data.UnlitDrawMap, shader, useSkinning ? ShaderVariations::DefaultSkinned : ShaderVariations::Default, material, mesh, i, transform, boneTransforms, isSelected);
 			}
+		}	
+	}
+
+
+	
+	
+	static void CaptureCurrentSkybox(Ref<Material> skyboxMaterial)
+	{
+		/*
+			We take the color attachment of the framebuffer and switch its texture target around for every face of the cubemap, 
+			directly rendering the scene into one of the cubemap's faces. Once this routine has finished (which we only have to do once), 
+			the cubemap envCubemap should be the cubemapped environment version of our original HDR image.
+		*/
+		
+		//Renderer::Submit([]() { glDepthMask(false);	}, "");
+		skyboxMaterial->GetShader()->Bind(ShaderVariations::Default);
+		skyboxMaterial->Bind();
+		
+		Renderer::Submit([=]() {
+			glViewport(0, 0, CAPTURE_SKYBOX_SIZE, CAPTURE_SKYBOX_SIZE); // don't forget to configure the viewport to the capture dimensions.
+			glBindFramebuffer(GL_FRAMEBUFFER, s_Data.SkyboxCaptureFBO);
+		}, "");
+
+		
+		for (uint32_t i = 0; i < 6; ++i)
+		{
+			skyboxMaterial->GetShader()->SetMat4("ares_InverseVP", glm::inverse(CAPTURE_SKYBOX_PROJECTION * CAPTURE_SKYBOX_VIEWS[i]));
+			
+			Renderer::Submit([=](){
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, s_Data.SkyboxCapturedCube->GetRendererID(), 0);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			}, "");
+			
+			Renderer::GetRendererData().m_FullscreenQuadVertexArray->Bind();
+			
+			Renderer::DrawIndexed(6, PrimitiveType::Triangles, false);// skyboxMaterial->GetFlag(MaterialFlag::DepthTest));
 		}
+
+
+		Renderer::Submit([]() { 
+			glGenerateTextureMipmap(s_Data.SkyboxCapturedCube->GetRendererID());
+			glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+		}, "");
 		
+		skyboxMaterial->SetTexture("u_Texture", s_Data.SkyboxCapturedCube);
+
+		//Renderer::Submit([]() { glDepthMask(true); }, "");
 	}
+
+
+	Ref<TextureCube> SceneRenderer::ConvertHDRToCubemap(const std::string& filepath, uint32_t cubemapSize)
+	{
+		// laod teh 2d equirectangular map
+		Ref<Texture2D> envEquirect = Texture2D::Create(filepath, FilterType::Trilinear, false);
+		ARES_CORE_ASSERT(envEquirect->GetFormat() == TextureFormat::Float16, "Texture is not HDR!");
+		
+		// create the target cubemap
+		Ref<TextureCube> cubemap = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize, FilterType::Trilinear, true);
+		Shader::Find("Assets/Shaders/EquirectangularToCubeMap.glsl")->Bind(ShaderVariations::Default);
+		envEquirect->Bind();
+		Renderer::Submit([cubemap, cubemapSize, envEquirect]() {
+			glBindImageTexture(0, cubemap->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+			glDispatchCompute(cubemapSize / 32, cubemapSize / 32, 6);
+			//glGenerateTextureMipmap(cubemap->GetRendererID());
+		}, "EnvMap 0");
+		return cubemap;
+	}
+
 	/*
-	//void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> materialOverride)
-	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, std::vector<Ref<Material>> materials, const std::string& name)
-
-	//void SceneRenderer::SubmitEntity(Entity& entity)
-	{
-		// TODO: Culling, sorting, etc.
-
-		/auto& mrComponent = entity.GetComponent<MeshRendererComponent>();
-		if (!mrComponent.Mesh)
-			return;/
-		
-		s_Data.DrawList.push_back({ mesh, materials, transform, name });
-	}
-	//void SceneRenderer::SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> materialOverride)
-	void SceneRenderer::SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform, std::vector<Ref<Material>> materials)
-	{
-		s_Data.SelectedMeshDrawList.push_back({ mesh, materials, transform, "selected" });
-	}
+		creates a reflection cubemap (where mip levels are filtered for roughness)
+		and an irradiance cube (for pbr lighting)
 	*/
-
-	//static Ref<Shader> equirectangularConversionShader, envFilteringShader, envIrradianceShader;
-
-	//std::pair<Ref<TextureCube>, Ref<TextureCube>> SceneRenderer::CreateEnvironmentMap(const std::string& filepath)
-	//{
-	//	const uint32_t CAPTURE_SIZE = 512;
-	//	const uint32_t IRRADIANCE_SIZE = 32;
-
-	//	// pbr: setup framebuffer
-	//	uint32_t captureFBO;
-	//	uint32_t captureRBO;
-
-	//	glGenFramebuffers(1, &captureFBO);
-	//	glGenRenderbuffers(1, &captureRBO);
-
-	//	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-	//	glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
-	//	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, CAPTURE_SIZE, CAPTURE_SIZE);
-	//	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
-
-	//	// pbr: load the HDR environment map
-	//	// ---------------------------------
-	//	Ref<Texture2D> hdrTex = Texture2D::Create(filepath, FilterType::Trilinear, false);
-
-	//	// pbr: setup cubemap to render to and attach to framebuffer
-	//	// ---------------------------------------------------------
-	//	Ref<TextureCube> envCube = TextureCube::Create(TextureFormat::Float16, CAPTURE_SIZE, CAPTURE_SIZE, FilterType::Bilinear, false);
-
-	//	// pbr: set up projection and view matrices for capturing data onto the 6 cubemap face directions
-	//	// ----------------------------------------------------------------------------------------------
-	//	glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-	//	glm::mat4 captureViews[] =
-	//	{
-	//		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-	//		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-	//		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
-	//		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
-	//		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-	//		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
-	//	};
-
-	//	// pbr: convert HDR equirectangular environment map to cubemap equivalent
-	//	// ----------------------------------------------------------------------
-
-	//	Ref<Shader> eq2CubeShader = Shader::Find("Assets/Shaders/Eq2Cube.glsl");
-	//	eq2CubeShader->Bind();
-	//	eq2CubeShader->SetInt("u_Texture", 0);
-	//	eq2CubeShader->SetMat4("u_Projection", captureProjection);
-	//	hdrTex->Bind();
-	//	
-	//	Renderer::Submit([captureViews, eq2CubeShader]() {
-	//	
-	//		// don't forget to configure the viewport to the capture dimensions.
-	//		glViewport(0, 0, CAPTURE_SIZE, CAPTURE_SIZE); 
-	//	
-	//		glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-	//	
-	//		for (uint32_t i = 0; i < 6; ++i)
-	//		{
-	//			 
-	//			eq2CubeShader->SetMat4FromRenderThread("u_View", captureViews[i]);
-	//		
-	//			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCube->GetRendererID(), 0);
-	//		
-	//			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	//			renderCube();
-	//		}
-	//		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	//	}, "capture env map");
-
-	//	// pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
-	//	// --------------------------------------------------------------------------------
-	//	Ref<TextureCube> irradianceMap = TextureCube::Create(TextureFormat::Float16, IRRADIANCE_SIZE, IRRADIANCE_SIZE, FilterType::Bilinear, false);
-
-	//	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-	//	glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
-	//	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, IRRADIANCE_SIZE, IRRADIANCE_SIZE);
-
-	//	// pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
-	//	// -----------------------------------------------------------------------------
-
-	//	Ref<Shader> irradianceShader = Shader::Find("Assets/Shaders/Irradiance.glsl");
-
-	//	irradianceShader->Bind();
-	//	irradianceShader->SetInt("u_Texture", 0);
-	//	irradianceShader->SetMat4("u_Projection", captureProjection);
-
-	//	envCube->Bind();
-	//	
-	//	// don't forget to configure the viewport to the capture dimensions.
-	//	glViewport(0, 0, IRRADIANCE_SIZE, IRRADIANCE_SIZE); 
-	//	
-	//	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-	//	
-	//	for (unsigned int i = 0; i < 6; ++i)
-	//	{
-	//		irradianceShader->SetMat4("u_View", captureViews[i]);
-
-	//		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap->GetRendererID(), 0);
-	//		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	//		renderCube();
-	//	}
-	//	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-	//	// then before rendering, configure the viewport to the original framebuffer's screen dimensions
-	//	int scrWidth, scrHeight;
-	//	glfwGetFramebufferSize((GLFWwindow*)Application::Get().GetWindow().GetNativeWindow(), &scrWidth, &scrHeight);
-
-	//	glViewport(0, 0, scrWidth, scrHeight);
-
-	//	glDeleteFramebuffers(1, &captureFBO);
-	//	glDeleteRenderbuffers(1 & captureRBO);
-	//}
-
-
-	std::pair<Ref<TextureCube>, Ref<TextureCube>> SceneRenderer::CreateEnvironmentMap(const std::string& filepath)
+	Environment SceneRenderer::UpdateGI(Ref<Material> skyboxMaterial)
 	{
 
-		
-		const uint32_t cubemapSize = 2048;
-		//const uint32_t irradianceMapSize = 2048;
 		const uint32_t irradianceMapSize = 32;
 
-		// env unfiltered
-		Ref<TextureCube> envUnfiltered = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize, FilterType::Trilinear, true);
-		
-		//if (!equirectangularConversionShader)
-		Ref<Shader> equirectangularConversionShader = Shader::Find("Assets/Shaders/EquirectangularToCubeMap.glsl");
-		
-		Ref<Texture2D> envEquirect = Texture2D::Create(filepath, FilterType::Trilinear, false);
+		CaptureCurrentSkybox(skyboxMaterial);
 
-		ARES_CORE_ASSERT(envEquirect->GetFormat() == TextureFormat::Float16, "Texture is not HDR!");
-		 
-		equirectangularConversionShader->Bind(ShaderVariations::Default);
-		envEquirect->Bind();
-		Renderer::Submit([envUnfiltered, cubemapSize, envEquirect](){
-
-			glBindImageTexture(0, envUnfiltered->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-			glDispatchCompute(cubemapSize / 32, cubemapSize / 32, 6);
-			glGenerateTextureMipmap(envUnfiltered->GetRendererID());
-		}, "EnvMap 0");
-		
-		//envUnfiltered->GenerateMipMaps();
-
-
-		//if (!envFilteringShader)
-		Ref<Shader> envFilteringShader = Shader::Find("Assets/Shaders/EnvironmentMipFilter.glsl");
-
-		Ref<TextureCube> envFiltered = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize, FilterType::Trilinear, true);
+		Ref<TextureCube> reflectionCube = TextureCube::Create(TextureFormat::Float16, CAPTURE_SKYBOX_SIZE, CAPTURE_SKYBOX_SIZE, FilterType::Trilinear, true);
 
 		// copy mip map 0 to filtered (need unfiltered as input texture)
 		// maybe just eq2cube sample in filter step?
-		Renderer::Submit([envUnfiltered, envFiltered](){
+		Renderer::Submit([reflectionCube]() {
 
 			glCopyImageSubData(
-				envUnfiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
-				envFiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
-				envFiltered->GetWidth(), envFiltered->GetHeight(), 6
+				s_Data.SkyboxCapturedCube->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
+				reflectionCube->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
+				reflectionCube->GetWidth(),
+				reflectionCube->GetHeight(), 6
 			);
-		}, "EnvMap 1");
+			}, "EnvMap 1");
 
 
+		Ref<Shader> envFilteringShader = Shader::Find("Assets/Shaders/EnvironmentMipFilter.glsl");
 		envFilteringShader->Bind(ShaderVariations::Default);
-		envUnfiltered->Bind();
+		s_Data.SkyboxCapturedCube->Bind();
 
-		int32_t mipCount = envFiltered->GetMipLevelCount();
+		int32_t mipCount = reflectionCube->GetMipLevelCount();
 
-		Renderer::Submit([envUnfiltered, envFiltered, cubemapSize, mipCount, envFilteringShader]() {
-			
+		Renderer::Submit([reflectionCube, mipCount, envFilteringShader]() {
+
 			const float deltaRoughness = 1.0f / glm::max((float)(mipCount - 1.0f), 1.0f);
 
-			for (int32_t mipLevel = 1, size = cubemapSize / 2; mipLevel < mipCount; mipLevel++, size /= 2) // <= ?
+			for (int32_t mipLevel = 1, size = CAPTURE_SKYBOX_SIZE / 2; mipLevel < mipCount; mipLevel++, size /= 2) // <= ?
 			{
-				glBindImageTexture(0, envFiltered->GetRendererID(), mipLevel, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-				
-				//float roughness = (float)mipLevel / (float)(mipCount - 1);
+				glBindImageTexture(0, reflectionCube->GetRendererID(), mipLevel, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
 				// set the first float uniform to the roughness factor
 				glProgramUniform1f(envFilteringShader->GetRendererID(ShaderVariations::Default), 0, mipLevel * deltaRoughness);
-				//glProgramUniform1f(envFilteringShader->GetRendererID(), 0, roughness);
-
 				const GLuint numGroups = glm::max(1, size / 32);
 				glDispatchCompute(numGroups, numGroups, 6);
 			}
-		}, "EnvMap 2");
+			}, "EnvMap 2");
 
-		//if (!envIrradianceShader)
 		Ref<Shader> envIrradianceShader = Shader::Find("Assets/Shaders/EnvironmentIrradiance.glsl");
 
 		Ref<TextureCube> irradianceMap = TextureCube::Create(TextureFormat::Float16, irradianceMapSize, irradianceMapSize, FilterType::Trilinear, false);
 		envIrradianceShader->Bind(ShaderVariations::Default);
 
-		envFiltered->Bind();
-		//envCube->Bind();
+		reflectionCube->Bind();
 
-		Renderer::Submit([irradianceMap, irradianceMapSize](){
-				glBindImageTexture(0, irradianceMap->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-				glDispatchCompute(irradianceMapSize / 32, irradianceMapSize / 32, 6);
-				//glGenerateTextureMipmap(irradianceMap->GetRendererID());
+		Renderer::Submit([irradianceMap, irradianceMapSize]() {
+			glBindImageTexture(0, irradianceMap->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+			glDispatchCompute(irradianceMapSize / 32, irradianceMapSize / 32, 6);
+			//glGenerateTextureMipmap(irradianceMap->GetRendererID());
 			}, "EnvMap 3");
 
-		//irradianceMap->GenerateMipMaps();
-
-		return { envFiltered, irradianceMap };
-		//return { envCube, irradianceMap };
+		return { reflectionCube, irradianceMap };
 	}
 
 
-	
-	void SceneRenderer::GeometryPass()
+
+
+	//std::pair<Ref<TextureCube>, Ref<TextureCube>> SceneRenderer::CreateEnvironmentMap(const std::string& filepath)
+	//{
+	//	
+	//	const uint32_t cubemapSize = 2048;
+	//	const uint32_t irradianceMapSize = 32;
+
+	//	// env unfiltered
+	//	Ref<TextureCube> envUnfiltered = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize, FilterType::Trilinear, true);
+	//	
+	//	
+	//	Ref<Texture2D> envEquirect = Texture2D::Create(filepath, FilterType::Trilinear, false);
+	//	ARES_CORE_ASSERT(envEquirect->GetFormat() == TextureFormat::Float16, "Texture is not HDR!");
+	//	 
+	//	Shader::Find("Assets/Shaders/EquirectangularToCubeMap.glsl")->Bind(ShaderVariations::Default);
+	//	envEquirect->Bind();
+	//	Renderer::Submit([envUnfiltered, cubemapSize, envEquirect](){
+	//		glBindImageTexture(0, envUnfiltered->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+	//		glDispatchCompute(cubemapSize / 32, cubemapSize / 32, 6);
+	//		glGenerateTextureMipmap(envUnfiltered->GetRendererID());
+	//	}, "EnvMap 0");
+	//	
+
+
+
+
+
+
+
+
+
+	//	Ref<TextureCube> envFiltered = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize, FilterType::Trilinear, true);
+
+	//	// copy mip map 0 to filtered (need unfiltered as input texture)
+	//	// maybe just eq2cube sample in filter step?
+	//	Renderer::Submit([envUnfiltered, envFiltered](){
+
+	//		glCopyImageSubData(
+	//			envUnfiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
+	//			envFiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
+	//			envFiltered->GetWidth(), 
+	//			envFiltered->GetHeight(), 6
+	//		);
+	//	}, "EnvMap 1");
+
+
+	//	Ref<Shader> envFilteringShader = Shader::Find("Assets/Shaders/EnvironmentMipFilter.glsl");
+	//	envFilteringShader->Bind(ShaderVariations::Default);
+	//	envUnfiltered->Bind();
+
+	//	int32_t mipCount = envFiltered->GetMipLevelCount();
+
+	//	Renderer::Submit([envUnfiltered, envFiltered, cubemapSize, mipCount, envFilteringShader]() {
+	//		
+	//		const float deltaRoughness = 1.0f / glm::max((float)(mipCount - 1.0f), 1.0f);
+
+	//		for (int32_t mipLevel = 1, size = cubemapSize / 2; mipLevel < mipCount; mipLevel++, size /= 2) // <= ?
+	//		{
+	//			glBindImageTexture(0, envFiltered->GetRendererID(), mipLevel, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+	//			// set the first float uniform to the roughness factor
+	//			glProgramUniform1f(envFilteringShader->GetRendererID(ShaderVariations::Default), 0, mipLevel * deltaRoughness);
+	//			const GLuint numGroups = glm::max(1, size / 32);
+	//			glDispatchCompute(numGroups, numGroups, 6);
+	//		}
+	//	}, "EnvMap 2");
+
+	//	Ref<Shader> envIrradianceShader = Shader::Find("Assets/Shaders/EnvironmentIrradiance.glsl");
+
+	//	Ref<TextureCube> irradianceMap = TextureCube::Create(TextureFormat::Float16, irradianceMapSize, irradianceMapSize, FilterType::Trilinear, false);
+	//	envIrradianceShader->Bind(ShaderVariations::Default);
+
+	//	envFiltered->Bind();
+
+	//	Renderer::Submit([irradianceMap, irradianceMapSize](){
+	//		glBindImageTexture(0, irradianceMap->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+	//		glDispatchCompute(irradianceMapSize / 32, irradianceMapSize / 32, 6);
+	//		//glGenerateTextureMipmap(irradianceMap->GetRendererID());
+	//	}, "EnvMap 3");
+
+	//	return { envFiltered, irradianceMap };
+	//}
+
+
+	static void DrawBoundingBoxes(const std::vector<SceneRendererData::DrawCommand>& drawList, bool depthTest)
 	{
-		ARES_PROFILE_FUNCTION();
+		for (auto& dc : drawList)
+			Renderer::DrawAABB(dc.Mesh, dc.Transform, s_Data.Options.AABBColor, depthTest);
+	}
 
-		bool outline = s_Data.SelectedMeshDrawList.size() > 0;
-
-		if (outline)
-		{
-			/*Renderer::Submit([](){
-				glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-			}, "Outline STart");*/
-		}
-
-		Renderer::BeginRenderPass(s_Data.GeoPass, true, true, true);
-
-		//auto viewProjection = s_Data.SceneData.SceneCamera.GetProjectionMatrix() * s_Data.SceneData.SceneCamera.GetViewMatrix();
-		//auto viewProjection = s_Data.SceneData.SceneCamera.GetViewProjection();
-
-		if (outline)
-		{
-
-			Renderer::Submit([]() {
-				glStencilOp(
-
-					// action to take if the stencil test fails.
-					GL_KEEP,	// If any of the tests fail we do nothing; we keep the currently stored value 
-								// that is in the stencil buffer. 
-
-					// action to take if the stencil test passes, but the depth test fails.
-					GL_REPLACE,
-
-					// action to take if both the stenciland the depth test pass
-					GL_REPLACE	// If both the stencil test and the depth test succeed however, 
-								// we want to replace the stored stencil value with the reference value set 
-								// via glStencilFunc which we later set to 1.
-				);
-				}, "Outline STart");
-			Renderer::Submit([]() {
-
-				// all fragments should pass the stencil test
-				glStencilFunc(GL_ALWAYS, 1, 0xff);
-
-				}, "outline other stuff");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-			// make sure we don't update the stencil buffer while drawing the floor
-			Renderer::Submit([](){
-				glStencilMask(0x00); 
-
-			}, "Outline Stencil mask");
-		}
-		/*
-		*/
-
-
-
-		auto viewMatrix = s_Data.SceneData.SceneCamera.ViewMatrix;
-		auto viewProjection = s_Data.SceneData.SceneCamera.Camera.GetProjectionMatrix() * viewMatrix;
-		glm::vec3 cameraPosition = glm::inverse(s_Data.SceneData.SceneCamera.ViewMatrix)[3];
-
-
-
-		// Skybox
+	static void SetupSelectedMeshDrawing()
+	{
 		Renderer::Submit([]() {
-			glDepthMask(false);	
-		}, "");
-		
-		// TODO: render skybox (render as last to prevent overdraw)
-		auto skyboxShader = s_Data.SceneData.SkyboxMaterial->GetShader();
-		skyboxShader->Bind(ShaderVariations::Default);
 
-		s_Data.SceneData.SkyboxMaterial->SetValue("u_InverseVP", glm::inverse(viewProjection));
-		//float skyboxLod = s_Data.ActiveScene->GetSkyboxLod();
-		
-		//s_Data.SceneData.SkyboxMaterial->Set("u_TextureLod", s_Data.SceneData.SkyboxLod);
-		// s_Data.SceneInfo.EnvironmentIrradianceMap->Bind(0);
-		Renderer::SubmitFullscreenQuad(s_Data.SceneData.SkyboxMaterial, true);
-		Renderer::Submit([]() {
-			glDepthMask(true);
-		}, "");
-
-
-
-		/*
-			set standard mesh drawing shader variables
-		*/
-
-		s_Data.BRDFLUT->Bind(Renderer::BRDF_LUT_TEX_SLOT);
-		s_Data.SceneData.SceneEnvironment.RadianceMap->Bind(Renderer::ENVIRONMENT_CUBE_TEX_SLOT);
-		s_Data.SceneData.SceneEnvironment.IrradianceMap->Bind(Renderer::ENVIRONMENT_IRRADIANCE_TEX_SLOT);
-
-
-		DrawRenderMapUnlit(s_Data.UnlitDrawMap, viewProjection, viewMatrix, false);
-		DrawRenderMapForwardBase(s_Data.FwdBaseDrawMap, viewProjection, viewMatrix, false);
-
-		//DrawRenderMapForwardAdd(s_Data.FwdAddDrawMap, viewProjection, viewMatrix);
-
-
-		//RenderMap drawMap;
-		//SortRenderMap(s_Data.DrawList, drawMap);
-		//DrawRenderMap(drawMap, viewProjection, viewMatrix);// , cameraPosition);
-		//DrawRenderMap(s_Data.DrawMap, viewProjection, viewMatrix);// , cameraPosition);
-		//drawMap.clear();
-
-
-		// TODO: render order based on material....
-		// Render entities
-		
-		//std::unordered_set<std::string> shadersVisited;
-
-		//for (auto& dc : s_Data.DrawList)
-		//{
-		//	//auto baseMaterial = dc.Mesh->GetMaterial();
-
-
-		//	ShaderVariant variant = dc.Mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
-
-		//	const std::vector<Ref<Material>>& materials = dc.Materials;
-
-		//	for (auto material : materials)
-		//	//for (size_t i = 0; i < materials.size(); i++)
-		//	{
-
-		//		Ref<Shader> shader = material->GetShader();
-		//		std::string key = shader->GetName() + std::to_string((size_t)variant);
-
-		//		if (!shadersVisited.count(key))
-		//		{
-
-		//			shader->Bind(variant);
-		//			shader->SetMat4("ares_VPMatrix", viewProjection, variant);
-		//			// maybe set view and projection seperate as well
-
-		//			shadersVisited.insert(key);
-		//		}
-
-		//		//baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
-		//		material->Set("u_CameraPosition", cameraPosition);
-
-		//		// Environment (TODO: don't do this per mesh)
-		//		material->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
-		//		material->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
-		//		material->Set("u_BRDFLUTTexture", s_Data.BRDFLUT);
-
-		//		// Set lights (TODO: move to light environment and don't do per mesh)
-		//		material->Set("lights", s_Data.SceneData.ActiveLight);
-
-		//	}
-
-
-		//	/*
-		//	Ref<Material> baseMaterial = nullptr;
-		//	//if (dc.MaterialOverride)
-		//	if (dc.Material)
-		//	{
-
-		//		//baseMaterial = dc.MaterialOverride->BaseMaterial();
-		//		baseMaterial = dc.Material;
-		//	}
-		//	else
-		//	{
-		//		baseMaterial = dc.Mesh->GetMaterial();
-		//	}
-
-		//	Ref<Shader> shader = baseMaterial->GetShader();
-		//	ShaderVariant variant = dc.Mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
-
-		//	std::string key = shader->GetName() + std::to_string((size_t)variant);
-
-		//	if (!shadersVisited.count(key))
-		//	{
-
-		//		shader->Bind(variant);
-		//		shader->SetMat4("ares_VPMatrix", viewProjection, variant);
-		//		// maybe set view and projection seperate as well
-
-		//		shadersVisited.insert(key);
-		//	}
-		//	*/
-
-
-
-		////	auto baseMaterial = dc.Material;// Mesh->GetMaterial();
-
-		//	// make list of shaders from draw list, set this per shader:
-		//	{
-		//		//ares_VPMatrix
-
-		//		//baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
-		//		// maybe set view and projection seperate as well
-		//	}
-
-		//	
-		//	/*
-		//	baseMaterial->Set("u_CameraPosition", cameraPosition);
-
-		//	// Environment (TODO: don't do this per mesh)
-		//	baseMaterial->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
-		//	baseMaterial->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
-		//	baseMaterial->Set("u_BRDFLUTTexture", s_Data.BRDFLUT);
-
-		//	//ARES_CORE_LOG("LGIHT {0}", s_Data.SceneData.ActiveLight.Multiplier);
-		//	// Set lights (TODO: move to light environment and don't do per mesh)
-		//	baseMaterial->Set("lights", s_Data.SceneData.ActiveLight);
-		//	*/
-		//	//auto overrideMaterial = nullptr; // dc.Material;
-		//	
-		//	Renderer::SubmitMesh(dc.Mesh, dc.Transform, materials);
-		//	//Renderer::SubmitMesh(dc.Mesh, dc.Transform, dc.MaterialOverride);
-
-		////	//auto overrideMaterial = nullptr; // dc.Material;
-
-		////	//baseMaterial->Bind();
-		//	//Renderer::SubmitMesh(dc.Mesh, dc.Transform);// , baseMaterial->GetShader());
-		////	//Renderer::SubmitMesh(dc.Mesh, dc.Transform, overrideMaterial);
-		//}
-
-
-		if (outline)
-		{
 			/*
-
-			Renderer::Submit([]() {
-				glStencilOp(
-
-					// action to take if the stencil test fails.
-					GL_KEEP,	// If any of the tests fail we do nothing; we keep the currently stored value 
-								// that is in the stencil buffer. 
-					
-					// action to take if the stencil test passes, but the depth test fails.
-					GL_REPLACE,
-					
-					// action to take if both the stenciland the depth test pass
-					GL_REPLACE	// If both the stencil test and the depth test succeed however, 
-								// we want to replace the stored stencil value with the reference value set 
-								// via glStencilFunc which we later set to 1.
-				);
-				}, "Outline STart");
-			Renderer::Submit([]() {
-				
-				// all fragments should pass the stencil test
-				glStencilFunc(GL_ALWAYS, 1, 0xff); 
-
-				// enable writing to the stencil buffer
-				// We clear the stencil buffer to 0s at the start of the frame and for the outlined object 
-				// we update the stencil buffer to 1 for each fragment drawn:
-				glStencilMask(0xff);	
-			}, "outline other stuff");
-			
-			DrawRenderMapUnlit(s_Data.UnlitDrawMap, viewProjection, viewMatrix, true);
-			DrawRenderMapForwardBase(s_Data.FwdBaseDrawMap, viewProjection, viewMatrix, true);
-			*/
-		
-			/*
-				By using GL_REPLACE as the stencil op function we make sure that each of the containers' 
-				fragments update the stencil buffer with a stencil value of 1. 
-				Because the fragments always pass the stencil test, the stencil buffer is updated 
+				By using GL_REPLACE as the stencil op function we make sure that each of the containers'
+				fragments update the stencil buffer with a stencil value of 1.
+				Because the fragments always pass the stencil test, the stencil buffer is updated
 				with the reference value wherever we've drawn them.
-
 			*/
-		}
+
+			glStencilOp(
+				// action to take if the stencil test fails.
+				GL_KEEP,	// If any of the tests fail we do nothing; we keep the currently stored value 
+							// that is in the stencil buffer. 
+				// action to take if the stencil test passes, but the depth test fails.
+				GL_REPLACE,
+				// action to take if both the stenciland the depth test pass
+				GL_REPLACE	// If both the stencil test and the depth test succeed however, 
+							// we want to replace the stored stencil value with the reference value set 
+							// via glStencilFunc which we later set to 1.
+			);
+
+			// all fragments should pass the stencil test
+			glStencilFunc(GL_ALWAYS, 1, 0xff);
+
+			// make sure we don't update the stencil buffer while drawing the normal geometry
+			glStencilMask(0x00);
+
+		}, "Outline Start");
+	}
+
+	static void DrawSelectedMeshes(const Matrix4& viewProjection)
+	{
+
+		Renderer::Submit([]() {
+			glStencilMask(0x00); // disable writing to the stencil buffer
+			glLineWidth(2);
+			glEnable(GL_LINE_SMOOTH);
+			glPolygonMode(GL_FRONT, GL_LINE);
+			}, "Draw Outline Prepare");
 
 
-/*
-*/
-
-
-
-		//SortRenderMap(s_Data.SelectedMeshDrawList, drawMap);
-		//DrawRenderMap(drawMap, viewProjection, viewMatrix);// , cameraPosition);
-		
-		
-		/*
-			MAYBE NEED TO RE RENDER SELECTED OBJECTS...
-		//DrawRenderMap(s_Data.SelectedDrawMap, viewProjection, viewMatrix);// , cameraPosition);
 		size_t outlineDrawCount = s_Data.SelectedMeshDrawList.size();
 		std::vector<SceneRendererData::DrawCommand> outlineDraws;
 		outlineDraws.resize(s_Data.SelectedMeshDrawList.size());
@@ -1208,17 +721,21 @@ namespace Ares {
 		size_t y = outlineDrawCount - 1;
 		for (auto& dc : s_Data.SelectedMeshDrawList)
 		{
-			if (dc.Mesh->IsAnimated())
+			if (dc.BoneTransforms)
 				outlineDraws[y--] = dc;
 			else
 				outlineDraws[x++] = dc;
-			
 		}
 		size_t skinnedVariationStart = x;
 
+
+		/*
+			draw the mesh wireframe of the selected objects
+		*/
+
 		s_Data.OutlineShader->Bind(ShaderVariations::Default);
 		s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection);
-		s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1));
+		s_Data.OutlineShader->SetFloat4("u_Color", s_Data.Options.MeshTrianglesColor);
 
 		for (size_t i = 0; i < outlineDrawCount; i++)
 		{
@@ -1226,527 +743,145 @@ namespace Ares {
 			{
 				s_Data.OutlineShader->Bind(ShaderVariations::DefaultSkinned);
 				s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection);
-				s_Data.OutlineShader->SetFloat4("u_Color", glm::vec4(1, .5f, 0, 1));
+				s_Data.OutlineShader->SetFloat4("u_Color", s_Data.Options.MeshTrianglesColor);
 			}
 
-			Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, true);
+			Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, outlineDraws[i].BoneTransforms, true);
 		}
+
+
+		/*
+			Now that the stencil buffer is updated with 1s where the containers were drawn
+			we're going to draw the upscaled containers, but this time with the appropriate
+			test function and disabling writes to the stencil buffer:
+
+			We set the stencil function to GL_NOTEQUAL to make sure that we're only drawing parts
+			of the containers that are not equal to 1. This way we only draw the part of the containers
+			that are outside the previously drawn containers. Note that we also disable depth testing so
+			the scaled up containers (e.g. the borders) do not get overwritten by the floor.
 		*/
+		Renderer::Submit([]() {
+			glStencilFunc(GL_NOTEQUAL, 1, 0xff);
+			glLineWidth(10);
+			}, "");
 
+		s_Data.OutlineShader->Bind(ShaderVariations::Default);
+		s_Data.OutlineShader->SetFloat4("u_Color", s_Data.Options.OutlineColor);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		//shadersVisited.clear();
-
-		//for (auto& dc : s_Data.SelectedMeshDrawList)
-		//{
-		//	//Ref<Material> baseMaterial = nullptr;
-		//	//if (dc.MaterialOverride)
-		//	//if (dc.Material)
-		//	//{
-
-		//	//	//baseMaterial = dc.MaterialOverride->BaseMaterial();
-		//	//	baseMaterial = dc.Material;
-		//	//}
-		//	//else
-		//	//{
-		//	//	baseMaterial = dc.Mesh->GetMaterial();
-		//	//}
-
-		//	ShaderVariant variant = dc.Mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
-		//	
-		//	for (size_t i = 0; i < dc.Materials.size(); i++)
-		//	{
-		//		Ref<Shader> shader = dc.Materials[i]->GetShader();
-		//		std::string key = shader->GetName() + std::to_string((size_t)variant);
-
-		//		if (!shadersVisited.count(key))
-		//		{
-		//			shader->Bind(variant);
-		//			shader->SetMat4("ares_VPMatrix", viewProjection, variant);
-		//			// maybe set view and projection seperate as well
-		//			shadersVisited.insert(key);
-		//		}
-
-		//		//baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
-		//		dc.Materials[i]->Set("u_CameraPosition", cameraPosition);
-
-		//		// Environment (TODO: don't do this per mesh)
-		//		dc.Materials[i]->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
-		//		dc.Materials[i]->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
-		//		dc.Materials[i]->Set("u_BRDFLUTTexture", s_Data.BRDFLUT);
-
-		//		// Set lights (TODO: move to light environment and don't do per mesh)
-		//		dc.Materials[i]->Set("lights", s_Data.SceneData.ActiveLight);
-
-		//	}
-
-
-
-
-		//	////baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
-		//	//baseMaterial->Set("u_CameraPosition", cameraPosition);
-
-		//	//// Environment (TODO: don't do this per mesh)
-		//	//baseMaterial->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
-		//	//baseMaterial->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
-		//	//baseMaterial->Set("u_BRDFLUTTexture", s_Data.BRDFLUT);
-
-		//	//// Set lights (TODO: move to light environment and don't do per mesh)
-		//	//baseMaterial->Set("lights", s_Data.SceneData.ActiveLight);
-
-		//	//auto overrideMaterial = nullptr; // dc.Material;
-
-		//	//Renderer::SubmitMesh(dc.Mesh, dc.Transform, dc.MaterialOverride);
-		//	Renderer::SubmitMesh(dc.Mesh, dc.Transform, dc.Materials);
-		//}
-
-		if (outline)
+		for (size_t i = 0; i < outlineDrawCount; i++)
 		{
-
-			Renderer::Submit([]() {
-				//glStencilFunc(GL_NOTEQUAL, 1, 0xff);
-				glStencilMask(0x00); // disable writing to the stencil buffer
-
-				glLineWidth(2);
-				glEnable(GL_LINE_SMOOTH);
-				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				glPolygonMode(GL_FRONT, GL_LINE);
-				//glDisable(GL_DEPTH_TEST);
-				}, "Draw Outline Prepare");
-
-			// Draw outline here
-
-
-
-				//Ref<Shader> outlineShader = s_Data.OutlineMaterial->GetShader();
-
-				//std::unordered_set<ShaderVariant> outlineVariantsVisited;
-				//std::vector<Ref<Material>> outlineMaterials = { s_Data.OutlineMaterial };
-
-			size_t outlineDrawCount = s_Data.SelectedMeshDrawList.size();
-			std::vector<SceneRendererData::DrawCommand> outlineDraws;
-			outlineDraws.resize(s_Data.SelectedMeshDrawList.size());
-			size_t x = 0;
-			size_t y = outlineDrawCount - 1;
-			for (auto& dc : s_Data.SelectedMeshDrawList)
+			if (i == skinnedVariationStart)
 			{
-				//if (dc.Mesh->IsAnimated())
-				if (dc.BoneTransforms)
-					outlineDraws[y--] = dc;
-				/*{
-				}*/
-				else
-					outlineDraws[x++] = dc;
-				/*{
-				}*/
-			}
-			size_t skinnedVariationStart = x;
-
-			s_Data.OutlineShader->Bind(ShaderVariations::Default);
-			s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection);
-			s_Data.OutlineShader->SetFloat4("u_Color", GetOptions().MeshTrianglesColor);
-
-			for (size_t i = 0; i < outlineDrawCount; i++)
-			{
-				if (i == skinnedVariationStart)
-				{
-					s_Data.OutlineShader->Bind(ShaderVariations::DefaultSkinned);
-					s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection);
-					s_Data.OutlineShader->SetFloat4("u_Color", GetOptions().MeshTrianglesColor);
-				}
-
-				Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, outlineDraws[i].BoneTransforms, true);
+				s_Data.OutlineShader->Bind(ShaderVariations::DefaultSkinned);
+				s_Data.OutlineShader->SetFloat4("u_Color", s_Data.Options.OutlineColor);
 			}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-			/*
-				Now that the stencil buffer is updated with 1s where the containers were drawn 
-				we're going to draw the upscaled containers, but this time with the appropriate 
-				test function and disabling writes to the stencil buffer:
-			*/
-			
-			/*
-				We set the stencil function to GL_NOTEQUAL to make sure that we're only drawing parts 
-				of the containers that are not equal to 1. This way we only draw the part of the containers 
-				that are outside the previously drawn containers. Note that we also disable depth testing so 
-				the scaled up containers (e.g. the borders) do not get overwritten by the floor. 
-			*/
-			Renderer::Submit([]() {
-				glStencilFunc(GL_NOTEQUAL, 1, 0xff);
-				glStencilMask(0x00); // disable writing to the stencil buffer
-
-
-				glLineWidth(10);
-				glEnable(GL_LINE_SMOOTH);
-				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				glPolygonMode(GL_FRONT, GL_LINE);
-				//glDisable(GL_DEPTH_TEST);
-			}, "Draw Outline Prepare");
-
-			// Draw outline here
-
-			
-
-				//Ref<Shader> outlineShader = s_Data.OutlineMaterial->GetShader();
-			
-				//std::unordered_set<ShaderVariant> outlineVariantsVisited;
-				//std::vector<Ref<Material>> outlineMaterials = { s_Data.OutlineMaterial };
-
-				//size_t 
-					outlineDrawCount = s_Data.SelectedMeshDrawList.size();
-				//std::vector<SceneRendererData::DrawCommand> outlineDraws;
-
-					outlineDraws.clear();
-
-				outlineDraws.resize(s_Data.SelectedMeshDrawList.size());
-				//size_t 
-					x = 0;
-				//size_t 
-					y = outlineDrawCount - 1;
-				for (auto& dc : s_Data.SelectedMeshDrawList)
-				{
-					//if (dc.Mesh->IsAnimated())
-					if (dc.BoneTransforms)
-						outlineDraws[y--] = dc;
-					/*{
-					}*/
-					else
-						outlineDraws[x++] = dc;
-					/*{
-					}*/
-				}
-				//size_t 
-					skinnedVariationStart = x;
-
-				s_Data.OutlineShader->Bind(ShaderVariations::Default);
-				s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection);
-				s_Data.OutlineShader->SetFloat4("u_Color", GetOptions().OutlineColor);
-
-				for (size_t i = 0; i < outlineDrawCount; i++)
-				{
-					if (i == skinnedVariationStart)
-					{
-						s_Data.OutlineShader->Bind(ShaderVariations::DefaultSkinned);
-						s_Data.OutlineShader->SetMat4("ares_VPMatrix", viewProjection);
-						s_Data.OutlineShader->SetFloat4("u_Color", GetOptions().OutlineColor);
-					}
-
-					Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, outlineDraws[i].BoneTransforms, false);
-				}
-
-
-
-				//s_Data.OutlineMaterial->Set("u_ViewProjection", viewProjection);
-				//for (auto& dc : s_Data.SelectedMeshDrawList)
-				//{
-				//	ShaderVariant variant = dc.Mesh->IsAnimated() ? ShaderVariant::Skinned : ShaderVariant::Static;
-				//	if (!outlineVariantsVisited.count(variant))
-				//	{
-				//		s_Data.OutlineMaterial->GetShader()->Bind(variant);
-				//		s_Data.OutlineMaterial->GetShader()->SetMat4("ares_VPMatrix", viewProjection, variant);
-				//		outlineVariantsVisited.insert(variant);
-				//	}
-				//
-				//	//Renderer::SubmitMesh(dc.Mesh, dc.Transform, s_Data.OutlineMaterial);
-				//	Renderer::SubmitMesh(dc.Mesh, dc.Transform, outlineMaterials);
-				//}
-
-			
-
-
-
-
-
-			Renderer::Submit([](){
-					glPointSize(10);
-					//glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-					glPolygonMode(GL_FRONT, GL_POINT);
-				}, "Draw Outline polymode");
-
-
-
-			s_Data.OutlineShader->Bind(ShaderVariations::Default);
-			
-			for (size_t i = 0; i < outlineDrawCount; i++)
-			{
-				if (i == skinnedVariationStart)
-				{
-					s_Data.OutlineShader->Bind(ShaderVariations::DefaultSkinned);
-				}
-
-				Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, outlineDraws[i].BoneTransforms, false);
-			}
-
-			//for (auto& dc : s_Data.SelectedMeshDrawList)
-			//{
-			//	//Renderer::SubmitMesh(dc.Mesh, dc.Transform, s_Data.OutlineMaterial);
-			//	Renderer::SubmitMesh(dc.Mesh, dc.Transform, outlineMaterials);
-			//}
-
-
-
-
-
-			Renderer::Submit([](){
-					glStencilMask(0xff);
-					glStencilFunc(GL_ALWAYS, 1, 0xff);
-					//glEnable(GL_DEPTH_TEST);
-					glPolygonMode(GL_FRONT, GL_FILL);
-					glEnable(GL_DEPTH_TEST);
-				}, "Outline End");
+			Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, outlineDraws[i].BoneTransforms, false);
 		}
 
 
+		/*
+			draw with points (this fills out gaps from the line rendering)
+		*/
+		Renderer::Submit([]() {
+			glPointSize(10);
+			glPolygonMode(GL_FRONT, GL_POINT);
+			}, "");
+
+		s_Data.OutlineShader->Bind(ShaderVariations::Default);
+		for (size_t i = 0; i < outlineDrawCount; i++)
+		{
+			if (i == skinnedVariationStart)
+				s_Data.OutlineShader->Bind(ShaderVariations::DefaultSkinned);
+
+			Renderer::SubmitMesh(s_Data.OutlineShader, outlineDraws[i].Mesh, outlineDraws[i].Transform, outlineDraws[i].BoneTransforms, false);
+		}
+
+		Renderer::Submit([]() {
+			glStencilMask(0xff);
+			glStencilFunc(GL_ALWAYS, 1, 0xff);
+			glPolygonMode(GL_FRONT, GL_FILL);
+			glEnable(GL_DEPTH_TEST);
+			}, "Outline End");
 
 
+		/*
+			draw the bounding boxes of the selected meshes
+		*/
+		DrawBoundingBoxes(s_Data.SelectedMeshDrawList, false);		
+	}
+	
+	static void DrawGrid(const Vector3& cameraPosition)
+	{
+		Vector3 camPos = cameraPosition;
+		camPos.y = 0;
+		camPos.x = (int)camPos.x;
+		camPos.z = (int)camPos.z;
+
+		uint32_t gridRes = s_Data.Options.GridResolution;
+
+		for (int i = -gridRes; i <= gridRes; i++)
+		{
+			Renderer2D::SubmitLine(camPos + Vector3{ i, 0, -gridRes }, camPos + Vector3{ i, 0, gridRes }, s_Data.Options.GridColor, true, s_Data.Options.GridCameraRange);
+			Renderer2D::SubmitLine(camPos + Vector3{ -gridRes, 0, i }, camPos + Vector3{ gridRes, 0, i }, s_Data.Options.GridColor, true, s_Data.Options.GridCameraRange);
+		}
+	}
+	
+	void SceneRenderer::GeometryPass()
+	{
+		ARES_PROFILE_FUNCTION();
+
+		auto viewMatrix = s_Data.SceneData.SceneCamera.ViewMatrix;
+		auto viewProjection = s_Data.SceneData.SceneCamera.Camera.GetProjectionMatrix() * viewMatrix;
+		glm::vec3 cameraPosition = glm::inverse(s_Data.SceneData.SceneCamera.ViewMatrix)[3];
 		
-
-		// DEBUG THE BRDF TEXTURE
-
-
-		//Ref<Shader> texShader = Shader::Find("Assets/Shaders/Textured.glsl");
-		//texShader->Bind();
-		//texShader->SetInt("u_Texture", 0);
-		//texShader->SetMat4("u_ViewProjection", viewProjection);
-		//s_Data.BRDFLUT->Bind();
-
-		////Renderer::SubmitQuad(texShader, glm::translate(glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec3(0, 0, -2)), true);
-		//Renderer::SubmitQuad(texShader, glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, -2)), true);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		Renderer::BeginRenderPass(s_Data.GeoPass, true, true, true);
 		
-
-		//auto viewProj = m_EditorCamera.GetViewProjection();
-		Renderer2D::BeginScene(viewProjection, cameraPosition);// , false);
-
-		//if (m_SelectionContext.size() && false)
+		Renderer2D::BeginScene(viewProjection, cameraPosition);
+		
+		bool outline = s_Data.SelectedMeshDrawList.size() > 0;
 		if (outline)
 		{
+			SetupSelectedMeshDrawing();
+		}
 
-			size_t outlineDrawCount = s_Data.SelectedMeshDrawList.size();
-			std::vector<SceneRendererData::DrawCommand> outlineDraws;
-			outlineDraws.resize(s_Data.SelectedMeshDrawList.size());
-			size_t x = 0;
-			size_t y = outlineDrawCount - 1;
-			for (auto& dc : s_Data.SelectedMeshDrawList)
-			{
-				//if (dc.Mesh->IsAnimated())
-				if (dc.BoneTransforms)
-					outlineDraws[y--] = dc;
-				/*{
-				}*/
-				else
-					outlineDraws[x++] = dc;
-				/*{
-				}*/
-			}
-			size_t skinnedVariationStart = x;
-
-			
-			for (size_t i = 0; i < outlineDrawCount; i++)
-			{
-				if (i == skinnedVariationStart)
-				{
-				}
+		/*
+			set standard mesh drawing shader variables
+		*/
+		s_Data.BRDFLUT->Bind(Renderer::BRDF_LUT_TEX_SLOT);
+		s_Data.SceneData.SceneEnvironment.RadianceMap->Bind(Renderer::ENVIRONMENT_CUBE_TEX_SLOT);
+		s_Data.SceneData.SceneEnvironment.IrradianceMap->Bind(Renderer::ENVIRONMENT_IRRADIANCE_TEX_SLOT);
 
 
-				Renderer::DrawAABB(outlineDraws[i].Mesh, outlineDraws[i].Transform, GetOptions().AABBColor, false);
-				
-			}
+		DrawRenderMapUnlit(s_Data.UnlitDrawMap, viewProjection, viewMatrix);
+		DrawRenderMapForwardBase(s_Data.FwdBaseDrawMap, viewProjection, viewMatrix);
+		//DrawRenderMapForwardAdd(s_Data.FwdAddDrawMap, viewProjection, viewMatrix);
+
+
+		if (outline)
+		{
+			DrawSelectedMeshes(viewProjection);
 		}
 
 		if (GetOptions().ShowBoundingBoxes)
 		{
-			//Renderer2D::BeginScene(viewProjection, cameraPosition);
-			for (auto& dc : s_Data.DrawList)
-				Renderer::DrawAABB(dc.Mesh, dc.Transform, GetOptions().AABBColor, true);
-			//Renderer2D::EndScene();
+			DrawBoundingBoxes(s_Data.DrawList, true);
 		}
 
-
-		
-		
 		if (GetOptions().ShowGrid)
-		//if (showGrid)
 		{
-
-			Vector3 camPos = cameraPosition;// glm::inverse(m_EditorCamera.m_ViewMatrix)[3];
-			camPos.y = 0;
-			camPos.x = (int)camPos.x;
-			camPos.z = (int)camPos.z;
-
-			for (int i = -GetOptions().GridResolution; i <= GetOptions().GridResolution; i++)
-			{
-
-				Renderer2D::SubmitLine(camPos + Vector3{ i, 0, -GetOptions().GridResolution }, camPos + Vector3{ i, 0, GetOptions().GridResolution }, GetOptions().GridColor, true, GetOptions().GridCameraRange);
-				Renderer2D::SubmitLine(camPos + Vector3{ -GetOptions().GridResolution, 0, i }, camPos + Vector3{ GetOptions().GridResolution, 0, i }, GetOptions().GridColor, true, GetOptions().GridCameraRange);
-			}
-
+			DrawGrid(cameraPosition);
 		}
+
+		// Skybox (rendered last to prevent overdraw)
+		Renderer::Submit([]() { glDepthMask(false);	}, "");
+		s_Data.SceneData.SkyboxMaterial->GetShader()->Bind(ShaderVariations::Default);
+		s_Data.SceneData.SkyboxMaterial->GetShader()->SetMat4("ares_InverseVP", glm::inverse(viewProjection));
+		Renderer::SubmitFullscreenQuad(s_Data.SceneData.SkyboxMaterial, true);
+		Renderer::Submit([]() { glDepthMask(true); }, "");
+
 
 		Renderer2D::EndScene();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		// Grid
-		//if (GetOptions().ShowGrid)
-		{
-
-
-			//int m_GridScale = 8;
-			//float m_GridSize = 0.025f;
-			//float m_GridSize = 0.5f;
-
-			//s_Data.GridShader->Bind(ShaderVariations::Default);
-			//s_Data.GridShader->SetMat4("ares_VPMatrix", viewProjection);
-
-			/*s_Data.GridMaterial->GetShader()->Bind(ShaderVariant::Static);
-			s_Data.GridMaterial->GetShader()->SetMat4("ares_VPMatrix", viewProjection, ShaderVariant::Static);*/
-
-			//s_Data.GridMaterial->Set("ares_VPMatrix", viewProjection);
-
-
-			//s_Data.GridMaterial->Set("u_MVP", viewProjection * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
-
-			// TODO: get scale from scene params
-			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(16.0f)));
-			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(m_GridScale - m_GridSize)));
-			
-
-			//Renderer::SubmitQuad(s_Data.GridMaterial, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));// *glm::scale(glm::mat4(1.0f), glm::vec3(GRID_RESOLUTION + GRID_WIDTH)));
-			
-			
-			
-			
-			// used
-			//Renderer::SubmitQuad(s_Data.GridShader, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), true);// *glm::scale(glm::mat4(1.0f), glm::vec3(GRID_RESOLUTION + GRID_WIDTH)));
-		}
-
-		/*
-		if (GetOptions().ShowBoundingBoxes)
-		{
-			Renderer2D::BeginScene(viewProjection, cameraPosition);
-			for (auto& dc : s_Data.DrawList)
-				Renderer::DrawAABB(dc.Mesh, dc.Transform, GetOptions().AABBColor, true);
-			Renderer2D::EndScene();
-		}
-		*/
-
-		/*
-		// Skybox
-		// render skybox (render as last to prevent overdraw)
-		//auto skyboxShader = s_Data.SceneData.SkyboxMaterial->GetShader();
-		s_Data.SceneData.SkyboxMaterial->Set("u_InverseVP", glm::inverse(viewProjection));
-		//float skyboxLod = s_Data.ActiveScene->GetSkyboxLod();
-		s_Data.SceneData.SkyboxMaterial->Set("u_TextureLod", s_Data.SceneData.SkyboxLod);
-		// s_Data.SceneInfo.EnvironmentIrradianceMap->Bind(0);
-		Renderer::SubmitFullscreenQuad(s_Data.SceneData.SkyboxMaterial);
-		*/
-
-
 		Renderer::EndRenderPass();
 	}
 
@@ -1755,12 +890,8 @@ namespace Ares {
 	{
 		ARES_PROFILE_FUNCTION();
 
-		Renderer::Submit([]() {
-			glDepthMask(false);
-		}, "");
-		/*
-		*/
-
+		Renderer::Submit([]() { glDepthMask(false); }, "");
+		
 		Renderer::BeginRenderPass(s_Data.CompositePass, true, true, true);
 		s_Data.CompositeShader->Bind(ShaderVariations::Default);
 		s_Data.CompositeShader->SetFloat("u_Exposure", s_Data.SceneData.Exposure);
@@ -1770,12 +901,7 @@ namespace Ares {
 		Renderer::SubmitFullscreenQuad(nullptr, false);
 		Renderer::EndRenderPass();
 		
-		Renderer::Submit([]() {
-			glDepthMask(true);
-		}, "");
-		/*
-		*/
-
+		Renderer::Submit([]() { glDepthMask(true); }, "");
 	}
 
 	Ref<RenderPass> SceneRenderer::GetFinalRenderPass()
@@ -1787,8 +913,6 @@ namespace Ares {
 		return s_Data.GeoPass;
 	}
 
-
-	
 	uint32_t SceneRenderer::GetFinalColorBufferRendererID()
 	{
 		return s_Data.CompositePass->GetSpecs().TargetFrameBuffer->GetColorAttachmentRendererID();

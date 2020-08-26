@@ -3,6 +3,7 @@
 #include "Ares/Core/Components.h"
 #include "Ares/Renderer/Animator.h"
 
+#include "Ares/Renderer/SceneRenderer.h"
 
 #include "Ares/Core/Scene.h"
 #include "Ares/Renderer/Renderer2D.h"
@@ -378,11 +379,19 @@ namespace Ares
         return nullptr;
     }
 
+    void Scene::UpdateGI()
+    {
+        m_Environment = SceneRenderer::UpdateGI(m_SkyboxMaterial);
+        m_Environment.RadianceMap->Bind(Renderer::ENVIRONMENT_CUBE_TEX_SLOT);
+        m_Environment.IrradianceMap->Bind(Renderer::ENVIRONMENT_IRRADIANCE_TEX_SLOT);
+    }
 
 
+    /*
 	Environment Environment::Load(const std::string& filepath)
 	{
 		auto [radiance, irradiance] = SceneRenderer::CreateEnvironmentMap(filepath);
 		return { filepath, radiance, irradiance };
 	}
+    */
 }

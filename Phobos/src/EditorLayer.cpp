@@ -109,20 +109,26 @@ namespace Ares
         // Editor
         m_AssetManagerPanel = CreateScope<AssetManagerPanel>();
 
-        auto environment = Environment::Load(
+
+        Ref<TextureCube> skyCube = SceneRenderer::ConvertHDRToCubemap(
             "C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\env\\venice_dawn_1_4k.hdr"
         );
+        
+        //auto environment = Environment::Load(
+            //"C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\env\\venice_dawn_1_4k.hdr"
+        //);
 
         m_EditorScene = CreateRef<Scene>("Editor Scene");
         UpdateWindowTitle("Editor Scene");
 
-        auto skyboxShader = Shader::Find("Assets/Shaders/CubemapSkybox.glsl");
-        auto skyboxMaterial = CreateRef<Material>(skyboxShader);
+        //auto skyboxShader = Shader::Find("Assets/Shaders/CubemapSkybox.glsl");
+        auto skyboxMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/CubemapSkybox.glsl"));
+        skyboxMaterial->SetTexture("u_Texture", skyCube);
+        skyboxMaterial->SetFlag(MaterialFlag::DepthTest, true);
 
-        skyboxMaterial->SetFlag(MaterialFlag::DepthTest, false);
 
         m_EditorScene->SetSkyboxMaterial(skyboxMaterial);
-        m_EditorScene->SetEnvironment(environment);
+        //m_EditorScene->SetEnvironment(environment);
 
         std::vector<Ref<Material>> loadedMaterials;
         std::vector<Ref<Animation>> loadedAnimations;
@@ -657,7 +663,9 @@ namespace Ares
             m_EditorScene->OnViewportResize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
             if (m_RuntimeScene)
                 m_RuntimeScene->OnViewportResize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+            
             m_EditorCamera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
+            
             ImGui::Image((void*)(intptr_t)SceneRenderer::GetFinalColorBufferRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
 
             static int counter = 0;
@@ -983,12 +991,14 @@ namespace Ares
         // Editor Panel ------------------------------------------------------------------------------
         ImGui::Begin("Scene Settings");
         {
+                /*
             if (ImGui::Button("Load Environment Map"))
             {
                 std::string filename = Application::Get().OpenFile("*.hdr");
                 if (filename != "")
                     m_EditorScene->SetEnvironment(Environment::Load(filename));
             }
+                */
             ImGui::Columns(2);
             ImGui::AlignTextToFramePadding();
             EditorGUI::FloatSliderField("Exposure", m_EditorScene->GetExposure(), 0.0f, 5.0f);

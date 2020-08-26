@@ -7,25 +7,14 @@
 
 
 namespace Ares {
-
-	Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
 	
-	/*RenderCommandQueue Renderer::s_CommandQueue;
-	Ref<RenderPass> Renderer::s_ActiveRenderPass;*/
-	 
+	
+	static Renderer::RendererData s_Data;
 
-	struct RendererData
+	Renderer::RendererData& Renderer::GetRendererData()
 	{
-		Ref<RenderPass> m_ActiveRenderPass;
-		RenderCommandQueue m_CommandQueue;
-		Ref<VertexArray> m_FullscreenQuadVertexArray;
-		Ref<VertexArray> m_QuadVertexArray;
-
-		Ref<Texture2D> m_WhiteTexture;
-		Ref<Texture2D> m_DefaultBump;
-	};
-
-	static RendererData s_Data;
+		return s_Data;
+	}
 
 	RenderCommandQueue& Renderer::GetRenderCommandQueue()
 	{
@@ -33,9 +22,7 @@ namespace Ares {
 	}
 	void Renderer::Init()
 	{
-		Submit([]() { 
-			RenderCommand::Init(); 
-			}, "Rendering Init");
+		Submit([]() { RenderCommand::Init(); }, "Rendering Init");
 		Renderer2D::Init();
 
 		SceneRenderer::Init();
@@ -60,8 +47,6 @@ namespace Ares {
 		s_Data.m_FullscreenQuadVertexArray->SetIndexBuffer(IndexBuffer::Create(quadIndicies, 6));
 		delete[] data;
 
-
-
 		// Create Quad (check normal somehow)
 		float* data2 = new float[4 * 8]{
 			-0.5f, -0.5f, 0.0f,		0.0f, 0.0f,		0.0f, 0.0f, 1.0f,
@@ -83,29 +68,22 @@ namespace Ares {
 		s_Data.m_QuadVertexArray->SetIndexBuffer(IndexBuffer::Create(quadIndicies, 6));
 		delete[] quadIndicies;
 		delete[] data2;
-
-
-
-
-
-
 	}
 	
 	void Renderer::Shutdown()
 	{
+		SceneRenderer::Shutdown();
 		Renderer2D::Shutdown();
 	}
 
 
 
-	static Ref<Texture2D> CreateDefaultTexture(uint32_t data)// , uint32_t slot)
+	static Ref<Texture2D> CreateDefaultTexture(uint32_t data)
 	{
 		Ref<Texture2D> tex = Texture2D::Create(TextureFormat::RGBA, 1, 1, TextureWrap::Clamp, FilterType::Point, false);
-		//tex->SetData(&data);
 		tex->Lock();
 		tex->GetWriteableBuffer().Write(&data, sizeof(uint32_t));
 		tex->Unlock();
-		//tex->Bind(slot);
 		return tex;
 	}
 
@@ -113,35 +91,24 @@ namespace Ares {
 	Ref<Texture2D> Renderer::GetWhiteTexture()
 	{
 		if (s_Data.m_WhiteTexture == nullptr)
-		{
-			s_Data.m_WhiteTexture = CreateDefaultTexture(0xffffffff);// , WHITE_TEX_SLOT);
-			
-		}
+			s_Data.m_WhiteTexture = CreateDefaultTexture(0xffffffff);
 		return s_Data.m_WhiteTexture;
 	}
 
 	Ref<Texture2D> Renderer::GetDefaultBumpTexture()
 	{
 		if (s_Data.m_DefaultBump == nullptr)
-		{
-			s_Data.m_DefaultBump = CreateDefaultTexture(0xffff8080);//, DEF_BUMP_TEX_SLOT);
-			
-		}
+			s_Data.m_DefaultBump = CreateDefaultTexture(0xffff8080);
 		return s_Data.m_DefaultBump;
 	}
 
 	void Renderer::DrawIndexed(uint32_t count, PrimitiveType type, bool depthTest)
 	{
-		Submit([=]() {
-
-			RenderCommand::DrawIndexed(count, type, depthTest);
-		}, "Draw Indexed");
+		Submit([=]() { RenderCommand::DrawIndexed(count, type, depthTest); }, "Draw Indexed");
 	}
 	void Renderer::SetLineThickness(float thickness)
 	{
-		Submit([=]() {
-			RenderCommand::SetLineThickness(thickness);
-		}, "Set Line Thickness");
+		Submit([=]() { RenderCommand::SetLineThickness(thickness); }, "Set Line Thickness");
 	}
 
 	void Renderer::BeginRenderPass(Ref<RenderPass> renderPass, bool clearColor, bool clearDepth, bool clearStencil)
@@ -177,7 +144,6 @@ namespace Ares {
 		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
 	}
 
-	//void Renderer::SubmitQuad(Ref<MaterialInstance> material, const glm::mat4& transform)
 	void Renderer::SubmitQuad(Ref<Material> material, const glm::mat4& transform)
 	{
 		bool depthTest = true;
@@ -185,52 +151,32 @@ namespace Ares {
 		{
 			material->Bind();
 			depthTest = material->GetFlag(MaterialFlag::DepthTest);
-			//auto shader = material->GetShader();
-			
-			//material->GetShader()->SetMat4("u_Transform", transform);
 			material->GetShader()->SetMat4("_ares_internal_Transform", transform);
 		}
-
-
 		s_Data.m_QuadVertexArray->Bind();
 		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
 	}
 
-	//void Renderer::SubmitFullscreenQuad(Ref<MaterialInstance> material)
 	void Renderer::SubmitFullscreenQuad(Ref<Material> material, bool depthTest)
 	{
-		//bool depthTest = true;
 		if (material)
 		{
 			material->Bind();
 			depthTest = material->GetFlag(MaterialFlag::DepthTest);
 		}
-
 		s_Data.m_FullscreenQuadVertexArray->Bind();
 		DrawIndexed(6, PrimitiveType::Triangles, depthTest);
 	}
 
-
-
 	void Renderer::SubmitMesh(Ref<Shader> boundShader, Ref<Mesh> mesh, const glm::mat4& transform, const size_t& submeshIndex, Ref<Texture2D> boneMatrixTexture, const bool& depthTest)
 	{
-
 		// TODO: check shader bound
 		mesh->m_VertexArray->Bind();
 		
 		if (boneMatrixTexture)
-		//if (mesh->m_IsAnimated)
-		{ 
 			boneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
-			//mesh->m_BoneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
-			
-			
-			//mesh->m_BoneMatrixTexture->Bind(30);
-			//boundShader->SetInt("_ares_internal_BoneSampler", 30, variant);
-		}
+		
 		auto& submesh = mesh->GetSubmeshes()[submeshIndex];
-
-		//boundShader->SetMat4("_ares_internal_Transform", transform * submesh.Transform);
 		boundShader->SetMat4("_ares_internal_Transform", transform * submesh.ModelNode->GetModelSpaceTransform());
 
 		Submit([submesh, depthTest]() {
@@ -248,18 +194,10 @@ namespace Ares {
 		mesh->m_VertexArray->Bind();
 		
 		if (boneMatrixTexture)
-		//if (mesh->m_IsAnimated)
-		{
 			boneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
-			//mesh->m_BoneMatrixTexture->Bind(BONE_SAMPLER_TEX_SLOT);
-
-			//boundShader->SetInt("_ares_internal_BoneSampler", 30, variant);
-		}
-
 		
 		for (Submesh& submesh : mesh->m_Submeshes)
 		{
-			//boundShader->SetMat4("_ares_internal_Transform", transform * submesh.Transform);
 			boundShader->SetMat4("_ares_internal_Transform", transform * submesh.ModelNode->GetModelSpaceTransform());
 
 			Submit([submesh, depthTest]() {
@@ -273,103 +211,17 @@ namespace Ares {
 		}
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-	/*
-	
-	//void Renderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> overrideMaterial)
-	void Renderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, const std::vector<Ref<Material>>& materials)
-	{
-		// TODO: Sort this out
-		mesh->m_VertexArray->Bind();
-
-		//auto& materialOverrides = mesh->GetMaterialOverrides();
-
-
-		for (Submesh& submesh : mesh->m_Submeshes)
-		{
-			// Material
-
-			auto material = materials[submesh.MaterialIndex];
-
-			//auto material = overrideMaterial ? overrideMaterial : materialOverrides[submesh.MaterialIndex];
-			//auto material = materialOverrides[submesh.MaterialIndex];
-
-			auto shader = material->GetShader();
-			material->Bind(mesh->m_IsAnimated ? ShaderVariant::Skinned : ShaderVariant::Static);
-
-			if (mesh->m_IsAnimated)
-			{
-
-				mesh->m_BoneMatrixTexture->Bind(30);
-				shader->SetInt("_ares_internal_BoneSampler", 30, ShaderVariant::Skinned);
-				//shader->SetInt("u_BoneCount", mesh->m_BoneCount);
-
-
-				/for (size_t i = 0; i < mesh->m_BoneTransforms.size(); i++)
-				{
-					std::string uniformName = std::string("u_BoneTransforms[") + std::to_string(i) + std::string("]");
-					shader->SetMat4(uniformName, mesh->m_BoneTransforms[i]);
-				}/
-			}
-			shader->SetMat4("_ares_internal_Transform", transform * submesh.Transform, mesh->m_IsAnimated ? ShaderVariant::Skinned : ShaderVariant::Static);
-
-			Submit([submesh, material]() {
-				if (material->GetFlag(MaterialFlag::DepthTest))
-					glEnable(GL_DEPTH_TEST);
-				else
-					glDisable(GL_DEPTH_TEST);
-
-				glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
-			}, "Draw SubMesh");
-		}
-
-		// TODO: replace with render API calls
-		/Renderer::Submit([=]()
-		{
-			for (Submesh& submesh : mesh->m_Submeshes)
-			{
-				if (mesh->m_IsAnimated)
-				{
-					for (size_t i = 0; i < mesh->m_BoneTransforms.size(); i++)
-					{
-						std::string uniformName = std::string("u_BoneTransforms[") + std::to_string(i) + std::string("]");
-						shader->SetMat4FromRenderThread(uniformName, mesh->m_BoneTransforms[i]);
-					}
-				}
-
-				glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
-			}
-		});/
-	}
-		*/
-
 	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
 	{
-		Submit([=]() { 
-			RenderCommand::SetViewport(0, 0, width, height); 
-			}, "Set Viewport");
+		Submit([=]() { RenderCommand::SetViewport(0, 0, width, height); }, "Set Viewport");
 	}
 
 	void Renderer::Clear(float r, float g, float b, float a, bool clearColor, bool clearDepth, bool clearStencil)
 	{
-		Submit([=]() { 
-			RenderCommand::Clear(r, g, b, a, clearColor, clearDepth, clearStencil); 
-			}, "Clear" );
+		Submit([=]() { RenderCommand::Clear(r, g, b, a, clearColor, clearDepth, clearStencil); }, "Clear" );
 	}	
 	void Renderer::WaitAndRender()
 	{
-
 		s_Data.m_CommandQueue.Execute();
 	}
 
@@ -390,33 +242,27 @@ namespace Ares {
 		glm::vec4 min = { aabb.Min.x, aabb.Min.y, aabb.Min.z, 1.0f };
 		glm::vec4 max = { aabb.Max.x, aabb.Max.y, aabb.Max.z, 1.0f };
 
-		/*for (Submesh& submesh : mesh->m_Submeshes)
+		glm::vec4 corners[8] =
 		{
-			const auto& transform = submesh.Transform;
-			glm::vec4 min = { submesh.Min.x, submesh.Min.y, submesh.Min.z, 1.0f };
-			glm::vec4 max = { submesh.Max.x, submesh.Max.y, submesh.Max.z, 1.0f };*/
-
-			glm::vec4 corners[8] =
-			{
-				transform * glm::vec4 { aabb.Min.x, aabb.Min.y, aabb.Max.z, 1.0f },
-				transform * glm::vec4 { aabb.Min.x, aabb.Max.y, aabb.Max.z, 1.0f },
-				transform * glm::vec4 { aabb.Max.x, aabb.Max.y, aabb.Max.z, 1.0f },
-				transform * glm::vec4 { aabb.Max.x, aabb.Min.y, aabb.Max.z, 1.0f },
+			transform * glm::vec4 { aabb.Min.x, aabb.Min.y, aabb.Max.z, 1.0f },
+			transform * glm::vec4 { aabb.Min.x, aabb.Max.y, aabb.Max.z, 1.0f },
+			transform * glm::vec4 { aabb.Max.x, aabb.Max.y, aabb.Max.z, 1.0f },
+			transform * glm::vec4 { aabb.Max.x, aabb.Min.y, aabb.Max.z, 1.0f },
 													
-				transform * glm::vec4 { aabb.Min.x, aabb.Min.y, aabb.Min.z, 1.0f },
-				transform * glm::vec4 { aabb.Min.x, aabb.Max.y, aabb.Min.z, 1.0f },
-				transform * glm::vec4 { aabb.Max.x, aabb.Max.y, aabb.Min.z, 1.0f },
-				transform * glm::vec4 { aabb.Max.x, aabb.Min.y, aabb.Min.z, 1.0f }
-			};
+			transform * glm::vec4 { aabb.Min.x, aabb.Min.y, aabb.Min.z, 1.0f },
+			transform * glm::vec4 { aabb.Min.x, aabb.Max.y, aabb.Min.z, 1.0f },
+			transform * glm::vec4 { aabb.Max.x, aabb.Max.y, aabb.Min.z, 1.0f },
+			transform * glm::vec4 { aabb.Max.x, aabb.Min.y, aabb.Min.z, 1.0f }
+		};
 
-			for (uint32_t i = 0; i < 4; i++)
-				Renderer2D::SubmitLine(corners[i], corners[(i + 1) % 4], color, depthTest);
+		for (uint32_t i = 0; i < 4; i++)
+			Renderer2D::SubmitLine(corners[i], corners[(i + 1) % 4], color, depthTest);
 
-			for (uint32_t i = 0; i < 4; i++)
-				Renderer2D::SubmitLine(corners[i + 4], corners[((i + 1) % 4) + 4], color, depthTest);
+		for (uint32_t i = 0; i < 4; i++)
+			Renderer2D::SubmitLine(corners[i + 4], corners[((i + 1) % 4) + 4], color, depthTest);
 
-			for (uint32_t i = 0; i < 4; i++)
-				Renderer2D::SubmitLine(corners[i], corners[i + 4], color, depthTest);
-		//}
+		for (uint32_t i = 0; i < 4; i++)
+			Renderer2D::SubmitLine(corners[i], corners[i + 4], color, depthTest);
+		
 	}
 }
