@@ -2,22 +2,14 @@
 #include "AresPCH.h"
 #include "Ares/Core/Components.h"
 #include "Ares/Renderer/Animator.h"
-
 #include "Ares/Renderer/SceneRenderer.h"
-
 #include "Ares/Core/Scene.h"
 #include "Ares/Renderer/Renderer2D.h"
 #include "Ares/Renderer/SceneRenderer.h"
 #include "Ares/Core/Entity.h"
-
 #include "Ares/Math/Math.h"
-/*
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/matrix_decompose.hpp>
-#include <glm/gtc/type_ptr.hpp>
-*/
 
+#include "Ares/Renderer/Lighting.h"
 namespace Ares
 {
 
@@ -44,15 +36,6 @@ namespace Ares
 
     }
 
-    static std::tuple<glm::vec3, glm::quat, glm::vec3> GetTransformDecomposition(const glm::mat4& transform)
-    {
-        glm::vec3 scale, translation, skew;
-        glm::vec4 perspective;
-        glm::quat orientation;
-        glm::decompose(transform, scale, orientation, translation, skew, perspective);
-
-        return { translation, orientation, scale };
-    }
 
     Entity Scene::CreateEntity(const std::string& name)
     {
@@ -63,11 +46,7 @@ namespace Ares
         entityComponent->ID = {};
         entityComponent->Name = name.empty() ? "Entity" : name;
 
-        //auto* idComponent = entity.AddComponent<IDComponent>();
-        //idComponent->ID = {};
-        //entity.AddComponent<TagComponent>(name.empty() ? "Entity" : name);
-
-        TransformComponent* transform = entity.AddComponent<TransformComponent>();// glm::mat4(1.0f));
+        TransformComponent* transform = entity.AddComponent<TransformComponent>();
         transform->Entity = entityComponent->ID;
 
         m_EntityIDMap[entityComponent->ID] = entity;
@@ -84,13 +63,7 @@ namespace Ares
         entityComponent->ID = uuid;
         entityComponent->Name = name.empty() ? "Entity" : name;
 
-        /*
-        auto* idComponent = entity.AddComponent<IDComponent>();
-        idComponent->ID = uuid;
-
-        entity.AddComponent<TagComponent>(name.empty() ? "Entity" : name);
-        */
-        TransformComponent* transform = entity.AddComponent<TransformComponent>();// glm::mat4(1.0f));
+        TransformComponent* transform = entity.AddComponent<TransformComponent>();
         transform->Entity = uuid;
         
         m_EntityIDMap[uuid] = entity;
@@ -164,8 +137,7 @@ namespace Ares
 
                 glm::mat4 viewProj = mainCamera->GetProjectionMatrix() * glm::inverse(*cameraTransform);
 
-                Renderer2D::BeginScene(viewProj, (*cameraTransform)[3]);// , true);
-                //Renderer2D::BeginScene(mainCamera->GetProjectionMatrix(), *cameraTransform);
+                Renderer2D::BeginScene(viewProj, (*cameraTransform)[3]);
 
                 auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
         
@@ -212,9 +184,6 @@ namespace Ares
 
             if (meshComponent.Mesh)
             {
-                //meshComponent.Mesh->OnUpdate();
-                
-                //Ref<Texture2D> boneTransforms = nullptr;
                 Ref<Texture2D> boneTransforms = animator ? animator->Animator.GetBoneTransformsTexture() : nullptr;
 
                 // TODO: Should we render (logically)
@@ -245,11 +214,7 @@ namespace Ares
 
             if (meshComponent.Mesh)
             {
-                //meshComponent.Mesh->OnUpdate();
-
-                //Ref<Texture2D> boneTransforms = nullptr;
                 Ref<Texture2D> boneTransforms = animator ? animator->Animator.GetBoneTransformsTexture() : nullptr;
-
 
                 // TODO: Should we render (logically)
                 SceneRenderer::SubmitMesh(meshComponent.Mesh, transformComponent.GetWorldTransform(), boneTransforms, meshComponent.Materials, selectedEntity == entity);
@@ -348,7 +313,8 @@ namespace Ares
     {
         // Environment
         target->m_Light = m_Light;
-        target->m_Environment = m_Environment;
+
+        //target->m_Environment = m_Environment;
         target->m_SkyboxMaterial = m_SkyboxMaterial;
         target->m_Exposure = m_Exposure;
 
@@ -381,17 +347,6 @@ namespace Ares
 
     void Scene::UpdateGI()
     {
-        m_Environment = SceneRenderer::UpdateGI(m_SkyboxMaterial);
-        m_Environment.RadianceMap->Bind(Renderer::ENVIRONMENT_CUBE_TEX_SLOT);
-        m_Environment.IrradianceMap->Bind(Renderer::ENVIRONMENT_IRRADIANCE_TEX_SLOT);
+        Lighting::UpdateGI(m_SkyboxMaterial);
     }
-
-
-    /*
-	Environment Environment::Load(const std::string& filepath)
-	{
-		auto [radiance, irradiance] = SceneRenderer::CreateEnvironmentMap(filepath);
-		return { filepath, radiance, irradiance };
-	}
-    */
 }

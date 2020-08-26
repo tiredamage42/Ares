@@ -109,26 +109,19 @@ namespace Ares
         // Editor
         m_AssetManagerPanel = CreateScope<AssetManagerPanel>();
 
+        
+        m_EditorScene = CreateRef<Scene>("Editor Scene");
+        UpdateWindowTitle("Editor Scene");
+
 
         Ref<TextureCube> skyCube = SceneRenderer::ConvertHDRToCubemap(
             "C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\env\\venice_dawn_1_4k.hdr"
         );
-        
-        //auto environment = Environment::Load(
-            //"C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\env\\venice_dawn_1_4k.hdr"
-        //);
-
-        m_EditorScene = CreateRef<Scene>("Editor Scene");
-        UpdateWindowTitle("Editor Scene");
-
-        //auto skyboxShader = Shader::Find("Assets/Shaders/CubemapSkybox.glsl");
         auto skyboxMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/CubemapSkybox.glsl"));
         skyboxMaterial->SetTexture("u_Texture", skyCube);
         skyboxMaterial->SetFlag(MaterialFlag::DepthTest, true);
 
-
         m_EditorScene->SetSkyboxMaterial(skyboxMaterial);
-        //m_EditorScene->SetEnvironment(environment);
 
         std::vector<Ref<Material>> loadedMaterials;
         std::vector<Ref<Animation>> loadedAnimations;

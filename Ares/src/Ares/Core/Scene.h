@@ -1,37 +1,31 @@
 #pragma once
 
 #include "entt.hpp"
-
 #include "Ares/Core/UUID.h"
-
 #include "Ares/Renderer/Camera.h"
 #include "Ares/Renderer/Material.h"
 #include "Ares/Renderer/Renderer.h"
 #include "Ares/Renderer/SceneCamera.h"
-//#include "Ares/Editor/EditorCamera.h"
 
 namespace Ares
 {
 	class Entity;
 	using EntityMap = std::unordered_map<UUID, Entity>;
-
-	struct Environment
-	{
-		//std::string FilePath = "";
-		Ref<TextureCube> RadianceMap = nullptr;
-		Ref<TextureCube> IrradianceMap = nullptr;
-
-		//static Environment Load(const std::string& filepath);
-	};
+	
 	struct Light
 	{
 		glm::vec3 Direction{ 0 };
 		glm::vec3 Radiance{ 0 };
-
 		float Multiplier = 1.0f;
 	};
 	class Scene
 	{
+		friend class SceneRenderer;
+		friend class Entity;
+		friend class SceneSerializer;
+		friend class SceneHierarchyPanel;
+		friend class EditorLayer;
+
 	public:
 		Scene(const std::string& debugName = "Scene");
 		~Scene();
@@ -49,7 +43,6 @@ namespace Ares
 
 		Entity FindEntityByTag(const std::string& tag);
 
-
 		float GetExposure() const { return m_Exposure; }
 		float& GetExposure() { return m_Exposure; }
 
@@ -59,18 +52,6 @@ namespace Ares
 		}
 		void UpdateGI();
 		
-		/*
-		void SetEnvironment(const Environment& environment) { 
-
-			m_Environment = environment; 
-			m_SkyboxMaterial->SetTexture("u_Texture", environment.RadianceMap);
-			environment.RadianceMap->Bind(Renderer::ENVIRONMENT_CUBE_TEX_SLOT);
-			environment.IrradianceMap->Bind(Renderer::ENVIRONMENT_IRRADIANCE_TEX_SLOT);
-		}
-		*/
-
-		const Environment& GetEnvironment() const { return m_Environment; }
-
 		Light& GetLight() { return m_Light; }
 		const Light& GetLight() const { return m_Light; }
 
@@ -99,9 +80,6 @@ namespace Ares
 
 		static Ref<Scene> GetScene(UUID uuid);
 
-		// Editor-specific
-		//void SetSelectedEntity(entt::entity entity) { m_SelectedEntity = entity; }
-
 	private:
 		UUID m_SceneID;
 		
@@ -115,20 +93,12 @@ namespace Ares
 
 		Light m_Light{};
 
-		Environment m_Environment{};
-
 		Ref<Material> m_SkyboxMaterial = nullptr;
 
 		float m_Exposure = 0.8f;
 		bool m_IsPlaying = false;
 
-		//entt::entity m_SelectedEntity;
-
-		friend class SceneRenderer;
-		friend class Entity;
-		friend class SceneSerializer;
-		friend class SceneHierarchyPanel;
-		friend class EditorLayer;
+		
 	};
 
 }

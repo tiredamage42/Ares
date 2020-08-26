@@ -1,7 +1,7 @@
 #include "AresPCH.h"
 #include "Ares/Renderer/Renderer.h"
 #include "Ares/Renderer/Renderer2D.h"
-
+#include "Lighting.h"
 #include <glad/glad.h>
 #include "SceneRenderer.h"
 
@@ -26,6 +26,7 @@ namespace Ares {
 		Renderer2D::Init();
 
 		SceneRenderer::Init();
+		Lighting::Init();
 
 		// Create FS Quad
 		float* data = new float[4 * 2]{
@@ -72,6 +73,7 @@ namespace Ares {
 	
 	void Renderer::Shutdown()
 	{
+		Lighting::Shutdown();
 		SceneRenderer::Shutdown();
 		Renderer2D::Shutdown();
 	}

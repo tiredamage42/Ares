@@ -12,14 +12,6 @@
 
 /*
 	TODO:
-		update gi button/function:
-			renders skybox to cube
-			creates radiance and irradiance textures from it
-
-		this way we can have procedural skybox
-
-
-	TODO:
 	remove editor specific stuff
 */
 
@@ -74,12 +66,9 @@ namespace Ares {
 			SceneRendererCamera SceneCamera;
 			float Exposure;
 			Ref<Material> SkyboxMaterial;
-			Ref<TextureCube> EnvironmentCube, EnvironmentIrradiance;
-			Environment SceneEnvironment;
 			Light ActiveLight;
 		} SceneData;
 
-		Ref<Texture2D> BRDFLUT;
 		Ref<Shader> CompositeShader;
 
 		Ref<RenderPass> GeoPass;
@@ -102,14 +91,6 @@ namespace Ares {
 		Ref<Shader> OutlineShader;
 
 		SceneRendererOptions Options;
-
-
-
-
-		Ref<TextureCube> SkyboxCapturedCube;
-		uint32_t SkyboxCaptureRBO;
-		uint32_t SkyboxCaptureFBO;
-
 	};
 
 	static SceneRendererData s_Data;
@@ -248,24 +229,7 @@ namespace Ares {
 		}
 	}
 
-	const uint32_t CAPTURE_SKYBOX_SIZE = 2048;
-	/*
-		Then what's left to do is capture the current skybox onto the cubemap faces.
-		it effectively boils down to setting up 6 different view matrices (facing each side of the cube),
-		set up a projection matrix with a fov of 90 degrees to capture the entire face,
-		and render the skybox 6 times storing the results in a floating point framebuffer:
-	*/
-	const Matrix4 CAPTURE_SKYBOX_PROJECTION = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-	const Matrix4 CAPTURE_SKYBOX_VIEWS[] =
-	{
-	   glm::lookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(1.0f,  0.0f,  0.0f), Vector3(0.0f, -1.0f,  0.0f)),
-	   glm::lookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(-1.0f,  0.0f,  0.0f), Vector3(0.0f, -1.0f,  0.0f)),
-	   glm::lookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f,  1.0f,  0.0f), Vector3(0.0f,  0.0f,  1.0f)),
-	   glm::lookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, -1.0f,  0.0f), Vector3(0.0f,  0.0f, -1.0f)),
-	   glm::lookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f,  0.0f,  1.0f), Vector3(0.0f, -1.0f,  0.0f)),
-	   glm::lookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f,  0.0f, -1.0f), Vector3(0.0f, -1.0f,  0.0f))
-	};
-
+	
 
 	
 	void SceneRenderer::Init()
@@ -293,40 +257,15 @@ namespace Ares {
 		s_Data.CompositePass = CreateRef<RenderPass>(compRenderPassSpec);
 		s_Data.CompositeShader = Shader::Find("Assets/Shaders/HDRTonemapping.glsl");
 		
-		const uint32_t BRDF_SIZE = 512;
-		s_Data.BRDFLUT = Texture2D::Create(TextureFormat::RG16, BRDF_SIZE, BRDF_SIZE, TextureWrap::Clamp, FilterType::Bilinear, false);
-
-		Ref<Shader> createBRDFLUTShader = Shader::Find("Assets/Shaders/CreateBRDF.glsl");
-
-		createBRDFLUTShader->Bind(ShaderVariations::Default);
-
-		Renderer::Submit([BRDF_SIZE]() {
-			glBindImageTexture(0, s_Data.BRDFLUT->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RG16F);
-			glDispatchCompute(BRDF_SIZE / 32, BRDF_SIZE / 32, 1);
-		}, "EnvMap 0");
-
+		
 		s_Data.OutlineShader = Shader::Find("Assets/Shaders/UnlitColor.glsl");
 		s_Data.ErrorShader = Shader::Find("Assets/Shaders/ErrorShader.glsl");
 
-
-		Renderer::Submit([]() {
-			glGenFramebuffers(1, &s_Data.SkyboxCaptureFBO);
-			glGenRenderbuffers(1, &s_Data.SkyboxCaptureRBO);
-			glBindFramebuffer(GL_FRAMEBUFFER, s_Data.SkyboxCaptureFBO);
-			glBindRenderbuffer(GL_RENDERBUFFER, s_Data.SkyboxCaptureRBO);
-			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, CAPTURE_SKYBOX_SIZE, CAPTURE_SKYBOX_SIZE);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, s_Data.SkyboxCaptureRBO);
-		}, "");
-
-		s_Data.SkyboxCapturedCube = TextureCube::Create(TextureFormat::Float16, CAPTURE_SKYBOX_SIZE, CAPTURE_SKYBOX_SIZE, FilterType::Trilinear, true);
 	}
 
 	void SceneRenderer::Shutdown()
 	{
-		Renderer::Submit([]() {
-			glDeleteRenderbuffers(1, &s_Data.SkyboxCaptureRBO);
-			glDeleteFramebuffers(1, &s_Data.SkyboxCaptureFBO);
-		}, "");
+		
 	}
 
 	void SceneRenderer::SetViewportSize(uint32_t width, uint32_t height)
@@ -347,7 +286,6 @@ namespace Ares {
 
 		s_Data.SceneData.SceneCamera = camera;
 		s_Data.SceneData.SkyboxMaterial = scene->m_SkyboxMaterial;
-		s_Data.SceneData.SceneEnvironment = scene->m_Environment;
 		s_Data.SceneData.ActiveLight = scene->m_Light;
 
 		s_Data.SceneData.Exposure = scene->m_Exposure;		
@@ -456,49 +394,7 @@ namespace Ares {
 
 	
 	
-	static void CaptureCurrentSkybox(Ref<Material> skyboxMaterial)
-	{
-		/*
-			We take the color attachment of the framebuffer and switch its texture target around for every face of the cubemap, 
-			directly rendering the scene into one of the cubemap's faces. Once this routine has finished (which we only have to do once), 
-			the cubemap envCubemap should be the cubemapped environment version of our original HDR image.
-		*/
-		
-		//Renderer::Submit([]() { glDepthMask(false);	}, "");
-		skyboxMaterial->GetShader()->Bind(ShaderVariations::Default);
-		skyboxMaterial->Bind();
-		
-		Renderer::Submit([=]() {
-			glViewport(0, 0, CAPTURE_SKYBOX_SIZE, CAPTURE_SKYBOX_SIZE); // don't forget to configure the viewport to the capture dimensions.
-			glBindFramebuffer(GL_FRAMEBUFFER, s_Data.SkyboxCaptureFBO);
-		}, "");
-
-		
-		for (uint32_t i = 0; i < 6; ++i)
-		{
-			skyboxMaterial->GetShader()->SetMat4("ares_InverseVP", glm::inverse(CAPTURE_SKYBOX_PROJECTION * CAPTURE_SKYBOX_VIEWS[i]));
-			
-			Renderer::Submit([=](){
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, s_Data.SkyboxCapturedCube->GetRendererID(), 0);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			}, "");
-			
-			Renderer::GetRendererData().m_FullscreenQuadVertexArray->Bind();
-			
-			Renderer::DrawIndexed(6, PrimitiveType::Triangles, false);// skyboxMaterial->GetFlag(MaterialFlag::DepthTest));
-		}
-
-
-		Renderer::Submit([]() { 
-			glGenerateTextureMipmap(s_Data.SkyboxCapturedCube->GetRendererID());
-			glBindFramebuffer(GL_FRAMEBUFFER, 0); 
-		}, "");
-		
-		skyboxMaterial->SetTexture("u_Texture", s_Data.SkyboxCapturedCube);
-
-		//Renderer::Submit([]() { glDepthMask(true); }, "");
-	}
-
+	
 
 	Ref<TextureCube> SceneRenderer::ConvertHDRToCubemap(const std::string& filepath, uint32_t cubemapSize)
 	{
@@ -507,162 +403,17 @@ namespace Ares {
 		ARES_CORE_ASSERT(envEquirect->GetFormat() == TextureFormat::Float16, "Texture is not HDR!");
 		
 		// create the target cubemap
-		Ref<TextureCube> cubemap = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize, FilterType::Trilinear, true);
+		Ref<TextureCube> cubemap = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize, FilterType::Trilinear, false);
 		Shader::Find("Assets/Shaders/EquirectangularToCubeMap.glsl")->Bind(ShaderVariations::Default);
 		envEquirect->Bind();
 		Renderer::Submit([cubemap, cubemapSize, envEquirect]() {
 			glBindImageTexture(0, cubemap->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
 			glDispatchCompute(cubemapSize / 32, cubemapSize / 32, 6);
-			//glGenerateTextureMipmap(cubemap->GetRendererID());
-		}, "EnvMap 0");
+		}, "");
 		return cubemap;
 	}
 
-	/*
-		creates a reflection cubemap (where mip levels are filtered for roughness)
-		and an irradiance cube (for pbr lighting)
-	*/
-	Environment SceneRenderer::UpdateGI(Ref<Material> skyboxMaterial)
-	{
-
-		const uint32_t irradianceMapSize = 32;
-
-		CaptureCurrentSkybox(skyboxMaterial);
-
-		Ref<TextureCube> reflectionCube = TextureCube::Create(TextureFormat::Float16, CAPTURE_SKYBOX_SIZE, CAPTURE_SKYBOX_SIZE, FilterType::Trilinear, true);
-
-		// copy mip map 0 to filtered (need unfiltered as input texture)
-		// maybe just eq2cube sample in filter step?
-		Renderer::Submit([reflectionCube]() {
-
-			glCopyImageSubData(
-				s_Data.SkyboxCapturedCube->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
-				reflectionCube->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
-				reflectionCube->GetWidth(),
-				reflectionCube->GetHeight(), 6
-			);
-			}, "EnvMap 1");
-
-
-		Ref<Shader> envFilteringShader = Shader::Find("Assets/Shaders/EnvironmentMipFilter.glsl");
-		envFilteringShader->Bind(ShaderVariations::Default);
-		s_Data.SkyboxCapturedCube->Bind();
-
-		int32_t mipCount = reflectionCube->GetMipLevelCount();
-
-		Renderer::Submit([reflectionCube, mipCount, envFilteringShader]() {
-
-			const float deltaRoughness = 1.0f / glm::max((float)(mipCount - 1.0f), 1.0f);
-
-			for (int32_t mipLevel = 1, size = CAPTURE_SKYBOX_SIZE / 2; mipLevel < mipCount; mipLevel++, size /= 2) // <= ?
-			{
-				glBindImageTexture(0, reflectionCube->GetRendererID(), mipLevel, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-				// set the first float uniform to the roughness factor
-				glProgramUniform1f(envFilteringShader->GetRendererID(ShaderVariations::Default), 0, mipLevel * deltaRoughness);
-				const GLuint numGroups = glm::max(1, size / 32);
-				glDispatchCompute(numGroups, numGroups, 6);
-			}
-			}, "EnvMap 2");
-
-		Ref<Shader> envIrradianceShader = Shader::Find("Assets/Shaders/EnvironmentIrradiance.glsl");
-
-		Ref<TextureCube> irradianceMap = TextureCube::Create(TextureFormat::Float16, irradianceMapSize, irradianceMapSize, FilterType::Trilinear, false);
-		envIrradianceShader->Bind(ShaderVariations::Default);
-
-		reflectionCube->Bind();
-
-		Renderer::Submit([irradianceMap, irradianceMapSize]() {
-			glBindImageTexture(0, irradianceMap->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-			glDispatchCompute(irradianceMapSize / 32, irradianceMapSize / 32, 6);
-			//glGenerateTextureMipmap(irradianceMap->GetRendererID());
-			}, "EnvMap 3");
-
-		return { reflectionCube, irradianceMap };
-	}
-
-
-
-
-	//std::pair<Ref<TextureCube>, Ref<TextureCube>> SceneRenderer::CreateEnvironmentMap(const std::string& filepath)
-	//{
-	//	
-	//	const uint32_t cubemapSize = 2048;
-	//	const uint32_t irradianceMapSize = 32;
-
-	//	// env unfiltered
-	//	Ref<TextureCube> envUnfiltered = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize, FilterType::Trilinear, true);
-	//	
-	//	
-	//	Ref<Texture2D> envEquirect = Texture2D::Create(filepath, FilterType::Trilinear, false);
-	//	ARES_CORE_ASSERT(envEquirect->GetFormat() == TextureFormat::Float16, "Texture is not HDR!");
-	//	 
-	//	Shader::Find("Assets/Shaders/EquirectangularToCubeMap.glsl")->Bind(ShaderVariations::Default);
-	//	envEquirect->Bind();
-	//	Renderer::Submit([envUnfiltered, cubemapSize, envEquirect](){
-	//		glBindImageTexture(0, envUnfiltered->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-	//		glDispatchCompute(cubemapSize / 32, cubemapSize / 32, 6);
-	//		glGenerateTextureMipmap(envUnfiltered->GetRendererID());
-	//	}, "EnvMap 0");
-	//	
-
-
-
-
-
-
-
-
-
-	//	Ref<TextureCube> envFiltered = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize, FilterType::Trilinear, true);
-
-	//	// copy mip map 0 to filtered (need unfiltered as input texture)
-	//	// maybe just eq2cube sample in filter step?
-	//	Renderer::Submit([envUnfiltered, envFiltered](){
-
-	//		glCopyImageSubData(
-	//			envUnfiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
-	//			envFiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
-	//			envFiltered->GetWidth(), 
-	//			envFiltered->GetHeight(), 6
-	//		);
-	//	}, "EnvMap 1");
-
-
-	//	Ref<Shader> envFilteringShader = Shader::Find("Assets/Shaders/EnvironmentMipFilter.glsl");
-	//	envFilteringShader->Bind(ShaderVariations::Default);
-	//	envUnfiltered->Bind();
-
-	//	int32_t mipCount = envFiltered->GetMipLevelCount();
-
-	//	Renderer::Submit([envUnfiltered, envFiltered, cubemapSize, mipCount, envFilteringShader]() {
-	//		
-	//		const float deltaRoughness = 1.0f / glm::max((float)(mipCount - 1.0f), 1.0f);
-
-	//		for (int32_t mipLevel = 1, size = cubemapSize / 2; mipLevel < mipCount; mipLevel++, size /= 2) // <= ?
-	//		{
-	//			glBindImageTexture(0, envFiltered->GetRendererID(), mipLevel, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-	//			// set the first float uniform to the roughness factor
-	//			glProgramUniform1f(envFilteringShader->GetRendererID(ShaderVariations::Default), 0, mipLevel * deltaRoughness);
-	//			const GLuint numGroups = glm::max(1, size / 32);
-	//			glDispatchCompute(numGroups, numGroups, 6);
-	//		}
-	//	}, "EnvMap 2");
-
-	//	Ref<Shader> envIrradianceShader = Shader::Find("Assets/Shaders/EnvironmentIrradiance.glsl");
-
-	//	Ref<TextureCube> irradianceMap = TextureCube::Create(TextureFormat::Float16, irradianceMapSize, irradianceMapSize, FilterType::Trilinear, false);
-	//	envIrradianceShader->Bind(ShaderVariations::Default);
-
-	//	envFiltered->Bind();
-
-	//	Renderer::Submit([irradianceMap, irradianceMapSize](){
-	//		glBindImageTexture(0, irradianceMap->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-	//		glDispatchCompute(irradianceMapSize / 32, irradianceMapSize / 32, 6);
-	//		//glGenerateTextureMipmap(irradianceMap->GetRendererID());
-	//	}, "EnvMap 3");
-
-	//	return { envFiltered, irradianceMap };
-	//}
+	
 
 
 	static void DrawBoundingBoxes(const std::vector<SceneRendererData::DrawCommand>& drawList, bool depthTest)
@@ -844,14 +595,6 @@ namespace Ares {
 		{
 			SetupSelectedMeshDrawing();
 		}
-
-		/*
-			set standard mesh drawing shader variables
-		*/
-		s_Data.BRDFLUT->Bind(Renderer::BRDF_LUT_TEX_SLOT);
-		s_Data.SceneData.SceneEnvironment.RadianceMap->Bind(Renderer::ENVIRONMENT_CUBE_TEX_SLOT);
-		s_Data.SceneData.SceneEnvironment.IrradianceMap->Bind(Renderer::ENVIRONMENT_IRRADIANCE_TEX_SLOT);
-
 
 		DrawRenderMapUnlit(s_Data.UnlitDrawMap, viewProjection, viewMatrix);
 		DrawRenderMapForwardBase(s_Data.FwdBaseDrawMap, viewProjection, viewMatrix);
