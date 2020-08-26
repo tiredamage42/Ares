@@ -8,6 +8,10 @@ namespace Ares
 
 	void AnimatorComponent::OnDrawImGui()
 	{
+
+		// TODO: render animation names / assets
+
+
 		if (ImGui::Button(Animator.m_AnimationPlaying ? "Pause" : "Play"))
 			Animator.m_AnimationPlaying = !Animator.m_AnimationPlaying;
 

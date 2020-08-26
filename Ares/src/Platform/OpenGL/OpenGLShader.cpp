@@ -21,10 +21,7 @@
 	
 #include "AresPCH.h"
 #include "Platform/OpenGL/OpenGLShader.h"
-
 #include "Ares/Core/FileUtils/FileUtils.h"
-//#include <glm/gtc/type_ptr.hpp>
-
 #include "Ares/Renderer/Renderer.h"
 #include "Ares/Core/StringUtils.h"
 namespace Ares 
@@ -546,11 +543,13 @@ namespace Ares
 							shaderString.insert(
 								shaderString.find_first_of("{", shaderString.find("void main")) + 1, 
 								R"(
+									float _ares_internal_bones = 1.0 / float(textureSize(_ares_internal_BoneSampler, 0).y);
+									vec4 _ares_internal_BoneIndices2 = _ares_internal_BoneIndices * _ares_internal_bones;
 									mat4 _ares_internal_bone_transform = 
-										_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.x) * _ares_internal_BoneWeights.x +
-										_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.y) * _ares_internal_BoneWeights.y +
-										_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.z) * _ares_internal_BoneWeights.z +
-										_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices.w) * _ares_internal_BoneWeights.w;
+										_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices2.x) * _ares_internal_BoneWeights.x +
+										_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices2.y) * _ares_internal_BoneWeights.y +
+										_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices2.z) * _ares_internal_BoneWeights.z +
+										_ares_internal_GetBoneMatrix(_ares_internal_BoneIndices2.w) * _ares_internal_BoneWeights.w;
 
 									mat4 ares_Object2World = _ares_internal_Transform * _ares_internal_bone_transform;
 								)"
@@ -1212,6 +1211,7 @@ namespace Ares
 #pragma endregion
 #pragma region UPLOAD_UNIFORMS_WITH_LOCATION
 #pragma region SINGLE
+
 	void OpenGLShader::UploadUniformInt(uint32_t location, const int& value)
 	{
 		if (location == -1) return;

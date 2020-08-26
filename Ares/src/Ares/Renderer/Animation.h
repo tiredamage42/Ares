@@ -23,9 +23,9 @@ namespace Ares
 
 	class Animation
 	{
-		//friend class Mesh;
+		
 		friend class Animator;
-		friend class ModelLoadingUtils;
+		friend class ModelLoading;
 		friend class AnimatorComponent;
 	public:
 		void AddNode(const std::string& key, const AnimationNode& node)

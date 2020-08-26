@@ -6,7 +6,7 @@ namespace Ares {
 
 	struct Buffer
 	{
-		uint8_t* Data;
+		uint8_t* Data = nullptr;
 		uint32_t Size;
 
 		Buffer()
@@ -18,6 +18,17 @@ namespace Ares {
 			: Data(data), Size(size)
 		{
 		}
+
+		/*
+		~Buffer()
+		{
+			if (Data)
+			{
+				delete[] Data;
+				Data = nullptr;
+			}
+		}
+		*/
 
 		static Buffer Copy(void* data, uint32_t size)
 		{

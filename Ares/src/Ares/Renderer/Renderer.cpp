@@ -229,7 +229,9 @@ namespace Ares {
 			//boundShader->SetInt("_ares_internal_BoneSampler", 30, variant);
 		}
 		auto& submesh = mesh->GetSubmeshes()[submeshIndex];
-		boundShader->SetMat4("_ares_internal_Transform", transform * submesh.Transform);
+
+		//boundShader->SetMat4("_ares_internal_Transform", transform * submesh.Transform);
+		boundShader->SetMat4("_ares_internal_Transform", transform * submesh.ModelNode->GetModelSpaceTransform());
 
 		Submit([submesh, depthTest]() {
 			if (depthTest)
@@ -257,7 +259,8 @@ namespace Ares {
 		
 		for (Submesh& submesh : mesh->m_Submeshes)
 		{
-			boundShader->SetMat4("_ares_internal_Transform", transform * submesh.Transform);
+			//boundShader->SetMat4("_ares_internal_Transform", transform * submesh.Transform);
+			boundShader->SetMat4("_ares_internal_Transform", transform * submesh.ModelNode->GetModelSpaceTransform());
 
 			Submit([submesh, depthTest]() {
 				if (depthTest)
@@ -375,7 +378,8 @@ namespace Ares {
 		for (Submesh& submesh : mesh->m_Submeshes)
 		{
 			auto& aabb = submesh.BoundingBox;
-			auto aabbTransform = transform * submesh.Transform;
+			auto aabbTransform = transform * submesh.ModelNode->GetModelSpaceTransform();
+
 			DrawAABB(aabb, aabbTransform, color, depthTest);
 		}
 	}

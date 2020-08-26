@@ -15,15 +15,20 @@ namespace Ares
 		ImGui::Text("File Path");
 		ImGui::NextColumn();
 		ImGui::PushItemWidth(-1);
+
+		/*
 		if (this->Mesh)
 			ImGui::InputText("##meshfilepath", (char*)this->Mesh->GetFilePath().c_str(), 256, ImGuiInputTextFlags_ReadOnly);
 		else
 			ImGui::InputText("##meshfilepath", (char*)"Null", 256, ImGuiInputTextFlags_ReadOnly);
+		*/
+		
 		ImGui::PopItemWidth();
 
 		ImGui::NextColumn();
 		if (ImGui::Button("...##openmesh"))
 		{
+			/*
 			std::string file = Application::Get().OpenFile();
 			if (!file.empty())
 			{
@@ -32,6 +37,7 @@ namespace Ares
 				this->Mesh = CreateRef<Ares::Mesh>(file, materials, animations);
 				this->Materials = materials;
 			}
+			*/
 		}
 		ImGui::NextColumn();
 		ImGui::Columns(1);

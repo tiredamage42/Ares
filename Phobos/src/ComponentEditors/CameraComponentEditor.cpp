@@ -17,30 +17,6 @@ namespace Ares
 		if (EditorGUI::EnumField("Projection", projection, undo, SceneCamera::AllProjectionTypes, SceneCamera::AllProjectionTypeNames))
 			this->Camera.SetProjectionType(projection);
 
-
-
-
-
-		/*
-		const char* projTypeStrings[] = { "Perspective", "Orthographic" };
-		const char* currentProj = projTypeStrings[(int)cc->Camera.GetProjectionType()];
-		if (ImGui::BeginCombo("Projection", currentProj))
-		{
-			for (int type = 0; type < 2; type++)
-			{
-				bool is_selected = (currentProj == projTypeStrings[type]);
-				if (ImGui::Selectable(projTypeStrings[type], is_selected, ImGuiItemFlags_SelectableDontClosePopup))
-				{
-					currentProj = projTypeStrings[type];
-					cc->Camera.SetProjectionType((SceneCamera::ProjectionType)type);
-				}
-				if (is_selected)
-					ImGui::SetItemDefaultFocus();
-			}
-			ImGui::EndCombo();
-		}
-		*/
-
 		// Perspective parameters
 		if (Camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
 		{

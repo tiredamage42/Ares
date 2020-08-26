@@ -10,15 +10,7 @@
 #define _2D 0
 
 
-// w = p * l;
-// w * inv(p);
-
-
-
 /*
-    TODO:
-    display grid as lines2D
-
     save open save as scene key shortcuts
 */
 namespace Ares
@@ -31,12 +23,8 @@ namespace Ares
     {
     }
 
-
-
     void InitializeGUIColors()
     {
-        //return;
-        // ImGui Colors
         ImVec4* colors = ImGui::GetStyle().Colors;
         colors[ImGuiCol_Text] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
         colors[ImGuiCol_TextDisabled] = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
@@ -88,9 +76,7 @@ namespace Ares
     void EditorLayer::OnAttach()
     {
         m_FileSystemWatcher.Watch();
-        //EditorGUI::
-            InitializeGUIColors();
-        //memset(m_FrameTimeGraph, 0, sizeof(float) * 100);
+        InitializeGUIColors();
 
 #if _2D
         // create a frame buffer
@@ -121,11 +107,7 @@ namespace Ares
 
 #else
         // Editor
-        //m_PlayButtonTex = EditorResources::GetTexture("play.png");
-
         m_AssetManagerPanel = CreateScope<AssetManagerPanel>();
-
-
 
         auto environment = Environment::Load(
             "C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\env\\venice_dawn_1_4k.hdr"
@@ -142,16 +124,17 @@ namespace Ares
         m_EditorScene->SetSkyboxMaterial(skyboxMaterial);
         m_EditorScene->SetEnvironment(environment);
 
-        //m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>(m_EditorScene);
-        //m_SceneHierarchyPanel->SetSelectionChangedCallback(std::bind(&EditorLayer::SelectEntity, this, std::placeholders::_1));
-        //m_SceneHierarchyPanel->SetEntityDeletedCallback(std::bind(&EditorLayer::OnEntityDeleted, this, std::placeholders::_1));
-        
-
         std::vector<Ref<Material>> loadedMaterials;
         std::vector<Ref<Animation>> loadedAnimations;
-        Ref<Mesh> loadedMesh = CreateRef<Mesh>(
-            "C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\models\\m1911\\M1911Materials.fbx",
-            loadedMaterials, loadedAnimations
+        Ref<Mesh> loadedMesh;
+        Ref<ModelNodeMap> loadedModelNodeMap;
+
+        ModelLoading::LoadModel(
+            "C:\\Users\\Andres\\Desktop\\DevProjects\\Hazel\\Hazel-dev\\Hazelnut\\assets\\models\\m1911\\M1911Materials.fbx", 
+            loadedMesh, 
+            loadedModelNodeMap,
+            loadedMaterials,
+            loadedAnimations
         );
         
         if (!loadedMaterials.size())
@@ -159,8 +142,6 @@ namespace Ares
             Ref<Material> m_MeshBaseMaterial = CreateRef<Material>(Shader::Find("Assets/Shaders/Standard.glsl"));
             ARES_WARN("Couldnt Find Materials... setting custom");
             loadedMaterials = { m_MeshBaseMaterial };
-            
-            //m_MeshMaterials = mr->Materials;
         }
 
         {
@@ -169,10 +150,9 @@ namespace Ares
 
             mr->Mesh = loadedMesh;
             mr->Materials = loadedMaterials;
-            //m_MeshMaterials = loadedMaterials;
-
+            
             AnimatorComponent* animator = gunEntity.AddComponent<AnimatorComponent>();
-            animator->Animator.SetAnimationNodeInformation(loadedMesh->GetRootNode(), loadedMesh->GetBoneCount());
+            animator->Animator.SetAnimationNodeInformation(loadedModelNodeMap);
             animator->Animator.SetAnimations(loadedAnimations);
 
             gunEntity.GetComponent<TransformComponent>()->SetWorldTransform( glm::scale(
@@ -188,10 +168,9 @@ namespace Ares
 
             mr->Mesh = loadedMesh;
             mr->Materials = loadedMaterials;
-            //m_MeshMaterials = loadedMaterials;
-
+            
             AnimatorComponent* animator = gunEntity.AddComponent<AnimatorComponent>();
-            animator->Animator.SetAnimationNodeInformation(loadedMesh->GetRootNode(), loadedMesh->GetBoneCount());
+            animator->Animator.SetAnimationNodeInformation(loadedModelNodeMap);
             animator->Animator.SetAnimations(loadedAnimations);
 
             gunEntity.GetComponent<TransformComponent>()->SetWorldTransform(glm::scale(
@@ -202,10 +181,6 @@ namespace Ares
         }
 
 
-
-
-
-        
         auto sphereMesh = CreateRef<Mesh>(PrimitiveMeshType::Cube);
 
         float spread = 1;
@@ -281,8 +256,6 @@ namespace Ares
     void EditorLayer::OnScenePlay()
     {
         m_SelectedEntity = {};
-        //m_SelectionContext.clear();
-
 
         m_SceneState = SceneState::Play;
 
@@ -290,7 +263,6 @@ namespace Ares
         m_EditorScene->CopyTo(m_RuntimeScene);
 
         m_RuntimeScene->OnRuntimeStart();
-        //m_SceneHierarchyPanel->SetContext(m_RuntimeScene);
     }
     void EditorLayer::OnSceneStop()
     {
@@ -301,9 +273,6 @@ namespace Ares
         m_RuntimeScene = nullptr;
 
         m_SelectedEntity = {};
-        //m_SelectionContext.clear();
-
-        //m_SceneHierarchyPanel->SetContext(m_EditorScene);
     }
 
     void EditorLayer::UpdateWindowTitle(const std::string& sceneName)
@@ -349,7 +318,6 @@ namespace Ares
             if (Input::GetKeyDown(KeyCode::D4))
             {
                 m_EditorCamera.m_FreeCamMode = !m_EditorCamera.m_FreeCamMode;
-                //m_EditorCamera.m_MoveMode = (EditorCamera::MoveMode)((((uint32_t)m_EditorCamera.m_MoveMode) + 1) % 3);
             }
 
             if (m_SelectedEntity)
@@ -399,75 +367,6 @@ namespace Ares
                 m_EditorCamera.Update();
 
             m_EditorScene->OnRenderEditor(m_EditorCamera, m_EditorCamera.m_ViewMatrix, m_SelectedEntity);
-
-            /*
-            if (m_DrawOnTopBoundingBoxes)
-            {
-                Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
-                auto viewProj = m_EditorCamera.GetViewProjection();
-                Renderer2D::BeginScene(viewProj, false);
-                // TODO: Renderer::DrawAABB(m_MeshEntity.GetComponent<MeshComponent>(), m_MeshEntity.GetComponent<TransformComponent>());
-                Renderer2D::EndScene();
-                Renderer::EndRenderPass();
-            }
-            */
-
-
-            //Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false, false, false);
-            //Renderer::BeginRenderPass(SceneRenderer::GetGeometryPass(), false, false, false);
-
-            /*
-            auto viewProj = m_EditorCamera.GetViewProjection();
-            Renderer2D::BeginScene(viewProj, glm::inverse(m_EditorCamera.m_ViewMatrix)[3]);// , false);
-            
-            //if (m_SelectionContext.size() && false)
-            if (m_SelectedEntity)
-            {
-
-                //auto& selection = m_SelectionContext[0];
-                //if (selection.Mesh && selection.Entity.HasComponent<MeshRendererComponent>())
-                if (m_SelectedEntity.HasComponent<MeshRendererComponent>())
-                {
-                    MeshRendererComponent* mr = m_SelectedEntity.GetComponent<MeshRendererComponent>();
-                    //glm::vec4 color = (m_SelectionMode == SelectionMode::Entity) ? glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f } : glm::vec4{ 0.2f, 0.9f, 0.2f, 1.0f };
-                    glm::vec4 color = glm::vec4{ 0.2f, 0.9f, 0.2f, 1.0f };
-                    
-                    Renderer::DrawAABB(mr->Mesh, m_SelectedEntity.GetComponent<TransformComponent>()->Transform, color, true);
-
-                    //Renderer::DrawAABB(mr->Mesh->GetBounds(), selection.Entity.GetComponent<TransformComponent>()->Transform * selection.Mesh->Transform, color);
-                    //Renderer::DrawAABB(selection.Mesh->BoundingBox, selection.Entity.GetComponent<TransformComponent>()->Transform * selection.Mesh->Transform, color);
-
-
-
-                    
-
-                }
-            }
-
-
-            
-            Vector3 camPos = glm::inverse(m_EditorCamera.m_ViewMatrix)[3];
-            camPos.y = 0;
-            camPos.x = (int)camPos.x;
-            camPos.z = (int)camPos.z;
-
-
-
-            Vector4 gridColor = { .8f, .8f, .8f, .5f };
-            const int gridRes = 30;
-            for (int i = -m_GridResolution; i <= m_GridResolution; i++)
-            {
-
-                Renderer2D::SubmitLine(camPos + Vector3{ i, 0, -m_GridResolution }, camPos + Vector3{ i, 0, m_GridResolution }, m_GridColor, true, m_GridCameraRange);
-                //Renderer2D::SubmitLine(camPos + Vector3{ -m_GridResolution, 0, i }, camPos + Vector3{ m_GridResolution, 0, i }, m_GridColor, true, m_GridCameraRange);
-            }
-
-
-
-            Renderer2D::EndScene();
-            Renderer::EndRenderPass();
-            */
-            
             break;
         }
         case SceneState::Play:
@@ -489,28 +388,7 @@ namespace Ares
         }
         }
     }
-    /*
-    void EditorLayer::ShowBoundingBoxes(bool show, bool onTop)
-    {
-        SceneRenderer::GetOptions().ShowBoundingBoxes = show && !onTop;
-        m_DrawOnTopBoundingBoxes = show && onTop;
-    }
-
-    void EditorLayer::SelectEntity(Entity entity)
-    {
-        SelectedSubmesh selection;
-        if (entity.HasComponent<MeshRendererComponent>())
-        {
-            selection.Mesh = &entity.GetComponent<MeshRendererComponent>()->Mesh->GetSubmeshes()[0];
-        }
-        selection.Entity = entity;
-        m_SelectionContext.clear();
-        m_SelectionContext.push_back(selection);
-
-        m_EditorScene->SetSelectedEntity(entity);
-    }
-    */
-
+    
 
 #endif
 
@@ -596,38 +474,11 @@ namespace Ares
         ImGui::SameLine(xl);
 
         const char* camName = m_EditorCamera.m_FreeCamMode ? "Free Cam" : "Editor Cam";
-
-        //if (EditorGUI::EditorButton("Cam Default", buttonW, m_EditorCamera.m_MoveMode == EditorCamera::MoveMode::Default))
         if (EditorGUI::EditorButton(camName, buttonW, false))
         {
             m_EditorCamera.m_FreeCamMode = !m_EditorCamera.m_FreeCamMode;
-            //m_EditorCamera.m_MoveMode = EditorCamera::MoveMode::Default;
         }
 
-        /*
-        xl += buttonW + buttonPad;
-        ImGui::SameLine(xl);
-        if (EditorGUI::EditorButton("Cam Pan", buttonW, m_EditorCamera.m_MoveMode == EditorCamera::MoveMode::Pan))
-        {
-            m_EditorCamera.m_MoveMode = EditorCamera::MoveMode::Pan;
-        }
-        xl += buttonW + buttonPad;
-        ImGui::SameLine(xl);
-        if (EditorGUI::EditorButton("Free Cam", buttonW, m_EditorCamera.m_MoveMode == EditorCamera::MoveMode::FreeCamera))
-        {
-            m_EditorCamera.m_MoveMode = EditorCamera::MoveMode::FreeCamera;
-        }
-        */
-
-
-
-
-        
-
-
-
-
-        
         float mx = toolbarWidth * .5f - buttonSize.x * .5f;
         ImGui::SameLine(mx);
         if (EditorGUI::EditorImageButton(EditorResources::GetTexture("play.png"), buttonSize, m_SceneState == SceneState::Play))
@@ -659,9 +510,7 @@ namespace Ares
         {
             SceneRenderer::GetOptions().ShowBoundingBoxes = !SceneRenderer::GetOptions().ShowBoundingBoxes;
         }
-        /*
-        */
-
+        
         xr = (xr - buttonPad) - buttonWidth;
         ImGui::SameLine(xr);
         if (EditorGUI::EditorButton("Show Grid", buttonWidth, SceneRenderer::GetOptions().ShowGrid))
@@ -690,11 +539,7 @@ namespace Ares
             m_EditorScene = newScene;
             std::filesystem::path path = filepath;
             UpdateWindowTitle(path.filename().string());
-            //m_SceneHierarchyPanel->SetContext(m_EditorScene);
-
             m_SelectedEntity = {};
-            //m_EditorScene->SetSelectedEntity({});
-            //m_SelectionContext.clear();
             m_SceneFilePath = filepath;
         }
 
@@ -736,45 +581,16 @@ namespace Ares
 
                 }
                 if (ImGui::MenuItem("Open Scene", "Ctrl/Cmd + O"))
-                {
                     OpenScene();
-                    /*
-                    auto& app = Application::Get();
-                    std::string filepath = app.OpenFile("Hazel Scene (*.hsc)\0*.hsc\0");
-                    if (!filepath.empty())
-                    {
-                        Ref<Scene> newScene = CreateRef<Scene>();
-                        SceneSerializer serializer(newScene);
-                        serializer.Deserialize(filepath);
-                        m_EditorScene = newScene;
-                        std::filesystem::path path = filepath;
-                        UpdateWindowTitle(path.filename().string());
-                        //m_SceneHierarchyPanel->SetContext(m_EditorScene);
-
-                        m_SelectedEntity = {};
-                        //m_EditorScene->SetSelectedEntity({});
-                        //m_SelectionContext.clear();
-                    }
-                    */
-                }
 
                 ImGui::Separator();
+
                 if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
                     SaveScene();
+
                 if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S"))
                     SaveSceneAs();
-/*
-                if (ImGui::MenuItem("Save Scene", "Ctrl/Cmd + S"))
-                {
-                    auto& app = Application::Get();
-                    std::string filepath = app.SaveFile("Hazel Scene (*.hsc)\0*.hsc\0");
-                    SceneSerializer serializer(m_EditorScene);
-                    serializer.Serialize(filepath);
 
-                    std::filesystem::path path = filepath;
-                    UpdateWindowTitle(path.filename().string());
-                }
-*/
                 ImGui::Separator();
 
                 if (ImGui::MenuItem("Exit"))
@@ -821,7 +637,7 @@ namespace Ares
 
         ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
 
-        ImGui::Begin("Viewport", 0);//, ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoNavFocus);
+        ImGui::Begin("Viewport", 0);
         {
             ImVec2 viewportOffset = ImGui::GetCursorPos(); // includes tab bar
             ImVec2 viewportSize = ImGui::GetContentRegionAvail();
@@ -829,11 +645,7 @@ namespace Ares
             m_ViewportPanelMouseOver = ImGui::IsWindowHovered();
             m_ViewportPanelFocused = ImGui::IsWindowFocused();
 
-            //m_ViewportFocused = ImGui::IsWindowFocused();
-            //m_ViewportHovered = ImGui::IsWindowHovered();
-
             Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportPanelFocused || !m_ViewportPanelMouseOver);
-
 
 #if _2D
             m_ViewportSize = { viewportSize.x, viewportSize.y };
@@ -846,8 +658,6 @@ namespace Ares
             if (m_RuntimeScene)
                 m_RuntimeScene->OnViewportResize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
             m_EditorCamera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
-            //m_EditorCamera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
-
             ImGui::Image((void*)(intptr_t)SceneRenderer::GetFinalColorBufferRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
 
             static int counter = 0;
@@ -870,15 +680,7 @@ namespace Ares
             ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, rw, rh);
 
             glm::mat4 im = glm::mat4(1.0);
-            /*
-            ImGuizmo::DrawGrid(
-                glm::value_ptr(m_EditorCamera.m_ViewMatrix),
-                glm::value_ptr(m_EditorCamera.m_ProjectionMatrix),
-                glm::value_ptr(im), 
-                10.0f);
-            */
-
-
+            
             if (!m_EditorCamera.m_FreeCamMode)
             {
                 float viewManipSize = 128;
@@ -889,117 +691,27 @@ namespace Ares
                     0x80808080
                 );
             }
-            //m_EditorCamera.SetViewMatrix(m_EditorCamera.m_ViewMatrix);
-
-            //ImGuizmo::SetOrthographic(false);
-
-            //ImGuizmo::ViewManipulate(glm::value_ptr(m_EditorCamera.m_ViewMatrix), 8.0f, ImVec2(ImGui::GetWindowPos().x + (ImGui::GetWindowWidth() - 256), ImGui::GetWindowPos().y), ImVec2(256, 256), 0xff101010);
-
-            {
-                /*
-                float ar = (float)ImGui::GetWindowHeight() / (float)ImGui::GetWindowWidth();
-                float compassDist = 2;
-                ImGuizmo::SetOrthographic(false);
-                ImGuizmo::SetDrawlist();
-                ImGuizmo::SetRect(ImGui::GetWindowPos().x + (ImGui::GetWindowWidth() - 256), ImGui::GetWindowPos().y + (ImGui::GetWindowHeight() - 256 * ar), 256, 256 * ar);
-
-                glm::quat camRot = glm::quat(glm::vec3(-m_EditorCamera.m_Pitch, -m_EditorCamera.m_Yaw, 0.0f));
-                glm::mat4 view = glm::inverse(glm::translate(glm::mat4(1.0f), -glm::rotate(camRot, glm::vec3(0.0f, 0.0f, -1.0f)) * compassDist) * glm::toMat4(camRot));
-                glm::mat4 m = glm::mat4(1.0f);
-                //ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(m_EditorCamera.m_ProjectionMatrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(m), nullptr, nullptr);
-                ImGuizmo::DrawCube(glm::value_ptr(view), glm::value_ptr(m_EditorCamera.m_ProjectionMatrix), glm::value_ptr(m));
-                */
-
-            }
-
-
+            
             // Gizmos
-            if (m_GizmoType != -1 && m_SelectedEntity)//m_SelectionContext.size())
+            if (m_GizmoType != -1 && m_SelectedEntity)
             {
-                //auto& selection = m_SelectionContext[0];
-
-                /*
-                float rw = (float)ImGui::GetWindowWidth();
-                float rh = (float)ImGui::GetWindowHeight();
-                ImGuizmo::SetOrthographic(false);
-                ImGuizmo::SetDrawlist();
-                ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, rw, rh);
-                */
-
-
-
-                //ImGuizmo::Manipulate(glm::value_ptr(m_Camera.GetViewMatrix()), glm::value_ptr(m_Camera.GetProjectionMatrix()), (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(m_Transform));
-                //ImGuizmo::Manipulate(
-                //    glm::value_ptr(m_ActiveScene->GetCamera().GetViewMatrix()), // view
-                //    glm::value_ptr(m_ActiveScene->GetCamera().GetProjectionMatrix()), // projection
-                //    (ImGuizmo::OPERATION)m_GizmoType, // operation
-                //    ImGuizmo::LOCAL, // mode
-                //    glm::value_ptr(m_MeshEntity.Transform())
-                //);
-
-
-                //auto& camera = m_CameraEntity.GetComponent<CameraComponent>().Camera;
-
                 bool snap = Input::GetKey(KeyCode::LeftControl);
-                //ImGuizmo::Manipulate(
-                //    glm::value_ptr(m_ActiveScene->GetCamera().GetViewMatrix()),// * *m_CurrentlySelectedTransform),
-                //    glm::value_ptr(m_ActiveScene->GetCamera().GetProjectionMatrix()),
-                //    (ImGuizmo::OPERATION)m_GizmoType,
-                //    ImGuizmo::LOCAL,
-                //    glm::value_ptr(*m_CurrentlySelectedTransform),
-                //    nullptr,
-                //    snap ? &m_SnapValue : nullptr
-                //);
-
+                
                 auto& entityTransform = m_SelectedEntity.GetComponent<TransformComponent>()->GetWorldTransform();
                 float snapValue = GetSnapValue();
                 float snapValues[3] = { snapValue, snapValue, snapValue };
 
-
-                //if (m_SelectionMode == SelectionMode::Entity)
-                {
-                    ImGuizmo::Manipulate(
-                        glm::value_ptr(m_EditorCamera.m_ViewMatrix),
-                        glm::value_ptr(m_EditorCamera.m_ProjectionMatrix),
-
-                        //ImGuizmo::Manipulate(glm::value_ptr(camera.GetViewMatrix()),
-                        //    glm::value_ptr(camera.GetProjectionMatrix()),
-                        (ImGuizmo::OPERATION)m_GizmoType,
-                        ImGuizmo::LOCAL,
-                        glm::value_ptr(entityTransform),
-                        nullptr,
-                        snap ? snapValues : nullptr);
-                }
+                ImGuizmo::Manipulate(
+                    glm::value_ptr(m_EditorCamera.m_ViewMatrix),
+                    glm::value_ptr(m_EditorCamera.m_ProjectionMatrix),
+                    (ImGuizmo::OPERATION)m_GizmoType,
+                    ImGuizmo::LOCAL,
+                    glm::value_ptr(entityTransform),
+                    nullptr,
+                    snap ? snapValues : nullptr
+                );
 
                 m_SelectedEntity.GetComponent<TransformComponent>()->SetWorldTransform(entityTransform);
-
-
-
-
-
-
-
-                
-                
-                //else
-                //{
-                //    glm::mat4 transformBase = entityTransform * selection.Mesh->Transform;
-
-
-                //    ImGuizmo::Manipulate(glm::value_ptr(m_EditorCamera.GetViewMatrix()),
-                //        glm::value_ptr(m_EditorCamera.GetProjectionMatrix()),
-
-                //        /*ImGuizmo::Manipulate(glm::value_ptr(camera.GetViewMatrix()),
-                //            glm::value_ptr(camera.GetProjectionMatrix()),*/
-                //        (ImGuizmo::OPERATION)m_GizmoType,
-                //        ImGuizmo::LOCAL,
-                //        glm::value_ptr(transformBase),
-                //        nullptr,
-                //        snap ? snapValue : nullptr);
-
-                //    selection.Mesh->Transform = glm::inverse(entityTransform) * transformBase;
-                //}
-
             }
 
             if (showStats)
@@ -1128,7 +840,6 @@ namespace Ares
                 EditorGUI::Color4Field(s_ImGuiColorKeys[i], colors[i]);
             }
 
-            //EditorGUI::DrawEditorColorPickers();
             ImGui::Columns(1);
         }
 
@@ -1206,36 +917,16 @@ namespace Ares
         m_AssetManagerPanel->RenderAssetWindow();
 
         ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
-        //m_SceneHierarchyPanel->OnImGuiRender();
-
-        //bool selectionChanged;
-        //Entity deletedEntity;
-
         Entity doubleClickedEntity;
         SceneHierarchyPanel::Draw(m_EditorScene, m_SelectedEntity, doubleClickedEntity, m_SceneHierarchyFocused);// , deletedEntity);
         if (doubleClickedEntity)
-        {
             m_EditorCamera.Focus(doubleClickedEntity.GetComponent<TransformComponent>()->GetWorldTransform()[3], 5);
-        }
-
+        
         ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
         m_Console.Render();
 
-
-        /*if (selectionChanged)
-        {
-            SelectEntity(m_SelectedEntity);
-        }
-        if (deletedEntity)
-        {
-            OnEntityDeleted(deletedEntity);
-        }*/
-
         ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
         InspectorPanel::DrawInspectorForEntity(m_SelectedEntity);
-
-       
-
 
 #if _2D
         ImGui::Begin("Stats");
@@ -1308,51 +999,42 @@ namespace Ares
             EditorGUI::FloatSliderField("Light Multiplier", light.Multiplier, 0.0f, 5.0f);
             ImGui::Columns(1);
 
-
-
-        
-
-
-        if (ImGui::TreeNode("Shaders"))
-        {
-            auto& shaders = Shader::s_AllShaders;
-            for (auto& shader : shaders)
+            if (ImGui::TreeNode("Shaders"))
             {
-                if (ImGui::TreeNode(shader->GetName().c_str()))
+                auto& shaders = Shader::s_AllShaders;
+                for (auto& shader : shaders)
                 {
-                    std::string buttonName = "Open##" + shader->GetName();
-                    if (ImGui::Button(buttonName.c_str()))
+                    if (ImGui::TreeNode(shader->GetName().c_str()))
                     {
-                        // TODO: have user specify code editor of choice
-                        int r = system(("code " + shader->GetPath()).c_str());
-
-                        if (r)
+                        std::string buttonName = "Open##" + shader->GetName();
+                        if (ImGui::Button(buttonName.c_str()))
                         {
-                            ARES_CORE_ERROR("Problem With Shader Open");
+                            // TODO: have user specify code editor of choice
+                            int r = system(("code " + shader->GetPath()).c_str());
+
+                            if (r)
+                            {
+                                ARES_CORE_ERROR("Problem With Shader Open");
+                            }
+
                         }
 
+                        buttonName = "Reload##" + shader->GetName();
+                        if (ImGui::Button(buttonName.c_str()))
+                            shader->Reload();
+                        ImGui::TreePop();
                     }
-
-                    buttonName = "Reload##" + shader->GetName();
-                    if (ImGui::Button(buttonName.c_str()))
-                        shader->Reload();
-                    ImGui::TreePop();
                 }
+                ImGui::TreePop();
             }
-            ImGui::TreePop();
+            ImGui::End();
         }
-        ImGui::End();
-    }
 
         
 
 #endif
         
-
         ImGui::End();
-
-
-        //ToolbarUI();
     }
 
     void EditorLayer::OnEvent(Ares::Event& e)
@@ -1375,10 +1057,6 @@ namespace Ares
 
     bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
     {
-        //auto [mx, my] = Input::GetMousePosition();
-        auto mp = Input::GetMousePosition();
-        float mx = mp.x;
-        float my = mp.y;
         if (e.GetMouseButton() == MouseButtonCode::ButtonLeft && !Input::GetKey(KeyCode::LeftAlt) && !ImGuizmo::IsOver() && m_SceneState != SceneState::Play)
         {
             auto [mouseX, mouseY] = GetMouseViewportSpace();
@@ -1386,19 +1064,10 @@ namespace Ares
             {
                 auto [origin, direction] = CastRay(mouseX, mouseY);
 
-                //m_SelectedSubmeshes.clear();
-
-                //m_ActiveScene->m_Registry.each([&](auto entity)
-
                 std::vector<SelectedSubmesh> m_SelectionContext;
-                //m_SelectionContext.clear();
-                //auto meshEntities = m_ActiveScene->GetAllEntitiesWith<MeshRendererComponent>();
-                
-                //m_EditorScene->SetSelectedEntity({});
                 m_SelectedEntity = {};
 
                 auto meshEntities = m_EditorScene->GetAllEntitiesWith<MeshRendererComponent>();
-
 
                 for (auto e : meshEntities)
 
@@ -1408,27 +1077,15 @@ namespace Ares
                     if (!mesh)
                         continue;
 
-                    
-                    //Entity entityS = m_ActiveScene->EntityConstructor(entity);
-
-                    /*if (!entityS.HasComponent<MeshRendererComponent>())
-                        return;
-                    
-                    MeshRendererComponent& mrComponent = entityS.GetComponent<MeshRendererComponent>();
-                    if (!mrComponent.Mesh)
-                        return;*/
-                    //auto mesh = entityS.GetComponent<MeshRendererComponent>().Mesh;
-
                     auto& submeshes = mesh->GetSubmeshes();
-                    //constexpr float lastT = std::numeric_limits<float>::max();
                     for (uint32_t i = 0; i < submeshes.size(); i++)
                     {
                         auto& submesh = submeshes[i];
                         Ray ray = {
                             glm::inverse(
-                                entity.GetComponent<TransformComponent>()->GetWorldTransform() * submesh.Transform
+                                entity.GetComponent<TransformComponent>()->GetWorldTransform() * submesh.ModelNode->GetModelSpaceTransform()
                             ) * glm::vec4(origin, 1.0f),
-                            glm::inverse(glm::mat3(entity.GetComponent<TransformComponent>()->GetWorldTransform()) * glm::mat3(submesh.Transform)) * direction
+                            glm::inverse(glm::mat3(entity.GetComponent<TransformComponent>()->GetWorldTransform()) * glm::mat3(submesh.ModelNode->GetModelSpaceTransform())) * direction
                         };
 
                         float t;
@@ -1440,33 +1097,19 @@ namespace Ares
                             {
                                 if (ray.IntersectsTriangle(triangle.V0.Position, triangle.V1.Position, triangle.V2.Position, t))
                                 {
-                                    ARES_WARN("INTERSECTION: {0}, t={1}", submesh.NodeName, t);
-                                    //m_SelectedSubmeshes.push_back({ entityS, &submesh, t });
-                                    //m_SelectionContext.push_back({ entity, &submesh, t });
                                     m_SelectionContext.push_back({ entity, t });
-
                                     break;
                                 }
                             }
                         }
                     }
-                }//);
+                }
 
                 std::sort(m_SelectionContext.begin(), m_SelectionContext.end(), [](auto& a, auto& b) { return a.Distance < b.Distance; });
                 if (m_SelectionContext.size())
                 {
-                    //OnSelected(m_SelectionContext[0]);
                     m_SelectedEntity = m_SelectionContext[0].Entity;
                 }
-
-                //std::sort(m_SelectedSubmeshes.begin(), m_SelectedSubmeshes.end(), [](auto& a, auto& b) { return a.Distance < b.Distance; });
-
-                //// TODO: Handle mesh being deleted, etc.
-                //if (m_SelectedSubmeshes.size())
-                //    m_CurrentlySelectedTransform = &m_SelectedSubmeshes[0].Mesh->Transform;
-                //else
-                //    m_CurrentlySelectedTransform = nullptr;// &m_MeshEntity.GetComponent<TransformComponent>().Transform;
-
             }
         }
         return false;
@@ -1474,55 +1117,24 @@ namespace Ares
 
     std::pair<float, float> EditorLayer::GetMouseViewportSpace()
     {
-        auto [mx, my] = ImGui::GetMousePos(); // Input::GetMousePosition();
+        auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;
         my -= m_ViewportBounds[0].y;
         auto viewportWidth = m_ViewportBounds[1].x - m_ViewportBounds[0].x;
         auto viewportHeight = m_ViewportBounds[1].y - m_ViewportBounds[0].y;
-
         return { (mx / viewportWidth) * 2.0f - 1.0f, ((my / viewportHeight) * 2.0f - 1.0f) * -1.0f };
     }
 
     std::pair<glm::vec3, glm::vec3> EditorLayer::CastRay(float mx, float my)
     {
         glm::vec4 mouseClipPos = { mx, my, -1.0f, 1.0f };
-
         auto inverseProj = glm::inverse(m_EditorCamera.m_ProjectionMatrix);
         auto inverseView = glm::inverse(glm::mat3(m_EditorCamera.m_ViewMatrix));
-
-        /*auto inverseProj = glm::inverse(m_CameraEntity.GetComponent<CameraComponent>().Camera.GetProjectionMatrix());
-        auto inverseView = glm::inverse(glm::mat3(m_CameraEntity.GetComponent<CameraComponent>().Camera.GetViewMatrix()));*/
-
-        /*auto inverseProj = glm::inverse(m_Scene->GetCamera().GetProjectionMatrix());
-        auto inverseView = glm::inverse(glm::mat3(m_Scene->GetCamera().GetViewMatrix()));*/
-
         glm::vec4 ray = inverseProj * mouseClipPos;
-
-        //glm::vec3 rayPos = m_Scene->GetCamera().GetPosition();
-        //glm::vec3 rayPos = m_CameraEntity.GetComponent<CameraComponent>().Camera.GetPosition();
-        glm::vec3 rayPos = glm::inverse(m_EditorCamera.m_ViewMatrix)[3];//.m_Position;
-
+        glm::vec3 rayPos = glm::inverse(m_EditorCamera.m_ViewMatrix)[3];
         glm::vec3 rayDir = inverseView * glm::vec3(ray);
-
         return { rayPos, rayDir };
     }
-
-    //void EditorLayer::OnSelected(const SelectedSubmesh& selectionContext)
-    //{
-        //m_SceneHierarchyPanel->SetSelected(selectionContext.Entity);
-        //m_EditorScene->SetSelectedEntity(selectionContext.Entity);
-    //}
-    /*
-    void EditorLayer::OnEntityDeleted(Entity e)
-    {
-        if (m_SelectionContext[0].Entity == e)
-        {
-            m_SelectionContext.clear();
-            m_EditorScene->SetSelectedEntity({});
-        }
-    }
-    */
-
 
     Ray EditorLayer::CastMouseRay()
     {
@@ -1537,71 +1149,3 @@ namespace Ares
 
 
 }
-
-
-
-
-// TODO: MESH SUBMESHES
-
-/*
-
-
-
-    void SceneHierarchyPanel::DrawMeshNode(const Ref<Mesh>& mesh, uint32_t& imguiMeshID)
-    {
-        static char imguiName[128];
-        memset(imguiName, 0, 128);
-        sprintf(imguiName, "Mesh##%d", imguiMeshID++);
-
-        // Mesh Hierarchy
-        if (ImGui::TreeNode(imguiName))
-        {
-            auto rootNode = mesh->m_Scene->mRootNode;
-            MeshNodeHierarchy(mesh, rootNode);
-            ImGui::TreePop();
-        }
-    }
-
-    static std::tuple<glm::vec3, glm::quat, glm::vec3> GetTransformDecomposition(const glm::mat4& transform)
-    {
-        glm::vec3 scale, translation, skew;
-        glm::vec4 perspective;
-        glm::quat orientation;
-        glm::decompose(transform, scale, orientation, translation, skew, perspective);
-
-        return { translation, orientation, scale };
-    }
-
-    void SceneHierarchyPanel::MeshNodeHierarchy(const Ref<Mesh>& mesh, aiNode* node, const glm::mat4& parentTransform, uint32_t level)
-    {
-        glm::mat4 localTransform = Mat4FromAssimpMat4(node->mTransformation);
-        glm::mat4 transform = parentTransform * localTransform;
-        /for (uint32_t i = 0; i < node->mNumMeshes; i++)
-        {
-            uint32_t meshIndex = node->mMeshes[i];
-            mesh->m_Submeshes[meshIndex].Transform = transform;
-        }/
-
-if (ImGui::TreeNode(node->mName.C_Str()))
-{
-    {
-        auto [translation, rotation, scale] = GetTransformDecomposition(transform);
-        ImGui::Text("World Transform");
-        ImGui::Text("  Translation: %.2f, %.2f, %.2f", translation.x, translation.y, translation.z);
-        ImGui::Text("  Scale: %.2f, %.2f, %.2f", scale.x, scale.y, scale.z);
-    }
-    {
-        auto [translation, rotation, scale] = GetTransformDecomposition(localTransform);
-        ImGui::Text("Local Transform");
-        ImGui::Text("  Translation: %.2f, %.2f, %.2f", translation.x, translation.y, translation.z);
-        ImGui::Text("  Scale: %.2f, %.2f, %.2f", scale.x, scale.y, scale.z);
-    }
-
-    for (uint32_t i = 0; i < node->mNumChildren; i++)
-        MeshNodeHierarchy(mesh, node->mChildren[i], transform, level + 1);
-
-    ImGui::TreePop();
-}
-    }
-
-*/

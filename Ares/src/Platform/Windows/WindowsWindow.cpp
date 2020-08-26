@@ -205,23 +205,11 @@ namespace Ares {
 
 	void WindowsWindow::OnUpdate()
 	{
-		{
-			//ARES_PROFILE_SCOPE("poll events");
-		//glfwPollEvents();
-		}
-		{
-			ARES_PROFILE_SCOPE("swap buffers");
 		glfwSwapBuffers(m_Window);
-		}
-
-		{
-			ARES_PROFILE_SCOPE("imgui cursors");
 		ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
 		glfwSetCursor(m_Window, m_ImGuiMouseCursors[imgui_cursor] ? m_ImGuiMouseCursors[imgui_cursor] : m_ImGuiMouseCursors[ImGuiMouseCursor_Arrow]);
 		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		}
 	}
-
 
 	void WindowsWindow::SetVSync(bool enabled)
 	{

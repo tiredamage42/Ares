@@ -210,7 +210,7 @@ namespace Ares {
 		{
 			StartObject(out, "MeshComponent");
 			auto mesh = entity.GetComponent<MeshRendererComponent>()->Mesh;
-			SetKeyValue(out, "AssetPath", mesh->GetFilePath());
+			//SetKeyValue(out, "AssetPath", mesh->GetFilePath());
 			EndObject(out);
 		}
 
@@ -359,9 +359,12 @@ namespace Ares {
 					if (!deserializedEntity.HasComponent<MeshRendererComponent>())
 					{
 						MeshRendererComponent* mrComponent = deserializedEntity.AddComponent<MeshRendererComponent>();
+						
 						std::vector<Ref<Material>> materials;
+						/*
 						std::vector<Ref<Animation>> animations;
 						mrComponent->Mesh = CreateRef<Mesh>(meshPath, materials, animations);
+						*/
 						mrComponent->Materials = materials;
 
 					}

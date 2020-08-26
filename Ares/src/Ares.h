@@ -32,6 +32,8 @@
 #include "Ares/Editor/AssetManager.h"
 #include "Ares/Editor/EditorResources.h"
 
+#include "Ares/Renderer/Mesh/ModelLoading.h"
+
 // renderer ===============
 #include "Ares/Renderer/Renderer.h"
 #include "Ares/Renderer/SceneRenderer.h"

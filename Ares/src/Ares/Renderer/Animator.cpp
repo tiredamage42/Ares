@@ -51,25 +51,8 @@ namespace Ares
 	}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	void Animator::UpdateBoneTransformsRecursive(float time, Ref<Animation> animation, Ref<ModelNode> modelNode, const glm::mat4& parentTransform)
 	{
-		//std::string name(modelNode->mName.data);
-		//glm::mat4 nodeTransform(Mat4FromAssimpMat4(modelNode->mTransformation));
-
 		glm::mat4 localTransform = modelNode->DefaultLocalTransform;
 
 		bool success;
@@ -84,30 +67,22 @@ namespace Ares
 
 		glm::mat4 globalTransform = parentTransform * localTransform;
 
-
 		if (modelNode->IsBone)
-			//if (m_BoneMapping.find(name) != m_BoneMapping.end())
 		{
-			//uint32_t BoneIndex = m_BoneMapping[name];
-			// m_InverseTransform * globalTransform turns into object space
-			//Matrix4 finalTransform = m_InverseTransform * globalTransform * m_BoneInfo[BoneIndex].BoneOffset;
-
 			Matrix4 finalTransform = m_InverseTransform * globalTransform * modelNode->BoneOffset;
-
 			const float* pSource = (const float*)glm::value_ptr(finalTransform);
 			std::copy(pSource, pSource + 16, m_BoneMatrixData + 16 * modelNode->BoneIndex);
 		}
 
 		for (auto& child : modelNode->Children)
 			UpdateBoneTransformsRecursive(time, animation, child, globalTransform);
-		//for (uint32_t i = 0; i < modelNode->mNumChildren; i++)
-			//UpdateBoneTransformsRecursive(time, animation, modelNode->mChildren[i], globalTransform);
+		
 	}
 
 
 	void Animator::UpdateBoneTransforms(float time, Ref<Animation> animation)
 	{
-		UpdateBoneTransformsRecursive(time, animation, m_RootNode, glm::mat4(1.0f));
+		UpdateBoneTransformsRecursive(time, animation, m_ModelNodeMap->RootNode, glm::mat4(1.0f));
 		m_BoneMatrixTexture->SetData(m_BoneMatrixData);
 	}
 
@@ -122,8 +97,6 @@ namespace Ares
 		}
 		if (m_AnimationPlaying && currentAnimation)
 		{
-			//m_WorldTime += (float)Time::GetDeltaTime();
-
 			float ticksPerSecond = (currentAnimation->m_TicksPerSecond != 0 ? currentAnimation->m_TicksPerSecond : DEFAULT_TICKS_PER_SECOND) * m_Speed;
 			m_AnimationTime += (float)Time::GetDeltaTime() * ticksPerSecond;
 			m_AnimationTime = fmod(m_AnimationTime, currentAnimation->m_Duration);
@@ -134,19 +107,19 @@ namespace Ares
 
 
 
-	void Animator::SetAnimationNodeInformation(Ref<ModelNode> rootNode, uint32_t boneCount)
+	void Animator::SetAnimationNodeInformation(Ref<ModelNodeMap> modelNodeMap)
 	{
-		m_RootNode = rootNode;
+		m_ModelNodeMap = modelNodeMap;
 
-		m_BoneMatrixTexture = Texture2D::Create(TextureFormat::Float16, 4, boneCount, TextureWrap::Clamp, FilterType::Point, false);
+		m_BoneMatrixTexture = Texture2D::Create(TextureFormat::Float16, 4, modelNodeMap->BoneCount, TextureWrap::Clamp, FilterType::Point, false);
 
 		if (m_BoneMatrixData)
 		{
 			delete[] m_BoneMatrixData;
 		}
-		m_BoneMatrixData = new float[16 * (size_t)boneCount];
+		m_BoneMatrixData = new float[16 * (size_t)modelNodeMap->BoneCount];
 
-		m_InverseTransform = glm::inverse(rootNode->DefaultLocalTransform);
+		m_InverseTransform = glm::inverse(modelNodeMap->RootNode->DefaultLocalTransform);
 	}
 
 }
